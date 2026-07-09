@@ -716,7 +716,7 @@ textarea{resize:vertical;min-height:56px;}
 /* ── DOCS MODAL ─────────────────────────────────────── */
 .docs-modal-overlay{position:fixed;inset:0;background:rgba(30,35,50,.5);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .docs-modal-overlay.open{opacity:1;pointer-events:all;}
-.docs-modal{background:#fff;border:1px solid #e5e7eb;border-radius:14px;width:600px;max-height:92vh;overflow-y:auto;transform:translateY(20px);transition:transform .2s;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.docs-modal{background:#fff;border:1px solid #e5e7eb;border-radius:14px;width:600px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;overflow-x:hidden;transform:translateY(20px);transition:transform .2s;box-shadow:0 20px 60px rgba(0,0,0,.2);}
 .docs-modal-overlay.open .docs-modal{transform:translateY(0);}
 .docs-modal-body input, .docs-modal-body select, .docs-modal-body textarea{pointer-events:none;opacity:.7;background:#f9fafb;}
 .docs-modal-body.dm-edit-active input, .docs-modal-body.dm-edit-active select, .docs-modal-body.dm-edit-active textarea{pointer-events:auto;opacity:1;background:#fff;}
@@ -4851,28 +4851,18 @@ function toggleDocsEditMode(){
   const btn = document.getElementById('dm-edit-btn');
   const saveBtn = document.getElementById('dm-save-btn');
   const body = document.getElementById('dm-body');
-
   if(docsEditMode){
     btn.textContent = '✕ Скасувати';
-    btn.style.background = '#fee2e2';
     btn.style.borderColor = '#fca5a5';
     btn.style.color = '#991b1b';
     if(saveBtn) saveBtn.style.display = '';
     body.classList.add('dm-edit-active');
-    // Enable all inputs/selects/textareas
-    body.querySelectorAll('input,select,textarea').forEach(el=>{
-      el.removeAttribute('disabled');
-      el.style.pointerEvents='';
-      el.style.opacity='';
-    });
   } else {
     btn.textContent = '✏ Редагувати';
-    btn.style.background = '';
-    btn.style.borderColor = '';
-    btn.style.color = '';
+    btn.style.borderColor = '#2563eb';
+    btn.style.color = '#2563eb';
     if(saveBtn) saveBtn.style.display = 'none';
     body.classList.remove('dm-edit-active');
-    // Restore view mode
     const v = ALL_VEHICLES.find(x=>x.id===docsVehicleId);
     if(v) renderDocsModalBody(v);
   }
@@ -6397,14 +6387,12 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
         <span class="ins-veh-name" id="dm-vehname"></span>
       </div>
       <div class="docs-modal-title">Документи</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button id="dm-edit-btn" class="btn btn-ghost" onclick="toggleDocsEditMode()" style="font-size:11px;padding:6px 14px">✏ Редагувати</button>
-        <button class="docs-modal-x" onclick="closeDocsModal()">✕</button>
-      </div>
+      <button class="docs-modal-x" onclick="closeDocsModal()">✕</button>
     </div>
     <div class="docs-modal-body" id="dm-body"></div>
-    <div class="docs-modal-footer" id="dm-footer">
+    <div class="docs-modal-footer">
       <button class="btn btn-ghost" onclick="closeDocsModal()">Закрити</button>
+      <button id="dm-edit-btn" class="btn btn-ghost" onclick="toggleDocsEditMode()" style="border-color:#2563eb;color:#2563eb">✏ Редагувати</button>
       <button id="dm-save-btn" class="btn btn-primary" onclick="saveDocChanges()" style="display:none">Зберегти зміни</button>
     </div>
   </div>
