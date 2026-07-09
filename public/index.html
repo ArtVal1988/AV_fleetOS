@@ -5431,21 +5431,63 @@ function loadMessengers(messengersData){
   });
 }
 
+// Country calling codes we can confidently auto-detect (checked longest-prefix-first
+// so e.g. "380" isn't mistaken for a 1-digit code). Not exhaustive — just the countries
+// clients realistically call from. Anything else falls back to generic grouping.
+const INTL_CODES_3 = ['994','993','992','998','996','995','420','421','423','370','371','372','374','375','373','351','352','353','354','355','356','357','358','359','380','381','382','385','386','971','972','973'];
+const INTL_CODES_2 = ['30','31','32','33','34','36','39','40','41','43','44','45','46','47','48','49','86','90','91','61','64','20','27','52','55','60','62','63','65','66','81','82','84','98'];
+const INTL_CODES_1 = ['1','7'];
+const INTL_CODES_ALL = [...INTL_CODES_3, ...INTL_CODES_2, ...INTL_CODES_1];
+
 function formatPhoneUA(raw){
-  const d = (raw||'').replace(/\D/g,'');
-  let norm = d;
-  if(norm.startsWith('0') && norm.length===10) norm = '38'+norm;
-  else if(norm.length===9) norm = '380'+norm;
-  // Only re-format numbers we can confidently recognize as Ukrainian (380 + 9 digits).
-  // Anything else (foreign country codes, unusual lengths) is left exactly as typed,
-  // so we never mangle a non-UA client's phone number.
+  raw = raw || '';
+  const hadPlus = raw.trim().startsWith('+');
+  // Strip absolutely everything except digits — this is what blocks letters/junk.
+  const digits = raw.replace(/\D/g,'');
+  if(!digits) return hadPlus ? '+' : '';
+
+  // Ukrainian numbers — same heuristics as before, unchanged behavior.
+  let norm = digits;
+  if(!hadPlus && norm.startsWith('0') && norm.length===10) norm = '380'+norm.slice(1);
+  else if(!hadPlus && norm.length===9) norm = '380'+norm;
+
   if(norm.startsWith('380') && norm.length===12){
-    const groups=[2,3,3,2,2];
-    let i=0; const parts=[];
+    const groups=[2,3,3,2,2]; let i=0; const parts=[];
     groups.forEach(g=>{ parts.push(norm.slice(i,i+g)); i+=g; });
     return '+'+parts.join(' ');
   }
-  return raw;
+
+  // Not (yet) a recognizable UA number — try to auto-detect a foreign country code
+  // from what's typed so far, longest prefix first.
+  for(const code of INTL_CODES_ALL){
+    if(digits.startsWith(code) && digits.length > code.length){
+      const rest = digits.slice(code.length);
+      let groups;
+      if(code==='1' && rest.length===10){
+        groups=[3,3,4]; // NANP-style
+      } else {
+        groups=[]; let r=rest.length;
+        while(r>0){ const g=Math.min(3,r); groups.push(g); r-=g; }
+      }
+      let i=0; const parts=[code];
+      groups.forEach(g=>{ parts.push(rest.slice(i,i+g)); i+=g; });
+      return '+'+parts.join(' ');
+    }
+  }
+
+  // Unrecognized country code, but clearly a full international number (typed with
+  // "+" or long enough) — group generically instead of leaving it unformatted.
+  if(hadPlus || digits.length>=8){
+    const cc = digits.slice(0,3);
+    const rest = digits.slice(3);
+    const parts=[cc]; let i=0; let r=rest.length;
+    while(r>0){ const g=Math.min(3,r); parts.push(rest.slice(i,i+g)); i+=g; r-=g; }
+    return '+'+parts.join(' ');
+  }
+
+  // Still short/ambiguous (e.g. just a few digits typed) — show as-is with a +
+  // so the user sees it's being read as international, but keep it digits-only.
+  return hadPlus ? '+'+digits : digits;
 }
 function onPhoneInput(el){
   const target = el || document.getElementById('bm-phone');
