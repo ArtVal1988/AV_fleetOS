@@ -2692,13 +2692,14 @@ function renderCalendar(){
   const getDow=d=>DOW[colDate(d).getDay()];
 
   const thDays=days.map((d,i)=>{
+    if(i===0) return `<th class="th-day th-nav-arrow" onclick="shiftWindow(-7)" title="Назад на тиждень" style="cursor:pointer"><div style="font-size:16px;color:var(--accent);font-weight:700;line-height:30px">‹</div></th>`;
     if(i===days.length-1) return `<th class="th-day th-nav-arrow" onclick="shiftWindow(7)" title="Вперед на тиждень" style="cursor:pointer"><div style="font-size:16px;color:var(--accent);font-weight:700;line-height:30px">›</div></th>`;
     return `<th class="th-day${isWE(d)?' weekend':''}${isToday(d)?' today-col':''}">
     <div class="th-day-num">${String(colDate(d).getDate()).padStart(2,'0')}</div>
     <div class="th-day-dow">${getDow(d)}</div></th>`;
   }).join('');
 
-  let html=`<thead><tr><th class="th-vehicle">Транспортний засіб<span onclick="shiftWindow(-7)" title="Назад" style="float:right;cursor:pointer;font-size:15px;color:var(--accent);font-weight:700;user-select:none;line-height:1;margin-top:-1px">‹</span></th>${thDays}</tr></thead><tbody>`;
+  let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
 
   CATEGORIES.forEach(cat=>{
     html+=`<tr class="cat-row"><td colspan="${total+1}">${cat.name}</td></tr>`;
