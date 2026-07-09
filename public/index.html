@@ -146,11 +146,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .td-day.weekend-col{background:rgba(37,99,235,.025);}
 .td-day.today-col{}
 .day-cell{height:30px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;transition:all .12s;position:relative;}
-.day-cell.empty{background:transparent;color:var(--muted);}
-.day-cell.empty:hover{background:var(--surface2);color:var(--text);}
-.cell-date-num{font-size:9px;font-weight:400;opacity:.35;position:absolute;top:2px;left:3px;line-height:1;pointer-events:none;font-family:'Verdana',sans-serif;}
-.cell-date-booked{opacity:.4;color:#fff;}
-.day-cell.empty:hover .cell-date-num{opacity:.6;}
+.day-cell.empty{background:transparent;color:transparent;}
+.day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
+.cell-date-num{font-size:9px;font-weight:400;opacity:.4;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);line-height:1;pointer-events:none;font-family:'Verdana',sans-serif;color:var(--muted);}
+.cell-date-booked{opacity:.35;color:#fff;}
+.day-cell.empty:hover .cell-date-num{opacity:.7;}
 .day-cell.booked{cursor:pointer;}
 /* Extension chain visual */
 .day-cell[data-s="extension"]{position:relative;}
