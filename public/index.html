@@ -741,7 +741,7 @@ textarea{resize:vertical;min-height:56px;}
 .dm-card{background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;}
 
 /* STS grid inside card */
-.dm-sts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dm-sts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:8px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .dm-field-val{font-size:13px;font-weight:600;color:#1a1d26;}
 .dm-field-val.mono{letter-spacing:2px;color:#0891b2;font-family:var(--font-mono);}
@@ -4914,8 +4914,8 @@ function renderDocsModalBody(v){
       <div class="dm-sec-head"><span class="dm-sec-icon">📋</span><span class="dm-sec-title">Технічний паспорт</span></div>
       <div class="dm-card">
         <div class="dm-sts-grid">
-          <div><div class="dm-field-lbl">Номер СТС</div><input type="text" id="dm-sts-number" class="dm-field-val mono" value="${v.sts?.number||''}" placeholder="—"></div>
-          <div><div class="dm-field-lbl">Дата видачі</div><input type="date" id="dm-sts-date" class="dm-field-val" value="${v.sts?.date||''}"></div>
+          <div><div class="dm-field-lbl">Номер</div><input type="text" id="dm-sts-number" class="dm-field-val mono" value="${v.sts?.number||''}" placeholder="—"></div>
+          <div style="text-align:right"><div class="dm-field-lbl">Дата видачі</div><input type="date" id="dm-sts-date" class="dm-field-val" style="text-align:right" value="${v.sts?.date||''}"></div>
         </div>
       </div>
     </div>
