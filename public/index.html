@@ -912,6 +912,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.12.38/bundle/libphonenumber-max.js"></script>
 <body>
 <div id="login-overlay" style="position:fixed;inset:0;background:#dde1e8;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;padding:40px 44px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
@@ -5434,62 +5435,32 @@ function loadMessengers(messengersData){
 // Country calling codes we can confidently auto-detect (checked longest-prefix-first
 // so e.g. "380" isn't mistaken for a 1-digit code). Not exhaustive — just the countries
 // clients realistically call from. Anything else falls back to generic grouping.
-const INTL_CODES_3 = ['994','993','992','998','996','995','420','421','423','370','371','372','374','375','373','351','352','353','354','355','356','357','358','359','380','381','382','385','386','971','972','973'];
-const INTL_CODES_2 = ['30','31','32','33','34','36','39','40','41','43','44','45','46','47','48','49','86','90','91','61','64','20','27','52','55','60','62','63','65','66','81','82','84','98'];
-const INTL_CODES_1 = ['1','7'];
-const INTL_CODES_ALL = [...INTL_CODES_3, ...INTL_CODES_2, ...INTL_CODES_1];
+// (Country-code auto-detection is now handled by libphonenumber-js, see formatPhoneUA below.)
 
 function formatPhoneUA(raw){
   raw = raw || '';
+  if(!raw.trim()) return '';
+
+  // Strip everything except digits and a leading "+" — this is what blocks
+  // letters/junk from ever ending up in the field.
   const hadPlus = raw.trim().startsWith('+');
-  // Strip absolutely everything except digits — this is what blocks letters/junk —
-  // and cap at 15 digits, the max length of any valid international number (E.164),
-  // so the field can't just keep growing forever.
-  const digits = raw.replace(/\D/g,'').slice(0,15);
+  const digits = raw.replace(/\D/g,'').slice(0,15); // E.164 max length
   if(!digits) return hadPlus ? '+' : '';
+  const cleaned = (hadPlus ? '+' : '') + digits;
 
-  // Ukrainian numbers — same heuristics as before, unchanged behavior.
-  let norm = digits;
-  if(!hadPlus && norm.startsWith('0') && norm.length===10) norm = '380'+norm.slice(1);
-  else if(!hadPlus && norm.length===9) norm = '380'+norm;
-
-  if(norm.startsWith('380') && norm.length===12){
-    const groups=[2,3,3,2,2]; let i=0; const parts=[];
-    groups.forEach(g=>{ parts.push(norm.slice(i,i+g)); i+=g; });
-    return '+'+parts.join(' ');
+  // Use Google's libphonenumber (via libphonenumber-js) for proper, per-country
+  // "as you type" formatting — this is the real standard used for every country,
+  // instead of a generic guess. Default country is UA, so a local Ukrainian number
+  // typed without "+380" is still recognized correctly; typing "+" followed by any
+  // other country's code auto-switches formatting to that country's own standard.
+  if(typeof libphonenumber !== 'undefined'){
+    try{
+      return new libphonenumber.AsYouType('UA').input(cleaned);
+    }catch(e){ /* fall through to basic cleanup below */ }
   }
 
-  // Not (yet) a recognizable UA number — try to auto-detect a foreign country code
-  // from what's typed so far, longest prefix first.
-  for(const code of INTL_CODES_ALL){
-    if(digits.startsWith(code) && digits.length > code.length){
-      const rest = digits.slice(code.length);
-      let groups;
-      if(code==='1' && rest.length===10){
-        groups=[3,3,4]; // NANP-style
-      } else {
-        groups=[]; let r=rest.length;
-        while(r>0){ const g=Math.min(3,r); groups.push(g); r-=g; }
-      }
-      let i=0; const parts=[code];
-      groups.forEach(g=>{ parts.push(rest.slice(i,i+g)); i+=g; });
-      return '+'+parts.join(' ');
-    }
-  }
-
-  // Unrecognized country code, but clearly a full international number (typed with
-  // "+" or long enough) — group generically instead of leaving it unformatted.
-  if(hadPlus || digits.length>=8){
-    const cc = digits.slice(0,3);
-    const rest = digits.slice(3);
-    const parts=[cc]; let i=0; let r=rest.length;
-    while(r>0){ const g=Math.min(3,r); parts.push(rest.slice(i,i+g)); i+=g; r-=g; }
-    return '+'+parts.join(' ');
-  }
-
-  // Still short/ambiguous (e.g. just a few digits typed) — show as-is with a +
-  // so the user sees it's being read as international, but keep it digits-only.
-  return hadPlus ? '+'+digits : digits;
+  // Fallback (only if the CDN library failed to load) — at least keep it digits-only.
+  return cleaned;
 }
 function onPhoneInput(el){
   const target = el || document.getElementById('bm-phone');
