@@ -1069,11 +1069,13 @@ textarea{resize:vertical;min-height:56px;}
 
   <div class="controls">
     <div style="position:relative;display:flex;align-items:center;gap:8px">
+      <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
       <div class="month-nav">
         <button class="mn-btn" onclick="shiftMonth(-1)">‹</button>
         <div class="mn-label" id="mn-label" onclick="toggleNavPicker()" title="Оберіть місяць або дату ▾" style="cursor:pointer;user-select:none"></div>
         <button class="mn-btn" onclick="shiftMonth(1)">›</button>
       </div>
+      <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
       <button class="today-btn" onclick="goToday()">Сьогодні</button>
       <!-- NAV PICKER POPUP -->
       <div class="nav-picker" id="nav-picker" style="display:none">
@@ -2692,8 +2694,6 @@ function renderCalendar(){
   const getDow=d=>DOW[colDate(d).getDay()];
 
   const thDays=days.map((d,i)=>{
-    if(i===0) return `<th class="th-day th-nav-arrow" onclick="shiftWindow(-7)" title="Назад на тиждень" style="cursor:pointer"><div style="font-size:16px;color:var(--accent);font-weight:700;line-height:30px">‹</div></th>`;
-    if(i===days.length-1) return `<th class="th-day th-nav-arrow" onclick="shiftWindow(7)" title="Вперед на тиждень" style="cursor:pointer"><div style="font-size:16px;color:var(--accent);font-weight:700;line-height:30px">›</div></th>`;
     return `<th class="th-day${isWE(d)?' weekend':''}${isToday(d)?' today-col':''}">
     <div class="th-day-num">${String(colDate(d).getDate()).padStart(2,'0')}</div>
     <div class="th-day-dow">${getDow(d)}</div></th>`;
