@@ -4989,9 +4989,9 @@ function renderDocsModalBody(v){
               buildAttachArea(v, d.key)+
             '</div>'+
             '<div style="display:flex;flex-direction:column;gap:8px">'+
-              '<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-                '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;white-space:nowrap">Строк дії до</span>'+
-                '<input type="date" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;flex:1;min-width:120px;box-sizing:border-box">'+
+              '<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px">'+
+                '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;flex-shrink:0">Строк дії до</span>'+
+                '<input type="date" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;flex:1;box-sizing:border-box">'+
               '</div>'+
               (v.poaExpiry?'<div style="background:'+pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pl+'</div>':'')+
             '</div>'+
