@@ -745,6 +745,8 @@ textarea{resize:vertical;min-height:56px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .dm-field-val{font-size:13px;font-weight:600;color:#1a1d26;}
 .dm-field-val.mono{letter-spacing:2px;color:#0891b2;font-family:var(--font-mono);}
+input.dm-field-val{border:none;outline:none;width:100%;padding:3px 0;border-radius:4px;background:transparent;}
+.dm-edit-active input.dm-field-val{padding:5px 8px;border:1px solid #dbeafe;}
 
 /* POA */
 .dm-poa-inner{display:flex;align-items:center;gap:10px;}
@@ -762,11 +764,16 @@ textarea{resize:vertical;min-height:56px;}
 .dm-avatar.trusted{background:#d1fae5;color:#065f46;}
 .dm-person-role{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .dm-person-name{font-family:var(--font-head);font-size:17px;font-weight:800;color:#1a1d26;}
+input.dm-person-name{border:none;outline:none;width:100%;padding:2px 0;background:transparent;}
+.dm-edit-active input.dm-person-name{padding:4px 8px;border:1px solid #dbeafe;border-radius:4px;}
 .dm-person-fields{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:start;}
 .dm-pf{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:9px 12px;}
 .dm-pf-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .dm-pf-val{font-size:12px;color:#374151;}
 .dm-pf-val.tel{color:#0891b2;font-size:16px;font-weight:600;font-family:var(--font-mono);}
+input.dm-pf-val{border:none;outline:none;width:100%;padding:2px 0;background:transparent;font-family:var(--font-mono);}
+input.dm-pf-val.tel{font-size:16px;}
+.dm-edit-active input.dm-pf-val{padding:4px 6px;border:1px solid #dbeafe;border-radius:4px;}
 
 /* doc checklist */
 .dm-checklist{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
@@ -4907,8 +4914,8 @@ function renderDocsModalBody(v){
       <div class="dm-sec-head"><span class="dm-sec-icon">📋</span><span class="dm-sec-title">Технічний паспорт</span></div>
       <div class="dm-card">
         <div class="dm-sts-grid">
-          <div><div class="dm-field-lbl">Номер СТС</div><div class="dm-field-val mono">${v.sts?.number||'—'}</div></div>
-          <div><div class="dm-field-lbl">Дата видачі</div><div class="dm-field-val">${fmtD(v.sts?.date)}</div></div>
+          <div><div class="dm-field-lbl">Номер СТС</div><input type="text" id="dm-sts-number" class="dm-field-val mono" value="${v.sts?.number||''}" placeholder="—"></div>
+          <div><div class="dm-field-lbl">Дата видачі</div><input type="date" id="dm-sts-date" class="dm-field-val" value="${v.sts?.date||''}"></div>
         </div>
       </div>
     </div>
@@ -4918,7 +4925,7 @@ function renderDocsModalBody(v){
         <div class="dm-sts-grid">
           <div style="grid-column:1/-1">
             <div class="dm-field-lbl">VIN</div>
-            <div class="dm-field-val mono" style="font-size:14px;letter-spacing:2px">${v.vin||'—'}</div>
+            <input type="text" id="dm-vin" class="dm-field-val mono" style="font-size:14px;letter-spacing:2px" value="${v.vin||''}" placeholder="—">
           </div>
         </div>
       </div>
@@ -4926,27 +4933,27 @@ function renderDocsModalBody(v){
   </div>`;
 
   // ── PERSON CARD ────────────────────────────────────────────────
-  function personCard(p, role, avatarCls, icon){
+  function personCard(p, role, avatarCls, icon, idPrefix){
     return `<div class="dm-sec">
       <div class="dm-sec-head"><span class="dm-sec-icon">${icon}</span><span class="dm-sec-title">${role}</span></div>
       <div class="dm-person-card">
         <div class="dm-person-top">
           <div class="dm-avatar ${avatarCls}">${ini(p.name)}</div>
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="dm-person-role">${role}</div>
-            <div class="dm-person-name">${p.name}</div>
+            <input type="text" id="${idPrefix}-name" class="dm-person-name" value="${p.name||''}" placeholder="ПІБ">
           </div>
         </div>
         <div class="dm-person-fields">
-          <div class="dm-pf"><div class="dm-pf-lbl">Телефон</div><div class="dm-pf-val tel">${p.phone||'—'}</div></div>
-          <div class="dm-pf"><div class="dm-pf-lbl">Паспорт</div><div class="dm-pf-val">${p.passport||'—'}</div></div>
-          <div class="dm-pf"><div class="dm-pf-lbl">ІПН</div><div class="dm-pf-val">${p.inn||'—'}</div></div>
+          <div class="dm-pf"><div class="dm-pf-lbl">Телефон</div><input type="text" id="${idPrefix}-phone" class="dm-pf-val tel" value="${p.phone||''}" placeholder="+38 067 000 00 00" oninput="onPhoneInput(this)"></div>
+          <div class="dm-pf"><div class="dm-pf-lbl">Паспорт</div><input type="text" id="${idPrefix}-passport" class="dm-pf-val" value="${p.passport||''}" placeholder="АА 123456"></div>
+          <div class="dm-pf"><div class="dm-pf-lbl">ІПН</div><input type="text" id="${idPrefix}-inn" class="dm-pf-val" value="${p.inn||''}" placeholder="1234567890"></div>
         </div>
       </div>
     </div>`;
   }
 
-  const ownerHtml = v.owner ? personCard(v.owner, 'Власник', 'owner', '🧑') : '';
+  const ownerHtml = v.owner ? personCard(v.owner, 'Власник', 'owner', '🧑', 'dm-owner') : '';
 
   // Trusted person — show card with remove btn, or "add" button
   const trustedHtml = v.trusted
@@ -4965,15 +4972,15 @@ function renderDocsModalBody(v){
         <div class="dm-person-card">
           <div class="dm-person-top">
             <div class="dm-avatar trusted">${ini(v.trusted.name)}</div>
-            <div>
+            <div style="flex:1;min-width:0">
               <div class="dm-person-role">Довірена особа</div>
-              <div class="dm-person-name">${v.trusted.name}</div>
+              <input type="text" id="dm-trusted-name" class="dm-person-name" value="${v.trusted.name||''}" placeholder="ПІБ">
             </div>
           </div>
           <div class="dm-person-fields">
-            <div class="dm-pf"><div class="dm-pf-lbl">Телефон</div><div class="dm-pf-val tel">${v.trusted.phone||'—'}</div></div>
-            <div class="dm-pf"><div class="dm-pf-lbl">Паспорт</div><div class="dm-pf-val">${v.trusted.passport||'—'}</div></div>
-            <div class="dm-pf"><div class="dm-pf-lbl">ІПН</div><div class="dm-pf-val">${v.trusted.inn||'—'}</div></div>
+            <div class="dm-pf"><div class="dm-pf-lbl">Телефон</div><input type="text" id="dm-trusted-phone" class="dm-pf-val tel" value="${v.trusted.phone||''}" placeholder="+38 067 000 00 00" oninput="onPhoneInput(this)"></div>
+            <div class="dm-pf"><div class="dm-pf-lbl">Паспорт</div><input type="text" id="dm-trusted-passport" class="dm-pf-val" value="${v.trusted.passport||''}" placeholder="АА 123456"></div>
+            <div class="dm-pf"><div class="dm-pf-lbl">ІПН</div><input type="text" id="dm-trusted-inn" class="dm-pf-val" value="${v.trusted.inn||''}" placeholder="1234567890"></div>
           </div>
         </div>
       </div>`
@@ -5127,6 +5134,41 @@ function recalcMissingDocs(v){
 }
 
 function saveDocChanges(){
+  const v = ALL_VEHICLES.find(x=>x.id===docsVehicleId);
+  if(!v){ closeDocsModal(); return; }
+
+  const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : undefined; };
+
+  // Технічний паспорт (СТС)
+  const stsNumber = val('dm-sts-number');
+  const stsDate = val('dm-sts-date');
+  if(stsNumber !== undefined || stsDate !== undefined){
+    if(!v.sts) v.sts = {};
+    v.sts.number = stsNumber || '';
+    v.sts.date = stsDate || '';
+  }
+
+  // VIN
+  const vin = val('dm-vin');
+  if(vin !== undefined) v.vin = vin;
+
+  // Власник
+  if(v.owner && document.getElementById('dm-owner-name')){
+    v.owner.name = val('dm-owner-name') || v.owner.name;
+    v.owner.phone = val('dm-owner-phone') || '';
+    v.owner.passport = val('dm-owner-passport') || '';
+    v.owner.inn = val('dm-owner-inn') || '';
+  }
+
+  // Довірена особа
+  if(v.trusted && document.getElementById('dm-trusted-name')){
+    v.trusted.name = val('dm-trusted-name') || v.trusted.name;
+    v.trusted.phone = val('dm-trusted-phone') || '';
+    v.trusted.passport = val('dm-trusted-passport') || '';
+    v.trusted.inn = val('dm-trusted-inn') || '';
+  }
+
+  docsEditMode = false;
   closeDocsModal();
   render();
 }
