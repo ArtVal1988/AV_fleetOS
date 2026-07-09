@@ -110,9 +110,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
 /* CALENDAR WRAP */
 .calendar-wrap{overflow:hidden;display:flex;flex-direction:column;min-width:0;flex:1;}
-.calendar-scroll{overflow-x:auto;flex:1;border:1px solid var(--border);border-radius:8px;}
-.calendar-scroll::-webkit-scrollbar{height:5px;}
-.calendar-scroll::-webkit-scrollbar-thumb{background:#c8cdd6;border-radius:3px;}
+.calendar-scroll{overflow-x:auto;flex:1;border:1px solid var(--border);border-radius:8px;scrollbar-width:none;}
+.calendar-scroll::-webkit-scrollbar{display:none;}
 
 /* TABLE */
 .cal-table{border-collapse:collapse;min-width:100%;}
