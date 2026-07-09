@@ -2698,7 +2698,7 @@ function renderCalendar(){
     <div class="th-day-dow">${getDow(d)}</div></th>`;
   }).join('');
 
-  let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
+  let html=`<thead><tr><th class="th-vehicle"><span onclick="shiftWindow(-7)" title="Назад на тиждень" style="cursor:pointer;font-size:16px;color:var(--accent);font-weight:700;margin-right:8px;user-select:none">‹</span>Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
 
   CATEGORIES.forEach(cat=>{
     html+=`<tr class="cat-row"><td colspan="${total+1}">${cat.name}</td></tr>`;
