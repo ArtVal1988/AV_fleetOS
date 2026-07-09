@@ -900,6 +900,29 @@ textarea{resize:vertical;min-height:56px;}
 </style>
 </head>
 <body>
+<div id="login-overlay" style="position:fixed;inset:0;background:#dde1e8;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;padding:40px 44px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+    <div style="font-size:22px;font-weight:700;color:#1a1d26;margin-bottom:4px">AV_fleetOS</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:28px;letter-spacing:.5px">ГРАФІК ЗАЙНЯТОСТІ</div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Логін</label>
+      <input id="login-username" type="text" autocomplete="username" placeholder="Введіть логін"
+        style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Пароль</label>
+      <input id="login-password" type="password" autocomplete="current-password" placeholder="Введіть пароль"
+        style="width:100%;margin-top:4px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;box-sizing:border-box;outline:none">
+    </div>
+    <div id="login-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
+    <button onclick="doLogin()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px">Увійти</button>
+  </div>
+</div>
+<div id="user-badge" style="display:none;position:fixed;top:12px;right:16px;z-index:200;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:5px 10px 5px 12px;font-size:11px;font-family:'Verdana',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+  <span id="user-badge-name" style="font-weight:600;color:#1a1d26"></span>
+  <span id="user-badge-role" style="color:#9ca3af;font-size:10px"></span>
+  <button onclick="doLogout()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px;line-height:1" title="Вийти">⏻</button>
+</div>
 <div class="app">
 <aside class="sidebar">
   <div class="logo">
@@ -5772,6 +5795,104 @@ document.getElementById('bm-currency').addEventListener('change', function(){
 ALL_VEHICLES.forEach(v => recalcMissingDocs(v));
 renderStickers();
 render();
+
+// ── AV_fleetOS API INTEGRATION ─────────────────────────────────
+const API_BASE = window.location.origin + '/api';
+let _token = localStorage.getItem('av_fleet_token') || '';
+let _currentUser = null;
+
+function apiHeaders(){ return {'Content-Type':'application/json','Authorization':'Bearer '+_token}; }
+
+async function apiFetch(method, path, body){
+  const opts = {method, headers: apiHeaders()};
+  if(body) opts.body = JSON.stringify(body);
+  try{
+    const res = await fetch(API_BASE + path, opts);
+    if(res.status === 401){ showLoginOverlay(); return null; }
+    return res.ok ? res.json() : null;
+  } catch(e){ return null; }
+}
+
+function showLoginOverlay(){
+  document.getElementById('login-overlay').style.display='flex';
+  document.getElementById('user-badge').style.display='none';
+}
+function hideLoginOverlay(){
+  document.getElementById('login-overlay').style.display='none';
+  const b = document.getElementById('user-badge');
+  b.style.display='flex';
+}
+
+async function doLogin(){
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!username||!password){ errEl.textContent='Введіть логін та пароль'; errEl.style.display='block'; return; }
+  try{
+    const res = await fetch(API_BASE+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const data = await res.json();
+    if(!res.ok){ errEl.textContent=data.error||'Помилка входу'; errEl.style.display='block'; return; }
+    _token=data.token; _currentUser=data.user;
+    localStorage.setItem('av_fleet_token',_token);
+    hideLoginOverlay();
+    document.getElementById('user-badge-name').textContent=_currentUser.name;
+    document.getElementById('user-badge-role').textContent=_currentUser.role==='admin'?'👑 Адмін':'👤 Менеджер';
+    await syncFromServer();
+  } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
+}
+
+function doLogout(){
+  _token=''; _currentUser=null;
+  localStorage.removeItem('av_fleet_token');
+  showLoginOverlay();
+}
+
+async function syncFromServer(){
+  const [sBookings, sVehicles, sStickers] = await Promise.all([
+    apiFetch('GET','/bookings'),
+    apiFetch('GET','/vehicles'),
+    apiFetch('GET','/stickers'),
+  ]);
+  if(sBookings){ bookings.length=0; sBookings.forEach(b=>bookings.push(b)); nextBid=bookings.length?Math.max(...bookings.map(b=>b.id))+1:1; }
+  if(sVehicles){ ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); }); }
+  if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
+  ALL_VEHICLES.forEach(v=>recalcMissingDocs(v));
+  renderStickers(); render();
+}
+
+// Auto-save bookings to server
+const _origSave = saveBooking;
+window.saveBooking = async function(){
+  _origSave();
+  const b = editBid ? bookings.find(x=>x.id===editBid) : bookings[bookings.length-1];
+  if(!b||!_token) return;
+  if(editBid){ apiFetch('PUT','/bookings/'+b.id, b); }
+  else { const r=await apiFetch('POST','/bookings',b); if(r?.id) b.id=r.id; }
+};
+
+const _origDelete = deleteBooking;
+window.deleteBooking = function(bid){
+  _origDelete(bid);
+  if(_token) apiFetch('DELETE','/bookings/'+bid);
+};
+
+// Init
+document.getElementById('login-password')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('login-password')?.focus(); });
+
+(async function init(){
+  if(!_token){ showLoginOverlay(); return; }
+  try{
+    const res = await fetch(API_BASE+'/auth/me',{headers:apiHeaders()});
+    if(!res.ok){ showLoginOverlay(); return; }
+    _currentUser = await res.json();
+    hideLoginOverlay();
+    document.getElementById('user-badge-name').textContent=_currentUser.name;
+    document.getElementById('user-badge-role').textContent=_currentUser.role==='admin'?'👑 Адмін':'👤 Менеджер';
+    await syncFromServer();
+  } catch(e){ showLoginOverlay(); }
+})();
 </script>
 
 
