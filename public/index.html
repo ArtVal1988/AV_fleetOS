@@ -921,7 +921,36 @@ textarea{resize:vertical;min-height:56px;}
 <div id="user-badge" style="display:none;position:fixed;top:12px;right:16px;z-index:200;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:5px 10px 5px 12px;font-size:11px;font-family:'Verdana',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.08)">
   <span id="user-badge-name" style="font-weight:600;color:#1a1d26"></span>
   <span id="user-badge-role" style="color:#9ca3af;font-size:10px"></span>
+  <button onclick="openChangePassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Змінити пароль">🔑</button>
   <button onclick="doLogout()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px;line-height:1" title="Вийти">⏻</button>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="chpwd-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:9998;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:14px;padding:32px 36px;width:320px;box-shadow:0 16px 48px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:700;color:#1a1d26;margin-bottom:20px">🔑 Зміна пароля</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Поточний пароль</label>
+      <input id="chpwd-old" type="password" placeholder="Введіть поточний пароль"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Новий пароль</label>
+      <input id="chpwd-new" type="password" placeholder="Мінімум 6 символів"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Повторіть пароль</label>
+      <input id="chpwd-confirm" type="password" placeholder="Повторіть новий пароль"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div id="chpwd-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
+    <div id="chpwd-success" style="display:none;color:#166534;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#dcfce7;border-radius:6px">✅ Пароль успішно змінено!</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeChangePassword()" style="flex:1;background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Скасувати</button>
+      <button onclick="doChangePassword()" style="flex:2;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Змінити пароль</button>
+    </div>
+  </div>
 </div>
 <div class="app">
 <aside class="sidebar">
@@ -5846,6 +5875,46 @@ function doLogout(){
   _token=''; _currentUser=null;
   localStorage.removeItem('av_fleet_token');
   showLoginOverlay();
+}
+
+function openChangePassword(){
+  const o = document.getElementById('chpwd-overlay');
+  o.style.display='flex';
+  document.getElementById('chpwd-old').value='';
+  document.getElementById('chpwd-new').value='';
+  document.getElementById('chpwd-confirm').value='';
+  document.getElementById('chpwd-error').style.display='none';
+  document.getElementById('chpwd-success').style.display='none';
+}
+function closeChangePassword(){
+  document.getElementById('chpwd-overlay').style.display='none';
+}
+async function doChangePassword(){
+  const oldPwd = document.getElementById('chpwd-old').value;
+  const newPwd = document.getElementById('chpwd-new').value;
+  const confirm = document.getElementById('chpwd-confirm').value;
+  const errEl = document.getElementById('chpwd-error');
+  const okEl = document.getElementById('chpwd-success');
+  errEl.style.display='none'; okEl.style.display='none';
+
+  if(!oldPwd || !newPwd || !confirm){ errEl.textContent='Заповніть всі поля'; errEl.style.display='block'; return; }
+  if(newPwd.length < 6){ errEl.textContent='Новий пароль — мінімум 6 символів'; errEl.style.display='block'; return; }
+  if(newPwd !== confirm){ errEl.textContent='Паролі не збігаються'; errEl.style.display='block'; return; }
+
+  // Verify old password by logging in
+  try{
+    const check = await fetch(API_BASE+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:_currentUser.username, password:oldPwd})});
+    if(!check.ok){ errEl.textContent='Поточний пароль невірний'; errEl.style.display='block'; return; }
+  } catch(e){ errEl.textContent='Помилка з\'єднання'; errEl.style.display='block'; return; }
+
+  // Update password
+  const res = await apiFetch('PUT', '/auth/users/'+_currentUser.id, { password: newPwd });
+  if(res?.ok){
+    okEl.style.display='block';
+    setTimeout(()=>closeChangePassword(), 2000);
+  } else {
+    errEl.textContent='Помилка при зміні пароля'; errEl.style.display='block';
+  }
 }
 
 async function syncFromServer(){

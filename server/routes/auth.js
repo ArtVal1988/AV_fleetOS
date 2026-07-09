@@ -78,21 +78,17 @@ router.post('/users', auth, adminOnly, (req, res) => {
   res.status(201).json({ id: result.lastInsertRowid, username, name, role });
 });
 
-// PUT /api/auth/users/:id
-router.put('/users/:id', auth, adminOnly, (req, res) => {
+// PUT /api/auth/users/:id — власний пароль або адмін
+router.put('/users/:id', auth, (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const isSelf = targetId === req.user.id;
+  const isAdmin = req.user.role === 'admin';
+  if (!isSelf && !isAdmin) return res.status(403).json({ error: 'Немає доступу' });
   const { name, role, active, password } = req.body;
-  const { id } = req.params;
-
-  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
-  if (!user) return res.status(404).json({ error: 'Користувача не знайдено' });
-
-  if (password) {
-    const hash = bcrypt.hashSync(password, 10);
-    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hash, id);
-  }
-  if (name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, id);
-  if (role) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, id);
-  if (active !== undefined) db.prepare('UPDATE users SET active = ? WHERE id = ?').run(active ? 1 : 0, id);
+  if (password) db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), targetId);
+  if (name && isAdmin) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, targetId);
+  if (role && isAdmin) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, targetId);
+  if (active !== undefined && isAdmin) db.prepare('UPDATE users SET active = ? WHERE id = ?').run(active ? 1 : 0, targetId);
 
   res.json({ ok: true });
 });
