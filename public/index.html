@@ -5442,8 +5442,10 @@ const INTL_CODES_ALL = [...INTL_CODES_3, ...INTL_CODES_2, ...INTL_CODES_1];
 function formatPhoneUA(raw){
   raw = raw || '';
   const hadPlus = raw.trim().startsWith('+');
-  // Strip absolutely everything except digits — this is what blocks letters/junk.
-  const digits = raw.replace(/\D/g,'');
+  // Strip absolutely everything except digits — this is what blocks letters/junk —
+  // and cap at 15 digits, the max length of any valid international number (E.164),
+  // so the field can't just keep growing forever.
+  const digits = raw.replace(/\D/g,'').slice(0,15);
   if(!digits) return hadPlus ? '+' : '';
 
   // Ukrainian numbers — same heuristics as before, unchanged behavior.
