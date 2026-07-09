@@ -921,8 +921,51 @@ textarea{resize:vertical;min-height:56px;}
 <div id="user-badge" style="display:none;position:fixed;top:12px;right:16px;z-index:200;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:5px 10px 5px 12px;font-size:11px;font-family:'Verdana',sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.08)">
   <span id="user-badge-name" style="font-weight:600;color:#1a1d26"></span>
   <span id="user-badge-role" style="color:#9ca3af;font-size:10px"></span>
-  <button onclick="openChangePassword()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Змінити пароль">🔑</button>
-  <button onclick="doLogout()" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px;line-height:1" title="Вийти">⏻</button>
+</div>
+
+<!-- USERS MANAGEMENT PANEL -->
+<div id="users-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">👥 Користувачі</div>
+      <button onclick="closeUsersPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <!-- Add user form -->
+      <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px 20px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#1d4ed8;margin-bottom:14px">+ Новий користувач</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Імʼя</label>
+            <input id="nu-name" type="text" placeholder="Імʼя та прізвище"
+              style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+          </div>
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Логін</label>
+            <input id="nu-username" type="text" placeholder="username"
+              style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+          </div>
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Пароль</label>
+            <input id="nu-password" type="password" placeholder="Мінімум 6 символів"
+              style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+          </div>
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Роль</label>
+            <select id="nu-role" style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;background:#fff;outline:none">
+              <option value="manager">👤 Менеджер</option>
+              <option value="admin">👑 Адмін</option>
+            </select>
+          </div>
+        </div>
+        <div id="nu-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:10px;padding:7px 10px;background:#fee2e2;border-radius:5px"></div>
+        <button onclick="addNewUser()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Додати користувача</button>
+      </div>
+      <!-- Users list -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список користувачів</div>
+      <div id="users-list"></div>
+    </div>
+  </div>
 </div>
 
 <!-- CHANGE PASSWORD MODAL -->
@@ -970,7 +1013,12 @@ textarea{resize:vertical;min-height:56px;}
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item" data-label="Звіти"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
+    <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
   </nav>
+  <div style="margin-top:auto;padding:16px 0;border-top:1px solid var(--border)">
+    <div class="nav-item" onclick="openChangePassword()" data-label="Змінити пароль"><span class="nav-icon">🔑</span><span class="nav-label">Змінити пароль</span></div>
+    <div class="nav-item" onclick="doLogout()" data-label="Вийти"><span class="nav-icon">⏻</span><span class="nav-label">Вийти</span></div>
+  </div>
 </aside>
 
 <main class="main">
@@ -5867,6 +5915,7 @@ async function doLogin(){
     hideLoginOverlay();
     document.getElementById('user-badge-name').textContent=_currentUser.name;
     document.getElementById('user-badge-role').textContent=_currentUser.role==='admin'?'👑 Адмін':'👤 Менеджер';
+    if(_currentUser && _currentUser.role==='admin') document.getElementById('nav-users').style.display='flex';
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -5876,6 +5925,75 @@ function doLogout(){
   localStorage.removeItem('av_fleet_token');
   showLoginOverlay();
 }
+
+// ── USERS MANAGEMENT ──────────────────────────────────────────
+async function openUsersPanel(){
+  document.getElementById('users-panel-overlay').style.display='flex';
+  await loadUsersList();
+}
+function closeUsersPanel(){
+  document.getElementById('users-panel-overlay').style.display='none';
+}
+
+async function loadUsersList(){
+  const users = await apiFetch('GET','/auth/users');
+  if(!users) return;
+  const list = document.getElementById('users-list');
+  list.innerHTML = users.map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:${u.active?'#fff':'#f9fafb'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:2px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</div>
+      </div>
+      ${u.id !== _currentUser?.id ? `
+        <button onclick="toggleUserActive(${u.id}, ${u.active})"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid ${u.active?'#fca5a5':'#86efac'};background:${u.active?'#fee2e2':'#dcfce7'};color:${u.active?'#991b1b':'#166534'};font-family:inherit;font-weight:600">
+          ${u.active?'Деактивувати':'Активувати'}
+        </button>
+        <button onclick="resetUserPassword(${u.id}, '${u.name}')"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
+          🔑 Пароль
+        </button>
+      ` : `<span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>`}
+    </div>
+  `).join('');
+}
+
+async function addNewUser(){
+  const name = document.getElementById('nu-name').value.trim();
+  const username = document.getElementById('nu-username').value.trim();
+  const password = document.getElementById('nu-password').value;
+  const role = document.getElementById('nu-role').value;
+  const errEl = document.getElementById('nu-error');
+  errEl.style.display='none';
+
+  if(!name||!username||!password){ errEl.textContent='Заповніть всі поля'; errEl.style.display='block'; return; }
+  if(password.length<6){ errEl.textContent='Пароль — мінімум 6 символів'; errEl.style.display='block'; return; }
+
+  const res = await apiFetch('POST','/auth/users',{name,username,password,role});
+  if(res?.id){
+    document.getElementById('nu-name').value='';
+    document.getElementById('nu-username').value='';
+    document.getElementById('nu-password').value='';
+    await loadUsersList();
+  } else {
+    errEl.textContent='Логін вже зайнятий або помилка сервера'; errEl.style.display='block';
+  }
+}
+
+async function toggleUserActive(id, isActive){
+  await apiFetch('PUT','/auth/users/'+id, {active: !isActive});
+  await loadUsersList();
+}
+
+async function resetUserPassword(id, name){
+  const newPwd = prompt(`Новий пароль для ${name}:`);
+  if(!newPwd) return;
+  if(newPwd.length<6){ alert('Пароль — мінімум 6 символів'); return; }
+  const res = await apiFetch('PUT','/auth/users/'+id, {password: newPwd});
+  if(res?.ok) alert(`✅ Пароль для ${name} змінено`);
+}
+// ── END USERS MANAGEMENT ───────────────────────────────────────
 
 function openChangePassword(){
   const o = document.getElementById('chpwd-overlay');
@@ -5959,6 +6077,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     hideLoginOverlay();
     document.getElementById('user-badge-name').textContent=_currentUser.name;
     document.getElementById('user-badge-role').textContent=_currentUser.role==='admin'?'👑 Адмін':'👤 Менеджер';
+    if(_currentUser.role==='admin') document.getElementById('nav-users').style.display='flex';
     await syncFromServer();
   } catch(e){ showLoginOverlay(); }
 })();
