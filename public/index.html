@@ -5169,7 +5169,12 @@ function saveDocChanges(){
   }
 
   docsEditMode = false;
-  closeDocsModal();
+  const btn = document.getElementById('dm-edit-btn');
+  const saveBtn = document.getElementById('dm-save-btn');
+  if(btn){ btn.textContent='✏ Редагувати'; btn.style.borderColor='#2563eb'; btn.style.color='#2563eb'; }
+  if(saveBtn) saveBtn.style.display='none';
+  document.getElementById('dm-body').classList.remove('dm-edit-active');
+  renderDocsModalBody(v);
   render();
 }
 
