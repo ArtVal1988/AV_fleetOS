@@ -4977,8 +4977,10 @@ function renderDocsModalBody(v){
       const has = (v.docs?.files?.[d.key]||[]).length > 0;
       if(d.key==='poa_owner'){
         const dd = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
-        const pc = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#22c55e';
-        const pl = dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні':dd+' дн.';
+        const pc  = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#22c55e';
+        const pb  = dd===null?'#f7f8fb':dd<0||dd<=7?'#fee2e2':dd<=30?'#fff8e6':'#f0fdf4';
+        const pbd = dd===null?'#e5e7eb':dd<0||dd<=7?'#fca5a5':dd<=30?'#f0d060':'#86efac';
+        const pl  = dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні':dd+' дн.';
         const fmtPoa = v.poaExpiry ? new Date(v.poaExpiry).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
         return '<div class="dm-doc-item'+(has?' has':'')+(v.poaExpiry?' has':'')+'" style="grid-column:1/-1;background:'+(v.poaExpiry?pb:'#f7f8fb')+';border-color:'+(v.poaExpiry?pbd:'#e5e7eb')+'">'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">'+
