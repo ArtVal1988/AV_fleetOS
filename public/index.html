@@ -6110,6 +6110,27 @@ window.deleteBooking = function(bid){
   if(_token) apiFetch('DELETE','/bookings/'+bid);
 };
 
+// ── Close modals on Escape or overlay background click ──────────
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
+  if(document.getElementById('to-modal')?.classList.contains('open')) closeToModal();
+  if(document.getElementById('ins-modal')?.classList.contains('open')) closeInsuranceModal();
+  if(document.getElementById('booking-modal')?.classList.contains('open')) closeBookingModal();
+  if(document.getElementById('add-work-modal')?.classList.contains('open')) document.getElementById('add-work-modal').classList.remove('open');
+  if(document.getElementById('users-panel-overlay')?.style.display==='flex') closeUsersPanel();
+  if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
+});
+['docs-modal','to-modal','ins-modal'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('mousedown',e=>{
+    if(e.target.id===id){
+      if(id==='docs-modal') closeDocsModal();
+      else if(id==='to-modal') closeToModal();
+      else if(id==='ins-modal') closeInsuranceModal();
+    }
+  });
+});
+
 // Init
 document.getElementById('login-password')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
 document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('login-password')?.focus(); });
