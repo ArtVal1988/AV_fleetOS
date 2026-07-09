@@ -116,7 +116,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* TABLE */
 .cal-table{border-collapse:collapse;min-width:100%;}
 .cal-table thead th{background:#eceef2;position:sticky;top:0;z-index:20;border-bottom:2px solid var(--border);white-space:nowrap;}
-.th-vehicle{min-width:338px;width:338px;max-width:338px;position:sticky;left:0;z-index:30!important;background:#eceef2;text-align:left;padding:10px 12px;border-right:2px solid var(--border);font-size:10px;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;display:flex;align-items:center;justify-content:space-between;}
+.th-vehicle{min-width:338px;width:338px;max-width:338px;position:sticky;left:0;z-index:30!important;background:#eceef2;text-align:left;padding:10px 12px;border-right:2px solid var(--border);font-size:10px;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 .th-day{width:36px;min-width:36px;text-align:center;padding:6px 2px;cursor:default;}
 .th-day-num{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);}
 .th-day.weekend .th-day-num{color:var(--accent);}
@@ -2698,7 +2698,7 @@ function renderCalendar(){
     <div class="th-day-dow">${getDow(d)}</div></th>`;
   }).join('');
 
-  let html=`<thead><tr><th class="th-vehicle"><span>Транспортний засіб</span><span onclick="shiftWindow(-7)" title="Назад на тиждень" style="cursor:pointer;font-size:18px;color:var(--accent);font-weight:700;user-select:none;line-height:1;padding:0 4px">‹</span></th>${thDays}</tr></thead><tbody>`;
+  let html=`<thead><tr><th class="th-vehicle">Транспортний засіб<span onclick="shiftWindow(-7)" title="Назад" style="float:right;cursor:pointer;font-size:15px;color:var(--accent);font-weight:700;user-select:none;line-height:1;margin-top:-1px">‹</span></th>${thDays}</tr></thead><tbody>`;
 
   CATEGORIES.forEach(cat=>{
     html+=`<tr class="cat-row"><td colspan="${total+1}">${cat.name}</td></tr>`;
