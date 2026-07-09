@@ -4980,20 +4980,21 @@ function renderDocsModalBody(v){
         const pc = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#22c55e';
         const pl = dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні':dd+' дн.';
         const fmtPoa = v.poaExpiry ? new Date(v.poaExpiry).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
-        return '<div class="dm-doc-item'+(has?' has':'')+(v.poaExpiry?' has':'')+' style="grid-column:1/-1;background:'+(v.poaExpiry?pb:'#f7f8fb')+';border-color:'+(v.poaExpiry?pbd:'#e5e7eb')+'">'+ 
-          '<div class="dm-poa-inner">'+ 
-            '<div class="dm-poa-icon">'+d.icon+'</div>'+ 
-            '<div class="dm-poa-info">'+ 
-              '<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">'+d.name+'</div>'+ 
-              '<div style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()">'+ 
-                '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af">Строк дії до</span>'+ 
-                '<input type="date" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:3px 6px;border:1px solid #e5e7eb;border-radius:4px;outline:none">'+ 
-              '</div>'+ 
-            '</div>'+ 
-            (v.poaExpiry?'<div class="dm-poa-badge" style="background:'+pc+'">'+pl+'</div>':'')+  
-          '</div>'+ 
-          '<div style="margin-top:8px">'+buildAttachArea(v, d.key)+'</div>'+ 
-        '</div>'; 
+        return '<div class="dm-doc-item'+(has?' has':'')+(v.poaExpiry?' has':'')+'" style="grid-column:1/-1;background:'+(v.poaExpiry?pb:'#f7f8fb')+';border-color:'+(v.poaExpiry?pbd:'#e5e7eb')+'">'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">'+
+            '<div>'+
+              '<div class="dm-doc-head-row"><span class="dm-doc-icon">'+d.icon+'</span><span class="dm-doc-name">'+d.name+'</span></div>'+
+              buildAttachArea(v, d.key)+
+            '</div>'+
+            '<div style="display:flex;flex-direction:column;gap:8px">'+
+              '<div onclick="event.stopPropagation()" style="display:flex;flex-direction:column;gap:4px">'+
+                '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af">Строк дії до</span>'+
+                '<input type="date" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;width:100%;box-sizing:border-box">'+
+              '</div>'+
+              (v.poaExpiry?'<div style="background:'+pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pl+'</div>':'')+
+            '</div>'+
+          '</div>'+
+        '</div>';
       }
       return '<div class="dm-doc-item'+(has?' has':'')+'">'+ 
         '<div class="dm-doc-head-row">'+
