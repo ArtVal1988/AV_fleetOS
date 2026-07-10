@@ -2979,7 +2979,8 @@ function renderCalendar(){
   // Архів always renders last, regardless of where it sits in the underlying array.
   const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
   orderedCategories.forEach((cat,catIdx)=>{
-    const tdVehCls = tdVehBlockClasses[catIdx % tdVehBlockClasses.length];
+    if(!cat.colorKey) cat.colorKey = 'b' + ((catIdx % 6) + 1);
+    const tdVehCls = tdVehBlockClasses[parseInt(cat.colorKey.slice(1))-1];
     const isCollapsed = collapsedCategories.has(cat.name);
     html+=`<tr class="cat-row${isCollapsed?' collapsed':''}" onclick="toggleCategoryCollapse('${cat.name.replace(/'/g,"\\'")}')">
       <td colspan="${total+1}"><span class="cat-row-chevron">${isCollapsed?'▸':'▾'}</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
@@ -6446,17 +6447,26 @@ function renderVehiclesPanelList(){
   const q = (document.getElementById('veh-search')?.value||'').trim().toLowerCase();
   const matches = v => !q || v.name.toLowerCase().includes(q) || v.plate.toLowerCase().includes(q) || (v.vin||'').toLowerCase().includes(q);
   const blockClasses = ['msec-b1','msec-b2','msec-b3','msec-b4','msec-b5','msec-b6'];
+  const swatchColors = {b1:'#a78bfa',b2:'#60a5fa',b3:'#4ade80',b4:'#fbbf24',b5:'#f87171',b6:'#d1d5db'};
   let colorIdx = 0;
   const html = CATEGORIES.map(cat => {
     const vehicles = cat.vehicles.filter(matches);
     if(!vehicles.length && q) return ''; // hide only when an active search finds nothing here
-    const cls = blockClasses[colorIdx % blockClasses.length];
+    if(!cat.colorKey) cat.colorKey = 'b' + ((colorIdx % 6) + 1); // stable once assigned
     colorIdx++;
+    const cls = blockClasses[parseInt(cat.colorKey.slice(1))-1];
     return `<div class="${cls}" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb">${cat.name}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="display:flex;gap:4px" title="Колір розділу">
+          ${Object.keys(swatchColors).map(k => `
+            <button onclick="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}','${k}')"
+              style="width:14px;height:14px;border-radius:50%;border:2px solid ${cat.colorKey===k?'#1a1d26':'transparent'};background:${swatchColors[k]};cursor:pointer;padding:0"></button>
+          `).join('')}
+        </div>
+        <input type="text" value="${cat.name}" onchange="renameVehicleCategory('${cat.name.replace(/'/g,"\\'")}',this.value)"
+          style="flex:1;min-width:0;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;border:none;background:transparent;outline:none;padding:2px 4px;border-radius:4px">
         <button onclick="deleteVehicleCategory('${cat.name.replace(/'/g,"\\'")}')" title="Видалити розділ"
-          style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px">🗑</button>
+          style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px;flex-shrink:0">🗑</button>
       </div>
       ${vehicles.length ? vehicles.map(v => `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.7)">
@@ -6483,6 +6493,29 @@ function renderVehiclesPanelList(){
     </div>`;
   }).join('');
   list.innerHTML = html || '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">Нічого не знайдено</div>';
+}
+function setVehicleCategoryColor(name, colorKey){
+  const cat = CATEGORIES.find(c=>c.name===name);
+  if(!cat) return;
+  cat.colorKey = colorKey;
+  renderVehiclesPanelList();
+  render();
+}
+function renameVehicleCategory(oldName, newName){
+  newName = newName.trim();
+  if(!newName || newName === oldName){ renderVehiclesPanelList(); return; }
+  if(CATEGORIES.some(c=>c.name.toLowerCase()===newName.toLowerCase())){
+    alert('Розділ з такою назвою вже існує');
+    renderVehiclesPanelList();
+    return;
+  }
+  const cat = CATEGORIES.find(c=>c.name===oldName);
+  if(!cat) return;
+  cat.name = newName;
+  // Keep archive "restore to original category" pointers in sync with the rename.
+  ALL_VEHICLES.forEach(v => { if(v.archivedFrom === oldName) v.archivedFrom = newName; });
+  renderVehiclesPanelList();
+  render();
 }
 function archiveVehicle(id){
   const v = ALL_VEHICLES.find(x=>x.id===id);
