@@ -675,6 +675,13 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .modal-x:hover{color:var(--text);}
 .modal-body{padding:18px 26px 22px;display:flex;flex-direction:column;gap:18px;}
 .msec{margin-bottom:0;}
+.msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6{padding:14px 16px;border-radius:0 8px 8px 0;border-left:3px solid transparent;}
+.msec-b1{background:#f5f3ff;border-left-color:#a78bfa;}
+.msec-b2{background:#eff6ff;border-left-color:#60a5fa;}
+.msec-b3{background:#f0fdf4;border-left-color:#4ade80;}
+.msec-b4{background:#fffbeb;border-left-color:#fbbf24;}
+.msec-b5{background:#fef2f2;border-left-color:#f87171;}
+.msec-b6{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid rgba(37,99,235,.15);}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .fg{display:flex;flex-direction:column;gap:4px;}
@@ -1225,7 +1232,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div id="bm-order-details">
     <!-- Customer + Status/Manager combined -->
-    <div class="msec">
+    <div class="msec msec-b1">
       <!-- Client type switcher -->
       <div class="client-type-switcher" id="client-type-switcher" style="margin-bottom:12px">
         <button type="button" class="ct-btn active" data-type="individual" onclick="setClientType('individual')">Фіз. особа</button>
@@ -1269,7 +1276,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       <input type="hidden" id="bm-client-type" value="individual">
     </div>
-    <div class="msec">
+    <div class="msec msec-b2">
       <div class="msec-title">Отримання та повернення</div>
       <div class="logistics-row">
         <div class="lr-label">↑ Отримання</div>
@@ -1364,7 +1371,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="bm-ext-history-list" style="display:none"></div>
       </div>
     </div>
-    <div class="msec">
+    <div class="msec msec-b3">
       <div class="msec-title">Фінанси</div>
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
@@ -1511,7 +1518,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 
     </div>
-    <div class="msec">
+    <div class="msec msec-b4">
       <div class="msec-title">Пробіг</div>
       <div class="km-row-compact">
         <div class="km-compact-field">
@@ -1533,7 +1540,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div>
     <!-- POST-RENTAL DEDUCTIONS -->
-    <div class="msec">
+    <div class="msec msec-b5">
       <button type="button" class="extras-toggle" id="ded-toggle-btn" onclick="toggleDedPanel()" style="background:#fff0f0;border-color:#fca5a5;color:#dc2626">
         <span>⊖</span>
         <span>Утримання після повернення</span>
@@ -1597,7 +1604,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div>
     </div>
-    <div class="msec">
+    <div class="msec msec-b6">
       <div class="msec-title">Нотатки</div>
       <div id="bm-notes-log" class="notes-log" style="display:none"></div>
       <div class="note-compose-box">
