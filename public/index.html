@@ -110,7 +110,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
 .sidebar-legend-section{padding:10px 16px 6px;border-top:1px solid var(--border);}
 .sidebar-legend-title{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;padding:0 8px;}
-.app.sb-collapsed .sidebar-legend-section{display:none;}
+.app.sb-collapsed .sidebar-legend-section{padding:8px 0;}
+.app.sb-collapsed .legend-item{justify-content:center;padding:6px 0;gap:0;}
+.app.sb-collapsed #sidebar-user{justify-content:center;padding:10px 0!important;gap:0!important;}
+.app.sb-collapsed #sidebar-user > div:last-child{display:none;}
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;}
 
 /* CONTENT SPLIT */
@@ -2892,8 +2895,8 @@ function renderMonthLabel(){
 
 function renderLegend(){
   document.getElementById('legend').innerHTML=STATUSES.map(s=>`
-    <div class="legend-item${hiddenStatuses.has(s.key)?' hidden':''}" onclick="toggleHide('${s.key}')">
-      <div class="legend-dot" style="background:${s.color}"></div>${s.label}
+    <div class="legend-item${hiddenStatuses.has(s.key)?' hidden':''}" onclick="toggleHide('${s.key}')" title="${s.label}">
+      <div class="legend-dot" style="background:${s.color}"></div><span class="nav-label">${s.label}</span>
     </div>`).join('');
 }
 
