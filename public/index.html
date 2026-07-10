@@ -1764,7 +1764,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
   <div class="modal-footer" id="bm-footer">
     <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none">✕ Видалити</button>
-    <label style="display:flex;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
+    <label id="bm-closed-label" style="display:flex;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
       <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
       ✅ Авто повернено. Замовлення закрито.
     </label>
@@ -5612,9 +5612,12 @@ const STATUSES_WITHOUT_ORDER_DETAILS = ['repair','investor','storage','personal'
 function updateBookingDetailsVisibility(){
   const sel=document.getElementById('bm-status');
   const wrap=document.getElementById('bm-order-details');
+  const closedLabel=document.getElementById('bm-closed-label');
   if(!sel || !wrap) return;
   const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
   wrap.style.display = hide ? 'none' : 'flex';
+  if(closedLabel) closedLabel.style.display = hide ? 'none' : 'flex';
+  if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
 }
 // Locks the client-type tabs so a saved "Фіз. особа" order can't later be switched
 // to ФОП/ТОВ (and vice versa isn't relevant — only individual orders get locked).
