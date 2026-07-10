@@ -509,6 +509,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .dep-amount-input{flex:1;border:none;background:transparent;padding:8px 6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;min-width:0;}
 .dep-cur-pill{border:none;background:none;font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;padding:4px 5px;border-radius:4px;color:#9ca3af;transition:all .15s;flex-shrink:0;}
 .dep-cur-pill.active{background:#f0d060;color:#374151;}
+.dep-cur-pill.active[onclick*="'$'"]{background:#dbeafe;color:#1d4ed8;}
+.dep-cur-pill.active[onclick*="₴"]{background:#dcfce7;color:#166534;}
 .sc-input{width:100%;border:1px solid #e5e7eb;border-radius:4px;padding:3px 6px;font-family:var(--font-mono);font-size:11px;text-align:right;background:#fff;outline:none;box-sizing:border-box;}
 .sc-input:focus{border-color:#93c5fd;}
 .extras-chip{display:flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border-radius:14px;padding:5px 8px 5px 12px;font-size:11px;font-family:var(--font-mono);min-width:0;overflow:hidden;}
@@ -543,7 +545,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .extras-cur-toggle{display:flex;border:1px solid #e5e7eb;border-radius:4px;overflow:hidden;flex-shrink:0;}
 .extras-cur-btn{background:#f8f9fb;border:none;padding:3px 5px;font-size:9px;font-family:var(--font-mono);cursor:pointer;transition:all .15s;color:#9ca3af;}
 .extras-cur-btn.active{background:#2563eb;color:#fff;}
-.extras-cur-btn.active[onclick*="'uah'"]{background:#22c55e;color:#fff;}
+.extras-cur-btn.active[onclick*="'uah'"]{background:#166534;color:#fff;}
 
 .extra-pair-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-width:0;}
 .extra-pair-item{min-width:0;}
