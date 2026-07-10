@@ -1681,6 +1681,12 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
     </div>
+    <!-- ORDER CLOSED (return confirmed) -->
+    <div id="bm-closed-banner" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:11px;color:#991b1b;margin-top:-4px"></div>
+    <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;cursor:pointer;font-size:12px;color:#166534;font-weight:600">
+      <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:16px;height:16px;cursor:pointer">
+      ✅ Авто повернено. Замовлення закрито
+    </label>
     <!-- POST-RENTAL DEDUCTIONS -->
     <div class="msec msec-b5">
       <button type="button" class="extras-toggle" id="ded-toggle-btn" onclick="toggleDedPanel()" style="background:#fff0f0;border-color:#fca5a5;color:#dc2626">
@@ -3563,6 +3569,9 @@ function openBookingModal(vid=null,start=null,end=null){
     const veh=ALL_VEHICLES.find(x=>x.id===parseInt(vid));
     if(veh?.service?.lastKm) document.getElementById('bm-start-km').value=Number(veh.service.lastKm).toLocaleString('uk-UA');
   }
+  document.getElementById('bm-closed').checked = false;
+  bookingWasClosedOnOpen = false;
+  applyOrderLockState();
   document.getElementById('booking-modal').classList.add('open');
 }
 function editBooking(bid){
@@ -3643,10 +3652,44 @@ function editBooking(bid){
   renderEquipmentList();
   updateExtrasTotal();
   updateExtrasCount();
+  document.getElementById('bm-closed').checked = !!b.closed;
+  bookingWasClosedOnOpen = !!b.closed;
+  applyOrderLockState();
   document.getElementById('booking-modal').classList.add('open');
 }
 function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');}
+let bookingWasClosedOnOpen = false;
+function onOrderClosedToggle(){
+  // Checking/unchecking during the current edit session never self-locks the
+  // form — that would stop the person closing the order from saving their
+  // final notes/mileage. The lock only takes effect the NEXT time a booking
+  // that was already saved as closed gets reopened (see applyOrderLockState).
+}
+function applyOrderLockState(){
+  const isAdmin = _currentUser && _currentUser.role === 'admin';
+  const lock = bookingWasClosedOnOpen && !isAdmin;
+
+  const modal = document.getElementById('booking-modal');
+  const banner = document.getElementById('bm-closed-banner');
+  banner.style.display = lock ? 'block' : 'none';
+  banner.textContent = 'Замовлення закрито (авто повернено). Внести зміни може лише адміністратор.';
+
+  modal.querySelectorAll('input, select, textarea, button').forEach(el => {
+    if(el.matches('.modal-x') || el.matches('[onclick="closeBookingModal()"]')) return;
+    el.disabled = lock;
+  });
+
+  document.querySelectorAll('#bm-order-details, .msec-b5, .msec-b6').forEach(el=>{
+    el.style.opacity = lock ? '.65' : '1';
+    el.style.pointerEvents = lock ? 'none' : '';
+  });
+}
 function saveBooking(){
+  const isAdmin = _currentUser && _currentUser.role === 'admin';
+  if(bookingWasClosedOnOpen && !isAdmin){
+    alert('Замовлення закрито. Внести зміни може лише адміністратор.');
+    return;
+  }
   const start=document.getElementById('bm-start').value;
   const end=document.getElementById('bm-end').value;
   const vid=parseInt(document.getElementById('bm-vehicle').value);
@@ -3654,6 +3697,7 @@ function saveBooking(){
   const data={
     vehicleId:vid,
     status:document.getElementById('bm-status').value,
+    closed:document.getElementById('bm-closed').checked,
     start,end,
     clientType:document.getElementById('bm-client-type').value,
     customer:{
