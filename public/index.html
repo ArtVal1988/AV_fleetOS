@@ -705,7 +705,7 @@ input,select,textarea{background:var(--surface2);border:1px solid var(--border);
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 select option{background:var(--surface2);}
 textarea{resize:vertical;min-height:56px;}
-.modal-footer{padding:0 26px 22px;display:flex;gap:8px;justify-content:flex-end;}
+.modal-footer{padding:0 26px 22px;display:flex;align-items:center;gap:8px;justify-content:space-between;}
 /* Messenger icons */
 .phone-row{display:flex;gap:6px;align-items:center;}
 .phone-row input{flex:1;}
@@ -1681,12 +1681,6 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
     </div>
-    <!-- ORDER CLOSED (return confirmed) -->
-    <div id="bm-closed-banner" style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:11px;color:#991b1b;margin-top:-4px"></div>
-    <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;cursor:pointer;font-size:12px;color:#166534;font-weight:600">
-      <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:16px;height:16px;cursor:pointer">
-      ✅ Авто повернено. Замовлення закрито
-    </label>
     <!-- POST-RENTAL DEDUCTIONS -->
     <div class="msec msec-b5">
       <button type="button" class="extras-toggle" id="ded-toggle-btn" onclick="toggleDedPanel()" style="background:#fff0f0;border-color:#fca5a5;color:#dc2626">
@@ -1767,10 +1761,14 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="hidden" id="bm-notes-hidden">
     </div>
   </div>
+  <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
   <div class="modal-footer" id="bm-footer">
-    <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none">✕ Видалити замовлення</button>
-    <button class="btn btn-ghost" onclick="closeBookingModal()">Скасувати</button>
-    <button class="btn btn-primary" onclick="saveBooking()">Зберегти замовлення</button>
+    <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none">✕ Видалити</button>
+    <label style="display:flex;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
+      <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
+      ✅ Авто повернено. Замовлення закрито.
+    </label>
+    <button class="btn btn-primary" onclick="saveBooking()">Зберегти</button>
   </div>
 </div>
 </div>
