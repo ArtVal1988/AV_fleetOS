@@ -1431,14 +1431,6 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
         </div>
       </div>
-      <div class="logistics-row">
-        <div class="lr-label">↓ Повернення</div>
-        <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
-          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
-        </div>
-      </div>
 
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
@@ -1514,6 +1506,15 @@ input.dm-pf-val.tel{font-size:14px;}
           <span id="bm-ext-history-label">Історія закритих продовжень</span>
         </div>
         <div id="bm-ext-history-list" style="display:none"></div>
+      </div>
+
+      <div class="logistics-row" style="margin-top:8px">
+        <div class="lr-label">↓ Повернення</div>
+        <div class="lr-inputs">
+          <input type="date" id="bm-return-date" class="lr-date" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
+          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
+        </div>
       </div>
     </div>
     <div class="msec msec-b3">
