@@ -1119,9 +1119,10 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-size:16px;font-weight:700;color:#1a1d26" id="vf-title">+ Нове авто</div>
       <button onclick="closeVehicleForm()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <div style="padding:22px 28px">
+    <div style="padding:22px 28px;display:flex;flex-direction:column;gap:18px">
       <input type="hidden" id="vf-id">
 
+      <div class="msec-b1">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">🚘 Основне</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Марка</label><input id="vf-brand" type="text" class="vf-inp" placeholder="Toyota"></div>
@@ -1138,7 +1139,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
         <div><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="vf-lbl">Колір кузова</label><input id="vf-color" type="text" class="vf-inp" placeholder="Білий"></div>
         <div><label class="vf-lbl">Тип кузова</label>
           <select id="vf-bodytype" class="vf-inp">
@@ -1149,7 +1150,9 @@ input.dm-pf-val.tel{font-size:14px;}
           </select>
         </div>
       </div>
+      </div>
 
+      <div class="msec-b4">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">⚙ Технічні характеристики</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Об'єм двигуна (л)</label><input id="vf-engine" type="number" step="0.1" class="vf-inp no-spinner" placeholder="1.6"></div>
@@ -1175,13 +1178,15 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div><label class="vf-lbl">Витрата (л/100км)</label><input id="vf-consumption" type="number" step="0.1" class="vf-inp no-spinner" placeholder="6.4"></div>
       </div>
-      <div style="margin-bottom:18px">
+      <div>
         <label class="vf-lbl">Кондиціонер / клімат</label>
         <select id="vf-climate" class="vf-inp">
           <option value="">Немає</option><option>Кондиціонер</option><option>Клімат-контроль</option>
         </select>
       </div>
+      </div>
 
+      <div class="msec-b3">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">✨ Додаткові опції</div>
       <div id="vf-options-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
       <div style="display:flex;gap:8px;margin-bottom:6px">
@@ -1190,8 +1195,9 @@ input.dm-pf-val.tel{font-size:14px;}
         <button type="button" onclick="addVehicleOption()" style="background:#f0f7ff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:0 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Додати</button>
       </div>
       <div style="font-size:10px;color:#9ca3af">Вводьте будь-які опції — список не обмежений і зберігається довільно.</div>
+      </div>
 
-      <div id="vf-error" style="display:none;color:#dc2626;font-size:11px;margin-top:16px;padding:9px 12px;background:#fee2e2;border-radius:6px"></div>
+      <div id="vf-error" style="display:none;color:#dc2626;font-size:11px;padding:9px 12px;background:#fee2e2;border-radius:6px"></div>
     </div>
     <div style="padding:14px 28px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #e5e7eb;position:sticky;bottom:0;background:#fff">
       <button onclick="closeVehicleForm()" class="btn btn-ghost">Скасувати</button>
