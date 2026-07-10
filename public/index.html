@@ -673,9 +673,10 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .modal-title{font-family:var(--font-head);font-size:16px;font-weight:700;}
 .modal-x{background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;padding:3px 7px;}
 .modal-x:hover{color:var(--text);}
-.modal-body{padding:18px 26px 22px;display:flex;flex-direction:column;gap:18px;}
+.modal-body{padding:18px 26px 22px;display:flex;flex-direction:column;gap:22px;}
+.bm-order-details-wrap{display:flex;flex-direction:column;gap:22px;}
 .msec{margin-bottom:0;}
-.msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6{padding:14px 16px;border-radius:0 8px 8px 0;border-left:3px solid transparent;}
+.msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6{padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);border-left:3px solid transparent;}
 .msec-b1{background:#f5f3ff;border-left-color:#a78bfa;}
 .msec-b2{background:#eff6ff;border-left-color:#60a5fa;}
 .msec-b3{background:#f0fdf4;border-left-color:#4ade80;}
@@ -1230,7 +1231,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <input type="hidden" id="bm-start">
     <input type="hidden" id="bm-end">
 
-    <div id="bm-order-details">
+    <div id="bm-order-details" class="bm-order-details-wrap">
     <!-- Customer + Status/Manager combined -->
     <div class="msec msec-b1">
       <!-- Client type switcher -->
@@ -5396,7 +5397,7 @@ function updateBookingDetailsVisibility(){
   const wrap=document.getElementById('bm-order-details');
   if(!sel || !wrap) return;
   const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
-  wrap.style.display = hide ? 'none' : '';
+  wrap.style.display = hide ? 'none' : 'flex';
 }
 // Locks the client-type tabs so a saved "Фіз. особа" order can't later be switched
 // to ФОП/ТОВ (and vice versa isn't relevant — only individual orders get locked).
