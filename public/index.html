@@ -1058,7 +1058,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <button class="sticker-add-btn" onclick="openStickerForm()">+ Стікер</button>
   </div>
   <!-- STICKER ADD/EDIT POPUP -->
-  <div class="sticker-popup-overlay" id="sticker-popup-overlay" onclick="if(event.target.id==='sticker-popup-overlay')closeStickerForm()">
+  <div class="sticker-popup-overlay" id="sticker-popup-overlay">
     <div class="sticker-popup">
       <div class="sticker-popup-head">
         <span>Новий стікер</span>
@@ -1116,7 +1116,7 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 
   <!-- SPLIT BOOKINGS MODAL (handover day) -->
-  <div class="split-modal-overlay" id="split-modal-overlay" onclick="if(event.target.id==='split-modal-overlay')closePanel()">
+  <div class="split-modal-overlay" id="split-modal-overlay">
     <div class="split-modal">
       <div class="split-modal-head">
         <div id="bp-head-content"></div>
@@ -1139,7 +1139,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 
 <!-- BOOKING MODAL -->
-<div class="modal-overlay" id="booking-modal" onclick="if(event.target.id==='booking-modal')closeBookingModal()">
+<div class="modal-overlay" id="booking-modal">
 <div class="modal">
   <div class="modal-head">
     <select id="bm-vehicle" class="bm-head-select veh-plate-badge"></select>
@@ -6247,7 +6247,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 
 
 <!-- MAINTENANCE MODAL -->
-<div class="to-modal-overlay" id="to-modal" onclick="if(event.target.id==='to-modal')closeToModal()">
+<div class="to-modal-overlay" id="to-modal">
   <div class="to-modal">
     <div class="to-modal-head">
       <div class="to-modal-top">
@@ -6278,7 +6278,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- ADD WORK MODAL -->
-<div class="docs-modal-overlay" id="add-work-modal" onclick="if(event.target.id==='add-work-modal')document.getElementById('add-work-modal').classList.remove('open')">
+<div class="docs-modal-overlay" id="add-work-modal">
   <div class="docs-modal" style="width:540px">
     <div class="docs-modal-head">
       <div><div class="docs-modal-title" id="awm-title">Новий запис ТО</div></div>
@@ -6318,7 +6318,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- INSURANCE MODAL -->
-<div class="ins-modal-overlay" id="ins-modal" onclick="if(event.target.id==='ins-modal')closeInsuranceModal()">
+<div class="ins-modal-overlay" id="ins-modal">
   <div class="ins-modal">
     <div class="ins-modal-head">
       <div class="ins-head-vehicle">
@@ -6333,7 +6333,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- OSAGO EDIT MODAL -->
-<div class="docs-modal-overlay" id="cal-osago-modal" onclick="if(event.target.id==='cal-osago-modal')document.getElementById('cal-osago-modal').classList.remove('open')">
+<div class="docs-modal-overlay" id="cal-osago-modal">
   <div class="docs-modal" style="width:440px">
     <div class="docs-modal-head">
       <div><div class="docs-modal-title" id="cam-title">ОСАГО</div></div>
@@ -6357,7 +6357,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- KASKO EDIT MODAL -->
-<div class="docs-modal-overlay" id="cal-kasko-modal" onclick="if(event.target.id==='cal-kasko-modal')document.getElementById('cal-kasko-modal').classList.remove('open')">
+<div class="docs-modal-overlay" id="cal-kasko-modal">
   <div class="docs-modal" style="width:500px">
     <div class="docs-modal-head">
       <div><div class="docs-modal-title" id="ckm-title">КАСКО</div></div>
@@ -6395,7 +6395,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- INSURANCE CASE MODAL -->
-<div class="docs-modal-overlay" id="cal-case-modal" onclick="if(event.target.id==='cal-case-modal')closeCaseModal()">
+<div class="docs-modal-overlay" id="cal-case-modal">
   <div class="docs-modal" style="width:480px">
     <div class="docs-modal-head">
       <div><div class="docs-modal-title" id="cm-title">Страховий випадок</div></div>
@@ -6430,7 +6430,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- ATTACHMENT VIEWER (image/PDF preview with download) -->
-<div class="attach-viewer-overlay" id="attach-viewer" onclick="if(event.target.id==='attach-viewer')closeAttachViewer()">
+<div class="attach-viewer-overlay" id="attach-viewer">
   <div class="attach-viewer-inner">
     <button class="attach-viewer-close" onclick="closeAttachViewer()">✕</button>
     <div id="attach-viewer-media"></div>
@@ -6442,7 +6442,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 </div>
 
 <!-- DOCS MODAL -->
-<div class="docs-modal-overlay" id="docs-modal" onclick="if(event.target.id==='docs-modal')closeDocsModal()">
+<div class="docs-modal-overlay" id="docs-modal">
   <div class="docs-modal">
     <div class="docs-modal-head">
       <div class="ins-head-vehicle">
