@@ -129,7 +129,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .th-day.weekend .th-day-dow{color:var(--accent);}
 
 /* CAT ROW */
-.cat-row td{background:#eceef2;padding:5px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:sticky;left:0;}
+.cat-row td{background:#eceef2;padding:5px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:sticky;left:0;cursor:pointer;user-select:none;}
+.cat-row:hover td{filter:brightness(.97);}
+.cat-row-chevron{font-size:8px;flex-shrink:0;width:8px;display:inline-block;margin-right:6px;}
+.cat-row-count{float:right;background:rgba(0,0,0,.08);color:inherit;border-radius:8px;padding:1px 7px;font-size:8px;letter-spacing:0;}
 
 /* VEH ROWS */
 .cal-table tbody tr.veh-row{border-bottom:1px solid var(--border);}
@@ -2244,6 +2247,12 @@ let daysOverrideTouched = false;
 let rateCurrencyAnchor = '$';
 let extRateCurrencyAnchor = '$';
 let hiddenStatuses=new Set(), tooltipTimer=null;
+let collapsedCategories=new Set(['Архів']);
+function toggleCategoryCollapse(name){
+  if(collapsedCategories.has(name)) collapsedCategories.delete(name);
+  else collapsedCategories.add(name);
+  render();
+}
 let dragState=null, pendingDrag=null;
 
 /* ── SEED DATA ── */
@@ -2967,9 +2976,14 @@ function renderCalendar(){
   let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
 
   const tdVehBlockClasses = ['tdveh-b1','tdveh-b2','tdveh-b3','tdveh-b4','tdveh-b5','tdveh-b6'];
-  CATEGORIES.forEach((cat,catIdx)=>{
+  // Архів always renders last, regardless of where it sits in the underlying array.
+  const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
+  orderedCategories.forEach((cat,catIdx)=>{
     const tdVehCls = tdVehBlockClasses[catIdx % tdVehBlockClasses.length];
-    html+=`<tr class="cat-row"><td colspan="${total+1}">${cat.name}</td></tr>`;
+    const isCollapsed = collapsedCategories.has(cat.name);
+    html+=`<tr class="cat-row${isCollapsed?' collapsed':''}" onclick="toggleCategoryCollapse('${cat.name.replace(/'/g,"\\'")}')">
+      <td colspan="${total+1}"><span class="cat-row-chevron">${isCollapsed?'▸':'▾'}</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
+    if(isCollapsed) return;
     cat.vehicles.forEach(v=>{
       const cells=days.map(d=>{
         const k=cellKey(v.id,d);
@@ -6455,11 +6469,46 @@ function renderVehiclesPanelList(){
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">
             ✎ Редагувати
           </button>
+          ${cat.name==='Архів' ? `
+          <button onclick="restoreVehicleFromArchive(${v.id})"
+            style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#fff;color:#166534;font-family:inherit;font-weight:600">
+            ↩ Відновити
+          </button>` : `
+          <button onclick="archiveVehicle(${v.id})"
+            style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-family:inherit;font-weight:600">
+            📦 В архів
+          </button>`}
         </div>
       `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:4px 2px">Немає авто в цьому розділі</div>'}
     </div>`;
   }).join('');
   list.innerHTML = html || '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">Нічого не знайдено</div>';
+}
+function archiveVehicle(id){
+  const v = ALL_VEHICLES.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm(`Перенести "${v.name}" (${v.plate}) в архів? Усі документи, страхування, ТО та історія бронювань лишаться недоторканими — авто просто зникне з активного графіка.`)) return;
+  const currentCat = CATEGORIES.find(c=>c.vehicles.includes(v));
+  v.archivedFrom = currentCat ? currentCat.name : null;
+  if(currentCat) currentCat.vehicles = currentCat.vehicles.filter(x=>x.id!==id);
+  let archiveCat = CATEGORIES.find(c=>c.name==='Архів');
+  if(!archiveCat){ archiveCat = {name:'Архів', vehicles:[]}; CATEGORIES.push(archiveCat); }
+  archiveCat.vehicles.push(v);
+  renderVehiclesPanelList();
+  render();
+}
+function restoreVehicleFromArchive(id){
+  const v = ALL_VEHICLES.find(x=>x.id===id);
+  if(!v) return;
+  const archiveCat = CATEGORIES.find(c=>c.name==='Архів');
+  if(archiveCat) archiveCat.vehicles = archiveCat.vehicles.filter(x=>x.id!==id);
+  const targetName = v.archivedFrom || 'Легкові седани';
+  let targetCat = CATEGORIES.find(c=>c.name===targetName);
+  if(!targetCat){ targetCat = {name:targetName, vehicles:[]}; CATEGORIES.push(targetCat); }
+  targetCat.vehicles.push(v);
+  delete v.archivedFrom;
+  renderVehiclesPanelList();
+  render();
 }
 function addVehicleCategory(){
   const inp = document.getElementById('veh-new-cat');
