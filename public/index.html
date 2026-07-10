@@ -765,6 +765,12 @@ textarea{resize:vertical;min-height:56px;}
 /* STS grid inside card */
 .dm-sts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:8px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
+.vf-lbl{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600;margin-bottom:4px;}
+.vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
+.vf-inp:focus{border-color:#93c5fd;}
+.vf-option-chip{display:flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border-radius:14px;padding:5px 8px 5px 12px;font-size:11px;}
+.vf-option-x{background:none;border:none;color:#1d4ed8;opacity:.6;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;}
+.vf-option-x:hover{opacity:1;}
 .dm-field-val{font-size:13px;font-weight:600;color:#1a1d26;}
 .dm-field-val.mono{letter-spacing:2px;color:#0891b2;font-family:var(--font-mono);}
 input.dm-field-val{border:none;outline:none;width:100%;padding:3px 0;border-radius:4px;background:transparent;}
@@ -1089,6 +1095,111 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
   </div>
 </div>
+
+<!-- VEHICLES LIST PANEL -->
+<div id="vehicles-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🚗 Транспортні засоби</div>
+      <input id="veh-search" type="text" placeholder="Пошук за номером, маркою, моделлю…" oninput="renderVehiclesPanelList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
+      <button onclick="openVehicleForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати авто</button>
+      <button onclick="closeVehiclesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="vehicles-panel-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT VEHICLE MODAL -->
+<div id="vehicle-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:600;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26" id="vf-title">+ Нове авто</div>
+      <button onclick="closeVehicleForm()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:22px 28px">
+      <input type="hidden" id="vf-id">
+
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">🚘 Основне</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Марка</label><input id="vf-brand" type="text" class="vf-inp" placeholder="Toyota"></div>
+        <div><label class="vf-lbl">Модель</label><input id="vf-model" type="text" class="vf-inp" placeholder="Camry"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Номерний знак</label><input id="vf-plate" type="text" class="vf-inp" placeholder="AA 1234 BC" style="text-transform:uppercase"></div>
+        <div><label class="vf-lbl">Категорія</label>
+          <input id="vf-category" list="vf-category-options" type="text" class="vf-inp" placeholder="Легкові седани">
+          <datalist id="vf-category-options"></datalist>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
+        <div><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div><label class="vf-lbl">Колір кузова</label><input id="vf-color" type="text" class="vf-inp" placeholder="Білий"></div>
+        <div><label class="vf-lbl">Тип кузова</label>
+          <select id="vf-bodytype" class="vf-inp">
+            <option value="">—</option>
+            <option>Седан</option><option>Хетчбек</option><option>Універсал</option>
+            <option>Позашляховик</option><option>Мінівен</option><option>Купе</option>
+            <option>Кабріолет</option><option>Пікап</option><option>Мікроавтобус</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">⚙ Технічні характеристики</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Об'єм двигуна (л)</label><input id="vf-engine" type="number" step="0.1" class="vf-inp no-spinner" placeholder="1.6"></div>
+        <div><label class="vf-lbl">Потужність (к.с.)</label><input id="vf-power" type="number" class="vf-inp no-spinner" placeholder="120"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Тип КПП</label>
+          <select id="vf-transmission" class="vf-inp">
+            <option value="">—</option><option>Автомат</option><option>Механіка</option><option>Робот</option><option>Варіатор</option>
+          </select>
+        </div>
+        <div><label class="vf-lbl">Привід</label>
+          <select id="vf-drive" class="vf-inp">
+            <option value="">—</option><option>Передній</option><option>Задній</option><option>Повний</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Тип пального</label>
+          <select id="vf-fuel" class="vf-inp">
+            <option value="">—</option><option>Бензин А92</option><option>Бензин А95</option><option>Дизель</option><option>Гібрид</option><option>Електро</option><option>Газ/Метан</option>
+          </select>
+        </div>
+        <div><label class="vf-lbl">Витрата (л/100км)</label><input id="vf-consumption" type="number" step="0.1" class="vf-inp no-spinner" placeholder="6.4"></div>
+      </div>
+      <div style="margin-bottom:18px">
+        <label class="vf-lbl">Кондиціонер / клімат</label>
+        <select id="vf-climate" class="vf-inp">
+          <option value="">Немає</option><option>Кондиціонер</option><option>Клімат-контроль</option>
+        </select>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">✨ Додаткові опції</div>
+      <div id="vf-options-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input id="vf-option-input" type="text" class="vf-inp" placeholder="Наприклад: CarPlay, підігрів сидінь…" style="flex:1"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addVehicleOption();}">
+        <button type="button" onclick="addVehicleOption()" style="background:#f0f7ff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:0 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Додати</button>
+      </div>
+      <div style="font-size:10px;color:#9ca3af">Вводьте будь-які опції — список не обмежений і зберігається довільно.</div>
+
+      <div id="vf-error" style="display:none;color:#dc2626;font-size:11px;margin-top:16px;padding:9px 12px;background:#fee2e2;border-radius:6px"></div>
+    </div>
+    <div style="padding:14px 28px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #e5e7eb;position:sticky;bottom:0;background:#fff">
+      <button onclick="closeVehicleForm()" class="btn btn-ghost">Скасувати</button>
+      <button onclick="saveVehicleForm()" class="btn btn-primary">Зберегти авто</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
 <aside class="sidebar">
   <div class="logo">
@@ -1103,7 +1214,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="sidebar-scroll">
   <nav>
     <div class="nav-item" data-label="Дашборд"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
-    <div class="nav-item" data-label="Транспортні засоби"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
+    <div class="nav-item" data-label="Транспортні засоби" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
@@ -6285,6 +6396,170 @@ async function openUsersPanel(){
 }
 function closeUsersPanel(){
   document.getElementById('users-panel-overlay').style.display='none';
+}
+
+// ── VEHICLES PANEL (list) ────────────────────────────────────────
+function openVehiclesPanel(){
+  document.getElementById('vehicles-panel-overlay').style.display='flex';
+  document.getElementById('veh-search').value='';
+  renderVehiclesPanelList();
+}
+function closeVehiclesPanel(){
+  document.getElementById('vehicles-panel-overlay').style.display='none';
+}
+function renderVehiclesPanelList(){
+  const list = document.getElementById('vehicles-panel-list');
+  const q = (document.getElementById('veh-search')?.value||'').trim().toLowerCase();
+  const matches = v => !q || v.name.toLowerCase().includes(q) || v.plate.toLowerCase().includes(q) || (v.vin||'').toLowerCase().includes(q);
+  const html = CATEGORIES.map(cat => {
+    const vehicles = cat.vehicles.filter(matches);
+    if(!vehicles.length) return '';
+    return `<div style="margin-bottom:18px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">${cat.name}</div>
+      ${vehicles.map(v => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
+          <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
+            ${v.specs ? `<div style="font-size:11px;color:#9ca3af;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
+          </div>
+          <button onclick="openVehicleForm(${v.id})"
+            style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
+            ✎ Редагувати
+          </button>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('');
+  list.innerHTML = html || '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">Нічого не знайдено</div>';
+}
+
+// ── ADD / EDIT VEHICLE FORM ───────────────────────────────────────
+let vfOptions = [];
+function openVehicleForm(vehicleId){
+  document.getElementById('vf-error').style.display='none';
+  document.getElementById('vf-id').value = vehicleId || '';
+  document.getElementById('vf-category-options').innerHTML = CATEGORIES.map(c=>`<option value="${c.name}">`).join('');
+
+  const v = vehicleId ? ALL_VEHICLES.find(x=>x.id===vehicleId) : null;
+  document.getElementById('vf-title').textContent = v ? '✎ Редагувати авто' : '+ Нове авто';
+
+  const s = v?.specs || {};
+  document.getElementById('vf-brand').value = s.brand || '';
+  document.getElementById('vf-model').value = s.model || '';
+  document.getElementById('vf-plate').value = v?.plate || '';
+  document.getElementById('vf-category').value = v ? (CATEGORIES.find(c=>c.vehicles.includes(v))?.name || '') : '';
+  document.getElementById('vf-vin').value = v?.vin || '';
+  document.getElementById('vf-year').value = s.year || '';
+  document.getElementById('vf-color').value = s.color || '';
+  document.getElementById('vf-bodytype').value = s.bodyType || '';
+  document.getElementById('vf-engine').value = s.engine || '';
+  document.getElementById('vf-power').value = s.power || '';
+  document.getElementById('vf-transmission').value = s.transmission || '';
+  document.getElementById('vf-drive').value = s.drive || '';
+  document.getElementById('vf-fuel').value = s.fuel || '';
+  document.getElementById('vf-consumption').value = s.consumption || '';
+  document.getElementById('vf-climate').value = s.climate || '';
+  document.getElementById('vf-option-input').value = '';
+  vfOptions = [...(s.options || [])];
+  renderVehicleOptionChips();
+
+  document.getElementById('vehicle-form-overlay').style.display = 'flex';
+}
+function closeVehicleForm(){
+  document.getElementById('vehicle-form-overlay').style.display = 'none';
+}
+function renderVehicleOptionChips(){
+  const wrap = document.getElementById('vf-options-chips');
+  wrap.innerHTML = vfOptions.map((opt, i) => `
+    <span class="vf-option-chip">${opt}
+      <button type="button" class="vf-option-x" onclick="removeVehicleOption(${i})" title="Прибрати">✕</button>
+    </span>
+  `).join('');
+}
+function addVehicleOption(){
+  const inp = document.getElementById('vf-option-input');
+  const val = inp.value.trim();
+  if(!val) return;
+  if(!vfOptions.some(o=>o.toLowerCase()===val.toLowerCase())) vfOptions.push(val);
+  inp.value = '';
+  renderVehicleOptionChips();
+  inp.focus();
+}
+function removeVehicleOption(i){
+  vfOptions.splice(i,1);
+  renderVehicleOptionChips();
+}
+function saveVehicleForm(){
+  const errEl = document.getElementById('vf-error');
+  errEl.style.display = 'none';
+
+  const id = document.getElementById('vf-id').value ? parseInt(document.getElementById('vf-id').value) : null;
+  const brand = document.getElementById('vf-brand').value.trim();
+  const model = document.getElementById('vf-model').value.trim();
+  const plate = document.getElementById('vf-plate').value.trim().toUpperCase();
+  const categoryName = document.getElementById('vf-category').value.trim() || 'Інше';
+  const vin = document.getElementById('vf-vin').value.trim().toUpperCase();
+  const year = parseInt(document.getElementById('vf-year').value) || null;
+
+  if(!brand || !model || !plate){
+    errEl.textContent = 'Заповніть принаймні марку, модель і номерний знак';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const specs = {
+    brand, model, year,
+    color: document.getElementById('vf-color').value.trim(),
+    bodyType: document.getElementById('vf-bodytype').value,
+    engine: parseFloat(document.getElementById('vf-engine').value) || null,
+    power: parseInt(document.getElementById('vf-power').value) || null,
+    transmission: document.getElementById('vf-transmission').value,
+    drive: document.getElementById('vf-drive').value,
+    fuel: document.getElementById('vf-fuel').value,
+    consumption: parseFloat(document.getElementById('vf-consumption').value) || null,
+    climate: document.getElementById('vf-climate').value,
+    options: [...vfOptions]
+  };
+  const displayName = `${brand} ${model}${year ? ' ' + year : ''}`.trim();
+
+  if(id){
+    // Editing an existing vehicle — mutate in place (same object reference in
+    // both ALL_VEHICLES and its category's vehicles array).
+    const v = ALL_VEHICLES.find(x=>x.id===id);
+    if(!v){ errEl.textContent='Авто не знайдено'; errEl.style.display='block'; return; }
+    v.name = displayName;
+    v.plate = plate;
+    v.vin = vin;
+    v.specs = specs;
+    // Move to a different category group if it changed
+    const currentCat = CATEGORIES.find(c=>c.vehicles.includes(v));
+    if(!currentCat || currentCat.name !== categoryName){
+      if(currentCat) currentCat.vehicles = currentCat.vehicles.filter(x=>x.id!==id);
+      let targetCat = CATEGORIES.find(c=>c.name.toLowerCase()===categoryName.toLowerCase());
+      if(!targetCat){ targetCat = {name: categoryName, vehicles: []}; CATEGORIES.push(targetCat); }
+      targetCat.vehicles.push(v);
+    }
+  } else {
+    const newId = ALL_VEHICLES.reduce((m,x)=>Math.max(m,x.id), 0) + 1;
+    const vehicle = {
+      id: newId, name: displayName, plate, vin, specs,
+      service: {lastKm:0, nextKm:0, lastDate:'', status:'ok'},
+      insurance: null, osago: null, kasko: null,
+      sts: {number:'', date:''}, poaExpiry: null,
+      owner: null, trusted: null,
+      docs: {tech_passport:false, owner_passport:false, trusted_passport:false, poa_owner:false, poa_company:false, agency_contract:false, missingCount:0},
+      works: []
+    };
+    let targetCat = CATEGORIES.find(c=>c.name.toLowerCase()===categoryName.toLowerCase());
+    if(!targetCat){ targetCat = {name: categoryName, vehicles: []}; CATEGORIES.push(targetCat); }
+    targetCat.vehicles.push(vehicle);
+    ALL_VEHICLES.push(vehicle);
+  }
+
+  closeVehicleForm();
+  renderVehiclesPanelList();
+  render();
 }
 
 function openStatusesPanel(){
