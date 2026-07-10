@@ -98,11 +98,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .mn-label{font-family:var(--font-head);font-size:13px;font-weight:700;padding:8px 16px;min-width:148px;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);}
 .today-btn{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 12px;font-family:var(--font-mono);font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .15s;}
 .today-btn:hover{color:var(--accent);border-color:rgba(37,99,235,.3);}
-.legend{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto;}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);padding:4px 7px;background:var(--surface);border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .12s;user-select:none;}
-.legend-item:hover{color:var(--text);}
-.legend-item.hidden{opacity:.3;}
+.legend{display:flex;flex-direction:column;gap:2px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:6px 8px;background:none;border:none;border-radius:5px;cursor:pointer;transition:all .12s;user-select:none;width:100%;box-sizing:border-box;}
+.legend-item:hover{background:var(--surface2);color:var(--text);}
+.legend-item.hidden{opacity:.35;}
 .legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.sidebar-legend-section{padding:10px 16px 6px;border-top:1px solid var(--border);}
+.sidebar-legend-title{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;padding:0 8px;}
+.app.sb-collapsed .sidebar-legend-section{display:none;}
+.sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;}
 
 /* CONTENT SPLIT */
 .content-split{flex:1;display:grid;grid-template-columns:1fr 0;transition:grid-template-columns .32s cubic-bezier(.4,0,.2,1);overflow:hidden;padding:0 32px 32px;gap:0;min-height:0;}
@@ -1096,6 +1100,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
   </div>
+  <div class="sidebar-scroll">
   <nav>
     <div class="nav-item" data-label="Дашборд"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
     <div class="nav-item" data-label="Транспортні засоби"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
@@ -1106,6 +1111,11 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
     <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
+  <div class="sidebar-legend-section">
+    <div class="sidebar-legend-title nav-label">Статуси</div>
+    <div class="legend" id="legend"></div>
+  </div>
+  </div>
   <div style="margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)">
     <div id="sidebar-user"
       style="display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:default">
@@ -1183,7 +1193,6 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       </div>
     </div><!-- end month wrapper -->
-    <div class="legend" id="legend"></div>
   </div>
 
   <div class="content-split" id="content-split">
