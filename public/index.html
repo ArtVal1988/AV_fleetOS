@@ -6212,6 +6212,10 @@ async function loadUsersList(){
         <div style="font-size:11px;color:#9ca3af;margin-top:2px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</div>
       </div>
       ${u.id !== _currentUser?.id ? `
+        <button onclick="renameUser(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
+          ✎ Змінити ім'я
+        </button>
         <button onclick="toggleUserActive(${u.id}, ${u.active})"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid ${u.active?'#fca5a5':'#86efac'};background:${u.active?'#fee2e2':'#dcfce7'};color:${u.active?'#991b1b':'#166534'};font-family:inherit;font-weight:600">
           ${u.active?'Деактивувати':'Активувати'}
@@ -6222,6 +6226,10 @@ async function loadUsersList(){
         </button>
       ` : `
         <span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>
+        <button onclick="renameUser(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
+          ✎ Змінити ім'я
+        </button>
         <button onclick="openChangePassword()"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
           🔑 Змінити пароль
@@ -6256,6 +6264,21 @@ async function addNewUser(){
 async function toggleUserActive(id, isActive){
   await apiFetch('PUT','/auth/users/'+id, {active: !isActive});
   await loadUsersList();
+}
+
+async function renameUser(id, currentName){
+  const newName = prompt('Нове ім\'я користувача:', currentName);
+  if(!newName || !newName.trim() || newName.trim()===currentName) return;
+  const res = await apiFetch('PUT','/auth/users/'+id, {name: newName.trim()});
+  if(res?.ok){
+    if(_currentUser && _currentUser.id===id){
+      _currentUser.name = newName.trim();
+      showSidebarUser(_currentUser);
+    }
+    await loadUsersList();
+  } else {
+    alert('Не вдалося змінити ім\'я');
+  }
 }
 
 async function resetUserPassword(id, name){
