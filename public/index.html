@@ -6220,9 +6220,15 @@ async function loadUsersList(){
         </button>
         <button onclick="resetUserPassword(${u.id}, '${u.name}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
-          🔑 Пароль
+          🔑 Змінити пароль
         </button>
-      ` : `<span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>`}
+      ` : `
+        <span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>
+        <button onclick="openChangePassword()"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
+          🔑 Змінити пароль
+        </button>
+      `}
     </div>
   `).join('');
 }
