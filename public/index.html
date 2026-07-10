@@ -5636,14 +5636,14 @@ function onCurrencyChange(){
   // currency — instead of silently reinterpreting the same digits.
   const exRate = parseFloat(document.getElementById('bm-exchange-rate').value) || 0;
   const rateInput = document.getElementById('bm-rate');
-  const rawRate = parseFloat(rateInput.value) || 0;
+  const rawRate = parseThousands(rateInput.value);
   if(cur !== rateCurrencyAnchor && rawRate > 0 && exRate > 0){
     const wasUah = rateCurrencyAnchor === '₴';
     const isUah  = cur === '₴';
     if(wasUah && !isUah){
-      rateInput.value = Math.round(rawRate / exRate * 100) / 100;
+      rateInput.value = (Math.round(rawRate / exRate * 100) / 100).toLocaleString('uk-UA');
     } else if(!wasUah && isUah){
-      rateInput.value = Math.round(rawRate * exRate * 100) / 100;
+      rateInput.value = (Math.round(rawRate * exRate * 100) / 100).toLocaleString('uk-UA');
     }
     rateCurrencyAnchor = cur;
   } else if(rawRate <= 0){
@@ -5783,7 +5783,7 @@ function updateVatPreview(){
   }
 
   if(dualTotal){ dualTotal.style.display = ''; }
-  document.getElementById('dual-days-label').textContent = `діб × ${rate} ${foreignSym}`;
+  document.getElementById('dual-days-label').textContent = `діб × ${rate.toLocaleString('uk-UA')} ${anchorCur}`;
   document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
   document.getElementById('dp-gross-uah').textContent = fmtU(toUah(gross));
 
