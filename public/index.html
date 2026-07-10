@@ -6417,20 +6417,24 @@ function renderVehiclesPanelList(){
   const list = document.getElementById('vehicles-panel-list');
   const q = (document.getElementById('veh-search')?.value||'').trim().toLowerCase();
   const matches = v => !q || v.name.toLowerCase().includes(q) || v.plate.toLowerCase().includes(q) || (v.vin||'').toLowerCase().includes(q);
+  const blockClasses = ['msec-b1','msec-b2','msec-b3','msec-b4','msec-b5','msec-b6'];
+  let colorIdx = 0;
   const html = CATEGORIES.map(cat => {
     const vehicles = cat.vehicles.filter(matches);
     if(!vehicles.length) return '';
-    return `<div style="margin-bottom:18px">
+    const cls = blockClasses[colorIdx % blockClasses.length];
+    colorIdx++;
+    return `<div class="${cls}" style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">${cat.name}</div>
       ${vehicles.map(v => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
-          <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.7)">
+          <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
-            ${v.specs ? `<div style="font-size:11px;color:#9ca3af;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
+            ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
           </div>
           <button onclick="openVehicleForm(${v.id})"
-            style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
+            style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">
             ✎ Редагувати
           </button>
         </div>
