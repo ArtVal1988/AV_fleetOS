@@ -120,7 +120,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .th-day{width:36px;min-width:36px;text-align:center;padding:6px 2px;cursor:default;}
 .th-day-num{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);}
 .th-day.weekend .th-day-num{color:var(--accent);}
-.th-day.today-col .th-day-num{color:#0055ff;font-weight:800;}
+.th-day.today-col .th-day-num{color:var(--accent);font-weight:800;}
 .th-day-dow{font-size:8px;color:#4b5563;margin-top:1px;letter-spacing:.5px;}
 .th-day.weekend .th-day-dow{color:var(--accent);}
 
@@ -145,6 +145,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .td-day{width:36px;min-width:36px;text-align:center;padding:3px 2px;vertical-align:middle;cursor:pointer;position:relative;background:#ffffff;border-right:1px solid #f0f2f5;}
 .td-day.weekend-col{background:rgba(37,99,235,.025);}
 .td-day.today-col{}
+.td-day.today-col .cell-date-num{color:#0055ff;font-weight:700;opacity:1;}
 .day-cell{height:30px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;transition:all .12s;position:relative;}
 .day-cell.empty{background:transparent;color:transparent;}
 .day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
@@ -2795,7 +2796,7 @@ function renderCalendar(){
         const bookingArr=cellMap.get(k);
         const visibleArr=bookingArr?bookingArr.filter(b=>!hiddenStatuses.has(b.status)):[];
         if(!visibleArr.length){
-          return`<td class="td-day${isWE(d)?' weekend-col':''}"
+          return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}"
             data-vid="${v.id}" data-day="${d}" data-empty="1"
             onmouseenter="showTooltipEmpty(event)"
             onmouseleave="hideTooltip()"
@@ -2807,7 +2808,7 @@ function renderCalendar(){
           const b1=visibleArr[0], b2=visibleArr[1];
           const c1=SM[b1.status]?.color||'#888', c2=SM[b2.status]?.color||'#888';
           const isSel=b1.id===selectedBid||b2.id===selectedBid;
-          return`<td class="td-day${isWE(d)?' weekend-col':''}"
+          return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}"
             onmouseenter="showTooltipSplit(event,${b1.id},${b2.id})"
             onmouseleave="hideTooltip()"
             onclick="selectSplitCell(event,${b1.id},${b2.id})">
@@ -2838,7 +2839,7 @@ function renderCalendar(){
           progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
         }
         const statusIcon=cellStatus==='rented'||cellStatus==='extension'||cellStatus==='ext-partial'?'●':cellStatus==='reserved'||cellStatus==='res-docs'?'◆':cellStatus==='repair'?'✕':cellStatus==='personal'?'★':'◉';
-        return`<td class="td-day${isWE(d)?' weekend-col':''}"
+        return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}"
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
