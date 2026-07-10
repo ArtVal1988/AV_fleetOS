@@ -1303,7 +1303,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <div class="ext-fin-field" style="flex:1;min-width:60px">
             <label>Вартість</label>
-            <input type="number" id="bm-ext-rate" class="no-spinner" oninput="extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+            <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
           </div>
           <div class="ext-fin-field" style="width:50px">
             <label>Валюта</label>
@@ -1363,7 +1363,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="fin-row">
         <div class="fin-field fin-rate">
           <label id="bm-rate-label">Вартість за добу</label>
-          <input type="number" id="bm-rate" placeholder="0" oninput="rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
         </div>
         <div class="fin-field fin-cur">
           <label>Валюта</label>
@@ -1509,12 +1509,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="km-row-compact">
         <div class="km-compact-field">
           <span class="km-compact-label">На початку оренди</span>
-          <input type="number" id="bm-start-km" placeholder="0" oninput="updateKmDiff()">
+          <input type="text" inputmode="numeric" id="bm-start-km" placeholder="0" oninput="formatThousandsInput(this);updateKmDiff()">
           <span class="km-compact-unit">км</span>
         </div>
         <div class="km-compact-field">
           <span class="km-compact-label">В кінці оренди:</span>
-          <input type="number" id="bm-end-km" placeholder="0" oninput="updateKmDiff()">
+          <input type="text" inputmode="numeric" id="bm-end-km" placeholder="0" oninput="formatThousandsInput(this);updateKmDiff()">
           <span class="km-compact-unit">км</span>
         </div>
         <div class="km-diff-badge" id="bm-km-diff" style="display:none">
@@ -3367,7 +3367,7 @@ function openBookingModal(vid=null,start=null,end=null){
   // Pre-fill start km from vehicle
   if(vid){
     const veh=ALL_VEHICLES.find(x=>x.id===parseInt(vid));
-    if(veh?.service?.lastKm) document.getElementById('bm-start-km').value=veh.service.lastKm;
+    if(veh?.service?.lastKm) document.getElementById('bm-start-km').value=Number(veh.service.lastKm).toLocaleString('uk-UA');
   }
   document.getElementById('booking-modal').classList.add('open');
 }
@@ -3389,8 +3389,8 @@ function editBooking(bid){
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
   document.getElementById('bm-vat').value=b.vatRate||20;
   document.getElementById('bm-exchange-rate').value=b.exchangeRate||'';
-  document.getElementById('bm-start-km').value=b.startKm||'';
-  document.getElementById('bm-end-km').value=b.endKm||'';
+  document.getElementById('bm-start-km').value=b.startKm?Number(b.startKm).toLocaleString('uk-UA'):'';
+  document.getElementById('bm-end-km').value=b.endKm?Number(b.endKm).toLocaleString('uk-UA'):'';
   updateKmDiff();
   loadDeductions(b.deductions||null);
   loadMessengers(b.messengers||[]);
@@ -3407,7 +3407,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-from').value=b.extension.fromDate||'';
     document.getElementById('bm-ext-to').value=b.extension.toDate||'';
     document.getElementById('bm-ext-days').value=b.extension.days||countDays(b.extension.fromDate,b.extension.toDate);
-    document.getElementById('bm-ext-rate').value=b.extension.rate||'';
+    document.getElementById('bm-ext-rate').value=b.extension.rate?Number(b.extension.rate).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-total').value=b.extension.cost?Number(b.extension.cost).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-paid').value=b.extension.amountPaid||0;
     extDaysOverridden=true; extTotalOverridden=true;
@@ -3423,7 +3423,7 @@ function editBooking(bid){
   }
   currentExtHistory = (b.extensionHistory||[]).slice();
   renderExtHistory();
-  document.getElementById('bm-rate').value=b.rate||'';
+  document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
   document.getElementById('bm-currency').value=b.currency||'$';
   rateCurrencyAnchor = b.currency||'$';
   onCurrencyChange();
@@ -3481,22 +3481,22 @@ function saveBooking(){
       fromDate: document.getElementById('bm-ext-from').value,
       toDate: document.getElementById('bm-ext-to').value,
       days: parseInt(document.getElementById('bm-ext-days').value)||0,
-      rate: parseFloat(document.getElementById('bm-ext-rate').value)||0,
+      rate: parseThousands(document.getElementById('bm-ext-rate').value),
       cost: parseThousands(document.getElementById('bm-ext-total').value),
       currency: document.getElementById('bm-ext-currency').value,
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
-    rate:parseFloat(document.getElementById('bm-rate').value)||0,
+    rate:parseThousands(document.getElementById('bm-rate').value),
     currency:document.getElementById('bm-currency').value,
     deposit:parseThousands(document.getElementById('bm-deposit').value),
     depositCur:(['$','₴','€'].find(c => document.getElementById(c==='$'?'dep-cur-btn-usd':c==='₴'?'dep-cur-btn-uah':'dep-cur-btn-eur')?.classList.contains('active')) || '$'),
     daysOverride:parseInt(document.getElementById('bm-days-override')?.value)||0,
     discount:parseFloat(document.getElementById('bm-discount').value)||0,
 
-    startKm:parseInt(document.getElementById('bm-start-km')?.value)||0,
-    endKm:parseInt(document.getElementById('bm-end-km')?.value)||0,
+    startKm:parseThousands(document.getElementById('bm-start-km')?.value),
+    endKm:parseThousands(document.getElementById('bm-end-km')?.value),
     deductions:readDeductions(),
     extras:readExtrasFromForm(),
     equipment:customEquipment.filter(item => item.name?.trim() || item.price > 0).map(({id, ...rest}) => rest),
@@ -3512,8 +3512,8 @@ function saveBooking(){
   if(editBid){const idx=bookings.findIndex(b=>b.id===editBid);if(idx!==-1)bookings[idx]={...bookings[idx],...data};}
   else bookings.push({id:nextBid++,...data});
   // Sync mileage to vehicle
-  const endKm = parseInt(document.getElementById('bm-end-km')?.value)||0;
-  const startKm = parseInt(document.getElementById('bm-start-km')?.value)||0;
+  const endKm = parseThousands(document.getElementById('bm-end-km')?.value);
+  const startKm = parseThousands(document.getElementById('bm-start-km')?.value);
   if(endKm>0){
     const veh = ALL_VEHICLES.find(x=>x.id===parseInt(document.getElementById('bm-vehicle')?.value));
     if(veh){
@@ -4069,8 +4069,8 @@ function loadDeductions(ded){
 // ── END POST-RENTAL DEDUCTIONS ──────────────────────────────────
 
 function updateKmDiff(){
-  const s = parseInt(document.getElementById('bm-start-km').value)||0;
-  const e = parseInt(document.getElementById('bm-end-km').value)||0;
+  const s = parseThousands(document.getElementById('bm-start-km').value);
+  const e = parseThousands(document.getElementById('bm-end-km').value);
   const badge = document.getElementById('bm-km-diff');
   const valEl = document.getElementById('bm-km-diff-val');
   if(badge){
@@ -4190,7 +4190,7 @@ function onExtCurrencyChange(){
     if(rawTotal > 0) totalEl.value = factor(rawTotal).toLocaleString('uk-UA');
     if(rawPaid > 0) paidEl.value = factor(rawPaid);
     extRateCurrencyAnchor = cur;
-  } else if((parseFloat(document.getElementById('bm-ext-rate').value)||0) <= 0 && parseThousands(document.getElementById('bm-ext-total').value) <= 0){
+  } else if((parseThousands(document.getElementById('bm-ext-rate').value)) <= 0 && parseThousands(document.getElementById('bm-ext-total').value) <= 0){
     extRateCurrencyAnchor = cur;
   }
 
@@ -4204,7 +4204,7 @@ function onExtCurrencyChange(){
 }
 function recalcExtensionCost(){
   const days = parseInt(document.getElementById('bm-ext-days').value)||0;
-  const rate = parseFloat(document.getElementById('bm-ext-rate').value)||0;
+  const rate = parseThousands(document.getElementById('bm-ext-rate').value);
   if(!extTotalOverridden){
     const totalVal = Math.round(days*rate*100)/100;
     document.getElementById('bm-ext-total').value = totalVal ? totalVal.toLocaleString('uk-UA') : '';
@@ -4252,7 +4252,7 @@ function closeAndStartNewExtension(){
     fromDate: document.getElementById('bm-ext-from').value,
     toDate: document.getElementById('bm-ext-to').value,
     days: parseInt(document.getElementById('bm-ext-days').value)||0,
-    rate: parseFloat(document.getElementById('bm-ext-rate').value)||0,
+    rate: parseThousands(document.getElementById('bm-ext-rate').value),
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
@@ -4266,7 +4266,7 @@ function closeAndStartNewExtension(){
   const dObj = new Date(fromD); dObj.setDate(dObj.getDate()+5);
   document.getElementById('bm-ext-from').value = fromD;
   document.getElementById('bm-ext-to').value = dObj.toISOString().split('T')[0];
-  document.getElementById('bm-ext-rate').value = closed.rate || '';
+  document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
   onExtDatesChanged();
   renderExtHistory();
@@ -5373,7 +5373,7 @@ function setClientType(type, isUserAction = true){
   // За замовчуванням ФОП/ТОВ рахують у гривні — перемикаємо валюту автоматично,
   // але ЛИШЕ якщо ставку ще не вписано (щоб не зачепити вже введені дані при
   // перемиканні між типами клієнта) і лише коли це ручна дія користувача.
-  const rateAlreadyTyped = (parseFloat(document.getElementById('bm-rate')?.value) || 0) > 0;
+  const rateAlreadyTyped = (parseThousands(document.getElementById('bm-rate')?.value)) > 0;
   if(isUserAction && isCompany && !rateAlreadyTyped){
     document.getElementById('bm-currency').value = '₴';
     rateCurrencyAnchor = '₴';
@@ -5630,7 +5630,7 @@ function updateVatPreview(){
   const isCompany = type !== 'individual';
   const isVat = type === 'fop' || type === 'tov';
 
-  const rate    = parseFloat(document.getElementById('bm-rate').value) || 0;
+  const rate    = parseThousands(document.getElementById('bm-rate').value);
   const vatPct  = isVat ? (parseFloat(document.getElementById('bm-vat').value) || 0) : 0;
   const cur     = document.getElementById('bm-currency').value;
   const exRate  = parseFloat(document.getElementById('bm-exchange-rate').value) || 0;
