@@ -465,6 +465,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .ct-btn{flex:1;background:none;border:none;padding:8px 10px;font-family:var(--font-mono);font-size:11px;color:#6b7280;cursor:pointer;transition:all .15s;letter-spacing:.3px;}
 .ct-btn:hover{background:#f0f7ff;color:#2563eb;}
 .ct-btn.active{background:#2563eb;color:#fff;font-weight:500;}
+.ct-btn-locked{opacity:.4;cursor:not-allowed;}
+.ct-btn-locked:hover{background:none !important;color:#6b7280 !important;}
 
 /* VAT BREAKDOWN */
 .vat-breakdown{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
@@ -3352,6 +3354,7 @@ function openBookingModal(vid=null,start=null,end=null){
   renderNotesLog('','bm-notes-log','');
   // Reset extras
   setClientType('individual');
+  updateClientTypeLock(false); // new booking — all client types selectable
   document.getElementById('bm-company').value='';
   document.getElementById('bm-edrpou').value='';
   document.getElementById('bm-vat').value='20';
@@ -3397,6 +3400,7 @@ function editBooking(bid){
   loadDeductions(b.deductions||null);
   loadMessengers(b.messengers||[]);
   setClientType(b.clientType||'individual', false);
+  updateClientTypeLock((b.clientType||'individual')==='individual');
   document.getElementById('bm-pickup-date').value=b.pickup?.date||'';
   document.getElementById('bm-pickup-time').value=b.pickup?.time||'10:00';
   document.getElementById('bm-pickup-loc').value=b.pickup?.loc||'';
@@ -5364,6 +5368,17 @@ function updateBookingDetailsVisibility(){
   if(!sel || !wrap) return;
   const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
   wrap.style.display = hide ? 'none' : '';
+}
+// Locks the client-type tabs so a saved "Фіз. особа" order can't later be switched
+// to ФОП/ТОВ (and vice versa isn't relevant — only individual orders get locked).
+function updateClientTypeLock(lock){
+  document.querySelectorAll('.ct-btn').forEach(btn=>{
+    const isIndividual = btn.dataset.type === 'individual';
+    const shouldDisable = lock && !isIndividual;
+    btn.disabled = shouldDisable;
+    btn.classList.toggle('ct-btn-locked', shouldDisable);
+    btn.title = shouldDisable ? 'Замовлення збережено як "Фіз. особа" — тип клієнта більше не можна змінити' : '';
+  });
 }
 function setClientType(type, isUserAction = true){
   document.getElementById('bm-client-type').value = type;
