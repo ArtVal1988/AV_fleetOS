@@ -1007,6 +1007,34 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<!-- EDIT USER MODAL (name / login / password, admin-side) -->
+<div id="edituser-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:9998;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:14px;padding:32px 36px;width:320px;box-shadow:0 16px 48px rgba(0,0,0,.2)">
+    <div style="font-size:15px;font-weight:700;color:#1a1d26;margin-bottom:20px">✎ Редагувати користувача</div>
+    <input type="hidden" id="eu-id">
+    <div style="margin-bottom:12px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Ім'я</label>
+      <input id="eu-name" type="text" placeholder="Ім'я та прізвище"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Логін</label>
+      <input id="eu-username" type="text" placeholder="username"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Новий пароль</label>
+      <input id="eu-password" type="password" placeholder="Залишити порожнім — без змін"
+        style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+    </div>
+    <div id="eu-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeEditUser()" style="flex:1;background:#f3f4f6;color:#374151;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Скасувати</button>
+      <button onclick="saveEditUser()" style="flex:2;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <!-- STATUSES ADMIN PANEL -->
 <div id="statuses-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -6212,9 +6240,9 @@ async function loadUsersList(){
         <div style="font-size:11px;color:#9ca3af;margin-top:2px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</div>
       </div>
       ${u.id !== _currentUser?.id ? `
-        <button onclick="renameUser(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+        <button onclick="openEditUser(${u.id}, '${u.name.replace(/'/g,"\\'")}', '${u.username.replace(/'/g,"\\'")}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
-          ✎ Змінити ім'я
+          ✎ Редагувати
         </button>
         <button onclick="toggleUserActive(${u.id}, ${u.active})"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid ${u.active?'#fca5a5':'#86efac'};background:${u.active?'#fee2e2':'#dcfce7'};color:${u.active?'#991b1b':'#166534'};font-family:inherit;font-weight:600">
@@ -6226,9 +6254,9 @@ async function loadUsersList(){
         </button>
       ` : `
         <span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>
-        <button onclick="renameUser(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+        <button onclick="openEditUser(${u.id}, '${u.name.replace(/'/g,"\\'")}', '${u.username.replace(/'/g,"\\'")}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
-          ✎ Змінити ім'я
+          ✎ Редагувати
         </button>
         <button onclick="openChangePassword()"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
@@ -6266,18 +6294,42 @@ async function toggleUserActive(id, isActive){
   await loadUsersList();
 }
 
-async function renameUser(id, currentName){
-  const newName = prompt('Нове ім\'я користувача:', currentName);
-  if(!newName || !newName.trim() || newName.trim()===currentName) return;
-  const res = await apiFetch('PUT','/auth/users/'+id, {name: newName.trim()});
+function openEditUser(id, name, username){
+  document.getElementById('eu-id').value = id;
+  document.getElementById('eu-name').value = name;
+  document.getElementById('eu-username').value = username;
+  document.getElementById('eu-password').value = '';
+  document.getElementById('eu-error').style.display = 'none';
+  document.getElementById('edituser-overlay').style.display = 'flex';
+}
+function closeEditUser(){
+  document.getElementById('edituser-overlay').style.display = 'none';
+}
+async function saveEditUser(){
+  const id = document.getElementById('eu-id').value;
+  const name = document.getElementById('eu-name').value.trim();
+  const username = document.getElementById('eu-username').value.trim();
+  const password = document.getElementById('eu-password').value;
+  const errEl = document.getElementById('eu-error');
+  errEl.style.display = 'none';
+
+  if(!name || !username){ errEl.textContent = 'Заповніть ім\'я та логін'; errEl.style.display = 'block'; return; }
+  if(password && password.length < 6){ errEl.textContent = 'Пароль — мінімум 6 символів'; errEl.style.display = 'block'; return; }
+
+  const payload = {name, username};
+  if(password) payload.password = password;
+
+  const res = await apiFetch('PUT','/auth/users/'+id, payload);
   if(res?.ok){
-    if(_currentUser && _currentUser.id===id){
-      _currentUser.name = newName.trim();
+    if(_currentUser && String(_currentUser.id)===String(id)){
+      _currentUser.name = name;
+      _currentUser.username = username;
       showSidebarUser(_currentUser);
     }
+    closeEditUser();
     await loadUsersList();
   } else {
-    alert('Не вдалося змінити ім\'я');
+    errEl.textContent = 'Логін вже зайнятий або помилка сервера'; errEl.style.display = 'block';
   }
 }
 
@@ -6370,6 +6422,7 @@ document.addEventListener('keydown', e => {
   if(document.getElementById('users-panel-overlay')?.style.display==='flex') closeUsersPanel();
   if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') closeStatusesPanel();
   if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
+  if(document.getElementById('edituser-overlay')?.style.display==='flex') closeEditUser();
 });
 // (outside-click-to-close intentionally removed — modals close only via their ✕ button)
 
