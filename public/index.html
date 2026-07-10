@@ -2975,12 +2975,12 @@ function renderCalendar(){
 
   let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
 
-  const tdVehBlockClasses = ['tdveh-b1','tdveh-b2','tdveh-b3','tdveh-b4','tdveh-b5','tdveh-b6'];
   // Архів always renders last, regardless of where it sits in the underlying array.
   const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
   orderedCategories.forEach((cat,catIdx)=>{
-    if(!cat.colorKey) cat.colorKey = 'b' + ((catIdx % 6) + 1);
-    const tdVehCls = tdVehBlockClasses[parseInt(cat.colorKey.slice(1))-1];
+    const defaultPalette = ['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#9ca3af'];
+    if(!cat.colorHex) cat.colorHex = defaultPalette[catIdx % defaultPalette.length];
+    const tdVehStyle = 'background:'+hexToRgba(cat.colorHex,.09)+'!important;box-shadow:inset 3px 0 0 '+cat.colorHex+';';
     const isCollapsed = collapsedCategories.has(cat.name);
     html+=`<tr class="cat-row${isCollapsed?' collapsed':''}" onclick="toggleCategoryCollapse('${cat.name.replace(/'/g,"\\'")}')">
       <td colspan="${total+1}"><span class="cat-row-chevron">${isCollapsed?'▸':'▾'}</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
@@ -3042,7 +3042,7 @@ function renderCalendar(){
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${isStart?`<span class="cell-start-icon">${statusIcon}</span>`:''}${progressStripHtml}</div></td>`;
       }).join('');
       const isHl = highlightedVid===v.id;
-      html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle '+tdVehCls+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
+      html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle" style="'+tdVehStyle+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
     });
   });
   html+='</tbody>';
@@ -6446,30 +6446,26 @@ function renderVehiclesPanelList(){
   const list = document.getElementById('vehicles-panel-list');
   const q = (document.getElementById('veh-search')?.value||'').trim().toLowerCase();
   const matches = v => !q || v.name.toLowerCase().includes(q) || v.plate.toLowerCase().includes(q) || (v.vin||'').toLowerCase().includes(q);
-  const blockClasses = ['msec-b1','msec-b2','msec-b3','msec-b4','msec-b5','msec-b6'];
-  const swatchColors = {b1:'#a78bfa',b2:'#60a5fa',b3:'#4ade80',b4:'#fbbf24',b5:'#f87171',b6:'#d1d5db'};
+  const defaultPalette = ['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#9ca3af'];
   let colorIdx = 0;
   const html = CATEGORIES.map(cat => {
     const vehicles = cat.vehicles.filter(matches);
     if(!vehicles.length && q) return ''; // hide only when an active search finds nothing here
-    if(!cat.colorKey) cat.colorKey = 'b' + ((colorIdx % 6) + 1); // stable once assigned
+    if(!cat.colorHex) cat.colorHex = defaultPalette[colorIdx % defaultPalette.length]; // stable once assigned
     colorIdx++;
-    const cls = blockClasses[parseInt(cat.colorKey.slice(1))-1];
-    return `<div class="${cls}" style="margin-bottom:16px">
+    const tint = hexToRgba(cat.colorHex, .09);
+    return `<div style="margin-bottom:16px;padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="display:flex;gap:4px" title="Колір розділу">
-          ${Object.keys(swatchColors).map(k => `
-            <button onclick="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}','${k}')"
-              style="width:14px;height:14px;border-radius:50%;border:2px solid ${cat.colorKey===k?'#1a1d26':'transparent'};background:${swatchColors[k]};cursor:pointer;padding:0"></button>
-          `).join('')}
-        </div>
+        <input type="color" value="${cat.colorHex}" onchange="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}',this.value)"
+          title="Обрати колір розділу" style="width:22px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;flex-shrink:0">
         <input type="text" value="${cat.name}" onchange="renameVehicleCategory('${cat.name.replace(/'/g,"\\'")}',this.value)"
-          style="flex:1;min-width:0;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;border:none;background:transparent;outline:none;padding:2px 4px;border-radius:4px">
+          onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+          style="flex:1;min-width:0;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;border:1px solid #e5e7eb;background:#fff;outline:none;padding:5px 8px;border-radius:5px">
         <button onclick="deleteVehicleCategory('${cat.name.replace(/'/g,"\\'")}')" title="Видалити розділ"
           style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px;flex-shrink:0">🗑</button>
       </div>
       ${vehicles.length ? vehicles.map(v => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
@@ -6494,10 +6490,16 @@ function renderVehiclesPanelList(){
   }).join('');
   list.innerHTML = html || '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">Нічого не знайдено</div>';
 }
-function setVehicleCategoryColor(name, colorKey){
+function hexToRgba(hex, alpha){
+  hex = (hex||'#888888').replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const r = parseInt(hex.slice(0,2),16)||0, g = parseInt(hex.slice(2,4),16)||0, bch = parseInt(hex.slice(4,6),16)||0;
+  return `rgba(${r},${g},${bch},${alpha})`;
+}
+function setVehicleCategoryColor(name, colorHex){
   const cat = CATEGORIES.find(c=>c.name===name);
   if(!cat) return;
-  cat.colorKey = colorKey;
+  cat.colorHex = colorHex;
   renderVehiclesPanelList();
   render();
 }
