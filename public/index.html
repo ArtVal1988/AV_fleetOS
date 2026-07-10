@@ -4452,6 +4452,12 @@ function onExtCurrencyChange(){
 
   document.getElementById('bm-ext-cur-2').textContent = cur;
   document.getElementById('bm-ext-cur-3').textContent = cur;
+  const extCurSelect = document.getElementById('bm-ext-currency');
+  const curColor = cur === '₴' ? '#166534' : '#1d4ed8';
+  const curBg = cur === '₴' ? '#dcfce7' : '#dbeafe';
+  if(extCurSelect){ extCurSelect.style.background = curBg; extCurSelect.style.borderColor = cur==='₴'?'#22c55e':'#2563eb'; extCurSelect.style.color = curColor; extCurSelect.style.fontWeight = '700'; }
+  document.getElementById('bm-ext-cur-2').style.color = curColor;
+  document.getElementById('bm-ext-cur-3').style.color = curColor;
   const rate2Field = document.getElementById('bm-ext-rate2-field');
   if(rate2Field) rate2Field.style.display = '';
   const rate2Label = rate2Field?.querySelector('label');
@@ -6036,6 +6042,8 @@ function updateVatPreview(){
 
   if(dualTotal){ dualTotal.style.display = ''; }
   document.getElementById('dual-days-label').textContent = `діб × ${rate.toLocaleString('uk-UA')} ${anchorCur}`;
+  document.getElementById('dual-days-label').style.color = anchorCur==='₴' ? '#166534' : '#1d4ed8';
+  document.getElementById('dual-days-label').style.fontWeight = '600';
   document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
   document.getElementById('dp-gross-uah').textContent = fmtU(toUah(gross));
 
@@ -6225,13 +6233,13 @@ function renderExtrasChips(){
     const mode  = extrasCurMode[e.key] || 'orig';
     const sumCur = mode === 'uah' && currency !== '₴' ? '₴' : currency;
     const qtyTxt = e.hasQty && qty > 1 ? ' ×' + qty : '';
-    const priceTxt = sum > 0 ? '<b class="extras-chip-price">+' + sum.toLocaleString('uk-UA') + ' ' + sumCur + '</b>' : '';
+    const priceTxt = sum > 0 ? '<b class="extras-chip-price" style="color:' + (sumCur==='₴'?'#166534':'#1d4ed8') + '">+' + sum.toLocaleString('uk-UA') + ' ' + sumCur + '</b>' : '';
     return '<span class="extras-chip"><span class="extras-chip-text">' + e.icon + ' ' + e.label + qtyTxt + '</span>' + priceTxt +
       '<button type="button" class="extras-chip-x" onclick="event.stopPropagation();toggleExtra(\'' + e.key + '\')" title="Прибрати">✕</button></span>';
   }).join('');
   const equipHtml = equipChips.map(item => {
     const sumCur = item.cur === 'uah' && currency !== '₴' ? '₴' : currency;
-    const priceTxt = item.price > 0 ? '<b class="extras-chip-price">+' + item.price.toLocaleString('uk-UA') + ' ' + sumCur + '</b>' : '';
+    const priceTxt = item.price > 0 ? '<b class="extras-chip-price" style="color:' + (sumCur==='₴'?'#166534':'#1d4ed8') + '">+' + item.price.toLocaleString('uk-UA') + ' ' + sumCur + '</b>' : '';
     return '<span class="extras-chip"><span class="extras-chip-text">🔧 ' + (item.name?.trim() || 'Обладнання') + '</span>' + priceTxt +
       '<button type="button" class="extras-chip-x" onclick="event.stopPropagation();removeEquipmentRow(' + item.id + ')" title="Прибрати">✕</button></span>';
   }).join('');
