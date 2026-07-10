@@ -1240,9 +1240,11 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <div class="fg-pair" style="grid-template-columns:0.8fr 1.2fr">
-        <div class="fg">
+        <div class="fg" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
-          <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові">
+          <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
+            oninput="onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+          <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="fg">
           <label>Телефон</label>
@@ -5553,6 +5555,49 @@ function formatPhoneUA(raw){
   // Fallback (only if the CDN library failed to load) — at least keep it digits-only.
   return cleaned;
 }
+// ── CLIENT AUTOCOMPLETE (suggests returning clients by name, autofills phone) ──
+function getClientsIndex(){
+  // Build a de-duplicated list of past clients from all bookings, most recent entry wins.
+  const map = new Map();
+  bookings
+    .filter(b => b.name && b.name.trim())
+    .sort((a,b) => (a.start||'').localeCompare(b.start||''))
+    .forEach(b => {
+      const key = b.name.trim().toLowerCase();
+      map.set(key, {name: b.name.trim(), phone: b.phone||''});
+    });
+  return [...map.values()];
+}
+function onClientNameInput(el){
+  const q = el.value.trim().toLowerCase();
+  const dd = document.getElementById('client-suggest-dropdown');
+  if(!q){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const matches = getClientsIndex()
+    .filter(c => c.name.toLowerCase().includes(q))
+    .slice(0, 8);
+  if(!matches.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML = matches.map(c => `
+    <div onmousedown="selectClientSuggestion('${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}')"
+      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:12px" 
+      onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+      <div style="font-weight:600;color:#1a1d26">${c.name}</div>
+      ${c.phone?`<div style="font-size:11px;color:#0891b2;margin-top:1px;font-family:var(--font-mono)">${c.phone}</div>`:''}
+    </div>
+  `).join('');
+  dd.style.display='block';
+}
+function selectClientSuggestion(name, phone){
+  document.getElementById('bm-name').value = name;
+  if(phone){
+    document.getElementById('bm-phone').value = phone;
+  }
+  closeClientSuggest();
+}
+function closeClientSuggest(){
+  const dd = document.getElementById('client-suggest-dropdown');
+  if(dd){ dd.style.display='none'; dd.innerHTML=''; }
+}
+
 function onPhoneInput(el){
   const target = el || document.getElementById('bm-phone');
   if(!target) return;
