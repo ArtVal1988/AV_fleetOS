@@ -38,7 +38,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .page-sub{font-size:11px;color:var(--muted);margin-top:3px;}
 .stickers-bar{display:flex;align-items:flex-start;gap:10px;padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
 .stickers-row{display:flex;gap:10px;flex:1;min-width:0;overflow-x:auto;padding-bottom:2px;}
-.sticker-card{position:relative;flex-shrink:0;width:170px;min-height:64px;border-radius:8px;padding:9px 11px 8px;font-size:12px;line-height:1.35;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.sticker-card{position:relative;flex-shrink:0;width:170px;height:130px;border-radius:8px;padding:9px 11px 8px;font-size:12px;line-height:1.35;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
+.sticker-text{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:default;}
+.sticker-pin{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
+.sticker-pin:hover{opacity:.8;}
+.sticker-pin.active{opacity:1;}
 .sticker-card.c-red{background:#fee2e2;border:1px solid #fca5a5;color:#7f1d1d;}
 .sticker-card.c-blue{background:#dbeafe;border:1px solid #93c5fd;color:#1e3a8a;}
 .sticker-card.c-green{background:#dcfce7;border:1px solid #86efac;color:#14532d;}
@@ -2925,14 +2930,22 @@ function renderStickers(){
   const row = document.getElementById('stickers-row');
   if(!row) return;
   if(!stickers.length){ row.innerHTML = '<div style="font-size:11px;color:#9ca3af;align-self:center;padding:0 6px">Немає стікерів — додайте нагадування праворуч →</div>'; return; }
-  row.innerHTML = stickers.map(s => `
-    <div class="sticker-card c-${s.color}">
+  const ordered = [...stickers].sort((a,b) => (b.pinned?1:0) - (a.pinned?1:0));
+  row.innerHTML = ordered.map(s => `
+    <div class="sticker-card c-${s.color}${s.pinned?' pinned':''}">
+      <button class="sticker-pin${s.pinned?' active':''}" onclick="togglePinSticker(${s.id})" title="${s.pinned?'Відкріпити':'Закріпити'}">${s.pinned?'📌':'📍'}</button>
       <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
       <div class="sticker-label">${STICKER_LABELS[s.color]||''}</div>
-      <div class="sticker-text">${s.text}</div>
+      <div class="sticker-text" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
       <div class="sticker-author">— ${s.author||'Анонім'}</div>
     </div>
   `).join('');
+}
+function togglePinSticker(id){
+  const s = stickers.find(x=>x.id===id);
+  if(!s) return;
+  s.pinned = !s.pinned;
+  renderStickers();
 }
 function openStickerForm(){
   document.getElementById('sticker-text').value = '';
