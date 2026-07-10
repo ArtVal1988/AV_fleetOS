@@ -1283,7 +1283,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-pickup-time" value="10:00" class="lr-time">
+          <input type="time" id="bm-pickup-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
         </div>
       </div>
@@ -1291,7 +1291,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-return-time" value="18:00" class="lr-time">
+          <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
       </div>
@@ -2658,6 +2658,24 @@ function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padS
 function colDate(d){const dt=new Date(viewStartDate);dt.setDate(viewStartDate.getDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
 function countDays(start,end){const s=new Date(start),e=new Date(end);return Math.max(1,Math.round((e-s)/86400000)+1);}
+// Billing day count that accounts for pickup/return TIME, not just calendar dates:
+// a rental day is a full 24h block from the pickup moment. Returning up to 3 hours
+// late is still within the same day count; returning more than 3 hours late rounds
+// up to the next day. E.g. pickup 01.01 09:00 -> return 02.01 12:00 = 1 day (3h grace),
+// but 02.01 12:30 = 2 days (past the grace window).
+function countBillableDays(startDate, startTime, endDate, endTime){
+  if(!startDate || !endDate) return 1;
+  const st = startTime || '09:00';
+  const et = endTime || '09:00';
+  const s = new Date(startDate + 'T' + st + ':00');
+  const e = new Date(endDate + 'T' + et + ':00');
+  const totalHours = (e - s) / 3600000;
+  if(totalHours <= 0) return 1;
+  let days = Math.floor(totalHours / 24);
+  const remainder = totalHours - days * 24;
+  if(remainder > 3) days += 1;
+  return Math.max(1, days);
+}
 function calcTotal(b){
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
   const gross=days*b.rate;
@@ -3350,8 +3368,10 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-pickup-date').value=start||colDateStr(1);
   document.getElementById('bm-return-date').value=end||colDateStr(1);
   ['bm-name','bm-phone','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
-  document.getElementById('bm-pickup-time').value='10:00';
-  document.getElementById('bm-return-time').value='18:00';
+  document.getElementById('bm-pickup-time').value='09:00';
+  document.getElementById('bm-return-time').value='09:00';
+  document.getElementById('bm-pickup-loc').value='Офіс, вул. Антоновича, 112';
+  document.getElementById('bm-return-loc').value='Офіс, вул. Антоновича, 112';
   document.getElementById('bm-rate').value='';
   document.getElementById('bm-currency').value='$';
   rateCurrencyAnchor = '$';
@@ -4102,7 +4122,7 @@ function updateKmDiff(){
       const startVal = document.getElementById('bm-start').value;
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
-      const autoDays = startVal && endVal ? countDays(startVal, endVal) : 0;
+      const autoDays = startVal && endVal ? countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value) : 0;
       const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
       if(avgBadge){
         if(days > 0){
@@ -5777,7 +5797,7 @@ function updateVatPreview(){
   // (days override, services, and surcharge must always be visible/editable).
   if(!startVal || !endVal || !rate){ if(dualTotal) dualTotal.style.display='none'; return; }
 
-  const autoDays = countDays(startVal, endVal);
+  const autoDays = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
   const daysInput = document.getElementById('bm-days-override');
   if(daysInput && !daysOverrideTouched) daysInput.value = autoDays;
   const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
