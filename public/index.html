@@ -1153,6 +1153,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <input type="hidden" id="bm-start">
     <input type="hidden" id="bm-end">
 
+    <div id="bm-order-details">
     <!-- Customer + Status/Manager combined -->
     <div class="msec">
       <!-- Client type switcher -->
@@ -1519,6 +1520,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span id="bm-ded-total-val" style="font-family:var(--font-head);font-weight:700;color:#991b1b;font-size:14px"></span>
         </div>
       </div>
+    </div>
     </div>
     <div class="msec">
       <div class="msec-title">Нотатки</div>
@@ -5271,6 +5273,17 @@ function updateStatusSelectColor(){
   const s=SM[sel.value];
   sel.style.color = s ? s.color : '';
   sel.style.fontWeight = '600';
+  updateBookingDetailsVisibility();
+}
+// Statuses that don't represent an actual client rental — for these we hide all
+// the order details (client, dates, finances, mileage, deductions) and leave only notes.
+const STATUSES_WITHOUT_ORDER_DETAILS = ['repair','investor','storage','personal'];
+function updateBookingDetailsVisibility(){
+  const sel=document.getElementById('bm-status');
+  const wrap=document.getElementById('bm-order-details');
+  if(!sel || !wrap) return;
+  const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
+  wrap.style.display = hide ? 'none' : '';
 }
 function setClientType(type, isUserAction = true){
   document.getElementById('bm-client-type').value = type;
