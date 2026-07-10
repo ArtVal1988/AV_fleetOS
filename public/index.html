@@ -1113,6 +1113,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <button onclick="closeVehiclesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <input id="veh-new-cat" type="text" placeholder="Назва нового розділу…"
+          style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addVehicleCategory();}">
+        <button onclick="addVehicleCategory()" style="background:#f0f7ff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:0 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати розділ</button>
+      </div>
       <div id="vehicles-panel-list"></div>
     </div>
   </div>
@@ -6429,12 +6435,16 @@ function renderVehiclesPanelList(){
   let colorIdx = 0;
   const html = CATEGORIES.map(cat => {
     const vehicles = cat.vehicles.filter(matches);
-    if(!vehicles.length) return '';
+    if(!vehicles.length && q) return ''; // hide only when an active search finds nothing here
     const cls = blockClasses[colorIdx % blockClasses.length];
     colorIdx++;
     return `<div class="${cls}" style="margin-bottom:16px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">${cat.name}</div>
-      ${vehicles.map(v => `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb">${cat.name}</div>
+        <button onclick="deleteVehicleCategory('${cat.name.replace(/'/g,"\\'")}')" title="Видалити розділ"
+          style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px">🗑</button>
+      </div>
+      ${vehicles.length ? vehicles.map(v => `
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.7)">
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
           <div style="flex:1;min-width:0">
@@ -6446,10 +6456,43 @@ function renderVehiclesPanelList(){
             ✎ Редагувати
           </button>
         </div>
-      `).join('')}
+      `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:4px 2px">Немає авто в цьому розділі</div>'}
     </div>`;
   }).join('');
   list.innerHTML = html || '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">Нічого не знайдено</div>';
+}
+function addVehicleCategory(){
+  const inp = document.getElementById('veh-new-cat');
+  const name = inp.value.trim();
+  if(!name) return;
+  if(CATEGORIES.some(c=>c.name.toLowerCase()===name.toLowerCase())){
+    alert('Розділ з такою назвою вже існує');
+    return;
+  }
+  CATEGORIES.push({name, vehicles: []});
+  inp.value = '';
+  renderVehiclesPanelList();
+}
+function deleteVehicleCategory(name){
+  const cat = CATEGORIES.find(c=>c.name===name);
+  if(!cat) return;
+  let msg;
+  if(cat.vehicles.length > 0){
+    const names = cat.vehicles.map(v=>v.plate).join(', ');
+    msg = `Видалити розділ "${name}"?\n\nУВАГА: разом з ним будуть видалені ${cat.vehicles.length} авто: ${names}.\nЦю дію не можна скасувати.`;
+  } else {
+    msg = `Видалити порожній розділ "${name}"?`;
+  }
+  if(!confirm(msg)) return;
+
+  const idx = CATEGORIES.indexOf(cat);
+  CATEGORIES.splice(idx, 1);
+  cat.vehicles.forEach(v => {
+    const ai = ALL_VEHICLES.indexOf(v);
+    if(ai !== -1) ALL_VEHICLES.splice(ai, 1);
+  });
+  renderVehiclesPanelList();
+  render();
 }
 
 // ── ADD / EDIT VEHICLE FORM ───────────────────────────────────────
