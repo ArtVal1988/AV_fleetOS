@@ -130,6 +130,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
 /* CAT ROW */
 .cat-row td{background:#eceef2;padding:5px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:sticky;left:0;}
+.cat-row-b1 td{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe;}
+.cat-row-b2 td{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
+.cat-row-b3 td{background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
+.cat-row-b4 td{background:#fffbeb;color:#b45309;border-color:#fde68a;}
+.cat-row-b5 td{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
+.cat-row-b6 td{background:#f9fafb;color:#4b5563;border-color:#e5e7eb;}
 
 /* VEH ROWS */
 .cal-table tbody tr.veh-row{border-bottom:1px solid var(--border);}
@@ -2954,8 +2960,9 @@ function renderCalendar(){
 
   let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
 
-  CATEGORIES.forEach(cat=>{
-    html+=`<tr class="cat-row"><td colspan="${total+1}">${cat.name}</td></tr>`;
+  const catBlockClasses = ['cat-row-b1','cat-row-b2','cat-row-b3','cat-row-b4','cat-row-b5','cat-row-b6'];
+  CATEGORIES.forEach((cat,catIdx)=>{
+    html+=`<tr class="cat-row ${catBlockClasses[catIdx % catBlockClasses.length]}"><td colspan="${total+1}">${cat.name}</td></tr>`;
     cat.vehicles.forEach(v=>{
       const cells=days.map(d=>{
         const k=cellKey(v.id,d);
