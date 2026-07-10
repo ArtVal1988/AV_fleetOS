@@ -1006,6 +1006,39 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
   </div>
 </div>
+
+<!-- STATUSES ADMIN PANEL -->
+<div id="statuses-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">🏷️ Статуси</div>
+      <button onclick="closeStatusesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <!-- Add status form -->
+      <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px 20px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#1d4ed8;margin-bottom:14px">+ Новий статус</div>
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1">
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Назва</label>
+            <input id="ns-label" type="text" placeholder="Наприклад: Заброньовано VIP"
+              style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
+          </div>
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Колір</label>
+            <input id="ns-color" type="color" value="#60a5fa"
+              style="display:block;margin-top:3px;width:44px;height:34px;border:1px solid #dbeafe;border-radius:6px;padding:2px;cursor:pointer">
+          </div>
+        </div>
+        <div id="ns-error" style="display:none;color:#dc2626;font-size:11px;margin-top:10px;padding:7px 10px;background:#fee2e2;border-radius:5px"></div>
+        <button onclick="addNewStatus()" style="margin-top:12px;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Додати статус</button>
+      </div>
+      <!-- Statuses list -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список статусів</div>
+      <div id="statuses-list"></div>
+    </div>
+  </div>
+</div>
 <div class="app">
 <aside class="sidebar">
   <div class="logo">
@@ -1025,6 +1058,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item" data-label="Звіти"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
+    <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
   <div style="margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)">
     <div id="sidebar-user" onclick="openChangePassword()" title="Змінити пароль"
@@ -1558,6 +1592,19 @@ const STATUSES=[
   {key:'personal',  label:'Особисте використання', color:'#f060c0'},
 ];
 const SM=Object.fromEntries(STATUSES.map(s=>[s.key,s]));
+// Load any statuses an admin previously created/renamed/recolored via the Статуси panel.
+try{
+  const savedStatuses = JSON.parse(localStorage.getItem('av_fleetos_statuses')||'null');
+  if(Array.isArray(savedStatuses) && savedStatuses.length){
+    STATUSES.length = 0;
+    savedStatuses.forEach(s=>STATUSES.push(s));
+    Object.keys(SM).forEach(k=>delete SM[k]);
+    STATUSES.forEach(s=>SM[s.key]=s);
+  }
+}catch(e){}
+function saveStatusesToStorage(){
+  try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
+}
 const DOW=['нд','пн','вт','ср','чт','пт','сб'];
 const MONTHS=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const CASE_CATEGORIES=[
@@ -6066,7 +6113,7 @@ async function doLogin(){
     localStorage.setItem('av_fleet_token',_token);
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin') document.getElementById('nav-users').style.display='flex';
+    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; }
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -6077,6 +6124,7 @@ function doLogout(){
   const su = document.getElementById('sidebar-user');
   if(su) su.style.display='none';
   document.getElementById('nav-users').style.display='none';
+  document.getElementById('nav-statuses').style.display='none';
   showLoginOverlay();
 }
 
@@ -6087,6 +6135,72 @@ async function openUsersPanel(){
 }
 function closeUsersPanel(){
   document.getElementById('users-panel-overlay').style.display='none';
+}
+
+function openStatusesPanel(){
+  document.getElementById('statuses-panel-overlay').style.display='flex';
+  document.getElementById('ns-label').value='';
+  document.getElementById('ns-color').value='#60a5fa';
+  document.getElementById('ns-error').style.display='none';
+  renderStatusesPanelList();
+}
+function closeStatusesPanel(){
+  document.getElementById('statuses-panel-overlay').style.display='none';
+}
+function renderStatusesPanelList(){
+  const list = document.getElementById('statuses-list');
+  list.innerHTML = STATUSES.map(s => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
+      <input type="color" value="${s.color}" onchange="updateStatusColor('${s.key}',this.value)"
+        style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
+      <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
+        style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${s.color};outline:none">
+      <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
+    </div>
+  `).join('');
+}
+function updateStatusLabel(key, value){
+  const s = SM[key];
+  value = value.trim();
+  if(!s || !value) { renderStatusesPanelList(); return; }
+  s.label = value;
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+  renderLegend();
+  render();
+}
+function updateStatusColor(key, value){
+  const s = SM[key];
+  if(!s) return;
+  s.color = value;
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+  renderLegend();
+  render();
+}
+function slugifyStatusKey(label){
+  const translit = {а:'a',б:'b',в:'v',г:'h',ґ:'g',д:'d',е:'e',є:'ie',ж:'zh',з:'z',и:'y',і:'i',ї:'i',й:'i',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ь:'',ю:'iu',я:'ia'};
+  let base = label.toLowerCase().split('').map(ch=>translit[ch]!==undefined?translit[ch]:ch).join('');
+  base = base.replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'status';
+  let key = base, i = 2;
+  while(SM[key]){ key = base+'-'+i; i++; }
+  return key;
+}
+function addNewStatus(){
+  const labelEl = document.getElementById('ns-label');
+  const colorEl = document.getElementById('ns-color');
+  const errEl = document.getElementById('ns-error');
+  errEl.style.display='none';
+  const label = labelEl.value.trim();
+  if(!label){ errEl.textContent='Введіть назву статусу'; errEl.style.display='block'; return; }
+  const key = slugifyStatusKey(label);
+  const s = {key, label, color: colorEl.value};
+  STATUSES.push(s);
+  SM[key] = s;
+  saveStatusesToStorage();
+  labelEl.value=''; colorEl.value='#60a5fa';
+  renderStatusesPanelList();
+  renderLegend();
 }
 
 async function loadUsersList(){
@@ -6227,17 +6341,10 @@ document.addEventListener('keydown', e => {
   if(document.getElementById('booking-modal')?.classList.contains('open')) closeBookingModal();
   if(document.getElementById('add-work-modal')?.classList.contains('open')) document.getElementById('add-work-modal').classList.remove('open');
   if(document.getElementById('users-panel-overlay')?.style.display==='flex') closeUsersPanel();
+  if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') closeStatusesPanel();
   if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
 });
-['docs-modal','to-modal','ins-modal'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('mousedown',e=>{
-    if(e.target.id===id){
-      if(id==='docs-modal') closeDocsModal();
-      else if(id==='to-modal') closeToModal();
-      else if(id==='ins-modal') closeInsuranceModal();
-    }
-  });
-});
+// (outside-click-to-close intentionally removed — modals close only via their ✕ button)
 
 // Init
 document.getElementById('login-password')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
@@ -6251,7 +6358,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     _currentUser = await res.json();
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser.role==='admin') document.getElementById('nav-users').style.display='flex';
+    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; }
     await syncFromServer();
   } catch(e){ showLoginOverlay(); }
 })();
