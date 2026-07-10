@@ -1527,6 +1527,9 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="km-diff-badge" id="bm-km-diff" style="display:none">
           🚙 <span>За оренду:</span> <span id="bm-km-diff-val">0</span> <span>км</span>
         </div>
+        <div class="km-diff-badge" id="bm-km-avg" style="display:none">
+          📊 <span>Сер./добу:</span> <span id="bm-km-avg-val">0</span> <span>км</span>
+        </div>
       </div>
     </div>
     <!-- POST-RENTAL DEDUCTIONS -->
@@ -4078,12 +4081,32 @@ function updateKmDiff(){
   const e = parseThousands(document.getElementById('bm-end-km').value);
   const badge = document.getElementById('bm-km-diff');
   const valEl = document.getElementById('bm-km-diff-val');
+  const avgBadge = document.getElementById('bm-km-avg');
+  const avgValEl = document.getElementById('bm-km-avg-val');
   if(badge){
     if(s>0&&e>0&&e>=s){
-      if(valEl) valEl.textContent = (e-s).toLocaleString('uk-UA');
+      const diff = e-s;
+      if(valEl) valEl.textContent = diff.toLocaleString('uk-UA');
       badge.style.display='flex';
+
+      // Average mileage per rental day, using the same day count as the cost calc
+      // (respects a manual days-override if the user has set one).
+      const startVal = document.getElementById('bm-start').value;
+      const endVal = document.getElementById('bm-end').value;
+      const daysInput = document.getElementById('bm-days-override');
+      const autoDays = startVal && endVal ? countDays(startVal, endVal) : 0;
+      const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
+      if(avgBadge){
+        if(days > 0){
+          if(avgValEl) avgValEl.textContent = Math.round(diff/days).toLocaleString('uk-UA');
+          avgBadge.style.display='flex';
+        } else {
+          avgBadge.style.display='none';
+        }
+      }
     } else {
       badge.style.display='none';
+      if(avgBadge) avgBadge.style.display='none';
     }
   }
 }
