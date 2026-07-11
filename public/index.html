@@ -156,6 +156,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .content-split{padding:0 10px 10px;}
   .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
   .page-title{display:none;}
+  .calendar-scroll{scroll-snap-type:x proximity;}
+  .th-day,.td-day{scroll-snap-align:start;}
   .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
   .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
   .th-vehicle{font-size:0;}
@@ -1298,6 +1300,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="topbar">
     <div><div class="page-title">Графік <span>зайнятості</span></div></div>
     <div style="position:relative;display:flex;align-items:center;gap:8px">
+      <button class="today-btn" onclick="goToday()">Сьогодні</button>
       <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
       <div class="month-nav">
         <button class="mn-btn" onclick="shiftMonth(-1)">‹</button>
@@ -1305,7 +1308,6 @@ input.dm-pf-val.tel{font-size:14px;}
         <button class="mn-btn" onclick="shiftMonth(1)">›</button>
       </div>
       <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
-      <button class="today-btn" onclick="goToday()">Сьогодні</button>
       <!-- NAV PICKER POPUP -->
       <div class="nav-picker" id="nav-picker" style="display:none">
       <div class="np-section">
