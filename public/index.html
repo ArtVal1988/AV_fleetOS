@@ -4008,24 +4008,58 @@ function handleDocAttach(e, vid, key){
   if(!v.docs.files) v.docs.files={};
   if(!v.docs.files[key]) v.docs.files[key]=[];
   const files = Array.from(e.target.files);
-  let loaded=0;
-  files.forEach(file=>{
+  if(!_token){
+    alert('Потрібно увійти в систему, щоб завантажувати файли.');
+    return;
+  }
+  files.forEach(async file => {
     if(file.size > 10*1024*1024){ alert(file.name+': файл понад 10 МБ'); return; }
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      v.docs.files[key].push({name:file.name, type:file.type, data:ev.target.result, size:file.size});
-      loaded++;
-      if(loaded===files.length){ recalcMissingDocs(v); renderDocsModalBody(v); render(); }
-    };
-    reader.readAsDataURL(file);
+    const fd = new FormData();
+    fd.append('file', file);
+    try{
+      const res = await fetch(API_BASE+'/documents/'+vid+'/'+key, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer '+_token },
+        body: fd
+      });
+      if(!res.ok){ alert(file.name+': не вдалося завантажити файл'); return; }
+      const saved = await res.json();
+      v.docs.files[key].push(saved);
+      recalcMissingDocs(v);
+      renderDocsModalBody(v);
+      render();
+    }catch(err){
+      alert(file.name+': помилка мережі при завантаженні');
+    }
   });
 }
 
 function removeDocFile(vid, key, idx){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
+  const file = v.docs.files[key][idx];
   v.docs.files[key].splice(idx,1);
   recalcMissingDocs(v);
   renderDocsModalBody(v);
+  render();
+  if(file?.id && _token) apiFetch('DELETE','/documents/'+file.id);
+}
+
+async function loadVehicleDocuments(vid){
+  if(!_token) return;
+  const v = ALL_VEHICLES.find(x=>x.id===vid);
+  if(!v) return;
+  const rows = await apiFetch('GET','/documents/'+vid);
+  if(!rows) return;
+  v.docs.files = {};
+  rows.forEach(r => {
+    if(!v.docs.files[r.doc_type]) v.docs.files[r.doc_type] = [];
+    v.docs.files[r.doc_type].push({
+      id: r.id, name: r.original_name, type: r.mime_type, size: r.size,
+      url: '/uploads/'+r.filename
+    });
+  });
+  recalcMissingDocs(v);
+  if(docsVehicleId === vid) renderDocsModalBody(v);
   render();
 }
 
@@ -4054,8 +4088,8 @@ function buildAttachArea(v, key){
   if(imgs.length){
     html+='<div class="dm-attach-grid">';
     imgs.forEach((f,i)=>{
-      html+='<div class="dm-attach-thumb" onclick="viewAttachment(\''+f.data+'\',\''+f.name+'\')">'+
-        '<img src="'+f.data+'" alt="'+f.name+'">'+
+      html+='<div class="dm-attach-thumb" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\')">'+
+        '<img src="'+f.url+'" alt="'+f.name+'">'+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
       '</div>';
     });
@@ -5788,6 +5822,7 @@ function openDocsModal(vid){
   document.getElementById('dm-vehname').textContent = stripYear(v.name);
   renderDocsModalBody(v);
   document.getElementById('docs-modal').classList.add('open');
+  loadVehicleDocuments(vid);
 }
 
 function closeDocsModal(){
