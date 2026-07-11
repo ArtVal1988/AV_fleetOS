@@ -151,6 +151,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* MOBILE: keep only the plate number pinned on the left while scrolling the
    grid horizontally — name/icons scroll away with it instead of eating up
    the narrow screen width. */
+/* Plate-only sticky column — applies whenever the window/screen is narrow,
+   not just on phones, so resizing a desktop browser narrower gets the same
+   compact treatment (only the plate stays pinned, name/icons scroll away). */
+@media (max-width: 900px){
+  .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
+  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
+  .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
+  .th-vehicle{font-size:0;}
+  .calendar-scroll{scroll-padding-left:96px;}
+}
 @media (max-width: 640px){
   .topbar{padding:8px 10px 6px;}
   .month-nav{padding:2px;}
@@ -164,14 +174,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .sticker-pin{top:3px;right:16px;font-size:9px;}
   .sticker-del{font-size:9px;top:2px;right:2px;}
   .content-split{padding:0 10px 10px;}
-  .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
-  .page-title{display:none;}
-  .calendar-scroll{scroll-snap-type:x proximity;scroll-padding-left:96px;}
+  .calendar-scroll{scroll-snap-type:x proximity;}
   .th-day,.td-day{scroll-snap-align:start;}
   .mn-label{min-width:100px;padding:8px 10px;}
-  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
-  .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
-  .th-vehicle{font-size:0;}
   .app.sb-hidden-mobile{grid-template-columns:0 1fr;}
   .app.sb-hidden-mobile .sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right:none;box-shadow:none;}
   .mobile-menu-fab{display:none;position:fixed;bottom:16px;left:16px;z-index:200;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:18px;align-items:center;justify-content:center;}
