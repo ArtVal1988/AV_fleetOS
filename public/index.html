@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .stickers-row{display:flex;gap:10px;flex:1;min-width:0;overflow-x:auto;padding-bottom:2px;}
 .sticker-card{position:relative;flex-shrink:0;width:170px;height:130px;border-radius:8px;padding:9px 11px 8px;font-size:12px;line-height:1.35;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
-.sticker-text{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:default;}
+.sticker-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:default;}
 .sticker-pin{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
 .sticker-pin:hover{opacity:.8;}
 .sticker-pin.active{opacity:1;}
@@ -156,8 +156,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .content-split{padding:0 10px 10px;}
   .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
   .page-title{display:none;}
-  .calendar-scroll{scroll-snap-type:x proximity;}
+  .calendar-scroll{scroll-snap-type:x proximity;scroll-padding-left:96px;}
   .th-day,.td-day{scroll-snap-align:start;}
+  .mn-label{min-width:100px;padding:8px 10px;}
   .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
   .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
   .th-vehicle{font-size:0;}
@@ -1362,6 +1363,12 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="calendar-wrap">
       <div class="calendar-scroll"><table class="cal-table" id="cal-table"></table></div>
     </div>
+  </div>
+
+  <!-- FLOATING DATE HEADER (mobile only) — pinned to true screen top while
+       scrolling down, horizontally synced with the calendar's own scroll. -->
+  <div id="floating-header-wrap" style="display:none;position:fixed;top:0;left:0;right:0;z-index:150;background:#eceef2;border-bottom:2px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+    <table style="border-collapse:collapse;table-layout:fixed"><thead><tr id="floating-header-row"></tr></thead></table>
   </div>
 
   <!-- SPLIT BOOKINGS MODAL (handover day) -->
@@ -2911,7 +2918,10 @@ function render(){renderMonthLabel();renderLegend();renderCalendar();}
 
 function renderMonthLabel(){
   const endD=colDate(VIEW_DAYS);
-  const fmt2=dt=>String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+dt.getFullYear();
+  const isMobile = window.innerWidth <= 640;
+  const fmt2=dt=>isMobile
+    ? String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')
+    : String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+dt.getFullYear();
   document.getElementById('mn-label').textContent=fmt2(viewStartDate)+' \u2014 '+fmt2(endD);
 }
 
@@ -3091,7 +3101,51 @@ function renderCalendar(){
   html+='</tbody>';
   document.getElementById('cal-table').innerHTML=html;
   renderSummary();
+  syncFloatingHeaderContent();
 }
+
+// ── FLOATING DATE HEADER (mobile) ───────────────────────────────
+// Mirrors the real table header into a fixed-position bar that appears once
+// the user scrolls past the calendar's own header, and keeps its horizontal
+// scroll position in sync with the calendar grid.
+function syncFloatingHeaderContent(){
+  if(window.innerWidth > 640) return;
+  const realHeadRow = document.querySelector('.cal-table thead tr');
+  const floatRow = document.getElementById('floating-header-row');
+  if(!realHeadRow || !floatRow) return;
+  floatRow.innerHTML = realHeadRow.innerHTML;
+  syncFloatingHeaderScroll();
+}
+function syncFloatingHeaderScroll(){
+  const calScroll = document.querySelector('.calendar-scroll');
+  const floatWrap = document.getElementById('floating-header-wrap');
+  if(!calScroll || !floatWrap) return;
+  const inner = floatWrap.querySelector('table');
+  if(inner) inner.style.transform = 'translateX(' + (-calScroll.scrollLeft) + 'px)';
+}
+function updateFloatingHeaderVisibility(){
+  if(window.innerWidth > 640) return;
+  const floatWrap = document.getElementById('floating-header-wrap');
+  const realHead = document.querySelector('.cal-table thead');
+  if(!floatWrap || !realHead) return;
+  const realHeadBottom = realHead.getBoundingClientRect().bottom;
+  const shouldShow = realHeadBottom < 0;
+  floatWrap.style.display = shouldShow ? 'block' : 'none';
+}
+(function initFloatingHeader(){
+  document.addEventListener('DOMContentLoaded', () => {
+    const mainEl = document.querySelector('.main');
+    const calScroll = document.querySelector('.calendar-scroll');
+    const calWrap = document.querySelector('.calendar-wrap');
+    // Listen broadly — whichever container actually ends up scrolling
+    // vertically on a given device/layout, this keeps the check in sync.
+    if(mainEl) mainEl.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
+    if(calScroll) calScroll.addEventListener('scroll', () => { syncFloatingHeaderScroll(); updateFloatingHeaderVisibility(); }, {passive:true});
+    if(calWrap) calWrap.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
+    window.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
+    window.addEventListener('resize', () => { syncFloatingHeaderContent(); updateFloatingHeaderVisibility(); });
+  });
+})();
 
 /* ── TOOLTIP ── */
 const tt=document.getElementById('tooltip');
