@@ -2978,11 +2978,12 @@ function buildVehCell(v){
   var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
-      '<div class="veh-name-click" onclick="highlightRow('+v.id+');showVehicleSpecs(event,'+v.id+')" title="Показати характеристики">'+
+      '<div class="veh-name-click" onclick="highlightRow('+v.id+')" title="Виділити рядок">'+
         '<span class="veh-plate-badge">'+v.plate+'</span>'+
         '<span class="veh-name">'+stripYear(v.name)+'</span>'+
       '</div>'+
       '<div class="veh-actions">'+
+        '<button class="veh-act-btn" title="Характеристики" onclick="event.stopPropagation();showVehicleSpecs(event,'+v.id+')" style="color:#9ca3af">ℹ️</button>'+
         '<button class="veh-act-btn" title="Тех. обслуговування" onclick="event.stopPropagation();openToModal('+v.id+')" style="color:'+sc+'">'+ICON_SERVICE+sdot+'</button>'+
         '<button class="veh-act-btn" title="Страхування" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:'+ic+'">'+ICON_INSURANCE+idot+'</button>'+
         '<button class="veh-act-btn" title="Документи" onclick="event.stopPropagation();openDocsModal('+v.id+')" style="color:'+dc+'">'+ICON_DOCS+ddot+'</button>'+
