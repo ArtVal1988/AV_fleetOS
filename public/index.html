@@ -1365,12 +1365,6 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
   </div>
 
-  <!-- FLOATING DATE HEADER (mobile only) — pinned to true screen top while
-       scrolling down, horizontally synced with the calendar's own scroll. -->
-  <div id="floating-header-wrap" style="display:none;position:fixed;top:0;left:0;right:0;z-index:150;background:#eceef2;border-bottom:2px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-    <table style="border-collapse:collapse;table-layout:fixed"><thead><tr id="floating-header-row"></tr></thead></table>
-  </div>
-
   <!-- SPLIT BOOKINGS MODAL (handover day) -->
   <div class="split-modal-overlay" id="split-modal-overlay">
     <div class="split-modal">
@@ -3101,51 +3095,7 @@ function renderCalendar(){
   html+='</tbody>';
   document.getElementById('cal-table').innerHTML=html;
   renderSummary();
-  syncFloatingHeaderContent();
 }
-
-// ── FLOATING DATE HEADER (mobile) ───────────────────────────────
-// Mirrors the real table header into a fixed-position bar that appears once
-// the user scrolls past the calendar's own header, and keeps its horizontal
-// scroll position in sync with the calendar grid.
-function syncFloatingHeaderContent(){
-  if(window.innerWidth > 640) return;
-  const realHeadRow = document.querySelector('.cal-table thead tr');
-  const floatRow = document.getElementById('floating-header-row');
-  if(!realHeadRow || !floatRow) return;
-  floatRow.innerHTML = realHeadRow.innerHTML;
-  syncFloatingHeaderScroll();
-}
-function syncFloatingHeaderScroll(){
-  const calScroll = document.querySelector('.calendar-scroll');
-  const floatWrap = document.getElementById('floating-header-wrap');
-  if(!calScroll || !floatWrap) return;
-  const inner = floatWrap.querySelector('table');
-  if(inner) inner.style.transform = 'translateX(' + (-calScroll.scrollLeft) + 'px)';
-}
-function updateFloatingHeaderVisibility(){
-  if(window.innerWidth > 640) return;
-  const floatWrap = document.getElementById('floating-header-wrap');
-  const realHead = document.querySelector('.cal-table thead');
-  if(!floatWrap || !realHead) return;
-  const realHeadBottom = realHead.getBoundingClientRect().bottom;
-  const shouldShow = realHeadBottom < 0;
-  floatWrap.style.display = shouldShow ? 'block' : 'none';
-}
-(function initFloatingHeader(){
-  document.addEventListener('DOMContentLoaded', () => {
-    const mainEl = document.querySelector('.main');
-    const calScroll = document.querySelector('.calendar-scroll');
-    const calWrap = document.querySelector('.calendar-wrap');
-    // Listen broadly — whichever container actually ends up scrolling
-    // vertically on a given device/layout, this keeps the check in sync.
-    if(mainEl) mainEl.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
-    if(calScroll) calScroll.addEventListener('scroll', () => { syncFloatingHeaderScroll(); updateFloatingHeaderVisibility(); }, {passive:true});
-    if(calWrap) calWrap.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
-    window.addEventListener('scroll', updateFloatingHeaderVisibility, {passive:true});
-    window.addEventListener('resize', () => { syncFloatingHeaderContent(); updateFloatingHeaderVisibility(); });
-  });
-})();
 
 /* ── TOOLTIP ── */
 const tt=document.getElementById('tooltip');
