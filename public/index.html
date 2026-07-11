@@ -1927,10 +1927,7 @@ const CATEGORIES=[
       owner:{name:'Іваненко Олег Васильович',passport:'АА 112233',inn:'1234567890',phone:'+38 050 123 45 67'},
       trusted:{name:'Петренко Сергій Іванович',passport:'КА 554433',inn:'9876543210',phone:'+38 067 123 45 67'},
       docs:{tech_passport:true,owner_passport:true,trusted_passport:true,poa_owner:true,poa_company:true,agency_contract:false,missingCount:1},
-      works:[
-        {id:101,type:'planned',name:'Заміна масла та фільтрів',status:'done',date:'2026-04-15',mileage:85000,labor:600,garage:'СТО Автомайстер',materials:[{name:'Моторна олива Shell 5W-40',qty:5,price:380},{name:'Масляний фільтр',qty:1,price:180}],desc:'Планова заміна'},
-        {id:102,type:'planned',name:'Заміна свічок запалювання',status:'planned',date:'2026-07-01',mileage:90000,labor:400,garage:'',materials:[{name:'Свічки NGK BKR6EK',qty:4,price:180}],desc:'Регламент 90 000 км'},
-      ]},
+      works:[]},
     {id:2,name:'Volkswagen Tiguan 2020',plate:'КА 5678 MH',
       service:{lastKm:54200,nextKm:60000,lastDate:'2026-03-10',status:'ok'},
       insurance:null,
@@ -1941,10 +1938,7 @@ const CATEGORIES=[
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:true,agency_contract:true,missingCount:2},
       insuranceCases:[],
-      works:[
-        {id:201,type:'planned',name:'Заміна повітряного фільтра',status:'done',date:'2026-03-10',mileage:52000,labor:300,garage:'СТО Volkswagen',materials:[{name:'Повітряний фільтр Mann C26010',qty:1,price:320}],desc:''},
-        {id:202,type:'unplanned',name:'Заміна гальмівних колодок',status:'done',date:'2026-05-20',mileage:54000,labor:800,garage:'СТО Форд-Сервіс',materials:[{name:'Колодки Brembo P23030',qty:1,price:650}],desc:'Клієнт повідомив про скрип',downtime:3},
-      ]},
+      works:[]},
     {id:3,name:'Skoda Octavia 2023',plate:'КЕ 2345 GH',
       service:{lastKm:143800,nextKm:144500,lastDate:'2026-05-02',status:'warn'},
       insurance:null,
@@ -1954,9 +1948,7 @@ const CATEGORIES=[
       owner:{name:'Сидоренко Катерина Іванівна',passport:'МН 334455',inn:'1122334455',phone:'+38 093 123 45 67'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:true,agency_contract:true,missingCount:0},
-      works:[
-        {id:301,type:'planned',name:'ТО-1: масло + фільтри',status:'done',date:'2026-02-10',mileage:140000,labor:1200,garage:'СТО Oktavia Service',materials:[{name:'Моторна олива 5W-30',qty:5,price:420}],desc:''},
-      ]},
+      works:[]},
     {id:4,name:'Renault Kangoo 2018',plate:'ХА 7890 EF',
       service:{lastKm:143800,nextKm:144500,lastDate:'2026-06-05',status:'danger'},
       insurance:null,
@@ -1966,9 +1958,7 @@ const CATEGORIES=[
       owner:{name:'Мороз Тетяна Олегівна',passport:'ОД 667788',inn:'6677889900',phone:'+38 073 123 45 67'},
       trusted:{name:'Бондар Ірина Романівна',passport:'ПА 990011',inn:'4455667788',phone:'+38 067 123 45 00'},
       docs:{tech_passport:true,owner_passport:false,trusted_passport:false,poa_owner:false,poa_company:false,agency_contract:false,missingCount:3},
-      works:[
-        {id:401,type:'unplanned',name:'Заміна акумулятора',status:'done',date:'2026-05-20',mileage:143500,labor:200,garage:'АЗС Мотор',materials:[{name:'Акумулятор Bosch S4 60Ah',qty:1,price:3200}],desc:'Не тримає заряд',downtime:1},
-      ]},
+      works:[]},
   ]},
   {name:'Мікроавтобуси / Вантажні',vehicles:[
     {id:5,name:'Ford Transit 2019',plate:'ВА 9012 ОР',
@@ -1980,10 +1970,7 @@ const CATEGORIES=[
       owner:{name:'Захаренко Павло Миколайович',passport:'КА 556677',inn:'3344556677',phone:'+38 067 111 11 11'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:true,agency_contract:true,missingCount:0},
-      works:[
-        {id:501,type:'planned',name:'ТО: масло + фільтри',status:'done',date:'2026-05-01',mileage:88000,labor:900,garage:'СТО Transit',materials:[{name:'Моторна олива Shell 5W-30',qty:7,price:420},{name:'Масляний фільтр',qty:1,price:220}],desc:''},
-        {id:502,type:'planned',name:'Заміна ременя ГРМ',status:'planned',date:'2026-09-01',mileage:90000,labor:2500,garage:'',materials:[{name:'Комплект ГРМ',qty:1,price:4800}],desc:'Терміново'},
-      ]},
+      works:[]},
     {id:6,name:'Mercedes-Benz Sprinter 2022',plate:'АА 3456 СD',
       service:{lastKm:32100,nextKm:40000,lastDate:'2026-01-20',status:'ok'},
       insurance:null,
@@ -1993,9 +1980,7 @@ const CATEGORIES=[
       owner:{name:'Лисенко Андрій Вікторович',passport:'АА 223344',inn:'2233445566',phone:'+38 050 999 99 99'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:true,agency_contract:false,missingCount:1},
-      works:[
-        {id:601,type:'planned',name:'ТО-1: комплексне',status:'done',date:'2026-01-20',mileage:30000,labor:1500,garage:'Mercedes-Benz Service',materials:[{name:'Моторна олива Mercedes 5W-30',qty:7,price:480},{name:'Масляний фільтр',qty:1,price:220},{name:'Паливний фільтр',qty:1,price:340}],desc:''},
-      ]},
+      works:[]},
   ]},
   {name:'Спецтехніка / Інше',vehicles:[
     {id:7,name:'Jeep Wrangler 2020',plate:'ОА 1122 КК',
@@ -2007,9 +1992,7 @@ const CATEGORIES=[
       owner:{name:'Директор Іванов Олег',passport:'АА 000001',inn:'0000000001',phone:'+38 044 000 00 01'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:true,agency_contract:true,missingCount:0},
-      works:[
-        {id:701,type:'planned',name:'Заміна масла',status:'done',date:'2025-12-10',mileage:60000,labor:500,garage:'СТО Jeep',materials:[{name:'Моторна олива 5W-30',qty:5,price:400}],desc:''},
-      ]},
+      works:[]},
     {id:8,name:'Toyota Land Cruiser 2021',plate:'МН 3344 ТТ',
       service:{lastKm:44000,nextKm:50000,lastDate:'2026-02-15',status:'ok'},
       insurance:null,
@@ -2019,10 +2002,7 @@ const CATEGORIES=[
       owner:{name:'Шевченко Інвестор Миколайович',passport:'МН 770011',inn:'7700112233',phone:'+38 050 770 01 12'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,poa_company:false,agency_contract:false,missingCount:1},
-      works:[
-        {id:801,type:'planned',name:'Заміна масла та фільтрів',status:'done',date:'2026-02-15',mileage:42000,labor:700,garage:'Toyota Service',materials:[{name:'Моторна олива Toyota 5W-40',qty:6,price:450}],desc:''},
-        {id:802,type:'planned',name:'Заміна гальмівної рідини',status:'planned',date:'2026-08-01',mileage:50000,labor:400,garage:'',materials:[{name:'Гальмівна рідина DOT4',qty:1,price:180}],desc:''},
-      ]},
+      works:[]},
   ]},
   {name:'TopRent',vehicles:[
     {id:9,name:'Skoda Rapid 2017',plate:'__5119__',
@@ -2036,7 +2016,7 @@ const CATEGORIES=[
       owner:{name:'TopRent Fleet LLC',passport:'',inn:'40123456',phone:'+38 044 200 10 10'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:true,agency_contract:true,missingCount:0},
-      works:[{id:9001,type:'planned',name:'Заміна масла та фільтрів',status:'done',date:'2026-05-10',mileage:32000,labor:550,garage:'TopRent СТО',materials:[{name:'Моторна олива 5W-30',qty:4,price:380}],desc:''}]
+      works:[]
     },
 
   ]},
@@ -2065,7 +2045,7 @@ const CATEGORIES=[
       owner:{name:'Бondаренко Сервіс ТОВ',passport:'',inn:'30112233',phone:'+38 044 311 22 33'},
       trusted:{name:'Кушнір Олег Andrійович',passport:'ВН 112244',inn:'2233445566',phone:'+38 067 311 22 11'},
       docs:{tech_passport:true,owner_passport:true,trusted_passport:true,poa_owner:false,agency_contract:false,missingCount:0},
-      works:[{id:1101,type:'unplanned',name:'Заміна гальмівних колодок',status:'done',date:'2026-03-20',mileage:71200,labor:600,garage:'СТО Швидка допомога',materials:[{name:'Колодки гальмівні передні',qty:1,price:850}],desc:'Скрип при гальмуванні'}]
+      works:[]
     },
 
     {id:12,name:'Ford Fiesta 2018',plate:'__2996__',
@@ -2079,7 +2059,7 @@ const CATEGORIES=[
       owner:{name:'Карпенко Віталій Петрович',passport:'АТ 263500',inn:'5566778899',phone:'+38 050 263 50 00'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:true,agency_contract:false,missingCount:0},
-      works:[{id:1201,type:'planned',name:'Плановий огляд перед сезоном',status:'planned',date:'2026-07-15',mileage:90000,labor:400,garage:'',materials:[],desc:''}]
+      works:[]
     },
 
     {id:13,name:'Ford Fiesta 2017',plate:'__9355__',
@@ -2093,7 +2073,7 @@ const CATEGORIES=[
       owner:{name:'Карпенко Віталій Петрович',passport:'АТ 263500',inn:'5566778899',phone:'+38 050 263 50 00'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:true,agency_contract:false,missingCount:0},
-      works:[{id:1201,type:'planned',name:'Плановий огляд перед сезоном',status:'planned',date:'2026-07-15',mileage:50000,labor:400,garage:'',materials:[],desc:''}]
+      works:[]
     },
 
     {id:14,name:'Ford Fiesta 2017',plate:'__4972__',
@@ -2123,7 +2103,7 @@ const CATEGORIES=[
       owner:{name:'Гордієнко Назар Ігорович',passport:'АА 715700',inn:'1122998877',phone:'+38 099 715 70 00'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:false,trusted_passport:false,poa_owner:false,agency_contract:false,missingCount:1},
-      works:[{id:1801,type:'unplanned',name:'Заміна акумулятора',status:'done',date:'2026-06-01',mileage:69000,labor:150,garage:'АЗС Мотор',materials:[{name:'Акумулятор Bosch S4',qty:1,price:2900}],desc:'Розряджався'}]
+      works:[]
     },
 
     {id:19,name:'Nissan Sentra 2019',plate:'__8298__',
@@ -2144,7 +2124,7 @@ const CATEGORIES=[
       trusted:{name:'Семенюк Ольга Олексіївна',passport:'ВС 690911',inn:'6677001133',phone:'+38 067 690 91 11'},
       docs:{tech_passport:true,owner_passport:true,trusted_passport:true,poa_owner:true,agency_contract:true,missingCount:0},
       insuranceCases:[],
-      works:[{id:2001,type:'planned',name:'ТО-1 — заміна масла',status:'done',date:'2026-05-15',mileage:18000,labor:500,garage:'Nissan Service',materials:[{name:'Моторна олива 5W-30',qty:4,price:420},{name:'Фільтр оливний',qty:1,price:180}],desc:''}]
+      works:[]
     },
 
     {id:21,name:'Citroen C3 Aircross 2019',plate:'__6068__',
@@ -2184,7 +2164,7 @@ const CATEGORIES=[
       owner:{name:'Бізнес Авто ТОВ',passport:'',inn:'40998877',phone:'+38 044 951 40 00'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:true,agency_contract:true,missingCount:0},
-      works:[{id:2701,type:'planned',name:'Планове ТО 40 000 км',status:'done',date:'2026-06-10',mileage:41000,labor:900,garage:'Honda Service',materials:[{name:'Моторна олива 0W-20',qty:5,price:480},{name:'Свічки запалювання',qty:4,price:1200}],desc:''}]
+      works:[]
     },
 
     {id:28,name:'Volkswagen Passat 2020',plate:'__8396__',
@@ -2225,7 +2205,7 @@ const CATEGORIES=[
       owner:{name:'Литвин Максим Сергійович',passport:'АТ 066400',inn:'3344112255',phone:'+38 050 066 40 00'},
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:false,agency_contract:false,missingCount:1},
-      works:[{id:3401,type:'unplanned',name:'Ремонт підвіски',status:'done',date:'2026-05-01',mileage:62000,labor:1800,garage:'4x4 Service Pro',materials:[{name:'Амортизатор передній',qty:2,price:2400},{name:'Стійка стабілізатора',qty:2,price:600}],desc:'Стук при русі по нерівностях'}]
+      works:[]
     },
 
     {id:35,name:'Jeep Renegade 2020',plate:'__1750__',
@@ -2302,7 +2282,7 @@ const CATEGORIES=[
       trusted:null,
       docs:{tech_passport:true,owner_passport:true,trusted_passport:false,poa_owner:true,agency_contract:true,missingCount:0},
       insuranceCases:[],
-      works:[{id:4601,type:'planned',name:'ТО згідно регламенту',status:'done',date:'2026-04-20',mileage:51000,labor:1100,garage:'Lexus Service',materials:[{name:'Моторна олива синтетична',qty:6,price:650}],desc:''}]
+      works:[]
     },
 
     {id:47,name:'Chevrolet Traverse 2019',plate:'__9284__',
