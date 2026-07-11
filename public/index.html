@@ -7600,6 +7600,42 @@ window.deleteBooking = function(bid){
   if(_token) apiFetch('DELETE','/bookings/'+bid);
 };
 
+// Auto-save stickers to server — the backend already has full CRUD for
+// these, the frontend just wasn't calling it yet.
+const _origSaveSticker = saveSticker;
+window.saveSticker = async function(){
+  const text = document.getElementById('sticker-text').value.trim();
+  if(!text) { _origSaveSticker(); return; } // let it show its own validation alert
+  const author = document.getElementById('sticker-author').value.trim();
+  const color = stickerColorDraft;
+  closeStickerForm();
+  if(_token){
+    const r = await apiFetch('POST','/stickers', {text, color, author});
+    addSticker(r?.id ? {text, color, author, id:r.id} : {text, color, author});
+    if(r?.id) nextStickerId = Math.max(nextStickerId, r.id+1);
+  } else {
+    addSticker({text, color, author});
+  }
+  renderStickers();
+};
+
+const _origRemoveSticker = removeSticker;
+window.removeSticker = function(id){
+  if(!confirm('Видалити цей стікер?')) return;
+  stickers = stickers.filter(s=>s.id!==id);
+  renderStickers();
+  if(_token) apiFetch('DELETE','/stickers/'+id);
+};
+
+const _origTogglePin = togglePinSticker;
+window.togglePinSticker = function(id){
+  const s = stickers.find(x=>x.id===id);
+  if(!s) return;
+  s.pinned = !s.pinned;
+  renderStickers();
+  if(_token) apiFetch('PUT','/stickers/'+id, {text:s.text, color:s.color, author:s.author, pinned:s.pinned});
+};
+
 // ── Close modals on Escape or overlay background click ──────────
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
