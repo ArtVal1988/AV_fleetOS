@@ -1172,7 +1172,8 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="date" id="rep-to" class="vf-inp">
         </div>
         <button onclick="generateProfitabilityReport()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Сформувати звіт</button>
-        <button id="rep-csv-btn" onclick="exportProfitabilityCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">↓ CSV</button>
+        <button id="rep-csv-btn" onclick="exportProfitabilityCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">↓ CSV (підсумок)</button>
+        <button id="rep-grid-csv-btn" onclick="exportProfitabilityGridCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">📅 CSV (по днях, як графік)</button>
       </div>
       <div style="font-size:10px;color:#9ca3af;margin:8px 2px 0">Враховуються лише замовлення зі статусом «В оренді»; дохід за бронювання, що частково виходить за межі періоду, пропорційно розподіляється по днях.</div>
       <div id="rep-results" style="margin-top:18px"></div>
@@ -4595,6 +4596,7 @@ function renderReportResults(rows){
   if(!rows.length){
     wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">За цей період не знайдено бронювань зі статусом «В оренді»</div>';
     csvBtn.style.display = 'none';
+    document.getElementById('rep-grid-csv-btn').style.display = 'none';
     return;
   }
   const totalDays = rows.reduce((s,r)=>s+r.days,0);
@@ -4633,6 +4635,7 @@ function renderReportResults(rows){
     </table>
   `;
   csvBtn.style.display = 'inline-block';
+  document.getElementById('rep-grid-csv-btn').style.display = 'inline-block';
 }
 function exportProfitabilityCSV(){
   if(!lastReportData) return;
@@ -4643,6 +4646,41 @@ function exportProfitabilityCSV(){
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
   a.download = `dohidnist_${fromStr}_to_${toStr}.csv`;
+  a.click();
+}
+function exportProfitabilityGridCSV(){
+  if(!lastReportData) return;
+  const {fromStr, toStr} = lastReportData;
+  const periodStart = new Date(fromStr);
+  const periodEnd = new Date(toStr);
+  const dayCount = Math.round((periodEnd - periodStart)/86400000) + 1;
+  const dayList = Array.from({length:dayCount}, (_,i) => {
+    const d = new Date(periodStart); d.setDate(d.getDate()+i);
+    return d;
+  });
+  const fmtDay = d => String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+
+  // For each vehicle+day, find the daily rate of any 'rented' booking covering that day.
+  const header = ['Категорія','Номер','Авто', ...dayList.map(fmtDay)];
+  const csvRows = [];
+  CATEGORIES.forEach(cat => {
+    cat.vehicles.forEach(v => {
+      const relevantBookings = bookings.filter(b => b.vehicleId===v.id && b.status==='rented');
+      const dayCells = dayList.map(d => {
+        const dStr = d.toISOString().slice(0,10);
+        const b = relevantBookings.find(bk => dStr >= bk.start && dStr <= getEffectiveEnd(bk));
+        if(!b) return '';
+        return b.rate + (b.currency||'$');
+      });
+      // Skip vehicles with zero activity in the period entirely? No — user
+      // explicitly wants them included with empty cells.
+      csvRows.push([cat.name, v.plate, v.name, ...dayCells]);
+    });
+  });
+  const csv = [header, ...csvRows].map(row => row.map(x=>`"${x}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `dohidnist_grafik_${fromStr}_to_${toStr}.csv`;
   a.click();
 }
 function exportCSV(){
