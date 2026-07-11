@@ -1155,6 +1155,17 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 <!-- VEHICLES LIST PANEL -->
+<!-- DASHBOARD PANEL -->
+<div id="dashboard-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:900px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">◈ Дашборд</div>
+      <button onclick="closeDashboard()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px" id="dashboard-body"></div>
+  </div>
+</div>
+
 <!-- PROFITABILITY REPORT PANEL -->
 <div id="report-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -1312,7 +1323,7 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
   <div class="sidebar-scroll">
   <nav>
-    <div class="nav-item" data-label="Дашборд"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
+    <div class="nav-item" data-label="Дашборд" onclick="openDashboard()"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
     <div class="nav-item" data-label="Транспортні засоби" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
@@ -4533,6 +4544,112 @@ function goToday(){
 function toggleHide(key){if(hiddenStatuses.has(key))hiddenStatuses.delete(key);else hiddenStatuses.add(key);render();}
 
 /* ── EXPORT ── */
+// ── DASHBOARD ──────────────────────────────────────────────────────
+function openDashboard(){
+  document.getElementById('dashboard-panel-overlay').style.display = 'flex';
+  renderDashboard();
+}
+function closeDashboard(){
+  document.getElementById('dashboard-panel-overlay').style.display = 'none';
+}
+function renderDashboard(){
+  const todayStr = today.toISOString().slice(0,10);
+  const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+
+  // ── 1. Today's activity ──────────────────────────────────────────
+  const pickupsToday = bookings.filter(b => b.status==='rented' && b.start===todayStr);
+  const returnsToday = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b)===todayStr);
+  const overdue = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b) < todayStr);
+
+  const activityHtml = `
+    <div class="msec-b2" style="margin-bottom:18px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">📅 Сьогодні (${fmtD(todayStr)})</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        ${dashActivityCol('↑ Отримання', pickupsToday, '#2563eb')}
+        ${dashActivityCol('↓ Повернення', returnsToday, '#166534')}
+        ${dashActivityCol('⚠ Прострочено', overdue, '#dc2626')}
+      </div>
+    </div>`;
+
+  // ── 2. Fleet status ───────────────────────────────────────────────
+  const totalVehicles = ALL_VEHICLES.length;
+  const activeToday = new Set();
+  bookings.forEach(b => { if(b.start<=todayStr && getEffectiveEnd(b)>=todayStr) activeToday.add(b.vehicleId+'|'+b.status); });
+  const countByStatus = {};
+  activeToday.forEach(key => { const st = key.split('|')[1]; countByStatus[st] = (countByStatus[st]||0)+1; });
+  const inRental = countByStatus['rented']||0;
+  const reserved = (countByStatus['reserved']||0) + (countByStatus['res-docs']||0);
+  const inRepair = countByStatus['repair']||0;
+  const busyTotal = Object.values(countByStatus).reduce((a,b)=>a+b,0);
+  const available = Math.max(0, totalVehicles - busyTotal);
+  const utilization = totalVehicles ? Math.round(inRental/totalVehicles*100) : 0;
+
+  const fleetHtml = `
+    <div class="msec-b3" style="margin-bottom:18px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🚗 Стан парку зараз</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+        ${dashStatCard(totalVehicles, 'Всього авто', '#374151')}
+        ${dashStatCard(inRental, 'В оренді', '#dc2626')}
+        ${dashStatCard(reserved, 'Резерв', '#16a34a')}
+        ${dashStatCard(inRepair, 'В ремонті', '#ea580c')}
+        ${dashStatCard(available, 'Вільні', '#2563eb')}
+      </div>
+      <div style="margin-top:12px;background:#f3f4f6;border-radius:8px;height:10px;overflow:hidden">
+        <div style="width:${utilization}%;height:100%;background:linear-gradient(90deg,#2563eb,#1d4ed8);border-radius:8px"></div>
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px">Завантаженість парку: <b style="color:#1a1d26">${utilization}%</b></div>
+    </div>`;
+
+  // ── 3. Needs attention ────────────────────────────────────────────
+  const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
+  const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
+  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
+  const serviceSoon = ALL_VEHICLES.filter(v => v.service && (v.service.status==='warn' || v.service.status==='danger'));
+  const missingDocs = ALL_VEHICLES.filter(v => v.docs && v.docs.missingCount > 0);
+
+  const attentionHtml = `
+    <div class="msec-b5">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${dashAlertList('🛡 ОСАГО спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
+        ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(v.kasko.end))}
+        ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => (v.service.nextKm-v.service.lastKm>0? (v.service.nextKm-v.service.lastKm)+' км залишилось':'Пора на ТО'))}
+        ${dashAlertList('📄 Неповний комплект документів', missingDocs, v => v.docs.missingCount+' відсутньо')}
+      </div>
+    </div>`;
+
+  document.getElementById('dashboard-body').innerHTML = activityHtml + fleetHtml + attentionHtml;
+}
+function dashActivityCol(title, list, color){
+  return `<div>
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
+    ${list.length ? list.slice(0,6).map(b => {
+      const v = getVehicle(b.vehicleId);
+      return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
+        <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
+        <span style="color:#6b7280"> — ${b.customer?.name||''}</span>
+      </div>`;
+    }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
+  </div>`;
+}
+function dashStatCard(value, label, color){
+  return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 10px;text-align:center">
+    <div style="font-size:22px;font-weight:800;color:${color}">${value}</div>
+    <div style="font-size:10px;color:#6b7280;margin-top:2px">${label}</div>
+  </div>`;
+}
+function dashAlertList(title, list, detailFn){
+  return `<div>
+    <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
+    ${list.length ? list.slice(0,6).map(v => `
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
+        <span><span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span> <span style="color:#6b7280">${stripYear(v.name)}</span></span>
+        <span style="color:#dc2626;font-weight:600">${detailFn(v)}</span>
+      </div>
+    `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
+  </div>`;
+}
+
 // ── PROFITABILITY REPORT ──────────────────────────────────────────
 // Converts any booking amount to its $ equivalent using the booking's own
 // exchange rate (₴/€ amount ÷ курс). $ amounts pass through unchanged.
