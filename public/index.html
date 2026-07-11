@@ -146,6 +146,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .cal-table tbody tr.veh-row{border-bottom:1px solid var(--border);}
 .cal-table tbody tr.veh-row:hover{background:rgba(37,99,235,.03);}.cal-table tbody tr.veh-row:hover .td-vehicle{background:#f0f2ff!important;}
 .td-vehicle{min-width:338px;width:338px;max-width:338px;position:sticky;left:0;z-index:10;background:#ffffff;border-right:2px solid var(--border);padding:8px 12px;vertical-align:middle;white-space:nowrap;}
+
+/* MOBILE: keep only the plate number pinned on the left while scrolling the
+   grid horizontally — name/icons scroll away with it instead of eating up
+   the narrow screen width. */
+@media (max-width: 640px){
+  .th-vehicle,.td-vehicle{min-width:84px;width:84px;max-width:84px;padding:8px 6px;}
+  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
+  .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 5px;}
+  .th-vehicle{font-size:0;}
+}
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
 .tdveh-b3{background:#f0fdf4!important;box-shadow:inset 3px 0 0 #4ade80;}
