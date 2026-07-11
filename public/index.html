@@ -7145,6 +7145,9 @@ function setVehicleCategoryColor(name, colorHex){
   const cat = CATEGORIES.find(c=>c.name===name);
   if(!cat) return;
   cat.colorHex = colorHex;
+  // No dedicated "categories" table on the backend — store the color on each
+  // vehicle in the group too, so it survives a reload via the vehicles data.
+  cat.vehicles.forEach(v => { v.categoryColor = colorHex; persistVehicle(v); });
   renderVehiclesPanelList();
   render();
 }
@@ -7161,6 +7164,7 @@ function renameVehicleCategory(oldName, newName){
   cat.name = newName;
   // Keep archive "restore to original category" pointers in sync with the rename.
   ALL_VEHICLES.forEach(v => { if(v.archivedFrom === oldName) v.archivedFrom = newName; });
+  cat.vehicles.forEach(v => { v.category = newName; persistVehicle(v); });
   renderVehiclesPanelList();
   render();
 }
@@ -7608,6 +7612,11 @@ async function syncFromServer(){
       let targetCat = CATEGORIES.find(c=>c.name.toLowerCase()===v.category.toLowerCase());
       if(!targetCat){ targetCat = {name:v.category, vehicles:[]}; CATEGORIES.push(targetCat); }
       targetCat.vehicles.push(v);
+    });
+    // Restore any custom category color saved on its vehicles.
+    CATEGORIES.forEach(cat=>{
+      const withColor = cat.vehicles.find(v=>v.categoryColor);
+      if(withColor) cat.colorHex = withColor.categoryColor;
     });
   }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
