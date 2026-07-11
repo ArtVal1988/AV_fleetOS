@@ -7174,6 +7174,7 @@ function archiveVehicle(id){
   let archiveCat = CATEGORIES.find(c=>c.name==='Архів');
   if(!archiveCat){ archiveCat = {name:'Архів', vehicles:[]}; CATEGORIES.push(archiveCat); }
   archiveCat.vehicles.push(v);
+  v.category = 'Архів';
   renderVehiclesPanelList();
   render();
 }
@@ -7186,6 +7187,7 @@ function restoreVehicleFromArchive(id){
   let targetCat = CATEGORIES.find(c=>c.name===targetName);
   if(!targetCat){ targetCat = {name:targetName, vehicles:[]}; CATEGORIES.push(targetCat); }
   targetCat.vehicles.push(v);
+  v.category = targetName;
   delete v.archivedFrom;
   renderVehiclesPanelList();
   render();
@@ -7322,6 +7324,7 @@ function saveVehicleForm(){
     v.plate = plate;
     v.vin = vin;
     v.specs = specs;
+    v.category = categoryName;
     // Move to a different category group if it changed
     const currentCat = CATEGORIES.find(c=>c.vehicles.includes(v));
     if(!currentCat || currentCat.name !== categoryName){
@@ -7333,7 +7336,7 @@ function saveVehicleForm(){
   } else {
     const newId = ALL_VEHICLES.reduce((m,x)=>Math.max(m,x.id), 0) + 1;
     const vehicle = {
-      id: newId, name: displayName, plate, vin, specs,
+      id: newId, name: displayName, plate, vin, specs, category: categoryName,
       service: {lastKm:0, nextKm:0, lastDate:'', status:'ok'},
       insurance: null, osago: null, kasko: null,
       sts: {number:'', date:''}, poaExpiry: null,
@@ -7578,7 +7581,35 @@ async function syncFromServer(){
     apiFetch('GET','/stickers'),
   ]);
   if(sBookings){ bookings.length=0; sBookings.forEach(b=>bookings.push(b)); nextBid=bookings.length?Math.max(...bookings.map(b=>b.id))+1:1; }
-  if(sVehicles){ ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); }); }
+  if(sVehicles){
+    ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); });
+    // Any vehicle the server knows about but isn't in our hardcoded seed list
+    // (created via the Транспортні засоби form) needs to be added back too.
+    const knownIds = new Set(ALL_VEHICLES.map(v=>v.id));
+    Object.keys(sVehicles).forEach(idStr=>{
+      const id = parseInt(idStr);
+      if(knownIds.has(id)) return;
+      const data = sVehicles[idStr];
+      if(!data || !data.plate) return; // incomplete/stale record — skip
+      const catName = data.category || 'Інше';
+      let cat = CATEGORIES.find(c=>c.name.toLowerCase()===catName.toLowerCase());
+      if(!cat){ cat = {name:catName, vehicles:[]}; CATEGORIES.push(cat); }
+      const vehicle = {id, ...data};
+      cat.vehicles.push(vehicle);
+      ALL_VEHICLES.push(vehicle);
+    });
+    // A vehicle's stored category may have changed since the seed data was
+    // written — make sure it's actually sitting in the right group.
+    ALL_VEHICLES.forEach(v=>{
+      if(!v.category) return;
+      const currentCat = CATEGORIES.find(c=>c.vehicles.includes(v));
+      if(currentCat && currentCat.name === v.category) return;
+      if(currentCat) currentCat.vehicles = currentCat.vehicles.filter(x=>x.id!==v.id);
+      let targetCat = CATEGORIES.find(c=>c.name.toLowerCase()===v.category.toLowerCase());
+      if(!targetCat){ targetCat = {name:v.category, vehicles:[]}; CATEGORIES.push(targetCat); }
+      targetCat.vehicles.push(v);
+    });
+  }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
   ALL_VEHICLES.forEach(v=>recalcMissingDocs(v));
   renderStickers(); render();
@@ -7634,6 +7665,39 @@ window.togglePinSticker = function(id){
   s.pinned = !s.pinned;
   renderStickers();
   if(_token) apiFetch('PUT','/stickers/'+id, {text:s.text, color:s.color, author:s.author, pinned:s.pinned});
+};
+
+// Auto-save vehicles to server — routes/vehicles.js already has PUT /:id
+// storing the whole object as service_data; we just weren't calling it.
+function persistVehicle(v){
+  if(!_token || !v) return;
+  const {id, ...data} = v;
+  apiFetch('PUT','/vehicles/'+id, data);
+}
+const _origSaveVehicleForm = saveVehicleForm;
+window.saveVehicleForm = function(){
+  const idBefore = document.getElementById('vf-id').value;
+  _origSaveVehicleForm();
+  // If the form is still open, validation failed — nothing to persist.
+  if(document.getElementById('vehicle-form-overlay').style.display !== 'none') return;
+  const id = idBefore ? parseInt(idBefore) : ALL_VEHICLES[ALL_VEHICLES.length-1]?.id;
+  persistVehicle(ALL_VEHICLES.find(x=>x.id===id));
+};
+const _origSaveDocChanges = saveDocChanges;
+window.saveDocChanges = function(){
+  const vid = docsVehicleId;
+  _origSaveDocChanges();
+  persistVehicle(ALL_VEHICLES.find(x=>x.id===vid));
+};
+const _origArchiveVehicle = archiveVehicle;
+window.archiveVehicle = function(id){
+  _origArchiveVehicle(id);
+  persistVehicle(ALL_VEHICLES.find(x=>x.id===id));
+};
+const _origRestoreVehicle = restoreVehicleFromArchive;
+window.restoreVehicleFromArchive = function(id){
+  _origRestoreVehicle(id);
+  persistVehicle(ALL_VEHICLES.find(x=>x.id===id));
 };
 
 // ── Close modals on Escape or overlay background click ──────────
