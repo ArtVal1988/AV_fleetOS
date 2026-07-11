@@ -151,7 +151,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
    grid horizontally — name/icons scroll away with it instead of eating up
    the narrow screen width. */
 @media (max-width: 640px){
+  .topbar{padding:16px 10px 10px;}
+  .stickers-bar{padding:8px 10px;}
+  .content-split{padding:0 10px 10px;}
   .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
+  .page-title{display:none;}
   .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
   .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
   .th-vehicle{font-size:0;}
