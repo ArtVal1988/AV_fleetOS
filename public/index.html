@@ -151,8 +151,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
    grid horizontally — name/icons scroll away with it instead of eating up
    the narrow screen width. */
 @media (max-width: 640px){
-  .topbar{padding:16px 10px 10px;}
-  .stickers-bar{padding:8px 10px;}
+  .topbar{padding:8px 10px 6px;}
+  .month-nav{padding:2px;}
+  .mn-btn{padding:5px 8px;}
+  .today-btn{padding:5px 9px;}
+  .stickers-bar{padding:6px 10px;gap:6px;}
+  .sticker-card{width:120px;height:64px;padding:6px 8px 5px;font-size:10px;}
+  .sticker-text{-webkit-line-clamp:2;}
+  .sticker-label{font-size:7px;margin-bottom:1px;}
+  .sticker-author{font-size:8px;}
+  .sticker-pin{top:3px;right:16px;font-size:9px;}
+  .sticker-del{font-size:9px;top:2px;right:2px;}
   .content-split{padding:0 10px 10px;}
   .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
   .page-title{display:none;}
