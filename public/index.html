@@ -4670,7 +4670,7 @@ function exportProfitabilityGridCSV(){
         const dStr = d.toISOString().slice(0,10);
         const b = relevantBookings.find(bk => dStr >= bk.start && dStr <= getEffectiveEnd(bk));
         if(!b) return '';
-        return b.rate + (b.currency||'$');
+        return b.rate;
       });
       // Skip vehicles with zero activity in the period entirely? No — user
       // explicitly wants them included with empty cells.
