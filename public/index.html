@@ -3036,7 +3036,7 @@ function renderCalendar(){
   orderedCategories.forEach((cat,catIdx)=>{
     const defaultPalette = ['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#9ca3af'];
     if(!cat.colorHex) cat.colorHex = defaultPalette[catIdx % defaultPalette.length];
-    const tdVehStyle = 'background:'+hexToRgba(cat.colorHex,.09)+'!important;box-shadow:inset 3px 0 0 '+cat.colorHex+';';
+    const tdVehStyle = 'background:'+mixWithWhite(cat.colorHex,.09)+'!important;box-shadow:inset 3px 0 0 '+cat.colorHex+';';
     const isCollapsed = collapsedCategories.has(cat.name);
     html+=`<tr class="cat-row${isCollapsed?' collapsed':''}" onclick="toggleCategoryCollapse('${cat.name.replace(/'/g,"\\'")}')">
       <td colspan="${total+1}"><span class="cat-row-chevron">${isCollapsed?'▸':'▾'}</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
@@ -6647,6 +6647,18 @@ function hexToRgba(hex, alpha){
   if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
   const r = parseInt(hex.slice(0,2),16)||0, g = parseInt(hex.slice(2,4),16)||0, bch = parseInt(hex.slice(4,6),16)||0;
   return `rgba(${r},${g},${bch},${alpha})`;
+}
+// Blends a color with white at the given alpha and returns a fully OPAQUE
+// rgb() — used for the sticky vehicle column, which must never be see-through
+// (a real rgba background lets scrolled content bleed through underneath it).
+function mixWithWhite(hex, alpha){
+  hex = (hex||'#888888').replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const r = parseInt(hex.slice(0,2),16)||0, g = parseInt(hex.slice(2,4),16)||0, bch = parseInt(hex.slice(4,6),16)||0;
+  const mr = Math.round(r*alpha + 255*(1-alpha));
+  const mg = Math.round(g*alpha + 255*(1-alpha));
+  const mb = Math.round(bch*alpha + 255*(1-alpha));
+  return `rgb(${mr},${mg},${mb})`;
 }
 function setVehicleCategoryColor(name, colorHex){
   const cat = CATEGORIES.find(c=>c.name===name);
