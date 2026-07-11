@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .stickers-row{display:flex;gap:10px;flex:1;min-width:0;overflow-x:auto;padding-bottom:2px;}
 .sticker-card{position:relative;flex-shrink:0;width:160px;height:80px;border-radius:8px;padding:7px 10px 6px;font-size:11px;line-height:1.3;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
-.sticker-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:default;}
+.sticker-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
 .sticker-pin{position:absolute;top:6px;right:48px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
 .sticker-edit{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:11px;opacity:0;transition:opacity .15s;color:inherit;padding:2px 4px;}
 .sticker-card:hover .sticker-edit{opacity:.5;}
@@ -1442,6 +1442,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <!-- TOOLTIP -->
 <div class="tooltip" id="tooltip"></div>
 <div id="vehicle-specs-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:260px;font-family:'Verdana',sans-serif;font-size:12px"></div>
+<div id="sticker-fulltext-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:240px;font-family:'Verdana',sans-serif;font-size:12px"></div>
 
 <!-- MINI PICKER (empty cell) -->
 <div class="mini-picker" id="mini-picker" style="display:none"></div>
@@ -3002,7 +3003,7 @@ function renderStickers(){
       <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати">✎</button>
       <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
       <div class="sticker-label">${STICKER_LABELS[s.color]||''}</div>
-      <div class="sticker-text" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
+      <div class="sticker-text" onclick="showStickerFullText(event,${s.id})" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
       <div class="sticker-author">— ${s.author||'Анонім'}</div>
     </div>
   `).join('');
@@ -4256,7 +4257,43 @@ document.addEventListener('click', (e) => {
   if(popup && popup.style.display==='block' && !popup.contains(e.target) && !e.target.closest('.veh-name-click')){
     popup.style.display='none';
   }
+  const stickerPopup = document.getElementById('sticker-fulltext-popup');
+  if(stickerPopup && stickerPopup.style.display==='block' && !stickerPopup.contains(e.target) && !e.target.closest('.sticker-text')){
+    stickerPopup.style.display='none';
+  }
 });
+
+function showStickerFullText(e, id){
+  e.stopPropagation();
+  const popup = document.getElementById('sticker-fulltext-popup');
+  const s = stickers.find(x=>x.id===id);
+  if(!popup || !s) return;
+
+  if(popup.style.display==='block' && popup.dataset.id==String(id)){
+    popup.style.display='none';
+    return;
+  }
+  popup.dataset.id = id;
+
+  popup.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">
+      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;font-weight:700">${STICKER_LABELS[s.color]||''}</div>
+      <button onclick="document.getElementById('sticker-fulltext-popup').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px">✕</button>
+    </div>
+    <div style="white-space:pre-wrap;word-break:break-word;color:#1a1d26;margin-bottom:8px">${s.text}</div>
+    <div style="text-align:right;font-size:11px;color:#6b7280;font-style:italic">— ${s.author||'Анонім'}</div>
+  `;
+
+  popup.style.display = 'block';
+  const rect = e.currentTarget.getBoundingClientRect();
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  const popupWidth = 240;
+  if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
+  if(top + 200 > window.innerHeight) top = Math.max(8, rect.top - 200);
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+}
 
 /* ── MILEAGE UPDATE ── */
 function showKmEditForm(vid){
