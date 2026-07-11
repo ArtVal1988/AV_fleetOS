@@ -998,6 +998,7 @@ input.dm-pf-val.tel{font-size:14px;}
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.12.38/bundle/libphonenumber-max.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <body>
 <div id="login-overlay" style="position:fixed;inset:0;background:#dde1e8;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;padding:40px 44px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
@@ -1174,6 +1175,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <button onclick="generateProfitabilityReport()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Сформувати звіт</button>
         <button id="rep-csv-btn" onclick="exportProfitabilityCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">↓ CSV (підсумок)</button>
         <button id="rep-grid-csv-btn" onclick="exportProfitabilityGridCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">📅 CSV (по днях, як графік)</button>
+        <button id="rep-xlsx-btn" onclick="exportProfitabilityStyledXLSX()" style="display:none;background:#fff;border:1px solid #86efac;color:#166534;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">📊 Стилізований Excel</button>
       </div>
       <div style="font-size:10px;color:#9ca3af;margin:8px 2px 0">Враховуються лише замовлення зі статусом «В оренді»; дохід за бронювання, що частково виходить за межі періоду, пропорційно розподіляється по днях.</div>
       <div id="rep-results" style="margin-top:18px"></div>
@@ -4597,6 +4599,7 @@ function renderReportResults(rows){
     wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">За цей період не знайдено бронювань зі статусом «В оренді»</div>';
     csvBtn.style.display = 'none';
     document.getElementById('rep-grid-csv-btn').style.display = 'none';
+    document.getElementById('rep-xlsx-btn').style.display = 'none';
     return;
   }
   const totalDays = rows.reduce((s,r)=>s+r.days,0);
@@ -4636,6 +4639,7 @@ function renderReportResults(rows){
   `;
   csvBtn.style.display = 'inline-block';
   document.getElementById('rep-grid-csv-btn').style.display = 'inline-block';
+  document.getElementById('rep-xlsx-btn').style.display = 'inline-block';
 }
 function exportProfitabilityCSV(){
   if(!lastReportData) return;
@@ -4681,6 +4685,104 @@ function exportProfitabilityGridCSV(){
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
   a.download = `dohidnist_grafik_${fromStr}_to_${toStr}.csv`;
+  a.click();
+}
+async function exportProfitabilityStyledXLSX(){
+  if(!lastReportData || typeof ExcelJS === 'undefined'){ alert('Бібліотека Excel ще завантажується, спробуйте за кілька секунд.'); return; }
+  const {fromStr, toStr} = lastReportData;
+  const periodStart = new Date(fromStr);
+  const periodEnd = new Date(toStr);
+  const dayCount = Math.round((periodEnd - periodStart)/86400000) + 1;
+  const dayList = Array.from({length:dayCount}, (_,i) => { const d = new Date(periodStart); d.setDate(d.getDate()+i); return d; });
+
+  // Only include vehicles that actually had at least one 'rented' day in the
+  // period — an all-49-vehicle sheet would be unreadably wide.
+  const activeVehicles = [];
+  CATEGORIES.forEach(cat => {
+    cat.vehicles.forEach(v => {
+      const has = bookings.some(b => b.vehicleId===v.id && b.status==='rented' &&
+        b.start <= toStr && getEffectiveEnd(b) >= fromStr);
+      if(has) activeVehicles.push({v, cat});
+    });
+  });
+  if(!activeVehicles.length){ alert('Немає активних авто за цей період для стилізованого звіту.'); return; }
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Дохідність');
+
+  const monthLabel = periodStart.toLocaleDateString('uk-UA',{month:'long',year:'2-digit'});
+  ws.getColumn(1).width = 14;
+  ws.getColumn(2).width = 8;
+  activeVehicles.forEach((_,i) => { ws.getColumn(3+i).width = 13; });
+
+  // Row 1: month label + vehicle model names
+  const r1 = ws.getRow(1);
+  ws.mergeCells(1,1,2,1);
+  r1.getCell(1).value = monthLabel;
+  r1.getCell(1).font = {bold:true, size:13, color:{argb:'FF1A1D26'}};
+  r1.getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF67E8F9'}};
+  r1.getCell(1).alignment = {horizontal:'center', vertical:'middle'};
+  activeVehicles.forEach(({v,cat}, i) => {
+    const col = 3+i;
+    const hex = (cat.colorHex||'#888888').replace('#','FF').toUpperCase();
+    const cell = r1.getCell(col);
+    cell.value = v.specs ? (v.specs.brand+' '+v.specs.model) : stripYear(v.name);
+    cell.font = {bold:true, color:{argb:'FFFFFFFF'}};
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:hex}};
+    cell.alignment = {horizontal:'center', vertical:'middle', wrapText:true};
+  });
+
+  // Row 2: headers — Місяць / Дата / plate numbers
+  const r2 = ws.getRow(2);
+  r2.getCell(2).value = 'Дата';
+  r2.getCell(2).font = {bold:true};
+  r2.getCell(2).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFF3F4F6'}};
+  r2.getCell(2).alignment = {horizontal:'center'};
+  activeVehicles.forEach(({v,cat}, i) => {
+    const col = 3+i;
+    const hex = (cat.colorHex||'#888888').replace('#','FF').toUpperCase();
+    const cell = r2.getCell(col);
+    cell.value = v.plate;
+    cell.font = {bold:true, color:{argb:'FFFFFFFF'}};
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:hex}};
+    cell.alignment = {horizontal:'center'};
+  });
+
+  // Data rows: one per day
+  dayList.forEach((d, i) => {
+    const row = ws.getRow(3+i);
+    const dStr = d.toISOString().slice(0,10);
+    row.getCell(1).value = monthLabel;
+    row.getCell(1).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFE8EAF6'}};
+    row.getCell(2).value = d.getDate();
+    row.getCell(2).alignment = {horizontal:'center'};
+    row.getCell(2).font = {bold:true};
+    activeVehicles.forEach(({v}, vi) => {
+      const col = 3+vi;
+      const b = bookings.find(bk => bk.vehicleId===v.id && bk.status==='rented' && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
+      const cell = row.getCell(col);
+      if(b){
+        cell.value = b.rate;
+        cell.alignment = {horizontal:'center'};
+      }
+    });
+  });
+
+  // Thin borders on the whole populated range
+  const lastRow = 2 + dayList.length;
+  const lastCol = 2 + activeVehicles.length;
+  for(let r=1;r<=lastRow;r++){
+    for(let c=1;c<=lastCol;c++){
+      ws.getCell(r,c).border = {top:{style:'thin',color:{argb:'FFD1D5DB'}},left:{style:'thin',color:{argb:'FFD1D5DB'}},bottom:{style:'thin',color:{argb:'FFD1D5DB'}},right:{style:'thin',color:{argb:'FFD1D5DB'}}};
+    }
+  }
+  ws.views = [{state:'frozen', xSplit:2, ySplit:2}];
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `dohidnist_${fromStr}_to_${toStr}.xlsx`;
   a.click();
 }
 function exportCSV(){
