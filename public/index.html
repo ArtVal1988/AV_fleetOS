@@ -41,7 +41,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sticker-card{position:relative;flex-shrink:0;width:170px;height:130px;border-radius:8px;padding:9px 11px 8px;font-size:12px;line-height:1.35;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
 .sticker-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:default;}
-.sticker-pin{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
+.sticker-pin{position:absolute;top:6px;right:48px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
+.sticker-edit{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:11px;opacity:0;transition:opacity .15s;color:inherit;padding:2px 4px;}
+.sticker-card:hover .sticker-edit{opacity:.5;}
+.sticker-edit:hover{opacity:1!important;}
 .sticker-pin:hover{opacity:.8;}
 .sticker-pin.active{opacity:1;}
 .sticker-card.c-red{background:#fee2e2;border:1px solid #fca5a5;color:#7f1d1d;}
@@ -171,7 +174,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .sticker-text{-webkit-line-clamp:2;}
   .sticker-label{font-size:7px;margin-bottom:1px;}
   .sticker-author{font-size:8px;}
-  .sticker-pin{top:3px;right:16px;font-size:9px;}
+  .sticker-pin{top:3px;right:30px;font-size:9px;}
+  .sticker-edit{top:3px;right:16px;font-size:9px;opacity:.5;}
   .sticker-del{font-size:9px;top:2px;right:2px;}
   .content-split{padding:0 10px 10px;}
   .calendar-scroll{scroll-snap-type:x proximity;}
@@ -1395,7 +1399,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="sticker-popup-overlay" id="sticker-popup-overlay">
     <div class="sticker-popup">
       <div class="sticker-popup-head">
-        <span>Новий стікер</span>
+        <span id="sticker-popup-title">Новий стікер</span>
         <button class="docs-modal-x" onclick="closeStickerForm()">✕</button>
       </div>
       <textarea id="sticker-text" class="sticker-textarea" placeholder="Короткий коментар..." maxlength="140"></textarea>
@@ -1407,7 +1411,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="text" id="sticker-author" class="sticker-author-input" placeholder="Ваше ім'я">
       <div class="sticker-popup-actions">
         <button class="btn btn-ghost" onclick="closeStickerForm()">Скасувати</button>
-        <button class="btn btn-primary" onclick="saveSticker()">Додати стікер</button>
+        <button class="btn btn-primary" id="sticker-save-btn" onclick="saveSticker()">Додати стікер</button>
       </div>
     </div>
   </div>
@@ -3018,6 +3022,7 @@ function renderStickers(){
   row.innerHTML = ordered.map(s => `
     <div class="sticker-card c-${s.color}${s.pinned?' pinned':''}">
       <button class="sticker-pin${s.pinned?' active':''}" onclick="togglePinSticker(${s.id})" title="${s.pinned?'Відкріпити':'Закріпити'}">${s.pinned?'📌':'📍'}</button>
+      <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати">✎</button>
       <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
       <div class="sticker-label">${STICKER_LABELS[s.color]||''}</div>
       <div class="sticker-text" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
@@ -3031,15 +3036,21 @@ function togglePinSticker(id){
   s.pinned = !s.pinned;
   renderStickers();
 }
-function openStickerForm(){
-  document.getElementById('sticker-text').value = '';
-  document.getElementById('sticker-author').value = '';
-  setStickerColor('red');
+let stickerEditId = null;
+function openStickerForm(editId){
+  stickerEditId = editId || null;
+  const s = editId ? stickers.find(x=>x.id===editId) : null;
+  document.getElementById('sticker-text').value = s ? s.text : '';
+  document.getElementById('sticker-author').value = s ? (s.author||'') : '';
+  setStickerColor(s ? s.color : 'red');
+  document.getElementById('sticker-popup-title').textContent = s ? '✎ Редагувати стікер' : '+ Новий стікер';
+  document.getElementById('sticker-save-btn').textContent = s ? 'Зберегти' : 'Додати';
   document.getElementById('sticker-popup-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('sticker-text').focus(), 0);
 }
 function closeStickerForm(){
   document.getElementById('sticker-popup-overlay').classList.remove('open');
+  stickerEditId = null;
 }
 function setStickerColor(color){
   stickerColorDraft = color;
@@ -7648,8 +7659,16 @@ window.saveSticker = async function(){
   if(!text) { _origSaveSticker(); return; } // let it show its own validation alert
   const author = document.getElementById('sticker-author').value.trim();
   const color = stickerColorDraft;
+  const editId = stickerEditId;
   closeStickerForm();
-  if(_token){
+
+  if(editId){
+    const s = stickers.find(x=>x.id===editId);
+    if(s){
+      s.text = text; s.color = color; s.author = author;
+      if(_token) apiFetch('PUT','/stickers/'+editId, {text, color, author, pinned: !!s.pinned});
+    }
+  } else if(_token){
     const r = await apiFetch('POST','/stickers', {text, color, author});
     addSticker(r?.id ? {text, color, author, id:r.id} : {text, color, author});
     if(r?.id) nextStickerId = Math.max(nextStickerId, r.id+1);
