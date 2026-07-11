@@ -4534,6 +4534,15 @@ function toggleHide(key){if(hiddenStatuses.has(key))hiddenStatuses.delete(key);e
 
 /* ── EXPORT ── */
 // ── PROFITABILITY REPORT ──────────────────────────────────────────
+// Converts any booking amount to its $ equivalent using the booking's own
+// exchange rate (₴/€ amount ÷ курс). $ amounts pass through unchanged.
+function toUSD(amount, currency, exchangeRate){
+  if(!amount) return 0;
+  if(!currency || currency === '$') return amount;
+  const rate = parseFloat(exchangeRate) || 0;
+  if(rate <= 0) return amount; // no rate on file — can't convert, show as-is
+  return amount / rate;
+}
 let lastReportData = null;
 function openReportPanel(){
   document.getElementById('report-panel-overlay').style.display = 'flex';
@@ -4569,28 +4578,23 @@ function generateProfitabilityReport(){
     const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
     if(overlapDays <= 0) return;
     const proportion = Math.min(1, overlapDays / totalBookingDays);
-    const revenueInPeriod = Math.round(calcTotal(b) * proportion * 100) / 100;
+    const revenueInPeriod = toUSD(calcTotal(b), b.currency, b.exchangeRate) * proportion;
 
     const v = getVehicle(b.vehicleId);
     if(!v) return;
-    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenue:{'$':0,'₴':0,'€':0}});
+    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0});
     const entry = perVehicle.get(v.id);
     entry.bookingsCount++;
     entry.days += overlapDays;
-    const cur = b.currency || '$';
-    entry.revenue[cur] = (entry.revenue[cur]||0) + revenueInPeriod;
+    entry.revenueUSD += revenueInPeriod;
   });
 
-  const rows = [...perVehicle.values()].sort((a,b) => (b.revenue['$']+b.revenue['₴']/40+b.revenue['€']) - (a.revenue['$']+a.revenue['₴']/40+a.revenue['€']));
+  const rows = [...perVehicle.values()].sort((a,b) => b.revenueUSD - a.revenueUSD);
   lastReportData = {rows, fromStr, toStr};
   renderReportResults(rows);
 }
-function fmtRevenue(rev){
-  const parts = [];
-  if(rev['$']) parts.push(rev['$'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' $');
-  if(rev['₴']) parts.push(rev['₴'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' ₴');
-  if(rev['€']) parts.push(rev['€'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' €');
-  return parts.length ? parts.join(' + ') : '—';
+function fmtRevenue(revenueUSD){
+  return revenueUSD ? '$' + revenueUSD.toLocaleString('uk-UA',{maximumFractionDigits:0}) : '—';
 }
 function renderReportResults(rows){
   const wrap = document.getElementById('rep-results');
@@ -4623,7 +4627,7 @@ function renderReportResults(rows){
             </td>
             <td style="padding:8px 6px;text-align:center">${r.bookingsCount}</td>
             <td style="padding:8px 6px;text-align:center">${r.days}</td>
-            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenue)}</td>
+            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenueUSD)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -4632,7 +4636,7 @@ function renderReportResults(rows){
           <td style="padding:10px 6px">Разом (${rows.length} авто)</td>
           <td style="padding:10px 6px;text-align:center">${totalBookings}</td>
           <td style="padding:10px 6px;text-align:center">${totalDays}</td>
-          <td style="padding:10px 6px;text-align:right;color:#166534">${fmtRevenue(rows.reduce((acc,r)=>{acc['$']+=r.revenue['$'];acc['₴']+=r.revenue['₴'];acc['€']+=r.revenue['€'];return acc;},{'$':0,'₴':0,'€':0}))}</td>
+          <td style="padding:10px 6px;text-align:right;color:#166534">${fmtRevenue(rows.reduce((s,r)=>s+r.revenueUSD,0))}</td>
         </tr>
       </tfoot>
     </table>
@@ -4644,8 +4648,8 @@ function renderReportResults(rows){
 function exportProfitabilityCSV(){
   if(!lastReportData) return;
   const {rows, fromStr, toStr} = lastReportData;
-  const header = ['Номер','Авто','Кількість бронювань','Днів в оренді','Дохід $','Дохід ₴','Дохід €'];
-  const csvRows = rows.map(r => [r.v.plate, r.v.name, r.bookingsCount, r.days, r.revenue['$']||0, r.revenue['₴']||0, r.revenue['€']||0]);
+  const header = ['Номер','Авто','Кількість бронювань','Днів в оренді','Дохід ($, еквівалент)'];
+  const csvRows = rows.map(r => [r.v.plate, r.v.name, r.bookingsCount, r.days, Math.round(r.revenueUSD)]);
   const csv = [header, ...csvRows].map(row => row.map(x=>`"${x}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
@@ -4674,7 +4678,7 @@ function exportProfitabilityGridCSV(){
         const dStr = d.toISOString().slice(0,10);
         const b = relevantBookings.find(bk => dStr >= bk.start && dStr <= getEffectiveEnd(bk));
         if(!b) return '';
-        return b.rate;
+        return Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
       });
       // Skip vehicles with zero activity in the period entirely? No — user
       // explicitly wants them included with empty cells.
@@ -4762,7 +4766,7 @@ async function exportProfitabilityStyledXLSX(){
       const b = bookings.find(bk => bk.vehicleId===v.id && bk.status==='rented' && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
       const cell = row.getCell(col);
       if(b){
-        cell.value = b.rate;
+        cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
         cell.alignment = {horizontal:'center'};
       }
     });
