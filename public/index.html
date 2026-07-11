@@ -1154,6 +1154,32 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 <!-- VEHICLES LIST PANEL -->
+<!-- PROFITABILITY REPORT PANEL -->
+<div id="report-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">📊 Звіт з дохідності</div>
+      <button onclick="closeReportPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px">
+        <div>
+          <label class="vf-lbl">Період з</label>
+          <input type="date" id="rep-from" class="vf-inp">
+        </div>
+        <div>
+          <label class="vf-lbl">по</label>
+          <input type="date" id="rep-to" class="vf-inp">
+        </div>
+        <button onclick="generateProfitabilityReport()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Сформувати звіт</button>
+        <button id="rep-csv-btn" onclick="exportProfitabilityCSV()" style="display:none;background:#fff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">↓ CSV</button>
+      </div>
+      <div style="font-size:10px;color:#9ca3af;margin:8px 2px 0">Враховуються лише замовлення зі статусом «В оренді»; дохід за бронювання, що частково виходить за межі періоду, пропорційно розподіляється по днях.</div>
+      <div id="rep-results" style="margin-top:18px"></div>
+    </div>
+  </div>
+</div>
+
 <div id="vehicles-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
@@ -1288,7 +1314,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
-    <div class="nav-item" data-label="Звіти"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
+    <div class="nav-item" data-label="Звіти" onclick="openReportPanel()"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
     <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
@@ -4504,6 +4530,121 @@ function goToday(){
 function toggleHide(key){if(hiddenStatuses.has(key))hiddenStatuses.delete(key);else hiddenStatuses.add(key);render();}
 
 /* ── EXPORT ── */
+// ── PROFITABILITY REPORT ──────────────────────────────────────────
+let lastReportData = null;
+function openReportPanel(){
+  document.getElementById('report-panel-overlay').style.display = 'flex';
+  const today = new Date();
+  const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate() - 29);
+  const toISO = d => d.toISOString().slice(0,10);
+  if(!document.getElementById('rep-from').value) document.getElementById('rep-from').value = toISO(monthAgo);
+  if(!document.getElementById('rep-to').value) document.getElementById('rep-to').value = toISO(today);
+  document.getElementById('rep-results').innerHTML = '';
+  document.getElementById('rep-csv-btn').style.display = 'none';
+}
+function closeReportPanel(){
+  document.getElementById('report-panel-overlay').style.display = 'none';
+}
+function generateProfitabilityReport(){
+  const fromStr = document.getElementById('rep-from').value;
+  const toStr = document.getElementById('rep-to').value;
+  if(!fromStr || !toStr){ alert('Оберіть обидві дати періоду'); return; }
+  const periodStart = new Date(fromStr);
+  const periodEnd = new Date(toStr);
+  if(periodEnd < periodStart){ alert('Кінець періоду раніше за початок'); return; }
+
+  const perVehicle = new Map(); // vid -> {v, bookings, days, revenue:{'$':0,'₴':0}}
+
+  bookings.filter(b => b.status === 'rented').forEach(b => {
+    const bStart = new Date(b.start);
+    const bEnd = new Date(getEffectiveEnd(b));
+    const overlapStart = bStart > periodStart ? bStart : periodStart;
+    const overlapEnd = bEnd < periodEnd ? bEnd : periodEnd;
+    if(overlapEnd < overlapStart) return; // no overlap with the report period
+
+    const totalBookingDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, getEffectiveEnd(b));
+    const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
+    if(overlapDays <= 0) return;
+    const proportion = Math.min(1, overlapDays / totalBookingDays);
+    const revenueInPeriod = Math.round(calcTotal(b) * proportion * 100) / 100;
+
+    const v = getVehicle(b.vehicleId);
+    if(!v) return;
+    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenue:{'$':0,'₴':0,'€':0}});
+    const entry = perVehicle.get(v.id);
+    entry.bookingsCount++;
+    entry.days += overlapDays;
+    const cur = b.currency || '$';
+    entry.revenue[cur] = (entry.revenue[cur]||0) + revenueInPeriod;
+  });
+
+  const rows = [...perVehicle.values()].sort((a,b) => (b.revenue['$']+b.revenue['₴']/40+b.revenue['€']) - (a.revenue['$']+a.revenue['₴']/40+a.revenue['€']));
+  lastReportData = {rows, fromStr, toStr};
+  renderReportResults(rows);
+}
+function fmtRevenue(rev){
+  const parts = [];
+  if(rev['$']) parts.push(rev['$'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' $');
+  if(rev['₴']) parts.push(rev['₴'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' ₴');
+  if(rev['€']) parts.push(rev['€'].toLocaleString('uk-UA',{maximumFractionDigits:0})+' €');
+  return parts.length ? parts.join(' + ') : '—';
+}
+function renderReportResults(rows){
+  const wrap = document.getElementById('rep-results');
+  const csvBtn = document.getElementById('rep-csv-btn');
+  if(!rows.length){
+    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">За цей період не знайдено бронювань зі статусом «В оренді»</div>';
+    csvBtn.style.display = 'none';
+    return;
+  }
+  const totalDays = rows.reduce((s,r)=>s+r.days,0);
+  const totalBookings = rows.reduce((s,r)=>s+r.bookingsCount,0);
+  wrap.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="border-bottom:2px solid #e5e7eb;text-align:left">
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase">Авто</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Бронювань</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Днів в оренді</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Дохід за період</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr style="border-bottom:1px solid #f3f4f6">
+            <td style="padding:8px 6px">
+              <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:2px 6px;margin-right:6px">${r.v.plate}</span>
+              <span style="color:#6b7280">${r.v.name}</span>
+            </td>
+            <td style="padding:8px 6px;text-align:center">${r.bookingsCount}</td>
+            <td style="padding:8px 6px;text-align:center">${r.days}</td>
+            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenue)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+      <tfoot>
+        <tr style="border-top:2px solid #e5e7eb;font-weight:700">
+          <td style="padding:10px 6px">Разом (${rows.length} авто)</td>
+          <td style="padding:10px 6px;text-align:center">${totalBookings}</td>
+          <td style="padding:10px 6px;text-align:center">${totalDays}</td>
+          <td style="padding:10px 6px;text-align:right;color:#166534">${fmtRevenue(rows.reduce((acc,r)=>{acc['$']+=r.revenue['$'];acc['₴']+=r.revenue['₴'];acc['€']+=r.revenue['€'];return acc;},{'$':0,'₴':0,'€':0}))}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+  csvBtn.style.display = 'inline-block';
+}
+function exportProfitabilityCSV(){
+  if(!lastReportData) return;
+  const {rows, fromStr, toStr} = lastReportData;
+  const header = ['Номер','Авто','Кількість бронювань','Днів в оренді','Дохід $','Дохід ₴','Дохід €'];
+  const csvRows = rows.map(r => [r.v.plate, r.v.name, r.bookingsCount, r.days, r.revenue['$']||0, r.revenue['₴']||0, r.revenue['€']||0]);
+  const csv = [header, ...csvRows].map(row => row.map(x=>`"${x}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `dohidnist_${fromStr}_to_${toStr}.csv`;
+  a.click();
+}
 function exportCSV(){
   const total=VIEW_DAYS, cm=buildCellMap();
   const header=['Авто','Номер',...Array.from({length:total},(_,i)=>String(colDate(i+1).getDate()).padStart(2,'0')+'.'+String(colDate(i+1).getMonth()+1).padStart(2,'0'))];
