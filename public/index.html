@@ -1907,7 +1907,7 @@ const CASE_STATUSES=[
 ];
 
 const DOC_TYPES=[
-  {key:'tech_passport',    name:'Технічний паспорт (СТС)', icon:'📋', required:true},
+  {key:'tech_passport',    name:'Технічний паспорт', icon:'📋', required:true},
   {key:'owner_passport',   name:'Паспорт та ІПН власника', icon:'🪪', required:true},
   {key:'trusted_passport', name:'Паспорт довіреної особи', icon:'🪪', required:false},
   {key:'agency_contract',  name:'Агентський договір та акт',icon:'📝', required:false},
@@ -5177,7 +5177,7 @@ function closeToModal(){ document.getElementById('to-modal').classList.remove('o
 function recalcNextService(v){
   const svc = v.service || (v.service={});
   const lastKm = svc.lastKm || 0;
-  const si = v.serviceInterval ?? svc.interval ?? 10000;
+  const si = v.serviceInterval ?? svc.interval ?? 15000;
   v.nextServiceKm = lastKm + si;
   svc.nextKm = v.nextServiceKm;
 }
@@ -5205,7 +5205,7 @@ function renderToKmBar(v){
   const svc = v.service || {};
   const cur  = v.currentKm  ?? svc.lastKm  ?? 0;
   const next = v.nextServiceKm ?? svc.nextKm  ?? 0;
-  const si   = v.serviceInterval ?? svc.interval ?? 10000;
+  const si   = v.serviceInterval ?? svc.interval ?? 15000;
   const lastDate = svc.lastDate || '';
   const kmLeft = next - cur;
   const pctRemaining = si > 0 ? (kmLeft / si * 100) : 100;
@@ -6144,7 +6144,7 @@ function openVehiclePanel(vid, tab){
 
   // Tab: docs
   const docItems=[
-    {label:'Технічний паспорт (СТС)', has:docs?.hasSTS},
+    {label:'Технічний паспорт', has:docs?.hasSTS},
     {label:'Страховий поліс', has:docs?.hasInsurance},
     {label:'Довіреність / документи', has:docs?.hasPOA},
   ];
