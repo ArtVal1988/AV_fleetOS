@@ -7283,6 +7283,8 @@ function deleteVehicleCategory(name){
   const idx = CATEGORIES.indexOf(cat);
   CATEGORIES.splice(idx, 1);
   cat.vehicles.forEach(v => {
+    v.deleted = true;
+    persistVehicle(v); // tombstone marker — seed data would otherwise reappear on reload
     const ai = ALL_VEHICLES.indexOf(v);
     if(ai !== -1) ALL_VEHICLES.splice(ai, 1);
   });
@@ -7678,6 +7680,14 @@ async function syncFromServer(){
       const withColor = cat.vehicles.find(v=>v.categoryColor);
       if(withColor) cat.colorHex = withColor.categoryColor;
     });
+    // Vehicles tombstoned via deleteVehicleCategory()/removeVehicle() should
+    // stay gone — the hardcoded seed would otherwise bring them back on
+    // every reload since it has no concept of "this was deleted".
+    const deletedIds = new Set(ALL_VEHICLES.filter(v=>v.deleted).map(v=>v.id));
+    if(deletedIds.size){
+      for(let i=ALL_VEHICLES.length-1;i>=0;i--){ if(deletedIds.has(ALL_VEHICLES[i].id)) ALL_VEHICLES.splice(i,1); }
+      CATEGORIES.forEach(cat=>{ cat.vehicles = cat.vehicles.filter(v=>!deletedIds.has(v.id)); });
+    }
   }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
   renderStickers(); render();
