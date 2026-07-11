@@ -7274,6 +7274,7 @@ async function syncFromServer(){
       if(knownIds.has(id)) return;
       const data = sVehicles[idStr];
       if(!data || !data.plate) return; // incomplete/stale record — skip
+      if(data.deleted) return; // tombstoned — don't resurrect its category either
       const catName = data.category || 'Інше';
       let cat = CATEGORIES.find(c=>c.name.toLowerCase()===catName.toLowerCase());
       if(!cat){ cat = {name:catName, vehicles:[]}; CATEGORIES.push(cat); }
