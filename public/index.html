@@ -2973,8 +2973,8 @@ function buildVehCell(v){
   var sc = v.service?.status==='danger'?'#ef4444':v.service?.status==='warn'?'#f59e0b':'#9ca3af';
   var ic = v.insurance?.status==='danger'?'#ef4444':v.insurance?.status==='warn'?'#f59e0b':'#9ca3af';
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
-  var sdot = v.service?.status!=='ok' ? dot(sc) : '';
-  var idot = v.insurance?.status!=='ok' ? dot(ic) : '';
+  var sdot = (v.service?.status==='warn'||v.service?.status==='danger') ? dot(sc) : '';
+  var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
       '<div class="veh-name-click" onclick="highlightRow('+v.id+');showVehicleSpecs(event,'+v.id+')" title="Показати характеристики">'+
