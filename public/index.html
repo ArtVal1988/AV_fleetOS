@@ -1511,6 +1511,20 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div class="msec msec-b2">
       <div class="msec-title" id="bm-b2-title">Отримання та повернення</div>
+      <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
+        <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
+        <span style="color:#9ca3af;font-size:12px">від</span>
+        <input type="date" id="bm-period-from" class="lr-date" style="flex:0 0 140px" oninput="
+          document.getElementById('bm-pickup-date').value=this.value;
+          document.getElementById('bm-start').value=this.value;
+          daysOverrideTouched=false;updateVatPreview();">
+        <span style="color:#9ca3af;font-size:12px">до</span>
+        <input type="date" id="bm-period-to" class="lr-date" style="flex:0 0 140px" oninput="
+          document.getElementById('bm-return-date').value=this.value;
+          document.getElementById('bm-end').value=this.value;
+          daysOverrideTouched=false;updateVatPreview();">
+      </div>
+      <div id="bm-normal-dates-wrap">
       <div class="logistics-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
@@ -1606,6 +1620,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
       </div>
+      </div><!-- /bm-normal-dates-wrap -->
     </div>
     <div class="msec msec-b3" id="bm-block-3">
       <div class="msec-title">Фінанси</div>
@@ -2802,10 +2817,15 @@ function showTooltip(e,bid){
     }).join('') + `</div>` : '';
 
   // 2: date+time on one line, address on the line below
-  const pickupRow = `<div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
-    (b.pickup?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.pickup.loc}</div>`:'');
-  const retRow = `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
-    (b.ret?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.ret.loc}</div>`:'');
+  const isSpecialStatus = STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
+  const pickupRow = isSpecialStatus
+    ? `<div class="tt-row"><span class="tt-label">Від</span><span class="tt-val">${fmt(b.start)}</span></div>`
+    : `<div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
+      (b.pickup?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.pickup.loc}</div>`:'');
+  const retRow = isSpecialStatus
+    ? `<div class="tt-row"><span class="tt-label">До</span><span class="tt-val">${fmt(b.end)}</span></div>`
+    : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
+      (b.ret?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.ret.loc}</div>`:'');
 
   // 4: extras + equipment
   const extrasList = Object.values(b.extras||{}).filter(x=>x.active);
@@ -5856,29 +5876,25 @@ function updateBookingDetailsVisibility(){
     const el=document.getElementById(id);
     if(el) el.style.display = hide ? 'none' : '';
   });
-  const extToggleWrap=document.getElementById('bm-ext-toggle-wrap');
-  if(extToggleWrap) extToggleWrap.style.display = hide ? 'none' : '';
+
+  // Special statuses: show one compact "Період: від ... до ..." row instead
+  // of the normal Отримання/Повернення+продовження block.
+  const title=document.getElementById('bm-b2-title');
+  const normalWrap=document.getElementById('bm-normal-dates-wrap');
+  const periodRow=document.getElementById('bm-period-row');
+  if(title) title.textContent = hide ? 'Період' : 'Отримання та повернення';
+  if(normalWrap) normalWrap.style.display = hide ? 'none' : '';
+  if(periodRow){
+    periodRow.style.display = hide ? 'flex' : 'none';
+    if(hide){
+      document.getElementById('bm-period-from').value = document.getElementById('bm-pickup-date').value;
+      document.getElementById('bm-period-to').value = document.getElementById('bm-return-date').value;
+    }
+  }
   if(hide){
-    const extFields=document.getElementById('bm-ext-fields');
-    const extHistory=document.getElementById('bm-ext-history-wrap');
-    if(extFields) extFields.style.display='none';
-    if(extHistory) extHistory.style.display='none';
     const extCb=document.getElementById('bm-ext-active');
     if(extCb) extCb.checked=false;
   }
-
-  // Relabel the date block for non-rental statuses so it reads naturally.
-  const title=document.getElementById('bm-b2-title');
-  const pLabel=document.getElementById('bm-pickup-label');
-  const rLabel=document.getElementById('bm-return-label');
-  if(title) title.textContent = hide ? 'Період' : 'Отримання та повернення';
-  if(pLabel) pLabel.textContent = hide ? '↑ Дата постановки' : '↑ Отримання';
-  if(rLabel) rLabel.textContent = hide ? '↓ Дата закінчення' : '↓ Повернення';
-  // Time/location don't apply to a repair/storage/etc. record — date only.
-  ['bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display = hide ? 'none' : '';
-  });
 
   if(closedLabel) closedLabel.style.display = hide ? 'none' : 'flex';
   if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
