@@ -549,6 +549,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .extras-toggle-chevron{margin-left:auto;font-size:10px;transition:transform .2s;}
 .extras-toggle.open .extras-toggle-chevron{transform:rotate(180deg);}
 #extras-active-count{background:#2563eb;color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:600;}
+#notes-active-count{background:#2563eb;color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:600;}
 .extras-panel{margin-top:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;}
 .extras-chips-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
 .dep-cur-toggle{display:flex;border:1px solid #e5e7eb;border-radius:4px;overflow:hidden;}
@@ -1860,6 +1861,13 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div class="msec msec-b6">
       <div class="msec-title">Нотатки</div>
+      <button type="button" class="extras-toggle" id="notes-toggle-btn" onclick="toggleNotesPanel()">
+        <span id="notes-toggle-icon">⊕</span>
+        <span>Показати / додати нотатку</span>
+        <span id="notes-active-count" style="display:none"></span>
+        <span class="extras-toggle-chevron" id="notes-chevron">▾</span>
+      </button>
+      <div id="notes-panel" style="display:none;margin-top:10px">
       <div id="bm-notes-log" class="notes-log" style="display:none"></div>
       <div class="note-compose-box">
         <div style="display:flex;align-items:center">
@@ -1869,6 +1877,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </label>
         </div>
         <textarea id="bm-new-note" class="note-text-input" placeholder="Текст нотатки..."></textarea>
+      </div>
       </div>
       <input type="hidden" id="bm-notes-hidden">
     </div>
@@ -3275,6 +3284,9 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-new-note').value='';
   if(document.getElementById('bm-note-important')) document.getElementById('bm-note-important').checked=false;
   renderNotesLog('','bm-notes-log','');
+  document.getElementById('notes-panel').style.display='none';
+  document.getElementById('notes-toggle-btn').classList.remove('open');
+  document.getElementById('notes-active-count').style.display='none';
   // Reset extras
   setClientType('individual');
   updateClientTypeLock(false); // new booking — all client types selectable
@@ -3371,6 +3383,15 @@ function editBooking(bid){
   document.getElementById('bm-new-note').value='';
   if(document.getElementById('bm-note-important')) document.getElementById('bm-note-important').checked=false;
   renderNotesLog(b.notes||'','bm-notes-log','Нотаток ще немає');
+  // Always start collapsed, same as the extras panel — just show a count badge.
+  document.getElementById('notes-panel').style.display='none';
+  document.getElementById('notes-toggle-btn').classList.remove('open');
+  const noteCount = parseNotesLog(b.notes||'').length;
+  const notesCountEl = document.getElementById('notes-active-count');
+  if(notesCountEl){
+    notesCountEl.style.display = noteCount ? 'inline-flex' : 'none';
+    notesCountEl.textContent = noteCount || '';
+  }
   // Load extras
   // Always start collapsed — the chips row above already shows what's selected;
   // the full selection panel only opens when the user clicks the toggle.
@@ -6463,6 +6484,14 @@ function toggleExtrasPanel(){
   const panel = document.getElementById('extras-panel');
   const btn   = document.getElementById('extras-toggle-btn');
   const chev  = document.getElementById('extras-chevron');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  btn.classList.toggle('open', open);
+}
+
+function toggleNotesPanel(){
+  const panel = document.getElementById('notes-panel');
+  const btn   = document.getElementById('notes-toggle-btn');
   const open  = panel.style.display === 'none';
   panel.style.display = open ? 'block' : 'none';
   btn.classList.toggle('open', open);
