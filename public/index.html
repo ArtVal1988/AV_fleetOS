@@ -1465,7 +1465,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div id="bm-order-details" class="bm-order-details-wrap">
     <!-- Customer + Status/Manager combined -->
-    <div class="msec msec-b1">
+    <div class="msec msec-b1" id="bm-block-1">
       <!-- Client type switcher -->
       <div class="client-type-switcher" id="client-type-switcher" style="margin-bottom:12px">
         <button type="button" class="ct-btn active" data-type="individual" onclick="setClientType('individual')">Фіз. особа</button>
@@ -1510,9 +1510,9 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="hidden" id="bm-client-type" value="individual">
     </div>
     <div class="msec msec-b2">
-      <div class="msec-title">Отримання та повернення</div>
+      <div class="msec-title" id="bm-b2-title">Отримання та повернення</div>
       <div class="logistics-row">
-        <div class="lr-label">↑ Отримання</div>
+        <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-pickup-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
@@ -1520,10 +1520,12 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
+      <div id="bm-ext-toggle-wrap">
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
         ↷ Продовження оренди
       </label>
+      </div>
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
         <div class="ext-fin-row">
@@ -1597,7 +1599,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div class="logistics-row" style="margin-top:8px">
-        <div class="lr-label">↓ Повернення</div>
+        <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
@@ -1605,7 +1607,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
     </div>
-    <div class="msec msec-b3">
+    <div class="msec msec-b3" id="bm-block-3">
       <div class="msec-title">Фінанси</div>
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
@@ -1752,7 +1754,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 
     </div>
-    <div class="msec msec-b4">
+    <div class="msec msec-b4" id="bm-block-4">
       <div class="msec-title">Пробіг</div>
       <div class="km-row-compact">
         <div class="km-compact-field">
@@ -1774,7 +1776,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div>
     <!-- POST-RENTAL DEDUCTIONS -->
-    <div class="msec msec-b5">
+    <div class="msec msec-b5" id="bm-block-5">
       <button type="button" class="extras-toggle" id="ded-toggle-btn" onclick="toggleDedPanel()" style="background:#fff0f0;border-color:#fca5a5;color:#dc2626">
         <span>⊖</span>
         <span>Утримання після повернення</span>
@@ -5837,7 +5839,10 @@ function updateStatusSelectColor(){
   updateBookingDetailsVisibility();
 }
 // Statuses that don't represent an actual client rental — for these we hide all
-// the order details (client, dates, finances, mileage, deductions) and leave only notes.
+// For repair/investor/storage/personal statuses, the booking isn't a rental
+// order — hide client/finance/mileage/deductions and the extension section,
+// but keep the date range visible (relabeled) so it can still be edited,
+// since these are genuine "car unavailable from X to Y" records.
 const STATUSES_WITHOUT_ORDER_DETAILS = ['repair','investor','storage','personal'];
 function updateBookingDetailsVisibility(){
   const sel=document.getElementById('bm-status');
@@ -5845,7 +5850,36 @@ function updateBookingDetailsVisibility(){
   const closedLabel=document.getElementById('bm-closed-label');
   if(!sel || !wrap) return;
   const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
-  wrap.style.display = hide ? 'none' : 'flex';
+
+  wrap.style.display = 'flex'; // block 2 (dates) always stays visible
+  ['bm-block-1','bm-block-3','bm-block-4','bm-block-5'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = hide ? 'none' : '';
+  });
+  const extToggleWrap=document.getElementById('bm-ext-toggle-wrap');
+  if(extToggleWrap) extToggleWrap.style.display = hide ? 'none' : '';
+  if(hide){
+    const extFields=document.getElementById('bm-ext-fields');
+    const extHistory=document.getElementById('bm-ext-history-wrap');
+    if(extFields) extFields.style.display='none';
+    if(extHistory) extHistory.style.display='none';
+    const extCb=document.getElementById('bm-ext-active');
+    if(extCb) extCb.checked=false;
+  }
+
+  // Relabel the date block for non-rental statuses so it reads naturally.
+  const title=document.getElementById('bm-b2-title');
+  const pLabel=document.getElementById('bm-pickup-label');
+  const rLabel=document.getElementById('bm-return-label');
+  if(title) title.textContent = hide ? 'Період' : 'Отримання та повернення';
+  if(pLabel) pLabel.textContent = hide ? '↑ Дата постановки' : '↑ Отримання';
+  if(rLabel) rLabel.textContent = hide ? '↓ Дата закінчення' : '↓ Повернення';
+  // Time/location don't apply to a repair/storage/etc. record — date only.
+  ['bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = hide ? 'none' : '';
+  });
+
   if(closedLabel) closedLabel.style.display = hide ? 'none' : 'flex';
   if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
 }
