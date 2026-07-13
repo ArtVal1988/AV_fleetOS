@@ -3965,17 +3965,42 @@ async function showExternalPrice(e, vid){
     const depositRow = r.deposit ? `<div style="display:flex;justify-content:space-between;padding:5px 0 0;margin-top:4px;font-size:11px">
         <span style="color:#9ca3af">Застава</span><span style="color:#6b7280">${r.deposit} $</span>
       </div>` : '';
+    const hasSpecs = r.specs && Object.keys(r.specs).length;
+    const specsRows = hasSpecs ? Object.entries(r.specs).map(([k,val]) => `
+      <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px">
+        <span style="color:#9ca3af">${VEHICLE_SPEC_LABELS[k]||k}</span><span style="color:#374151">${val}${k==='engine'?' л':k==='consumption'?' л/100км':''}</span>
+      </div>`).join('') : '';
+    const applyBtn = hasSpecs ? `<button onclick='applyScrapedSpecs(${vid}, ${JSON.stringify(r.specs)})' style="width:100%;margin-top:8px;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:6px;padding:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">⇩ Застосувати ці характеристики до авто</button>` : '';
     popup.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">
         <div style="font-weight:800;font-size:13px;color:#1a1d26">💰 Актуальна ціна</div>
         <button onclick="document.getElementById('external-price-popup').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px">✕</button>
       </div>
       ${rows}${depositRow}
+      ${hasSpecs?`<div style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px">Характеристики із сайту</div>
+        ${specsRows}
+      </div>`:''}
+      ${applyBtn}
       <a href="${v.specs.priceLink}" target="_blank" style="display:block;margin-top:8px;font-size:10px;color:#2563eb;text-align:center">Відкрити джерело →</a>
     `;
   }catch(err){
     popup.innerHTML += `<div style="color:#dc2626;font-size:11px">Помилка завантаження.</div>`;
   }
+}
+function applyScrapedSpecs(vid, scraped){
+  const v = ALL_VEHICLES.find(x=>x.id===vid);
+  if(!v) return;
+  if(!v.specs) v.specs = {};
+  const filled = Object.keys(scraped).filter(k => v.specs[k]);
+  if(filled.length){
+    const names = filled.map(k=>VEHICLE_SPEC_LABELS[k]||k).join(', ');
+    if(!confirm(`Поля вже заповнені: ${names}.\nПерезаписати їх даними із сайту?`)) return;
+  }
+  Object.assign(v.specs, scraped);
+  persistVehicle(v);
+  document.getElementById('external-price-popup').style.display='none';
+  alert('Характеристики застосовано й збережено.');
 }
 const VEHICLE_SPEC_LABELS = {
   bodyType:'Тип кузова', color:'Колір', engine:'Об\'єм двигуна', power:'Потужність',
