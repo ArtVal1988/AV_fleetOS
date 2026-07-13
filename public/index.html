@@ -1545,6 +1545,8 @@ input.dm-pf-val.tel{font-size:14px;}
       </label>
       </div>
 
+      <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
+
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
         <div class="ext-fin-row">
           <div class="ext-fin-field ext-fin-period">
@@ -1607,13 +1609,6 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <button type="button" class="case-add-btn" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534" onclick="closeAndStartNewExtension()">✓ Закрити та почати нове продовження</button>
         </div>
-      </div>
-      <div id="bm-ext-history-wrap" style="display:none;margin-top:8px">
-        <div class="ext-history-toggle" onclick="toggleExtHistory()">
-          <i class="ext-history-chevron" id="bm-ext-history-chevron">▾</i>
-          <span id="bm-ext-history-label">Історія закритих продовжень</span>
-        </div>
-        <div id="bm-ext-history-list" style="display:none"></div>
       </div>
 
       <div class="logistics-row" style="margin-top:8px">
@@ -3256,7 +3251,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-ext-fields').style.display='none';
   extDaysOverridden=false; extTotalOverridden=false;
   currentExtHistory = [];
-  renderExtHistory();
+  renderExtTimeline();
   editBid=null;
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='none';
@@ -3369,7 +3364,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-fields').style.display='none';
   }
   currentExtHistory = (b.extensionHistory||[]).slice();
-  renderExtHistory();
+  renderExtTimeline();
   document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
   document.getElementById('bm-currency').value=b.currency||'$';
   rateCurrencyAnchor = b.currency||'$';
@@ -4753,6 +4748,7 @@ function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
   block.style.display = active ? '' : 'none';
+  renderExtTimeline();
   if(active){
     extDaysOverridden = false;
     extTotalOverridden = false;
@@ -4900,30 +4896,36 @@ function closeAndStartNewExtension(){
   document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
   onExtDatesChanged();
-  renderExtHistory();
+  renderExtTimeline();
   render();
 }
 
-function renderExtHistory(){
-  const wrap = document.getElementById('bm-ext-history-wrap');
-  const list = document.getElementById('bm-ext-history-list');
-  const label = document.getElementById('bm-ext-history-label');
-  if(!wrap || !list) return;
-  if(!currentExtHistory.length){ wrap.style.display='none'; return; }
-  wrap.style.display = '';
-  label.textContent = `Історія закритих продовжень (${currentExtHistory.length})`;
-  list.innerHTML = currentExtHistory.map(h => `
+function renderExtTimeline(){
+  const wrap = document.getElementById('bm-ext-timeline');
+  if(!wrap) return;
+  const active = document.getElementById('bm-ext-active')?.checked;
+  if(!active){ wrap.style.display='none'; return; }
+
+  const b = editBid ? bookings.find(x=>x.id===editBid) : null;
+  let originalRowHtml = '';
+  if(b){
+    const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
+    const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
+    originalRowHtml = `
+      <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
+        <span class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</span>
+        <span class="eh-amt">${origDays} діб × ${(b.rate||0).toLocaleString('uk-UA')} ${b.currency||'$'} = ${origTotal.toLocaleString('uk-UA')} ${b.currency||'$'} · сплачено</span>
+      </div>`;
+  }
+
+  const historyRowsHtml = currentExtHistory.map(h => `
     <div class="ext-history-row">
-      <span class="eh-dates">✓ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-      <span class="eh-amt">${(h.cost||0).toLocaleString('uk-UA')} ${h.currency} · сплачено</span>
+      <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
+      <span class="eh-amt">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency} · сплачено</span>
     </div>`).join('');
-}
-function toggleExtHistory(){
-  const list = document.getElementById('bm-ext-history-list');
-  const chevron = document.getElementById('bm-ext-history-chevron');
-  const open = list.style.display !== 'none';
-  list.style.display = open ? 'none' : '';
-  chevron.classList.toggle('open', !open);
+
+  wrap.innerHTML = originalRowHtml + historyRowsHtml;
+  wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
 }
 
 function setExtStatusChoice(choice){
