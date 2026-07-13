@@ -3952,15 +3952,28 @@ async function showVehicleSpecs(e, vid){
   `;
 
   popup.style.display = 'block';
-  const rect = e.currentTarget.getBoundingClientRect();
-  let left = rect.left;
-  let top = rect.bottom + 6;
-  // Keep it on-screen
-  const popupWidth = 260;
-  if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
-  if(top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320);
-  popup.style.left = left + 'px';
-  popup.style.top = top + 'px';
+  const isMobile = window.innerWidth <= 900;
+  if(isMobile){
+    popup.style.left = '50%';
+    popup.style.top = '50%';
+    popup.style.transform = 'translate(-50%,-50%)';
+    popup.style.maxHeight = 'calc(100vh - 32px)';
+    popup.style.overflowY = 'auto';
+    popup.style.width = 'min(300px, calc(100vw - 32px))';
+  } else {
+    popup.style.transform = '';
+    popup.style.maxHeight = '';
+    popup.style.width = '260px';
+    const rect = e.currentTarget.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.bottom + 6;
+    // Keep it on-screen
+    const popupWidth = 260;
+    if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
+    if(top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320);
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+  }
 
   if(s?.priceLink) await loadPriceIntoSpecsPopup(vid, s.priceLink);
 }
