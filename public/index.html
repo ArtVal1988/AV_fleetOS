@@ -3963,11 +3963,31 @@ async function loadPriceIntoSpecsPopup(vid, priceLink){
   }
 }
 function copyVehicleLink(url, btn){
-  navigator.clipboard.writeText(url).then(()=>{
+  const showCopied = () => {
     const original = btn.textContent;
     btn.textContent = '✓ Скопійовано';
     setTimeout(()=>{ btn.textContent = original; }, 1500);
-  }).catch(()=>{ alert('Не вдалося скопіювати. Посилання: ' + url); });
+  };
+  const fallbackCopy = () => {
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showCopied();
+    }catch(e){
+      alert('Не вдалося скопіювати автоматично. Посилання:\n' + url);
+    }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+    navigator.clipboard.writeText(url).then(showCopied).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
 }
 async function fetchAndApplySpecsInForm(){
   const url = document.getElementById('vf-pricelink').value.trim();
