@@ -22,7 +22,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* LAYOUT */
 .app{position:relative;z-index:1;display:grid;grid-template-columns:240px 1fr;min-height:100vh;transition:grid-template-columns .28s cubic-bezier(.4,0,.2,1);}
 .sidebar{background:var(--surface);border-right:1px solid var(--border);box-shadow:1px 0 4px rgba(0,0,0,.06);padding:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:50;}
-.logo{padding:9px 16px 9px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.logo{padding:13px 16px 13px;border-bottom:1px solid var(--border);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
 .logo-text{font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--accent);}
 .logo-sub{font-size:8px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:1px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:7px 16px;cursor:pointer;font-size:11px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);transition:all .2s;border-left:2px solid transparent;}
@@ -32,11 +32,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* MAIN */
 .main{display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .main::-webkit-scrollbar{width:0;display:none;}
-.topbar{display:grid;grid-template-columns:auto 1fr;align-items:center;padding:5px 20px 5px;flex-shrink:0;}
+.topbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:12px 20px 12px;flex-shrink:0;position:relative;}
 .page-title{font-family:var(--font-head);font-size:26px;font-weight:800;}
 .page-title span{color:var(--accent);}
 .page-sub{font-size:11px;color:var(--muted);margin-top:3px;}
-.stickers-bar{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:6px 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;}
+.stickers-bar{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:6px;padding:6px 20px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;max-height:74px;}
 .stickers-row{display:flex;gap:10px;flex:1;min-width:0;overflow-x:auto;padding-bottom:2px;}
 .sticker-card{position:relative;flex-shrink:0;width:150px;height:62px;border-radius:8px;padding:5px 9px 5px;font-size:10px;line-height:1.25;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
@@ -121,7 +121,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 
 /* CONTENT SPLIT */
-.content-split{flex:1;display:grid;grid-template-columns:1fr 0;transition:grid-template-columns .32s cubic-bezier(.4,0,.2,1);overflow:hidden;padding:0 12px 8px;gap:0;min-height:0;}
+.content-split{flex:1;display:grid;grid-template-columns:1fr 0;transition:grid-template-columns .32s cubic-bezier(.4,0,.2,1);overflow:hidden;padding:0 10px 8px;gap:0;min-height:0;}
 .content-split.panel-open{grid-template-columns:1fr 480px;gap:16px;}
 
 /* CALENDAR WRAP */
@@ -1394,10 +1394,14 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       </div>
     </div><!-- end month wrapper -->
-    <div class="topbar-right" style="gap:14px">
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)">
       <button class="btn btn-primary" onclick="openBookingModal()">+ Замовлення</button>
-      <div style="width:1px;height:20px;background:var(--border)"></div>
-      <span id="topbar-username" style="font-size:11px;color:var(--muted);white-space:nowrap"></span>
+    </div>
+    <div class="topbar-right" style="gap:10px">
+      <div style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:5px 12px 5px 6px">
+        <span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="topbar-user-initials"></span>
+        <span id="topbar-username" style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap"></span>
+      </div>
       <button class="btn btn-ghost" onclick="doLogout()" style="white-space:nowrap">⏻ Вийти</button>
     </div>
   </div>
@@ -2660,9 +2664,8 @@ function renderStickers(){
       <button class="sticker-pin${s.pinned?' active':''}" onclick="togglePinSticker(${s.id})" title="${s.pinned?'Відкріпити':'Закріпити'}">${s.pinned?'📌':'📍'}</button>
       <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати">✎</button>
       <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
-      <div class="sticker-label">${STICKER_LABELS[s.color]||''}</div>
+      <div class="sticker-label">${s.author||'Анонім'}</div>
       <div class="sticker-text" onclick="showStickerFullText(event,${s.id})" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
-      <div class="sticker-author">— ${s.author||'Анонім'}</div>
     </div>
   `).join('');
 }
@@ -6898,6 +6901,8 @@ function showSidebarUser(user){
   const topbarName = document.getElementById('topbar-username');
   if(topbarName) topbarName.textContent = user.name;
   const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const topbarInitials = document.getElementById('topbar-user-initials');
+  if(topbarInitials) topbarInitials.textContent = initials;
   document.getElementById('sidebar-user-initials').textContent = initials;
 }
 
