@@ -3960,10 +3960,11 @@ async function showVehicleSpecs(e, vid){
     const margin = 14;
     const left = Math.round(vehColWidth + margin);
     const popupWidth = Math.max(180, Math.min(280, window.innerWidth - left - margin));
+    const stickersBarBottom = document.querySelector('.stickers-bar')?.getBoundingClientRect().bottom || 8;
     popup.style.left = left + 'px';
-    popup.style.top = '50%';
-    popup.style.transform = 'translateY(-50%)';
-    popup.style.maxHeight = 'calc(100vh - 32px)';
+    popup.style.top = Math.round(stickersBarBottom) + 'px';
+    popup.style.transform = '';
+    popup.style.maxHeight = `calc(100vh - ${Math.round(stickersBarBottom)}px - 16px)`;
     popup.style.overflowY = 'auto';
     popup.style.width = popupWidth + 'px';
   } else {
