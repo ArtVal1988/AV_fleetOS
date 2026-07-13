@@ -1380,10 +1380,9 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       </div>
     </div><!-- end month wrapper -->
-    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)">
+    <div class="topbar-right" style="gap:14px">
       <button class="btn btn-primary" onclick="openBookingModal()">+ Замовлення</button>
-    </div>
-    <div class="topbar-right" style="gap:10px">
+      <div style="width:1px;height:22px;background:var(--border)"></div>
       <div style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:5px 12px 5px 6px">
         <span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="topbar-user-initials"></span>
         <span id="topbar-username" style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap"></span>
@@ -6471,7 +6470,7 @@ function updateVatPreview(){
   }
 
   if(dualTotal){ dualTotal.style.display = ''; }
-  document.getElementById('dual-days-label').textContent = `діб × ${rate.toLocaleString('uk-UA')} ${anchorCur}`;
+  document.getElementById('dual-days-label').textContent = `${days} діб × ${rate.toLocaleString('uk-UA')} ${anchorCur}`;
   document.getElementById('dual-days-label').style.color = anchorCur==='₴' ? '#166534' : '#1d4ed8';
   document.getElementById('dual-days-label').style.fontWeight = '600';
   document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
