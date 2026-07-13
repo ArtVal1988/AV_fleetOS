@@ -1827,7 +1827,7 @@ input.dm-pf-val.tel{font-size:14px;}
           🚙 <span>За оренду:</span> <span id="bm-km-diff-val">0</span> <span>км</span>
         </div>
         <div class="km-diff-badge" id="bm-km-avg" style="display:none">
-          📊 <span>Сер./добу:</span> <span id="bm-km-avg-val">0</span> <span>км</span>
+          ⚠️ <span>Перепробіг:</span> <span id="bm-km-avg-val">0</span> <span>км</span>
         </div>
       </div>
     </div>
@@ -4364,8 +4364,9 @@ function updateKmDiff(){
       if(valEl) valEl.textContent = diff.toLocaleString('uk-UA');
       badge.style.display='flex';
 
-      // Average mileage per rental day, using the same day count as the cost calc
-      // (respects a manual days-override if the user has set one).
+      // Excess mileage (перепробіг) over the 350 km/day allowance, using the
+      // same day count as the cost calc (respects a manual days-override).
+      const KM_ALLOWANCE_PER_DAY = 350;
       const startVal = document.getElementById('bm-start').value;
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
@@ -4373,7 +4374,11 @@ function updateKmDiff(){
       const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
       if(avgBadge){
         if(days > 0){
-          if(avgValEl) avgValEl.textContent = Math.round(diff/days).toLocaleString('uk-UA');
+          const allowance = days * KM_ALLOWANCE_PER_DAY;
+          const excess = diff - allowance;
+          if(avgValEl) avgValEl.textContent = (excess > 0 ? '+' : '') + excess.toLocaleString('uk-UA');
+          avgBadge.style.background = excess > 0 ? '#fef2f2' : '';
+          avgBadge.style.color = excess > 0 ? '#991b1b' : '';
           avgBadge.style.display='flex';
         } else {
           avgBadge.style.display='none';
