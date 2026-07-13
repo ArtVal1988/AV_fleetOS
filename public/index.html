@@ -176,7 +176,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .sticker-pin{top:3px;right:30px;font-size:9px;}
   .sticker-edit{top:3px;right:16px;font-size:9px;opacity:.5;}
   .sticker-del{font-size:9px;top:2px;right:2px;}
-  .content-split{padding:0 10px 10px;}
+  .content-split{padding:0 2px 10px 10px;}
+  .calendar-scroll{border-right:none;border-radius:8px 0 0 8px;}
   .calendar-scroll{scroll-snap-type:x proximity;}
   .th-day,.td-day{scroll-snap-align:start;}
   .mn-label{min-width:100px;padding:8px 10px;}
@@ -3952,12 +3953,19 @@ async function showVehicleSpecs(e, vid){
   popup.style.display = 'block';
   const isMobile = window.innerWidth <= 900;
   if(isMobile){
-    popup.style.left = '50%';
+    // Sit to the right of the sticky vehicle column, sized to whatever
+    // space is actually left, so it never overlaps the plate/name AND
+    // never runs off the right edge on narrow phones.
+    const vehColWidth = document.querySelector('.td-vehicle')?.getBoundingClientRect().width || 96;
+    const margin = 14;
+    const left = Math.round(vehColWidth + margin);
+    const popupWidth = Math.max(180, Math.min(280, window.innerWidth - left - margin));
+    popup.style.left = left + 'px';
     popup.style.top = '50%';
-    popup.style.transform = 'translate(-50%,-50%)';
+    popup.style.transform = 'translateY(-50%)';
     popup.style.maxHeight = 'calc(100vh - 32px)';
     popup.style.overflowY = 'auto';
-    popup.style.width = 'min(300px, calc(100vw - 32px))';
+    popup.style.width = popupWidth + 'px';
   } else {
     popup.style.transform = '';
     popup.style.maxHeight = '';
