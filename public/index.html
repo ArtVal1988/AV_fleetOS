@@ -1260,7 +1260,11 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       <div style="margin-top:10px">
         <label class="vf-lbl">🔗 Посилання на сторонній прайс (напр. toprent.ua)</label>
-        <input id="vf-pricelink" type="url" class="vf-inp" placeholder="https://toprent.ua/uk/skoda-rapid-2015">
+        <div style="display:flex;gap:8px">
+          <input id="vf-pricelink" type="url" class="vf-inp" placeholder="https://toprent.ua/uk/skoda-rapid-2015" style="flex:1">
+          <button type="button" onclick="fetchAndApplySpecsInForm()" style="flex-shrink:0;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 Оновити характеристики</button>
+        </div>
+        <div id="vf-pricelink-status" style="font-size:10px;color:#9ca3af;margin-top:4px"></div>
       </div>
       </div>
 
@@ -3947,31 +3951,55 @@ async function loadPriceIntoSpecsPopup(vid, priceLink){
     const depositRow = r.deposit ? `<div style="display:flex;justify-content:space-between;padding:3px 0 0;font-size:11px">
         <span style="color:#9ca3af">Застава</span><span style="color:#6b7280">${r.deposit} $</span>
       </div>` : '';
-    const hasScrapedSpecs = r.specs && Object.keys(r.specs).length;
-    const applyBtn = hasScrapedSpecs ? `<button onclick='applyScrapedSpecs(${vid}, ${JSON.stringify(r.specs)})' style="width:100%;margin-top:8px;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:6px;padding:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">⇩ Оновити характеристики із сайту</button>` : '';
+    const copyBtn = `<button onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="width:100%;margin-top:8px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;padding:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">📋 Копіювати посилання на авто</button>`;
     section.innerHTML = `
       <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
       ${rows}${depositRow}
-      ${applyBtn}
+      ${copyBtn}
       <a href="${priceLink}" target="_blank" style="display:block;margin-top:8px;font-size:10px;color:#2563eb;text-align:center">Відкрити джерело →</a>
     `;
   }catch(err){
     section.innerHTML = `<div style="color:#dc2626;font-size:11px">Помилка завантаження ціни.</div>`;
   }
 }
-function applyScrapedSpecs(vid, scraped){
-  const v = ALL_VEHICLES.find(x=>x.id===vid);
-  if(!v) return;
-  if(!v.specs) v.specs = {};
-  const filled = Object.keys(scraped).filter(k => v.specs[k]);
-  if(filled.length){
-    const names = filled.map(k=>VEHICLE_SPEC_LABELS[k]||k).join(', ');
-    if(!confirm(`Поля вже заповнені: ${names}.\nПерезаписати їх даними із сайту?`)) return;
+function copyVehicleLink(url, btn){
+  navigator.clipboard.writeText(url).then(()=>{
+    const original = btn.textContent;
+    btn.textContent = '✓ Скопійовано';
+    setTimeout(()=>{ btn.textContent = original; }, 1500);
+  }).catch(()=>{ alert('Не вдалося скопіювати. Посилання: ' + url); });
+}
+async function fetchAndApplySpecsInForm(){
+  const url = document.getElementById('vf-pricelink').value.trim();
+  const statusEl = document.getElementById('vf-pricelink-status');
+  if(!url){ statusEl.textContent = 'Спочатку вкажіть посилання.'; statusEl.style.color = '#dc2626'; return; }
+  statusEl.textContent = '⏳ Завантаження з сайту...'; statusEl.style.color = '#9ca3af';
+  try{
+    const r = await apiFetch('GET', '/price-check?url=' + encodeURIComponent(url));
+    if(!r || !r.specs || !Object.keys(r.specs).length){
+      statusEl.textContent = 'Не вдалося знайти характеристики на сторінці.'; statusEl.style.color = '#dc2626';
+      return;
+    }
+    const fieldMap = {bodyType:'vf-bodytype', transmission:'vf-transmission', drive:'vf-drive', engine:'vf-engine', power:'vf-power', fuel:'vf-fuel', consumption:'vf-consumption', climate:'vf-climate'};
+    let count = 0;
+    Object.entries(r.specs).forEach(([key,val]) => {
+      const fieldId = fieldMap[key];
+      const el = fieldId && document.getElementById(fieldId);
+      if(!el) return;
+      if(el.tagName === 'SELECT'){
+        // Scraped text (e.g. "Бензин") rarely matches a dropdown option
+        // exactly (e.g. "Бензин А95") — pick the closest one instead.
+        const opt = [...el.options].find(o => o.value && (o.value.toLowerCase().includes(String(val).toLowerCase()) || String(val).toLowerCase().includes(o.value.toLowerCase())));
+        if(opt){ el.value = opt.value; count++; }
+      } else {
+        el.value = val; count++;
+      }
+    });
+    statusEl.textContent = count ? `✓ Оновлено полів: ${count}. Не забудьте натиснути «Зберегти авто».` : 'Не вдалося зіставити характеристики з полями форми.';
+    statusEl.style.color = count ? '#166534' : '#dc2626';
+  }catch(e){
+    statusEl.textContent = 'Помилка мережі при завантаженні.'; statusEl.style.color = '#dc2626';
   }
-  Object.assign(v.specs, scraped);
-  persistVehicle(v);
-  document.getElementById('vehicle-specs-popup').style.display='none';
-  alert('Характеристики застосовано й збережено.');
 }
 const VEHICLE_SPEC_LABELS = {
   bodyType:'Тип кузова', color:'Колір', engine:'Об\'єм двигуна', power:'Потужність',
