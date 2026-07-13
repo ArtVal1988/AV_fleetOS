@@ -1826,9 +1826,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="km-diff-badge" id="bm-km-diff" style="display:none">
           🚙 <span>За оренду:</span> <span id="bm-km-diff-val">0</span> <span>км</span>
         </div>
-        <div class="km-diff-badge" id="bm-km-avg" style="display:none">
-          ⚠️ <span>Перепробіг:</span> <span id="bm-km-avg-val">0</span> <span>км</span>
-        </div>
+        <div class="km-diff-badge" id="bm-km-avg" style="display:none"></div>
       </div>
     </div>
     <!-- POST-RENTAL DEDUCTIONS -->
@@ -4389,9 +4387,15 @@ function updateKmDiff(){
         if(days > 0){
           const allowance = days * KM_ALLOWANCE_PER_DAY;
           const excess = diff - allowance;
-          if(avgValEl) avgValEl.textContent = (excess > 0 ? '+' : '') + excess.toLocaleString('uk-UA');
-          avgBadge.style.background = excess > 0 ? '#fef2f2' : '';
-          avgBadge.style.color = excess > 0 ? '#991b1b' : '';
+          if(excess > 0){
+            avgBadge.innerHTML = `⚠️ <span>Перепробіг:</span> <span>+${excess.toLocaleString('uk-UA')}</span> <span>км</span>`;
+            avgBadge.style.background = '#fef2f2';
+            avgBadge.style.color = '#991b1b';
+          } else {
+            avgBadge.innerHTML = `✅ <span>В межах ліміту</span> <span>·</span> <span>${diff.toLocaleString('uk-UA')}</span> <span>км</span>`;
+            avgBadge.style.background = '#f0fdf4';
+            avgBadge.style.color = '#166534';
+          }
           avgBadge.style.display='flex';
         } else {
           avgBadge.style.display='none';
