@@ -116,8 +116,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sidebar-legend-title{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:3px;padding:0 6px;}
 .app.sb-collapsed .sidebar-legend-section{padding:8px 0;}
 .app.sb-collapsed .legend-item{justify-content:center;padding:6px 0;gap:0;}
-.app.sb-collapsed #sidebar-user{justify-content:center;padding:10px 0!important;gap:0!important;}
-.app.sb-collapsed #sidebar-user > div:last-child{display:none;}
+
 .sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 
 /* CONTENT SPLIT */
@@ -1347,18 +1346,6 @@ input.dm-pf-val.tel{font-size:14px;}
   </nav>
   </div>
   <div style="margin-top:auto">
-    <div style="padding:8px 14px;border-top:1px solid var(--border)">
-      <div id="sidebar-user"
-        style="display:none;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:default">
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <span id="sidebar-user-initials" style="color:#fff;font-size:10px;font-weight:700"></span>
-        </div>
-        <div style="min-width:0;flex:1" class="nav-label">
-          <div id="sidebar-user-name" style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-          <div id="sidebar-user-role" style="font-size:9px;color:var(--muted);margin-top:0"></div>
-        </div>
-      </div>
-    </div>
     <div class="sidebar-legend-section">
       <div class="sidebar-legend-title nav-label">Статуси</div>
       <div class="legend" id="legend"></div>
@@ -6893,17 +6880,11 @@ function hideLoginOverlay(){
 }
 
 function showSidebarUser(user){
-  const el = document.getElementById('sidebar-user');
-  if(!el) return;
-  el.style.display='flex';
-  document.getElementById('sidebar-user-name').textContent = user.name;
-  document.getElementById('sidebar-user-role').textContent = user.role==='admin' ? '👑 Адмін' : '👤 Менеджер';
   const topbarName = document.getElementById('topbar-username');
   if(topbarName) topbarName.textContent = user.name;
   const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   const topbarInitials = document.getElementById('topbar-user-initials');
   if(topbarInitials) topbarInitials.textContent = initials;
-  document.getElementById('sidebar-user-initials').textContent = initials;
 }
 
 async function doLogin(){
@@ -6928,8 +6909,6 @@ async function doLogin(){
 function doLogout(){
   _token=''; _currentUser=null;
   localStorage.removeItem('av_fleet_token');
-  const su = document.getElementById('sidebar-user');
-  if(su) su.style.display='none';
   document.getElementById('nav-users').style.display='none';
   document.getElementById('nav-statuses').style.display='none';
   showLoginOverlay();
