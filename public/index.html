@@ -3866,6 +3866,8 @@ const SPEC_ROWS = [
 ];
 function showVehicleSpecs(e, vid){
   e.stopPropagation();
+  const pricePopup = document.getElementById('external-price-popup');
+  if(pricePopup) pricePopup.style.display='none';
   const popup = document.getElementById('vehicle-specs-popup');
   const v = ALL_VEHICLES.find(x=>x.id===vid);
   if(!popup || !v) return;
@@ -3920,6 +3922,8 @@ function showVehicleSpecs(e, vid){
 }
 async function showExternalPrice(e, vid){
   e.stopPropagation();
+  const specsPopup = document.getElementById('vehicle-specs-popup');
+  if(specsPopup) specsPopup.style.display='none';
   const popup = document.getElementById('external-price-popup');
   const v = ALL_VEHICLES.find(x=>x.id===vid);
   if(!popup || !v || !v.specs?.priceLink) return;
