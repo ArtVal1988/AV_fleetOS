@@ -204,11 +204,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* Guarantee the close button is always reachable, regardless of how much
      the header's other content (long vehicle name, status label) wants to
      overflow — this was the main "can't close the order" bug. */
-  .modal-head{padding:14px 44px 12px 14px;position:relative;grid-template-columns:1fr;row-gap:6px;}
-  .modal-head .modal-x{position:absolute;top:10px;right:10px;z-index:6;font-size:20px;background:#f3f4f6;border-radius:50%;width:30px;height:30px;}
-  .modal-head>div:last-child{flex-wrap:wrap;padding-right:36px;}
-  .bm-head-select{max-width:120px;font-size:11px;}
-  .modal-title{font-size:14px;}
+  .modal-head{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:12px 48px 12px 14px!important;position:relative;row-gap:0;}
+  .modal-head .modal-x{position:absolute;top:8px;right:8px;z-index:6;font-size:18px;background:#eef0f3;color:#6b7280;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+  .modal-head>div:last-child{flex-wrap:nowrap;padding-right:0;flex-shrink:1;min-width:0;}
+  .modal-title{display:none;}
+  .bm-head-select{max-width:120px!important;font-size:11px;}
+  #bm-vehicle.bm-head-select{max-width:100px!important;padding:5px 6px!important;}
+  #bm-status.bm-head-select{max-width:100px!important;padding:5px 6px!important;}
+  #bm-vehicle{flex-shrink:0;}
+  #bm-status{flex:1;min-width:0;text-overflow:ellipsis;}
   .to-modal-x,.ins-modal-x,.docs-modal-x{position:relative;z-index:6;}
   .to-modal-top{flex-wrap:wrap;position:relative;padding-right:36px;}
   .to-modal-top .to-modal-x{position:absolute;top:-4px;right:-4px;font-size:20px;background:#f3f4f6;border-radius:50%;width:30px;height:30px;}
@@ -227,10 +231,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
   .logistics-row{flex-wrap:wrap;align-items:flex-start!important;}
   .logistics-row .lr-inputs{flex-wrap:wrap;width:100%;gap:8px;}
-  .lr-date,.lr-time,.lr-loc{flex:1 1 100%!important;width:100%;}
+  .lr-date,.lr-time{flex:1 1 0!important;width:auto;min-width:0!important;}
+  .lr-loc{flex:1 1 100%!important;width:100%;}
   .lr-label{width:100%!important;margin-bottom:2px;}
   .fin-row{gap:10px;}
-  .fin-field,.fin-rate,.fin-cur,.fin-rate2,.fin-vat,.fin-deposit{flex:1 1 100%!important;min-width:0!important;max-width:100%!important;}
+  .fin-row{row-gap:8px;}
+  .fin-rate,.fin-cur,.fin-rate2{flex:1 1 0!important;min-width:0!important;max-width:none!important;width:auto!important;}
+  .fin-vat,.fin-deposit{flex:1 1 100%!important;min-width:0!important;max-width:100%!important;width:100%!important;}
+  .vat-table-row{grid-template-columns:1fr 72px 82px!important;gap:4px!important;padding:6px 6px!important;}
+  .vat-row-label{font-size:10px!important;}
+  .vat-orig,.vat-uah{font-size:11px!important;}
+  #dp-total-label,#dp-total,#dp-total-uah{font-size:13px!important;}
+  .vat-row-label[style*="display:flex"]{gap:6px!important;}
+  .km-row-compact{flex-wrap:wrap!important;}
+  .km-diff-badge{flex:1 1 100%!important;justify-content:center;}
   .ext-period-inputs{flex-wrap:wrap;}
   .ext-period-inputs input[type=date]{flex:1 1 auto;width:auto!important;min-width:110px;}
   .ext-fin-row .ext-fin-period{width:100%!important;}
@@ -239,8 +253,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .fg-pair{grid-template-columns:1fr!important;gap:10px!important;}
   .client-type-switcher{display:grid!important;grid-template-columns:1fr 1fr!important;border-radius:8px;}
   .ct-btn{padding:9px 6px;font-size:10px;border:1px solid #dde0e6;margin:-1px 0 0 -1px;}
-  .ext-fin-row{flex-direction:column;align-items:stretch!important;}
-  .ext-fin-row .ext-fin-field{width:100%!important;}
+  /* Extension section: period gets its own full-width row (з/до stacked
+     and aligned via grid), the smaller fields share compact rows instead
+     of each demanding full width. */
+  .ext-fin-row{align-items:stretch!important;}
+  .ext-fin-field.ext-fin-period{flex:1 1 100%!important;width:100%!important;}
+  .ext-period-inputs{display:grid!important;grid-template-columns:22px 1fr;align-items:center;gap:5px 8px!important;}
+  .ext-period-inputs input[type=date]{width:100%!important;min-width:0;flex:none!important;}
+  .ext-fin-field:not(.ext-fin-period){flex:1 1 0!important;width:auto!important;min-width:0!important;}
+  #bm-ext-rate2-field{flex:1 1 0!important;}
+  .ext-fin-row div[style*="width:108px"]{flex:1 1 45%!important;width:auto!important;}
+  .ext-fin-row div[style*="width:96px"]{flex:1 1 45%!important;width:auto!important;}
+  .ext-fin-row div[style*="flex:1;min-width:170px"]{flex:1 1 45%!important;}
+  .ext-status-choice{flex-wrap:wrap;}
   .to-mat-add-row{grid-template-columns:1fr 1fr;}
 
   /* Vehicle specs / price popup — never let it run off the right edge. */
@@ -1696,7 +1721,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- EXTRAS TOGGLE -->
       <button type="button" class="extras-toggle" id="extras-toggle-btn" onclick="toggleExtrasPanel()">
         <span id="extras-toggle-icon">⊕</span>
-        <span>Додаткові послуги / обладнання / доплати</span>
+        <span>Додаткові послуги / обладнання</span>
         <span id="extras-active-count" style="display:none"></span>
         <span class="extras-toggle-chevron" id="extras-chevron">▾</span>
       </button>
@@ -1774,7 +1799,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
         <div class="fin-field fin-rate">
-          <label id="bm-rate-label">Вартість за добу</label>
+          <label id="bm-rate-label">Вартість</label>
           <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
         </div>
         <div class="fin-field fin-cur">
@@ -1951,7 +1976,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
   <div class="modal-footer" id="bm-footer">
     <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none">✕ Видалити</button>
-    <label id="bm-closed-label" style="display:flex;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
+    <label id="bm-closed-label" style="display:none;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
       <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
       ✅ Авто повернено. Замовлення закрито.
     </label>
@@ -6135,7 +6160,7 @@ function updateBookingDetailsVisibility(){
     if(extCb) extCb.checked=false;
   }
 
-  if(closedLabel) closedLabel.style.display = hide ? 'none' : 'flex';
+  if(closedLabel) closedLabel.style.display = 'none';
   if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
 }
 // Locks the client-type tabs so a saved "Фіз. особа" order can't later be switched
@@ -6187,7 +6212,7 @@ function setClientType(type, isUserAction = true){
 
   // Rate label
   document.getElementById('bm-rate-label').textContent =
-    'Вартість за добу';
+    'Вартість';
 
   updateVatPreview();
 }
