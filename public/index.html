@@ -32,7 +32,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* MAIN */
 .main{display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .main::-webkit-scrollbar{width:0;display:none;}
-.topbar{display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:12px 20px 12px;flex-shrink:0;position:relative;}
+.topbar{display:grid;grid-template-columns:minmax(0,auto) 1fr minmax(0,auto);align-items:center;padding:12px 20px 12px;flex-shrink:0;position:relative;min-width:0;}
+.topbar>*{min-width:0;}
 .page-title{font-family:var(--font-head);font-size:26px;font-weight:800;}
 .page-title span{color:var(--accent);}
 .page-sub{font-size:11px;color:var(--muted);margin-top:3px;}
@@ -164,7 +165,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .calendar-scroll{scroll-padding-left:96px;}
 }
 @media (max-width: 640px){
-  .topbar{padding:8px 10px 6px;}
+  .topbar{padding:8px 8px 6px;}
+  .topbar>div:first-child{gap:4px!important;}
+  .topbar-right{gap:6px!important;}
+  .topbar .btn-primary{padding:7px 10px;font-size:10px;}
+  #topbar-username{display:none;}
+  .topbar-right .btn-ghost{padding:0;width:30px;height:30px;border-radius:50%;font-size:14px;overflow:hidden;white-space:nowrap;}
+  .topbar-right .btn-ghost .logout-text{display:none;}
   .month-nav{padding:2px;}
   .mn-btn{padding:5px 8px;}
   .today-btn{padding:5px 9px;}
@@ -180,7 +187,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .calendar-scroll{border-right:none;border-radius:8px 0 0 8px;}
   .calendar-scroll{scroll-snap-type:x proximity;}
   .th-day,.td-day{scroll-snap-align:start;}
-  .mn-label{min-width:100px;padding:8px 10px;}
+  .mn-label{display:none;}
+  .month-nav{gap:2px;}
   .app.sb-hidden-mobile{grid-template-columns:0 1fr;}
   .app.sb-hidden-mobile .sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right:none;box-shadow:none;}
   .mobile-menu-fab{display:none;position:fixed;bottom:16px;left:16px;z-index:200;width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.25);font-size:18px;align-items:center;justify-content:center;}
@@ -1430,7 +1438,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="topbar-user-initials"></span>
         <span id="topbar-username" style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap"></span>
       </div>
-      <button class="btn btn-ghost" onclick="doLogout()" style="white-space:nowrap">⏻ Вийти</button>
+      <button class="btn btn-ghost" onclick="doLogout()" style="white-space:nowrap">⏻<span class="logout-text"> Вийти</span></button>
     </div>
   </div>
 
