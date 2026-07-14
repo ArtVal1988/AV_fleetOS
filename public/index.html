@@ -220,8 +220,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
     grid-template-columns:1fr!important;
   }
   [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
-  .logistics-row{flex-wrap:wrap;}
-  .logistics-row .lr-inputs{flex-wrap:wrap;width:100%;}
+  .logistics-row{flex-wrap:wrap;align-items:flex-start!important;}
+  .logistics-row .lr-inputs{flex-wrap:wrap;width:100%;gap:8px;}
+  .lr-date,.lr-time,.lr-loc{flex:1 1 100%!important;width:100%;}
+  .lr-label{width:100%!important;margin-bottom:2px;}
+  .fin-row{gap:10px;}
+  .fin-field,.fin-rate,.fin-cur,.fin-rate2,.fin-vat,.fin-deposit{flex:1 1 100%!important;min-width:0!important;max-width:100%!important;}
+  .ext-period-inputs{flex-wrap:wrap;}
+  .ext-period-inputs input[type=date]{flex:1 1 auto;width:auto!important;min-width:110px;}
+  .ext-fin-row .ext-fin-period{width:100%!important;}
+  #bm-period-row{flex-wrap:wrap!important;}
+  #bm-period-row input[type=date]{flex:1 1 100px;}
+  .fg-pair{grid-template-columns:1fr!important;gap:10px!important;}
+  .client-type-switcher{display:grid!important;grid-template-columns:1fr 1fr!important;border-radius:8px;}
+  .ct-btn{padding:9px 6px;font-size:10px;border:1px solid #dde0e6;margin:-1px 0 0 -1px;}
   .ext-fin-row{flex-direction:column;align-items:stretch!important;}
   .ext-fin-row .ext-fin-field{width:100%!important;}
   .to-mat-add-row{grid-template-columns:1fr 1fr;}
