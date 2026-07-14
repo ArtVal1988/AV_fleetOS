@@ -157,7 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* Plate-only sticky column — applies whenever the window/screen is narrow,
    not just on phones, so resizing a desktop browser narrower gets the same
    compact treatment (only the plate stays pinned, name/icons scroll away). */
-@media (max-width: 900px){
+@media (max-width: 640px){
   .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
   .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
   .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 4px;letter-spacing:0;}
@@ -2686,7 +2686,7 @@ function buildVehCell(v){
   var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
-      '<div class="veh-name-click" onclick="highlightRow('+v.id+');if(window.innerWidth<=900)showVehicleSpecs(event,'+v.id+')" title="Виділити рядок">'+
+      '<div class="veh-name-click" onclick="highlightRow('+v.id+');if(window.innerWidth<=640)showVehicleSpecs(event,'+v.id+')" title="Виділити рядок">'+
         '<span class="veh-plate-badge">'+v.plate+'</span>'+
         '<span class="veh-name">'+stripYear(v.name)+'</span>'+
       '</div>'+
@@ -3981,7 +3981,7 @@ async function showVehicleSpecs(e, vid){
   `;
 
   popup.style.display = 'block';
-  const isMobile = window.innerWidth <= 900;
+  const isMobile = window.innerWidth <= 640;
   if(isMobile){
     // Sit to the right of the sticky vehicle column, sized to whatever
     // space is actually left, so it never overlaps the plate/name AND
