@@ -260,7 +260,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .ext-fin-field.ext-fin-period{flex:1 1 100%!important;width:100%!important;}
   input[type=date],input[type=time]{box-sizing:border-box!important;max-width:100%!important;}
   .ext-period-inputs{display:grid!important;grid-template-columns:22px 1fr;align-items:center;gap:5px 8px!important;}
-  .ext-period-inputs input[type=date]{width:100%!important;min-width:0;flex:none!important;}
+  .ext-period-inputs input[type=date]{width:75%!important;min-width:0;flex:none!important;}
   .ext-fin-field:not(.ext-fin-period){flex:1 1 0!important;width:auto!important;min-width:0!important;}
   #bm-ext-rate2-field{flex:1 1 0!important;}
   .ext-fin-row div[style*="width:108px"]{flex:1 1 45%!important;width:auto!important;}
@@ -720,10 +720,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .bp-field-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:0;}
 
 /* COMPACT LOGISTICS ROW */
-.logistics-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.logistics-row{position:relative;display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:16px 10px 8px;}
 .logistics-row:last-child{margin-bottom:0;}
-.lr-label{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:#2563eb;flex-shrink:0;white-space:nowrap;width:76px;}
-.lr-inputs{display:flex;flex:1;gap:6px;align-items:center;min-width:0;}
+.lr-label{position:absolute;top:4px;left:10px;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;}
+.lr-inputs{display:flex;flex:1;gap:6px;align-items:center;min-width:0;width:100%;}
 .lr-date{flex:0 0 118px;min-width:0;}
 .lr-time{flex:0 0 70px;min-width:0;}
 .lr-loc{flex:1;min-width:0;}
