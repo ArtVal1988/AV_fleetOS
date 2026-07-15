@@ -236,7 +236,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .lr-label{width:100%!important;margin-bottom:2px;}
   .fin-row{gap:10px;}
   .fin-row{row-gap:8px;}
-  .fin-rate,.fin-cur,.fin-rate2{flex:1 1 0!important;min-width:0!important;max-width:none!important;width:auto!important;}
+  .fin-days,.fin-rate,.fin-cur,.fin-rate2{flex:1 1 0!important;min-width:0!important;max-width:none!important;width:auto!important;}
   .fin-vat,.fin-deposit{flex:1 1 100%!important;min-width:0!important;max-width:100%!important;width:100%!important;}
   .vat-table-row{grid-template-columns:1fr 72px 82px!important;gap:4px!important;padding:6px 6px!important;}
   .vat-row-label{font-size:10px!important;}
@@ -1799,6 +1799,11 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="msec-title">Фінанси</div>
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
+        <div class="fin-field fin-days" style="flex:0 0 60px">
+          <label>Кількість</label>
+          <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
+            style="text-align:center;font-family:var(--font-mono);">
+        </div>
         <div class="fin-field fin-rate">
           <label id="bm-rate-label">Вартість</label>
           <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
@@ -1839,9 +1844,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
         </div>
         <div class="vat-table-row">
-          <span class="vat-row-label" style="display:flex;align-items:center;gap:6px">
-            <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
-              style="width:38px;padding:2px 4px;border:1px solid #bfdbfe;border-radius:3px;background:#fff;text-align:center;font-family:var(--font-mono);font-size:12px;">
+          <span class="vat-row-label">
             <span id="dual-days-label">діб × —</span>
           </span>
           <span class="vat-orig" id="dp-gross">—</span>
