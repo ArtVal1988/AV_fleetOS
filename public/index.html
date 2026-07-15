@@ -342,6 +342,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* HOVER TOOLTIP */
 .tooltip{position:fixed;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.18);border-radius:8px;padding:13px 16px;z-index:500;pointer-events:none;min-width:230px;max-width:330px;box-shadow:0 8px 32px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;font-size:12px;}
 .tooltip.visible{opacity:1;}
+.tooltip.mobile-tap{pointer-events:auto!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;z-index:501;}
+.tt-mobile-edit-row{display:none;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+.tooltip.mobile-tap .tt-mobile-edit-row{display:block;}
+.tooltip-mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(20,24,34,.35);z-index:499;}
+.tooltip-mobile-backdrop.visible{display:block;}
 .tt-name{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:2px;}
 .tt-phone{color:var(--accent2);margin-bottom:10px;font-size:11px;}
 .tt-row{display:flex;justify-content:space-between;margin-bottom:4px;}
@@ -1540,6 +1545,7 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 <!-- TOOLTIP -->
+<div class="tooltip-mobile-backdrop" id="tooltip-mobile-backdrop" onclick="closeMobileTooltip()"></div>
 <div class="tooltip" id="tooltip"></div>
 <div id="vehicle-specs-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:260px;font-family:'Verdana',sans-serif;font-size:12px"></div>
 <div id="sticker-fulltext-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:240px;font-family:'Verdana',sans-serif;font-size:12px"></div>
@@ -2870,7 +2876,7 @@ function renderCalendar(){
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
-          onclick="selectBooking(${booking.id})">
+          onclick="selectBooking(${booking.id},event)">
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${isStart?`<span class="cell-start-icon">${statusIcon}</span>`:''}${progressStripHtml}</div></td>`;
       }).join('');
       const isHl = highlightedVid===v.id;
@@ -2992,7 +2998,10 @@ function showTooltip(e,bid){
     ${b.rate?`<div class="tt-cost">${canShowUahOnly?fmt2tt(totalUah)+' ₴':fmt2tt(total)+' '+cur+(totalUah!==null&&cur!=='₴'?` <span style="font-size:12px;color:#166534;font-weight:700">· ${fmt2tt(totalUah)} ₴</span>`:'')}</div>`:''}
     ${b.deposit?`<div class="tt-deposit-pill"><span>Застава</span><span>${fmt2tt(b.deposit)} ${b.depositCur||cur}</span></div>`:''}
     ${extBlock}
-    ${notesBlock}`;
+    ${notesBlock}
+    <div class="tt-mobile-edit-row">
+      <button type="button" class="btn btn-primary" style="width:100%" onclick="editBooking(${bid})">✏ Редагувати замовлення</button>
+    </div>`;
   positionTooltip(e);
   tt.classList.add('visible');
 }
@@ -3098,6 +3107,7 @@ function expandBooking(bid){
   editBooking(bid);
 }
 function hideTooltip(){
+  if(tt.classList.contains('mobile-tap')) return;
   ttHideTimer=setTimeout(()=>tt.classList.remove('visible'),120);
 }
 function positionTooltip(e){
@@ -3116,9 +3126,24 @@ document.addEventListener('click', e => {
 });
 
 /* ── SELECT BOOKING (right panel) ── */
-function selectBooking(bid){
+function selectBooking(bid,e){
+  if(window.innerWidth<=640){
+    tt.classList.add('mobile-tap');
+    document.getElementById('tooltip-mobile-backdrop').classList.add('visible');
+    showTooltip(e||window.event,bid);
+    return;
+  }
   editBooking(bid);
 }
+function closeMobileTooltip(){
+  tt.classList.remove('visible','mobile-tap');
+  document.getElementById('tooltip-mobile-backdrop').classList.remove('visible');
+}
+document.addEventListener('click', e => {
+  if(!tt.classList.contains('mobile-tap') || !tt.classList.contains('visible')) return;
+  if(e.target.closest('#tooltip, .day-cell')) return;
+  closeMobileTooltip();
+});
 function closePanel(){
   selectedBid=null;
   document.getElementById('content-split').classList.remove('panel-open');
@@ -3410,7 +3435,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('booking-modal').classList.add('open');
 }
 function editBooking(bid){
-  clearTimeout(ttHideTimer); tt.classList.remove('visible');
+  clearTimeout(ttHideTimer); tt.classList.remove('visible','mobile-tap');
+  document.getElementById('tooltip-mobile-backdrop')?.classList.remove('visible');
   const b=bookings.find(x=>x.id===bid);if(!b)return;
   editBid=bid;
   document.getElementById('bm-title').textContent='Замовлення';
