@@ -2059,7 +2059,7 @@ function getVehicle(id){return ALL_VEHICLES.find(v=>v.id===id);}
 const today=new Date();today.setHours(0,0,0,0);
 let viewYear=today.getFullYear(), viewMonth=today.getMonth();
 let viewStartDate=new Date(today);
-const VIEW_DAYS=30;
+const VIEW_DAYS=31;
 let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, highlightedVid=null;
 
 let stickers=[], nextStickerId=1, stickerColorDraft='red';
@@ -3465,10 +3465,10 @@ function editBooking(bid){
   setClientType(b.clientType||'individual', false);
   updateClientTypeLock((b.clientType||'individual')==='individual');
   document.getElementById('bm-pickup-date').value=b.pickup?.date||'';
-  document.getElementById('bm-pickup-time').value=b.pickup?.time||'10:00';
+  document.getElementById('bm-pickup-time').value=b.pickup?.time||'09:00';
   document.getElementById('bm-pickup-loc').value=b.pickup?.loc||'';
   document.getElementById('bm-return-date').value=b.ret?.date||'';
-  document.getElementById('bm-return-time').value=b.ret?.time||'18:00';
+  document.getElementById('bm-return-time').value=b.ret?.time||'09:00';
   document.getElementById('bm-return-loc').value=b.ret?.loc||'';
   if(b.extension && b.extension.active){
     document.getElementById('bm-ext-active').checked=true;
