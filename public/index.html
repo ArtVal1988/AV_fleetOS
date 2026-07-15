@@ -687,11 +687,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .extras-cur-btn.active{background:#2563eb;color:#fff;}
 .extras-cur-btn.active[onclick*="'uah'"]{background:#166534;color:#fff;}
 
-.extra-pair-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-width:0;}
+.extra-pair-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;min-width:0;width:100%;}
 .extra-pair-item{min-width:0;}
-.extra-pair-group{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.extra-pair-group{position:relative;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:16px 10px 10px;}
 .extra-pair-group:last-child{margin-bottom:0;}
-.extra-pair-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#2563eb;font-weight:600;flex-shrink:0;width:98px;margin:0;white-space:nowrap;}
+.extra-pair-label{position:absolute;top:4px;left:10px;font-size:8px;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;font-weight:700;margin:0;white-space:nowrap;}
 .extra-pair-label:first-child{margin-top:0;}
 .extras-total-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;font-size:12px;color:#374151;}
 
