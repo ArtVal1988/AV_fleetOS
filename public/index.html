@@ -145,7 +145,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .th-day.weekend .th-day-dow{color:var(--accent);}
 
 /* CAT ROW */
-.cat-row td{background:#eceef2;padding:5px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:sticky;left:0;cursor:pointer;user-select:none;}
+.cat-row td{background:#eceef2;padding:5px 12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:sticky;left:0;user-select:none;}
 .cat-row:hover td{filter:brightness(.97);}
 .cat-row-chevron{font-size:8px;flex-shrink:0;width:8px;display:inline-block;margin-right:6px;}
 .cat-row-count{float:right;background:rgba(0,0,0,.08);color:inherit;border-radius:8px;padding:1px 7px;font-size:8px;letter-spacing:0;}
@@ -2823,10 +2823,8 @@ function renderCalendar(){
     const defaultPalette = ['#a78bfa','#60a5fa','#4ade80','#fbbf24','#f87171','#9ca3af'];
     if(!cat.colorHex) cat.colorHex = defaultPalette[catIdx % defaultPalette.length];
     const tdVehStyle = 'background:'+mixWithWhite(cat.colorHex,.09)+'!important;box-shadow:inset 3px 0 0 '+cat.colorHex+';';
-    const isCollapsed = collapsedCategories.has(cat.name);
-    html+=`<tr class="cat-row${isCollapsed?' collapsed':''}" onclick="toggleCategoryCollapse('${cat.name.replace(/'/g,"\\'")}')">
-      <td colspan="${total+1}"><span class="cat-row-chevron">${isCollapsed?'▸':'▾'}</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
-    if(isCollapsed) return;
+    html+=`<tr class="cat-row">
+      <td colspan="${total+1}"><span class="cat-row-chevron">▾</span>${cat.name}<span class="cat-row-count">${cat.vehicles.length}</span></td></tr>`;
     cat.vehicles.forEach(v=>{
       const cells=days.map(d=>{
         const k=cellKey(v.id,d);
