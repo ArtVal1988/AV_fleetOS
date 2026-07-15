@@ -34,7 +34,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(37,99,235,.07);}
 
 /* MAIN */
-.main{display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.main{display:flex;flex-direction:column;height:100vh;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;container-type:inline-size;container-name:main-area;}
 .main::-webkit-scrollbar{width:0;display:none;}
 .topbar{display:grid;grid-template-columns:minmax(0,auto) 1fr minmax(0,auto);align-items:center;padding:12px 20px 12px;flex-shrink:0;position:relative;min-width:0;}
 .topbar>*{min-width:0;}
@@ -161,11 +161,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* Plate-only sticky column — applies whenever the window/screen is narrow,
    not just on phones, so resizing a desktop browser narrower gets the same
    compact treatment (only the plate stays pinned, name/icons scroll away). */
-@media (max-width: 640px){
-  .th-vehicle,.td-vehicle{min-width:96px;width:96px;max-width:96px;padding:8px 4px;}
-  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none;}
-  .td-vehicle .veh-plate-badge{font-size:11px;padding:3px 2px;letter-spacing:0;width:82px;}
-  .th-vehicle{font-size:0;}
+/* Plate-only sticky column — now driven by a CONTAINER query on the main
+   content area, not the raw viewport. This means collapsing the sidebar
+   (which frees up real width) can pull the calendar out of compact mode
+   even if the browser window itself hasn't changed size. */
+@container main-area (max-width: 640px){
+  .th-vehicle,.td-vehicle{min-width:96px!important;width:96px!important;max-width:96px!important;padding:8px 4px!important;}
+  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none!important;}
+  .td-vehicle .veh-plate-badge{font-size:11px!important;padding:3px 2px!important;letter-spacing:0!important;width:82px!important;}
+  .th-vehicle{font-size:0!important;}
   .calendar-scroll{scroll-padding-left:96px;}
   #specs-quick-actions{display:flex!important;}
 }
