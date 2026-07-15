@@ -3551,13 +3551,30 @@ function applyOrderLockState(){
 
   modal.querySelectorAll('input, select, textarea, button').forEach(el => {
     if(el.matches('.modal-x') || el.matches('[onclick="closeBookingModal()"]')) return;
+    if(el.closest('.client-type-switcher') || el.id === 'bm-client-type') return;
     el.disabled = lock;
   });
 
-  document.querySelectorAll('#bm-order-details, .msec-b5, .msec-b6').forEach(el=>{
+  document.querySelectorAll('.msec-b5, .msec-b6').forEach(el=>{
     el.style.opacity = lock ? '.65' : '1';
     el.style.pointerEvents = lock ? 'none' : '';
   });
+  // Client type must stay fully interactive and undimmed even when the rest
+  // of the order-details wrap is locked, so exempt it explicitly - opacity
+  // compounds through nesting, so a child can't just override its ancestor's
+  // dimming, which is why bm-order-details itself is left at full opacity
+  // and the dimming is applied per-child instead (skipping bm-block-1).
+  document.getElementById('bm-order-details').style.opacity = '1';
+  document.getElementById('bm-order-details').style.pointerEvents = '';
+  document.querySelectorAll('#bm-order-details > .msec').forEach(el=>{
+    if(el.id === 'bm-block-1') return;
+    el.style.opacity = lock ? '.65' : '1';
+    el.style.pointerEvents = lock ? 'none' : '';
+  });
+  const ctBlock = document.getElementById('bm-block-1');
+  if(ctBlock){ ctBlock.style.opacity = '1'; ctBlock.style.pointerEvents = 'auto'; }
+  const ctSwitcher = document.getElementById('client-type-switcher');
+  if(ctSwitcher){ ctSwitcher.style.opacity = '1'; ctSwitcher.style.pointerEvents = 'auto'; }
 }
 function saveBooking(){
   const isAdmin = _currentUser && _currentUser.role === 'admin';
@@ -6197,15 +6214,15 @@ function updateBookingDetailsVisibility(){
   if(closedLabel) closedLabel.style.display = 'none';
   if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
 }
-// Locks the client-type tabs so a saved "Фіз. особа" order can't later be switched
-// to ФОП/ТОВ (and vice versa isn't relevant — only individual orders get locked).
+// Client type can always be changed now - this used to lock a saved
+// "Фіз. особа" order from switching to ФОП/ТОВ, but that restriction has
+// been removed. Kept as a no-op (rather than deleting call sites) so it
+// always clears any stale locked/disabled state from before.
 function updateClientTypeLock(lock){
   document.querySelectorAll('.ct-btn').forEach(btn=>{
-    const isIndividual = btn.dataset.type === 'individual';
-    const shouldDisable = lock && !isIndividual;
-    btn.disabled = shouldDisable;
-    btn.classList.toggle('ct-btn-locked', shouldDisable);
-    btn.title = shouldDisable ? 'Замовлення збережено як "Фіз. особа" — тип клієнта більше не можна змінити' : '';
+    btn.disabled = false;
+    btn.classList.remove('ct-btn-locked');
+    btn.title = '';
   });
 }
 function setClientType(type, isUserAction = true){
