@@ -7722,6 +7722,12 @@ async function syncFromServer(){
     // sensible to show offline / before the next server round-trip.
     try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
     if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') renderStatusesPanelList();
+  } else if(sSettings && !sSettings.statuses){
+    // Server has no shared statuses yet — this is the first login after the
+    // upgrade. Seed the server with whatever this browser currently has
+    // (its local STATUSES, e.g. loaded from its own localStorage), so this
+    // becomes the shared baseline for every other device going forward.
+    apiFetch('PUT','/settings/statuses',{value:STATUSES});
   }
   renderStickers(); render();
 }
