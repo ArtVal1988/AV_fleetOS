@@ -1671,11 +1671,9 @@ input.dm-pf-val.tel{font-size:14px;}
               <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
                 <option value="$">$</option>
                 <option value="₴">₴</option>
-                <option value="€">€</option>
               </select>
               <div class="dep-inline-wrap" style="background:none;border:none;padding:0;align-self:stretch">
                 <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
-                <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
                 <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
               </div>
             </div>
@@ -1696,7 +1694,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
                 <button type="button" id="ext-total-cur-btn-usd" class="dep-cur-pill active" onclick="setExtTotalCurrency('$')">$</button>
-                <button type="button" id="ext-total-cur-btn-eur" class="dep-cur-pill" onclick="setExtTotalCurrency('€')">€</button>
                 <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
               </div>
             </div>
@@ -1715,7 +1712,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
                 <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
-                <button type="button" id="ext-paid-cur-btn-eur" class="dep-cur-pill" onclick="setExtPaidCurrency('€')">€</button>
                 <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
               </div>
             </div>
@@ -1838,12 +1834,10 @@ input.dm-pf-val.tel{font-size:14px;}
           <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
             <option value="$">$</option>
             <option value="₴">₴</option>
-            <option value="€">€</option>
           </select>
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
             <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
             <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
-            <button type="button" id="fin-cur-btn-eur" class="dep-cur-pill" onclick="setFinCurrency('€')">€</button>
           </div>
         </div>
         <div class="fin-field fin-rate2" id="bm-rate-row" style="display:none">
@@ -2244,7 +2238,7 @@ addB({vehicleId:18,status:'rented',clientType:'individual',start:'2026-06-23',en
   customer:{name:'Wagner Klaus',phone:'+49 170 1234567'},
   pickup:{date:'2026-06-23',time:'14:00',loc:'Аеропорт Бориспіль'},
   ret:{date:'2026-06-30',time:'12:00',loc:'Аеропорт Бориспіль'},
-  rate:24,currency:'€',deposit:200,depositCur:'€',discount:0,manager:'Оля',notes:''});
+  rate:24,currency:'$',deposit:200,depositCur:'€',discount:0,manager:'Оля',notes:''});
 
 // Середній (veh.20) — СПЛІТ-ПАРА №4: ФОП з ПДВ повертає → фіз.особа забирає
 addB({vehicleId:20,status:'rented',clientType:'fop',vatRate:20,exchangeRate:42,start:'2026-06-19',end:'2026-06-29',
@@ -2427,7 +2421,7 @@ addB({vehicleId:6,status:'completed',clientType:'individual',start:'2026-06-01',
   customer:{name:'Мюллер Ганс',phone:'+49 177 555 66 77'},
   pickup:{date:'2026-06-01',time:'12:00',loc:'Готель Хілтон'},
   ret:{date:'2026-06-07',time:'12:00',loc:'Готель Хілтон'},
-  rate:60,currency:'€',exchangeRate:44,deposit:400,depositCur:'€',
+  rate:60,currency:'$',exchangeRate:44,deposit:400,depositCur:'€',
   startKm:34000,endKm:35200,
   deductions:{std:{fines:{amount:600,currency:'₴'},refund:{amount:200,currency:'₴'}},damage:[],custom:[]},
   manager:'Оля',notes:''});
@@ -2488,7 +2482,7 @@ addB({vehicleId:12,status:'completed',clientType:'individual',start:'2026-05-20'
   customer:{name:'Шмідт Клаус',phone:'+43 664 123 45 67'},
   pickup:{date:'2026-05-20',time:'14:00',loc:'Готель Прем\'єр Палас'},
   ret:{date:'2026-05-27',time:'14:00',loc:'Готель Прем\'єр Палас'},
-  rate:70,currency:'€',exchangeRate:44,deposit:500,depositCur:'€',
+  rate:70,currency:'$',exchangeRate:44,deposit:500,depositCur:'€',
   startKm:28000,endKm:30100,
   deductions:{std:{},damage:[{part:'Лобове скло (тріщина)',amount:8500,currency:'₴'},{part:'Диск переднього колеса',amount:3200,currency:'₴'},{part:'Бампер задній',amount:5100,currency:'₴'}],custom:[]},
   manager:'Директор',notes:appendNote('','Значні пошкодження. Акт підписано клієнтом.','Директор',true)});
@@ -2549,8 +2543,8 @@ addB({vehicleId:20,status:'rented',clientType:'individual',start:'2026-06-25',en
   customer:{name:'Войцех Новак',phone:'+48 501 234 567'},
   pickup:{date:'2026-06-25',time:'13:00',loc:'Готель Опера'},
   ret:{date:'2026-07-09',time:'13:00',loc:'Готель Опера'},
-  rate:65,currency:'€',exchangeRate:44,deposit:450,depositCur:'€',
-  extension:{active:true,fromDate:'2026-07-02',toDate:'2026-07-09',days:8,rate:65,cost:520,currency:'€',amountPaid:520},
+  rate:65,currency:'$',exchangeRate:44,deposit:450,depositCur:'€',
+  extension:{active:true,fromDate:'2026-07-02',toDate:'2026-07-09',days:8,rate:65,cost:520,currency:'$',amountPaid:520},
   extensionHistory:[],
   manager:'Оля',notes:''});
 
@@ -2596,7 +2590,7 @@ addB({vehicleId:25,status:'completed',clientType:'fop',vatRate:20,start:'2026-06
   customer:{name:'Іноземна Компанія Київ',phone:'+38 044 900 10 20',company:'ФОП Ліщенко Р.В.',edrpou:'44332211'},
   pickup:{date:'2026-06-09',time:'10:00',loc:'вул. Паркова 5'},
   ret:{date:'2026-06-16',time:'10:00',loc:'вул. Паркова 5'},
-  rate:70,currency:'€',exchangeRate:44,deposit:500,depositCur:'€',
+  rate:70,currency:'$',exchangeRate:44,deposit:500,depositCur:'€',
   startKm:81000,endKm:82300,
   deductions:{std:{fuel:{amount:900,currency:'₴'}},damage:[{part:'Задній бампер',amount:3800,currency:'₴'},{part:'Стоп-сигнал правий',amount:1100,currency:'₴'}],custom:[{name:'Термінова діагностика',amount:600,currency:'₴'}]},
   manager:'Міша',notes:''});
@@ -5105,15 +5099,15 @@ function onExtDatesChanged(){
 }
 
 function getPillCurrency(prefix){
-  return ['$','€','₴'].find(c=>{
-    const id = c==='$'?prefix+'-usd':c==='€'?prefix+'-eur':prefix+'-uah';
+  return ['$','₴'].find(c=>{
+    const id = c==='$'?prefix+'-usd':prefix+'-uah';
     return document.getElementById(id)?.classList.contains('active');
   }) || '$';
 }
 function setExtTotalCurrency(cur, touched){
   if(touched !== false) extTotalCurTouched = true;
-  ['$','€','₴'].forEach(c=>{
-    const id = c==='$'?'ext-total-cur-btn-usd':c==='€'?'ext-total-cur-btn-eur':'ext-total-cur-btn-uah';
+  ['$','₴'].forEach(c=>{
+    const id = c==='$'?'ext-total-cur-btn-usd':'ext-total-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rateField = document.getElementById('bm-ext-total-rate-field');
@@ -5122,8 +5116,8 @@ function setExtTotalCurrency(cur, touched){
 }
 function setExtPaidCurrency(cur, touched){
   if(touched !== false) extPaidCurTouched = true;
-  ['$','€','₴'].forEach(c=>{
-    const id = c==='$'?'ext-paid-cur-btn-usd':c==='€'?'ext-paid-cur-btn-eur':'ext-paid-cur-btn-uah';
+  ['$','₴'].forEach(c=>{
+    const id = c==='$'?'ext-paid-cur-btn-usd':'ext-paid-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rateField = document.getElementById('bm-ext-paid-rate-field');
@@ -5161,8 +5155,8 @@ function onExtCurrencyChange(){
     extRateCurrencyAnchor = cur;
   }
 
-  ['$','€','₴'].forEach(c=>{
-    const id = c==='$'?'ext-cur-btn-usd':c==='€'?'ext-cur-btn-eur':'ext-cur-btn-uah';
+  ['$','₴'].forEach(c=>{
+    const id = c==='$'?'ext-cur-btn-usd':'ext-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rate2Field = document.getElementById('bm-ext-rate2-field');
@@ -6673,8 +6667,8 @@ function onCurrencyChange(){
     rateCurrencyAnchor = cur;
   }
 
-  ['$','₴','€'].forEach(c=>{
-    const id = c==='$'?'fin-cur-btn-usd':c==='₴'?'fin-cur-btn-uah':'fin-cur-btn-eur';
+  ['$','₴'].forEach(c=>{
+    const id = c==='$'?'fin-cur-btn-usd':'fin-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rateLabel = document.getElementById('bm-rate-label2');
