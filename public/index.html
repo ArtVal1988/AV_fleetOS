@@ -1640,7 +1640,6 @@ input.dm-pf-val.tel{font-size:14px;}
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
         <div class="ext-fin-row">
           <div class="ext-fin-field ext-fin-period">
-            <label>Період</label>
             <div class="ext-period-inputs" id="bm-ext-period-inputs">
               <span class="ext-period-prefix">з</span>
               <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
@@ -1658,7 +1657,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
           </div>
           <div class="ext-fin-field" style="width:auto">
-            <label>Валюта</label>
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
               <option value="₴">₴</option>
@@ -1666,8 +1664,8 @@ input.dm-pf-val.tel{font-size:14px;}
             </select>
             <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
               <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
-              <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
               <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
+              <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
             </div>
           </div>
           <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:50px;display:none">
@@ -1675,31 +1673,40 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="number" id="bm-ext-rate2" class="no-spinner" placeholder="0.00" step="0.01" oninput="recalcExtensionCost()">
           </div>
         </div>
-        <div class="ext-fin-row" style="margin-top:8px">
-          <div class="ext-fin-field" style="width:108px">
-            <label>Загальна сума</label>
+        <div class="ext-fin-row" style="margin-top:8px;align-items:flex-end">
+          <div class="ext-fin-field" style="width:120px">
+            <label>Загалом</label>
             <div class="ext-calc-input-cur">
               <input type="text" inputmode="numeric" id="bm-ext-total" oninput="onExtTotalInput(this)">
-              <span id="bm-ext-cur-2">$</span>
+            </div>
+            <div class="dep-inline-wrap" style="background:none;border:none;padding:0;margin-top:3px">
+              <button type="button" id="ext-total-cur-btn-usd" class="dep-cur-pill active" onclick="setExtTotalCurrency('$')">$</button>
+              <button type="button" id="ext-total-cur-btn-eur" class="dep-cur-pill" onclick="setExtTotalCurrency('€')">€</button>
+              <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
             </div>
           </div>
-          <div class="ext-fin-field" style="width:108px">
+          <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:50px;display:none">
+            <label>Курс</label>
+            <input type="number" id="bm-ext-total-rate" class="no-spinner" placeholder="0.00" step="0.01">
+          </div>
+          <div class="ext-fin-field" style="width:120px">
             <label>Оплачено</label>
             <div class="ext-calc-input-cur">
               <input type="number" id="bm-ext-paid" class="no-spinner" oninput="updateExtensionPaidUI()">
-              <span id="bm-ext-cur-3">$</span>
+            </div>
+            <div class="dep-inline-wrap" style="background:none;border:none;padding:0;margin-top:3px">
+              <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
+              <button type="button" id="ext-paid-cur-btn-eur" class="dep-cur-pill" onclick="setExtPaidCurrency('€')">€</button>
+              <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
             </div>
           </div>
-          <div class="ext-fin-field" style="width:96px">
-            <label>Залишок</label>
+          <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:50px;display:none">
+            <label>Курс</label>
+            <input type="number" id="bm-ext-paid-rate" class="no-spinner" placeholder="0.00" step="0.01">
+          </div>
+          <div class="ext-fin-field" style="margin-left:auto;text-align:right">
+            <label>Залишок боргу</label>
             <div class="ext-remaining-display" id="bm-ext-remaining">0 $</div>
-          </div>
-          <div class="ext-fin-field" style="flex:1;min-width:170px">
-            <label>Статус</label>
-            <div class="ext-status-choice">
-              <button type="button" id="bm-ext-status-full" onclick="setExtStatusChoice('full')">Повна сплата</button>
-              <button type="button" id="bm-ext-status-partial" onclick="setExtStatusChoice('partial')">Частково оплачено</button>
-            </div>
           </div>
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
@@ -3480,6 +3487,14 @@ function editBooking(bid){
     document.getElementById('bm-ext-currency').value=extCur;
     extRateCurrencyAnchor = extCur;
     document.getElementById('bm-ext-rate2').value=b.extension.exchangeRate||'';
+    const totalCur = b.extension.totalCurrency || extCur;
+    const paidCur = b.extension.paidCurrency || extCur;
+    extTotalCurTouched = totalCur !== extCur;
+    extPaidCurTouched = paidCur !== extCur;
+    setExtTotalCurrency(totalCur, extTotalCurTouched);
+    setExtPaidCurrency(paidCur, extPaidCurTouched);
+    document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
+    document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     onExtCurrencyChange();
     updateExtensionPaidUI();
   } else {
@@ -3627,6 +3642,10 @@ function saveBooking(){
       currency: document.getElementById('bm-ext-currency').value,
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+      totalCurrency: getPillCurrency('ext-total-cur-btn'),
+      totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate').value)||0,
+      paidCurrency: getPillCurrency('ext-paid-cur-btn'),
+      paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate').value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
     rate:parseThousands(document.getElementById('bm-rate').value),
@@ -4980,6 +4999,7 @@ function exportCSV(){
 
 let extDaysOverridden = false;
 let extTotalOverridden = false;
+let extTotalCurTouched = false, extPaidCurTouched = false;
 
 function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
@@ -4989,6 +5009,7 @@ function toggleExtensionSection(){
   if(active){
     extDaysOverridden = false;
     extTotalOverridden = false;
+    extTotalCurTouched = false; extPaidCurTouched = false;
     const curEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
     if(curEnd){
       document.getElementById('bm-ext-from').value = curEnd;
@@ -5045,6 +5066,31 @@ function onExtDatesChanged(){
   recalcExtensionCost();
 }
 
+function getPillCurrency(prefix){
+  return ['$','€','₴'].find(c=>{
+    const id = c==='$'?prefix+'-usd':c==='€'?prefix+'-eur':prefix+'-uah';
+    return document.getElementById(id)?.classList.contains('active');
+  }) || '$';
+}
+function setExtTotalCurrency(cur, touched){
+  if(touched !== false) extTotalCurTouched = true;
+  ['$','€','₴'].forEach(c=>{
+    const id = c==='$'?'ext-total-cur-btn-usd':c==='€'?'ext-total-cur-btn-eur':'ext-total-cur-btn-uah';
+    document.getElementById(id)?.classList.toggle('active', c===cur);
+  });
+  const rateField = document.getElementById('bm-ext-total-rate-field');
+  if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
+  updateExtensionPaidUI();
+}
+function setExtPaidCurrency(cur, touched){
+  if(touched !== false) extPaidCurTouched = true;
+  ['$','€','₴'].forEach(c=>{
+    const id = c==='$'?'ext-paid-cur-btn-usd':c==='€'?'ext-paid-cur-btn-eur':'ext-paid-cur-btn-uah';
+    document.getElementById(id)?.classList.toggle('active', c===cur);
+  });
+  const rateField = document.getElementById('bm-ext-paid-rate-field');
+  if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
+}
 function onExtCurrencyChange(){
   const cur = document.getElementById('bm-ext-currency').value;
   const exRate = parseFloat(document.getElementById('bm-ext-rate2').value) || 0;
@@ -5069,19 +5115,16 @@ function onExtCurrencyChange(){
     extRateCurrencyAnchor = cur;
   }
 
-  document.getElementById('bm-ext-cur-2').textContent = cur;
-  document.getElementById('bm-ext-cur-3').textContent = cur;
-  ['$','₴','€'].forEach(c=>{
-    const id = c==='$'?'ext-cur-btn-usd':c==='₴'?'ext-cur-btn-uah':'ext-cur-btn-eur';
+  ['$','€','₴'].forEach(c=>{
+    const id = c==='$'?'ext-cur-btn-usd':c==='€'?'ext-cur-btn-eur':'ext-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
-  const curColor = cur === '₴' ? '#166534' : '#1d4ed8';
-  document.getElementById('bm-ext-cur-2').style.color = curColor;
-  document.getElementById('bm-ext-cur-3').style.color = curColor;
   const rate2Field = document.getElementById('bm-ext-rate2-field');
   if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
   const rate2Label = rate2Field?.querySelector('label');
   if(rate2Label) rate2Label.textContent = 'Курс';
+  if(!extTotalCurTouched) setExtTotalCurrency(cur, false);
+  if(!extPaidCurTouched) setExtPaidCurrency(cur, false);
   updateExtensionPaidUI();
 }
 function setExtCurrency(cur){
@@ -5114,26 +5157,15 @@ function updateExtensionPaidUI(){
   if(paid > total) paid = total;
   paidEl.value = paid;
   const remaining = Math.max(0, Math.round((total - paid)*100)/100);
-  const cur = document.getElementById('bm-ext-cur-3')?.textContent || document.getElementById('bm-currency').value || '$';
+  const cur = getPillCurrency('ext-total-cur-btn');
   document.getElementById('bm-ext-remaining').textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
 
-  const fullBtn = document.getElementById('bm-ext-status-full');
-  const partialBtn = document.getElementById('bm-ext-status-partial');
-  if(fullBtn && partialBtn){
-    fullBtn.classList.remove('active','full');
-    partialBtn.classList.remove('active','partial');
-    if(total > 0 && paid >= total){
-      fullBtn.classList.add('active','full');
-    } else if(paid > 0 && paid < total){
-      partialBtn.classList.add('active','partial');
-    }
-  }
   const closeRow = document.getElementById('bm-ext-close-row');
   if(closeRow) closeRow.style.display = (total > 0 && paid >= total) ? '' : 'none';
 }
 
 function closeAndStartNewExtension(){
-  const cur = document.getElementById('bm-ext-cur-3')?.textContent || document.getElementById('bm-currency').value || '$';
+  const cur = getPillCurrency('ext-total-cur-btn');
   const closed = {
     fromDate: document.getElementById('bm-ext-from').value,
     toDate: document.getElementById('bm-ext-to').value,
@@ -5142,6 +5174,10 @@ function closeAndStartNewExtension(){
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+    totalCurrency: getPillCurrency('ext-total-cur-btn'),
+    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate').value)||0,
+    paidCurrency: getPillCurrency('ext-paid-cur-btn'),
+    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate').value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   currentExtHistory.push(closed);
@@ -5150,12 +5186,14 @@ function closeAndStartNewExtension(){
   // "From" carries over automatically (handover date), but "To" is left
   // for the user to pick manually rather than guessing +5 days.
   extDaysOverridden = false; extTotalOverridden = false;
+  extTotalCurTouched = false; extPaidCurTouched = false;
   const fromD = closed.toDate;
   document.getElementById('bm-ext-from').value = fromD;
   document.getElementById('bm-ext-to').value = fromD ? addOneDayStr(fromD) : '';
   document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
   document.getElementById('bm-ext-days').value = '';
+  onExtCurrencyChange();
   onExtDatesChanged();
   renderExtTimeline();
   render();
@@ -5187,19 +5225,6 @@ function renderExtTimeline(){
 
   wrap.innerHTML = originalRowHtml + historyRowsHtml;
   wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
-}
-
-function setExtStatusChoice(choice){
-  const totalEl = document.getElementById('bm-ext-total');
-  const paidEl = document.getElementById('bm-ext-paid');
-  const total = parseThousands(totalEl.value);
-  if(choice === 'full'){
-    paidEl.value = total;
-  } else {
-    const cur = parseFloat(paidEl.value)||0;
-    if(cur <= 0 || cur >= total) paidEl.value = total>0 ? Math.round(total/2) : 0;
-  }
-  updateExtensionPaidUI();
 }
 
 function getExtStatus(ext){
