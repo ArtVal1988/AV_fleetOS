@@ -765,14 +765,10 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;}
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
 .ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;min-width:0;}
-.ext-km-field{background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 14px 6px;text-align:center;box-sizing:border-box;flex-shrink:0;}
-.ext-km-field label{display:block;font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin:0 0 2px;}
-.ext-km-field input{border:none;background:transparent;padding:0;margin:0;line-height:1.2;font-size:20px;font-weight:700;color:#1a1d26;outline:none;text-align:center;font-family:var(--font-mono);width:100%!important;}
-#bm-ext-rate{width:70px!important;}
-#bm-ext-rate2{width:44px!important;}
 .ext-box .ext-fin-field{flex-direction:row;align-items:center;gap:6px;}
 .ext-box label{color:#854f0b!important;}
-.ext-box .ext-km-field label{color:#9ca3af!important;}
+#bm-ext-rate{width:70px!important;}
+#bm-ext-rate2{width:44px!important;}
 #bm-ext-total-rate, #bm-ext-paid-rate{width:44px!important;padding:4px 5px;font-size:11px;border:1px solid #bfdbfe;border-radius:3px;background:#fff;text-align:right;font-family:var(--font-mono);}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
@@ -1667,9 +1663,9 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
           <div class="ext-box" style="flex:1">
-            <div class="ext-km-field">
+            <div class="ext-fin-field" style="width:auto">
               <label>Вартість</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:70px;text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
@@ -1683,9 +1679,9 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
               </div>
             </div>
-            <div class="ext-km-field" id="bm-ext-rate2-field" style="display:none">
+            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:44px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
