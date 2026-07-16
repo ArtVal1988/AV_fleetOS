@@ -2009,6 +2009,7 @@ try{
 }catch(e){}
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
+  apiFetch('PUT','/settings/statuses',{value:STATUSES});
 }
 const DOW=['нд','пн','вт','ср','чт','пт','сб'];
 const MONTHS=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
@@ -7661,10 +7662,11 @@ async function doChangePassword(){
 }
 
 async function syncFromServer(){
-  const [sBookings, sVehicles, sStickers] = await Promise.all([
+  const [sBookings, sVehicles, sStickers, sSettings] = await Promise.all([
     apiFetch('GET','/bookings'),
     apiFetch('GET','/vehicles'),
     apiFetch('GET','/stickers'),
+    apiFetch('GET','/settings'),
   ]);
   if(sBookings){ bookings.length=0; sBookings.forEach(b=>bookings.push(b)); nextBid=bookings.length?Math.max(...bookings.map(b=>b.id))+1:1; }
   if(sVehicles){
@@ -7711,6 +7713,16 @@ async function syncFromServer(){
     }
   }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
+  if(sSettings && Array.isArray(sSettings.statuses) && sSettings.statuses.length){
+    STATUSES.length = 0;
+    sSettings.statuses.forEach(s=>STATUSES.push(s));
+    Object.keys(SM).forEach(k=>delete SM[k]);
+    STATUSES.forEach(s=>SM[s.key]=s);
+    // Keep the local cache in sync too, so the app still has something
+    // sensible to show offline / before the next server round-trip.
+    try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
+    if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') renderStatusesPanelList();
+  }
   renderStickers(); render();
 }
 

@@ -17,6 +17,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/stickers', require('./routes/stickers'));
+app.use('/api/settings', require('./routes/settings'));
 
 // ── Backup endpoint ──────────────────────────────────────────────
 const { auth, adminOnly } = require('./routes/auth');
@@ -28,6 +29,7 @@ app.get('/api/backup', auth, adminOnly, (req, res) => {
     bookings: db.prepare('SELECT * FROM bookings').all(),
     vehicles: db.prepare('SELECT * FROM vehicles').all(),
     stickers: db.prepare('SELECT * FROM stickers').all(),
+    settings: db.prepare('SELECT * FROM settings').all(),
     users: db.prepare('SELECT id, username, name, role, active FROM users').all(),
   };
   res.setHeader('Content-Disposition', `attachment; filename="AV_fleetOS-backup-${Date.now()}.json"`);
