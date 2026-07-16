@@ -766,6 +766,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
 .ext-fin-row .ext-fin-field:has(#bm-ext-rate) label,
 .ext-fin-row .ext-fin-field:has(#bm-ext-rate2) label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;}
+.ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;min-width:0;}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
@@ -1641,74 +1642,84 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
         <div class="ext-fin-row">
-          <div class="ext-fin-field ext-fin-period">
-            <div class="ext-period-inputs" id="bm-ext-period-inputs">
-              <span class="ext-period-prefix">з</span>
-              <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
-              <span class="ext-period-prefix">до</span>
-              <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
-            </div>
-            <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
-          </div>
-          <div class="ext-fin-field" style="width:38px">
-            <label>Діб</label>
-            <input type="number" id="bm-ext-days" class="no-spinner" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
-          </div>
-          <div class="ext-fin-field" style="width:80px">
-            <label>Вартість</label>
-            <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
-          </div>
-          <div class="ext-fin-field" style="width:auto">
-            <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
-              <option value="$">$</option>
-              <option value="₴">₴</option>
-              <option value="€">€</option>
-            </select>
-            <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-              <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
-              <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
-              <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
+          <div class="ext-box">
+            <div class="ext-fin-field ext-fin-period">
+              <div class="ext-period-inputs" id="bm-ext-period-inputs">
+                <span class="ext-period-prefix">з</span>
+                <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
+                <span class="ext-period-prefix">до</span>
+                <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
+              </div>
+              <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
           </div>
-          <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:52px;display:none">
-            <label>Курс</label>
-            <input type="number" id="bm-ext-rate2" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01" oninput="recalcExtensionCost()">
+          <div class="ext-box">
+            <div class="ext-fin-field" style="width:38px">
+              <label>Діб</label>
+              <input type="number" id="bm-ext-days" class="no-spinner" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
+            </div>
+          </div>
+          <div class="ext-box" style="flex:1">
+            <div class="ext-fin-field" style="width:70px">
+              <label>Вартість</label>
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+            </div>
+            <div class="ext-fin-field" style="width:auto">
+              <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
+                <option value="$">$</option>
+                <option value="₴">₴</option>
+                <option value="€">€</option>
+              </select>
+              <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+                <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
+                <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
+                <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
+              </div>
+            </div>
+            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:52px;display:none">
+              <label>Курс</label>
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+            </div>
           </div>
         </div>
         <div class="ext-fin-row" style="margin-top:8px">
-          <div class="ext-fin-field" style="width:90px">
-            <label>Загалом</label>
-            <div class="ext-calc-input-cur">
-              <input type="text" inputmode="numeric" id="bm-ext-total" oninput="onExtTotalInput(this)">
+          <div class="ext-box">
+            <div class="ext-fin-field" style="width:70px">
+              <label>Загалом</label>
+              <div class="ext-calc-input-cur">
+                <input type="text" inputmode="numeric" id="bm-ext-total" oninput="onExtTotalInput(this)">
+              </div>
+            </div>
+            <div class="ext-fin-field" style="width:auto">
+              <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+                <button type="button" id="ext-total-cur-btn-usd" class="dep-cur-pill active" onclick="setExtTotalCurrency('$')">$</button>
+                <button type="button" id="ext-total-cur-btn-eur" class="dep-cur-pill" onclick="setExtTotalCurrency('€')">€</button>
+                <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
+              </div>
+            </div>
+            <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:50px;display:none">
+              <label>Курс</label>
+              <input type="number" id="bm-ext-total-rate" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01">
             </div>
           </div>
-          <div class="ext-fin-field" style="width:auto">
-            <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-              <button type="button" id="ext-total-cur-btn-usd" class="dep-cur-pill active" onclick="setExtTotalCurrency('$')">$</button>
-              <button type="button" id="ext-total-cur-btn-eur" class="dep-cur-pill" onclick="setExtTotalCurrency('€')">€</button>
-              <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
+          <div class="ext-box">
+            <div class="ext-fin-field" style="width:70px">
+              <label>Оплачено</label>
+              <div class="ext-calc-input-cur">
+                <input type="number" id="bm-ext-paid" class="no-spinner" oninput="updateExtensionPaidUI()">
+              </div>
             </div>
-          </div>
-          <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:50px;display:none">
-            <label>Курс</label>
-            <input type="number" id="bm-ext-total-rate" class="no-spinner" placeholder="0.00" step="0.01">
-          </div>
-          <div class="ext-fin-field" style="width:90px">
-            <label>Оплачено</label>
-            <div class="ext-calc-input-cur">
-              <input type="number" id="bm-ext-paid" class="no-spinner" oninput="updateExtensionPaidUI()">
+            <div class="ext-fin-field" style="width:auto">
+              <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+                <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
+                <button type="button" id="ext-paid-cur-btn-eur" class="dep-cur-pill" onclick="setExtPaidCurrency('€')">€</button>
+                <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
+              </div>
             </div>
-          </div>
-          <div class="ext-fin-field" style="width:auto">
-            <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-              <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
-              <button type="button" id="ext-paid-cur-btn-eur" class="dep-cur-pill" onclick="setExtPaidCurrency('€')">€</button>
-              <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
+            <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:50px;display:none">
+              <label>Курс</label>
+              <input type="number" id="bm-ext-paid-rate" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01">
             </div>
-          </div>
-          <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:50px;display:none">
-            <label>Курс</label>
-            <input type="number" id="bm-ext-paid-rate" class="no-spinner" placeholder="0.00" step="0.01">
           </div>
           <div class="ext-fin-field" style="margin-left:auto;text-align:right">
             <label>Залишок боргу</label>
@@ -5043,6 +5054,8 @@ function toggleExtensionSection(){
     document.getElementById('bm-ext-currency').value = cur;
     extRateCurrencyAnchor = cur;
     document.getElementById('bm-ext-rate2').value = document.getElementById('bm-exchange-rate').value || '';
+    document.getElementById('bm-ext-total-rate').value = document.getElementById('bm-ext-rate2').value;
+    document.getElementById('bm-ext-paid-rate').value = document.getElementById('bm-ext-rate2').value;
     onExtCurrencyChange();
     onExtDatesChanged();
   } else {
@@ -5112,6 +5125,14 @@ function setExtPaidCurrency(cur, touched){
   });
   const rateField = document.getElementById('bm-ext-paid-rate-field');
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
+}
+function onExtRateInput(){
+  const val = document.getElementById('bm-ext-rate2').value;
+  const totalRateEl = document.getElementById('bm-ext-total-rate');
+  const paidRateEl = document.getElementById('bm-ext-paid-rate');
+  if(totalRateEl) totalRateEl.value = val;
+  if(paidRateEl) paidRateEl.value = val;
+  recalcExtensionCost();
 }
 function onExtCurrencyChange(){
   const cur = document.getElementById('bm-ext-currency').value;
