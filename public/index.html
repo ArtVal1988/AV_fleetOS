@@ -767,6 +767,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
+.ext-period-inputs.ext-period-invalid input[type=date]{border-color:#dc2626!important;background:#fee2e2!important;}
 .ext-period-inputs input[type=date]{width:96px;}
 .no-spinner::-webkit-outer-spin-button,.no-spinner::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .no-spinner{-moz-appearance:textfield;}
@@ -1640,12 +1641,13 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="ext-fin-row">
           <div class="ext-fin-field ext-fin-period">
             <label>Період</label>
-            <div class="ext-period-inputs">
+            <div class="ext-period-inputs" id="bm-ext-period-inputs">
               <span class="ext-period-prefix">з</span>
               <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
               <span class="ext-period-prefix">до</span>
               <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
             </div>
+            <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
           <div class="ext-fin-field" style="width:38px">
             <label>Діб</label>
@@ -4981,7 +4983,7 @@ function toggleExtensionSection(){
     const curEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
     if(curEnd){
       document.getElementById('bm-ext-from').value = curEnd;
-      document.getElementById('bm-ext-to').value = '';
+      document.getElementById('bm-ext-to').value = addOneDayStr(curEnd);
     }
     document.getElementById('bm-ext-rate').value = document.getElementById('bm-rate').value || '';
     document.getElementById('bm-ext-paid').value = 0;
@@ -4997,9 +4999,24 @@ function toggleExtensionSection(){
   }
 }
 
+function addOneDayStr(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+1);
+  return dStr(d.getFullYear(), d.getMonth(), d.getDate());
+}
 function onExtDatesChanged(){
   const from = document.getElementById('bm-ext-from').value;
   const to = document.getElementById('bm-ext-to').value;
+  const errEl = document.getElementById('bm-ext-period-error');
+  const wrapEl = document.getElementById('bm-ext-period-inputs');
+  if(from && to && to <= from){
+    // "До" must be strictly after "з" — same-day or backwards is not a valid period.
+    if(errEl) errEl.style.display = '';
+    if(wrapEl) wrapEl.classList.add('ext-period-invalid');
+    return;
+  }
+  if(errEl) errEl.style.display = 'none';
+  if(wrapEl) wrapEl.classList.remove('ext-period-invalid');
   if(to){
     document.getElementById('bm-return-date').value = to;
     // NOTE: bm-end intentionally stays at the ORIGINAL booking end date —
@@ -5050,9 +5067,9 @@ function onExtCurrencyChange(){
   document.getElementById('bm-ext-cur-2').style.color = curColor;
   document.getElementById('bm-ext-cur-3').style.color = curColor;
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = '';
+  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
   const rate2Label = rate2Field?.querySelector('label');
-  if(rate2Label) rate2Label.textContent = (cur === '₴') ? 'Курс $' : 'Курс';
+  if(rate2Label) rate2Label.textContent = 'Курс';
   updateExtensionPaidUI();
 }
 function recalcExtensionCost(){
@@ -5119,7 +5136,7 @@ function closeAndStartNewExtension(){
   extDaysOverridden = false; extTotalOverridden = false;
   const fromD = closed.toDate;
   document.getElementById('bm-ext-from').value = fromD;
-  document.getElementById('bm-ext-to').value = '';
+  document.getElementById('bm-ext-to').value = fromD ? addOneDayStr(fromD) : '';
   document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
   document.getElementById('bm-ext-days').value = '';
