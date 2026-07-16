@@ -1242,24 +1242,6 @@ input.dm-pf-val.tel{font-size:14px;}
       <button onclick="closeStatusesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <!-- Add status form -->
-      <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:18px 20px;margin-bottom:20px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#1d4ed8;margin-bottom:14px">+ Новий статус</div>
-        <div style="display:flex;gap:10px;align-items:flex-end">
-          <div style="flex:1">
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Назва</label>
-            <input id="ns-label" type="text" placeholder="Наприклад: Заброньовано VIP"
-              style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none">
-          </div>
-          <div>
-            <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Колір</label>
-            <input id="ns-color" type="color" value="#60a5fa"
-              style="display:block;margin-top:3px;width:44px;height:34px;border:1px solid #dbeafe;border-radius:6px;padding:2px;cursor:pointer">
-          </div>
-        </div>
-        <div id="ns-error" style="display:none;color:#dc2626;font-size:11px;margin-top:10px;padding:7px 10px;background:#fee2e2;border-radius:5px"></div>
-        <button onclick="addNewStatus()" style="margin-top:12px;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Додати статус</button>
-      </div>
       <!-- Statuses list -->
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список статусів</div>
       <div id="statuses-list"></div>
@@ -7428,9 +7410,6 @@ function saveVehicleForm(){
 
 function openStatusesPanel(){
   document.getElementById('statuses-panel-overlay').style.display='flex';
-  document.getElementById('ns-label').value='';
-  document.getElementById('ns-color').value='#60a5fa';
-  document.getElementById('ns-error').style.display='none';
   renderStatusesPanelList();
 }
 function closeStatusesPanel(){
@@ -7466,30 +7445,6 @@ function updateStatusColor(key, value){
   renderStatusesPanelList();
   renderLegend();
   render();
-}
-function slugifyStatusKey(label){
-  const translit = {а:'a',б:'b',в:'v',г:'h',ґ:'g',д:'d',е:'e',є:'ie',ж:'zh',з:'z',и:'y',і:'i',ї:'i',й:'i',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ь:'',ю:'iu',я:'ia'};
-  let base = label.toLowerCase().split('').map(ch=>translit[ch]!==undefined?translit[ch]:ch).join('');
-  base = base.replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'status';
-  let key = base, i = 2;
-  while(SM[key]){ key = base+'-'+i; i++; }
-  return key;
-}
-function addNewStatus(){
-  const labelEl = document.getElementById('ns-label');
-  const colorEl = document.getElementById('ns-color');
-  const errEl = document.getElementById('ns-error');
-  errEl.style.display='none';
-  const label = labelEl.value.trim();
-  if(!label){ errEl.textContent='Введіть назву статусу'; errEl.style.display='block'; return; }
-  const key = slugifyStatusKey(label);
-  const s = {key, label, color: colorEl.value};
-  STATUSES.push(s);
-  SM[key] = s;
-  saveStatusesToStorage();
-  labelEl.value=''; colorEl.value='#60a5fa';
-  renderStatusesPanelList();
-  renderLegend();
 }
 
 async function loadUsersList(){
