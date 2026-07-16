@@ -5,11 +5,19 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.set('etag', false);
 
 // ── Middleware ───────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// API responses carry per-user, frequently-changing data behind auth tokens —
+// never let the browser cache or conditionally-revalidate (ETag/304) them.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
 
 // ── Routes ───────────────────────────────────────────────────────
 const { router: authRouter } = require('./routes/auth');
