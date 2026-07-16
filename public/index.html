@@ -764,14 +764,8 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field{display:flex;flex-direction:column;gap:3px;}
 .ext-fin-field label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;}
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
-.ext-cost-card{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;flex:1;min-width:0;overflow-x:auto;}
-.ext-cost-card .dep-inline-wrap{gap:1px;flex-shrink:0;}
-.ext-cost-card .dep-cur-pill{padding:4px 4px;font-size:10px;}
-.ext-cost-card label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;margin:0;flex-shrink:0;}
-.ext-cost-card input{border:1px solid #dbe3ee;border-radius:6px;padding:6px 8px;font-family:var(--font-mono);font-size:13px;font-weight:600;box-sizing:border-box;background:#fff;}
-.ext-cost-card input#bm-ext-rate{width:80px;flex:0 0 auto;text-align:center;}
-.ext-cost-card input#bm-ext-rate2{width:52px;text-align:center;}
-.ext-cost-rate2{display:none;align-items:center;gap:4px;flex-shrink:0;}
+.ext-fin-row .ext-fin-field:has(#bm-ext-rate) label,
+.ext-fin-row .ext-fin-field:has(#bm-ext-rate2) label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
@@ -1660,9 +1654,11 @@ input.dm-pf-val.tel{font-size:14px;}
             <label>Діб</label>
             <input type="number" id="bm-ext-days" class="no-spinner" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
           </div>
-          <div class="ext-cost-card">
+          <div class="ext-fin-field" style="width:80px">
             <label>Вартість</label>
-            <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+            <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+          </div>
+          <div class="ext-fin-field" style="width:auto">
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
               <option value="₴">₴</option>
@@ -1673,10 +1669,10 @@ input.dm-pf-val.tel{font-size:14px;}
               <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
               <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
             </div>
-            <span id="bm-ext-rate2-field" class="ext-cost-rate2">
-              <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" placeholder="0.00" step="0.01" oninput="recalcExtensionCost()">
-            </span>
+          </div>
+          <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:52px;display:none">
+            <label>Курс</label>
+            <input type="number" id="bm-ext-rate2" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01" oninput="recalcExtensionCost()">
           </div>
         </div>
         <div class="ext-fin-row" style="margin-top:8px">
@@ -5146,7 +5142,7 @@ function onExtCurrencyChange(){
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : 'flex';
+  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
   if(!extTotalCurTouched) setExtTotalCurrency(cur, false);
   if(!extPaidCurTouched) setExtPaidCurrency(cur, false);
   updateExtensionPaidUI();
