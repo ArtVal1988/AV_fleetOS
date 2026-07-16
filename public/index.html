@@ -5067,9 +5067,9 @@ function onExtCurrencyChange(){
   document.getElementById('bm-ext-cur-2').style.color = curColor;
   document.getElementById('bm-ext-cur-3').style.color = curColor;
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
+  if(rate2Field) rate2Field.style.display = '';
   const rate2Label = rate2Field?.querySelector('label');
-  if(rate2Label) rate2Label.textContent = 'Курс';
+  if(rate2Label) rate2Label.textContent = (cur === '₴') ? 'Курс $' : 'Курс';
   updateExtensionPaidUI();
 }
 function recalcExtensionCost(){
