@@ -766,6 +766,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
 .ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;min-width:0;}
 .ext-box .ext-fin-field{flex-direction:row;align-items:center;gap:6px;}
+.ext-box label{color:#854f0b!important;}
 #bm-ext-rate2, #bm-ext-total-rate, #bm-ext-paid-rate{width:44px!important;padding:4px 5px;font-size:11px;border:1px solid #bfdbfe;border-radius:3px;background:#fff;text-align:right;font-family:var(--font-mono);}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
@@ -1654,15 +1655,15 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
           <div class="ext-box">
-            <div class="ext-fin-field" style="width:38px">
+            <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
+              <input type="number" id="bm-ext-days" class="no-spinner" style="width:44px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
             </div>
           </div>
           <div class="ext-box" style="flex:1">
-            <div class="ext-fin-field" style="width:70px">
+            <div class="ext-fin-field" style="width:auto">
               <label>Вартість</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:60px;text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
@@ -1676,18 +1677,18 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
               </div>
             </div>
-            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:52px;display:none">
+            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
         <div class="ext-fin-row" style="margin-top:8px">
           <div class="ext-box">
-            <div class="ext-fin-field" style="width:70px">
+            <div class="ext-fin-field" style="width:auto">
               <label>Загалом</label>
               <div class="ext-calc-input-cur">
-                <input type="text" inputmode="numeric" id="bm-ext-total" oninput="onExtTotalInput(this)">
+                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:60px" oninput="onExtTotalInput(this)">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
@@ -1697,16 +1698,16 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
               </div>
             </div>
-            <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:50px;display:none">
+            <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-total-rate" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01">
+              <input type="number" id="bm-ext-total-rate" class="no-spinner" placeholder="0.00" step="0.01">
             </div>
           </div>
           <div class="ext-box">
-            <div class="ext-fin-field" style="width:70px">
+            <div class="ext-fin-field" style="width:auto">
               <label>Оплачено</label>
               <div class="ext-calc-input-cur">
-                <input type="number" id="bm-ext-paid" class="no-spinner" oninput="updateExtensionPaidUI()">
+                <input type="number" id="bm-ext-paid" class="no-spinner" style="width:60px" oninput="updateExtensionPaidUI()">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
@@ -1716,9 +1717,9 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
               </div>
             </div>
-            <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:50px;display:none">
+            <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-paid-rate" class="no-spinner" style="text-align:center" placeholder="0.00" step="0.01">
+              <input type="number" id="bm-ext-paid-rate" class="no-spinner" placeholder="0.00" step="0.01">
             </div>
           </div>
           <div class="ext-fin-field" style="margin-left:auto;text-align:right">
