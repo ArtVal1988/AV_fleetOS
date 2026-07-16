@@ -3466,6 +3466,7 @@ function editBooking(bid){
   document.getElementById('bm-return-time').value=b.ret?.time||'09:00';
   document.getElementById('bm-return-loc').value=b.ret?.loc||'';
   if(b.extension && b.extension.active){
+    extDaysOverridden=false;
     document.getElementById('bm-ext-active').checked=true;
     document.getElementById('bm-ext-fields').style.display='';
     document.getElementById('bm-ext-from').value=b.extension.fromDate||'';
@@ -3474,7 +3475,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-rate').value=b.extension.rate?Number(b.extension.rate).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-total').value=b.extension.cost?Number(b.extension.cost).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-paid').value=b.extension.amountPaid||0;
-    extDaysOverridden=true; extTotalOverridden=true;
+    extTotalOverridden=true;
     const extCur=b.extension.currency||b.currency||'$';
     document.getElementById('bm-ext-currency').value=extCur;
     extRateCurrencyAnchor = extCur;
@@ -5003,6 +5004,8 @@ function toggleExtensionSection(){
     onExtDatesChanged();
   } else {
     // Deactivated: return date reverts to the booking's own end (no longer extended)
+    const origEnd = document.getElementById('bm-end').value;
+    if(origEnd) document.getElementById('bm-return-date').value = origEnd;
     updateExtensionPaidUI();
   }
 }
