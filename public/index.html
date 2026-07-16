@@ -764,12 +764,14 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field{display:flex;flex-direction:column;gap:3px;}
 .ext-fin-field label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;}
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
-.ext-cost-card{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:wrap;flex:1;min-width:220px;}
-.ext-cost-card label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;margin:0;}
+.ext-cost-card{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;flex:1;min-width:0;overflow-x:auto;}
+.ext-cost-card .dep-inline-wrap{gap:1px;flex-shrink:0;}
+.ext-cost-card .dep-cur-pill{padding:4px 4px;font-size:10px;}
+.ext-cost-card label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;margin:0;flex-shrink:0;}
 .ext-cost-card input{border:1px solid #dbe3ee;border-radius:6px;padding:6px 8px;font-family:var(--font-mono);font-size:13px;font-weight:600;box-sizing:border-box;background:#fff;}
 .ext-cost-card input#bm-ext-rate{width:80px;flex:0 0 auto;text-align:center;}
 .ext-cost-card input#bm-ext-rate2{width:52px;text-align:center;}
-.ext-cost-rate2{display:none;align-items:center;gap:6px;}
+.ext-cost-rate2{display:none;align-items:center;gap:4px;flex-shrink:0;}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
