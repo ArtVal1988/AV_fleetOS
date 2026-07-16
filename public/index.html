@@ -3517,7 +3517,7 @@ function editBooking(bid){
   updateAllMsgIconStates();
   document.getElementById('booking-modal').classList.add('open');
 }
-function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');}
+function closeBookingModal(){document.getElementById('booking-modal').classList.remove('open');editBid=null;}
 let bookingWasClosedOnOpen = false;
 function onOrderClosedToggle(){
   // Checking/unchecking during the current edit session never self-locks the
@@ -7700,10 +7700,11 @@ async function syncFromServer(){
 // Auto-save bookings to server
 const _origSave = saveBooking;
 window.saveBooking = async function(){
+  const wasEditBid = editBid;
   _origSave();
-  const b = editBid ? bookings.find(x=>x.id===editBid) : bookings[bookings.length-1];
+  const b = wasEditBid ? bookings.find(x=>x.id===wasEditBid) : bookings[bookings.length-1];
   if(!b||!_token) return;
-  if(editBid){ apiFetch('PUT','/bookings/'+b.id, b); }
+  if(wasEditBid){ apiFetch('PUT','/bookings/'+b.id, b); }
   else { const r=await apiFetch('POST','/bookings',b); if(r?.id) b.id=r.id; }
 };
 
