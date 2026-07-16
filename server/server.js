@@ -10,7 +10,12 @@ app.set('etag', false);
 // ── Middleware ───────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  cacheControl: false,
+  setHeaders: (res) => res.set('Cache-Control', 'no-store'),
+}));
 
 // API responses carry per-user, frequently-changing data behind auth tokens —
 // never let the browser cache or conditionally-revalidate (ETag/304) them.
@@ -51,7 +56,12 @@ app.get('/api/health', (req, res) => {
 
 // ── SPA fallback ─────────────────────────────────────────────────
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), {
+    etag: false,
+    lastModified: false,
+    cacheControl: false,
+    headers: { 'Cache-Control': 'no-store' },
+  });
 });
 
 app.listen(PORT, () => {

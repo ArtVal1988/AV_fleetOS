@@ -1604,7 +1604,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="hidden" id="bm-client-type" value="individual">
     </div>
     <div class="msec msec-b2">
-      <div class="msec-title" id="bm-b2-title">Отримання та повернення</div>
+      <div class="msec-title" id="bm-b2-title"></div>
       <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
         <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
         <span style="color:#9ca3af;font-size:12px">від</span>
@@ -1657,13 +1657,18 @@ input.dm-pf-val.tel{font-size:14px;}
             <label>Вартість</label>
             <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
           </div>
-          <div class="ext-fin-field" style="width:50px">
+          <div class="ext-fin-field" style="width:auto">
             <label>Валюта</label>
-            <select id="bm-ext-currency" onchange="onExtCurrencyChange()">
+            <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
               <option value="₴">₴</option>
               <option value="€">€</option>
             </select>
+            <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+              <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
+              <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
+              <button type="button" id="ext-cur-btn-eur" class="dep-cur-pill" onclick="setExtCurrency('€')">€</button>
+            </div>
           </div>
           <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:50px;display:none">
             <label>Курс</label>
@@ -1713,7 +1718,6 @@ input.dm-pf-val.tel{font-size:14px;}
       </div><!-- /bm-normal-dates-wrap -->
     </div>
     <div class="msec msec-b3" id="bm-block-extras">
-      <div class="msec-title">Додаткові послуги / обладнання</div>
       <!-- EXTRAS TOGGLE -->
       <button type="button" class="extras-toggle" id="extras-toggle-btn" onclick="toggleExtrasPanel()">
         <span id="extras-toggle-icon">⊕</span>
@@ -1791,7 +1795,6 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="extras-chips-row" id="extras-chips-row" style="display:none"></div>
     </div>
     <div class="msec msec-b3" id="bm-block-3">
-      <div class="msec-title">Фінанси</div>
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
         <div class="fin-field fin-days" style="flex:0 0 60px">
@@ -1805,11 +1808,16 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div class="fin-field fin-cur">
           <label>Валюта</label>
-          <select id="bm-currency" onchange="onCurrencyChange()">
+          <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
             <option value="$">$</option>
             <option value="₴">₴</option>
             <option value="€">€</option>
           </select>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+            <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
+            <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
+            <button type="button" id="fin-cur-btn-eur" class="dep-cur-pill" onclick="setFinCurrency('€')">€</button>
+          </div>
         </div>
         <div class="fin-field fin-rate2" id="bm-rate-row" style="display:none">
           <label id="bm-rate-label2">Курс</label>
@@ -1866,7 +1874,6 @@ input.dm-pf-val.tel{font-size:14px;}
 
     </div>
     <div class="msec msec-b4" id="bm-block-4">
-      <div class="msec-title">Пробіг</div>
       <div class="km-row-compact">
         <div class="km-compact-field">
           <span class="km-compact-label">На початку</span>
@@ -5061,17 +5068,22 @@ function onExtCurrencyChange(){
 
   document.getElementById('bm-ext-cur-2').textContent = cur;
   document.getElementById('bm-ext-cur-3').textContent = cur;
-  const extCurSelect = document.getElementById('bm-ext-currency');
+  ['$','₴','€'].forEach(c=>{
+    const id = c==='$'?'ext-cur-btn-usd':c==='₴'?'ext-cur-btn-uah':'ext-cur-btn-eur';
+    document.getElementById(id)?.classList.toggle('active', c===cur);
+  });
   const curColor = cur === '₴' ? '#166534' : '#1d4ed8';
-  const curBg = cur === '₴' ? '#dcfce7' : '#dbeafe';
-  if(extCurSelect){ extCurSelect.style.background = curBg; extCurSelect.style.borderColor = cur==='₴'?'#22c55e':'#2563eb'; extCurSelect.style.color = curColor; extCurSelect.style.fontWeight = '700'; }
   document.getElementById('bm-ext-cur-2').style.color = curColor;
   document.getElementById('bm-ext-cur-3').style.color = curColor;
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = '';
+  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
   const rate2Label = rate2Field?.querySelector('label');
-  if(rate2Label) rate2Label.textContent = (cur === '₴') ? 'Курс $' : 'Курс';
+  if(rate2Label) rate2Label.textContent = 'Курс';
   updateExtensionPaidUI();
+}
+function setExtCurrency(cur){
+  document.getElementById('bm-ext-currency').value = cur;
+  onExtCurrencyChange();
 }
 function recalcExtensionCost(){
   const days = parseInt(document.getElementById('bm-ext-days').value)||0;
@@ -6257,7 +6269,7 @@ function updateBookingDetailsVisibility(){
   const title=document.getElementById('bm-b2-title');
   const normalWrap=document.getElementById('bm-normal-dates-wrap');
   const periodRow=document.getElementById('bm-period-row');
-  if(title) title.textContent = hide ? 'Період' : 'Отримання та повернення';
+  if(title){ title.textContent = hide ? 'Період' : ''; title.style.display = hide ? '' : 'none'; }
   if(normalWrap) normalWrap.style.display = hide ? 'none' : '';
   if(periodRow){
     periodRow.style.display = hide ? 'flex' : 'none';
@@ -6589,22 +6601,18 @@ function onCurrencyChange(){
     rateCurrencyAnchor = cur;
   }
 
-  if(curSelect){
-    if(cur === '₴'){
-      curSelect.style.background = '#dcfce7';
-      curSelect.style.borderColor = '#22c55e';
-      curSelect.style.color = '#166534';
-      curSelect.style.fontWeight = '700';
-    } else {
-      curSelect.style.background = '#dbeafe';
-      curSelect.style.borderColor = '#2563eb';
-      curSelect.style.color = '#1d4ed8';
-      curSelect.style.fontWeight = '700';
-    }
-  }
+  ['$','₴','€'].forEach(c=>{
+    const id = c==='$'?'fin-cur-btn-usd':c==='₴'?'fin-cur-btn-uah':'fin-cur-btn-eur';
+    document.getElementById(id)?.classList.toggle('active', c===cur);
+  });
   const rateLabel = document.getElementById('bm-rate-label2');
   if(rateLabel) rateLabel.textContent = 'Курс';
   updateExtrasTotal();
+  updateVatPreview();
+}
+function setFinCurrency(cur){
+  document.getElementById('bm-currency').value = cur;
+  onCurrencyChange();
 }
 
 function formatExtraPriceInput(el){
@@ -6643,10 +6651,10 @@ function updateVatPreview(){
   const foreignSym = anchorNonUah ? anchorCur : '$'; // left column is always the foreign-currency reference ($ when the anchored currency is ₴)
   const canShowForeign = anchorNonUah || exRate > 0;
 
-  // Exchange rate is now ALWAYS available — when order currency is ₴, it converts to $ for reference
+  // Exchange rate is shown only when the order currency is $ or € (₴ needs no conversion).
   const rateRow = document.getElementById('bm-rate-row');
   if(rateRow){
-    rateRow.style.display = '';
+    rateRow.style.display = nonUah ? '' : 'none';
     const rateInput = document.getElementById('bm-exchange-rate');
     if(rateInput) rateInput.required = nonUah;
   }
