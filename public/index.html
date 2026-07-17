@@ -1432,7 +1432,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
-    <div class="nav-item" data-label="Звіти" onclick="openReportPanel()"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
+    <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
     <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
@@ -7219,7 +7219,7 @@ async function doLogin(){
     localStorage.setItem('av_fleet_token',_token);
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; }
+    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; }
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -7229,6 +7229,7 @@ function doLogout(){
   localStorage.removeItem('av_fleet_token');
   document.getElementById('nav-users').style.display='none';
   document.getElementById('nav-statuses').style.display='none';
+  document.getElementById('nav-reports').style.display='none';
   showLoginOverlay();
 }
 
@@ -7923,7 +7924,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     _currentUser = await res.json();
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; }
+    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; }
     await syncFromServer();
   } catch(e){ showLoginOverlay(); }
 })();
