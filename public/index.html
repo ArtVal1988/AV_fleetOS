@@ -3376,6 +3376,7 @@ function clearHighlight(){
 
 /* ── BOOKING MODAL ── */
 function openBookingModal(vid=null,start=null,end=null){
+  closeMiniPicker();
   clearTimeout(ttHideTimer); tt.classList.remove('visible');
   document.getElementById('bm-ext-active').checked=false;
   document.getElementById('bm-ext-fields').style.display='none';
@@ -3443,6 +3444,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('booking-modal').classList.add('open');
 }
 function editBooking(bid){
+  closeMiniPicker();
   clearTimeout(ttHideTimer); tt.classList.remove('visible','mobile-tap');
   document.getElementById('tooltip-mobile-backdrop')?.classList.remove('visible');
   const b=bookings.find(x=>x.id===bid);if(!b)return;
