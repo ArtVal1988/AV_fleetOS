@@ -1627,12 +1627,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
         <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
         <span style="color:#9ca3af;font-size:12px">від</span>
-        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
+        <input type="date" readonly id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
           document.getElementById('bm-pickup-date').value=this.value;
           document.getElementById('bm-start').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
         <span style="color:#9ca3af;font-size:12px">до</span>
-        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
+        <input type="date" readonly id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
           document.getElementById('bm-return-date').value=this.value;
           document.getElementById('bm-end').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
@@ -1641,7 +1641,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-pickup-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
         </div>
@@ -1662,9 +1662,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
-                <input type="date" id="bm-ext-from" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
+                <input type="date" readonly id="bm-ext-from" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
                 <span class="ext-period-prefix">до</span>
-                <input type="date" id="bm-ext-to" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
+                <input type="date" readonly id="bm-ext-to" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
               </div>
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
@@ -1734,7 +1734,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
