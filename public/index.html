@@ -7900,6 +7900,16 @@ window.restoreVehicleFromArchive = function(id){
 };
 
 // ── Close modals on Escape or overlay background click ──────────
+// Chromium quirk workaround: a focused <input type="date">'s native picker
+// popup can sometimes fail to release focus when the user clicks a nearby
+// field inside a scrollable modal, causing the calendar to flicker/reopen.
+// Force it to blur the instant a mousedown starts elsewhere.
+document.addEventListener('mousedown', e => {
+  const active = document.activeElement;
+  if(active && active.tagName === 'INPUT' && active.type === 'date' && active !== e.target){
+    active.blur();
+  }
+}, true);
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
