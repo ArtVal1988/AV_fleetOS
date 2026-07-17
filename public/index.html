@@ -908,6 +908,11 @@ textarea{resize:vertical;min-height:56px;}
 .custom-dp-day.today{outline:1px solid #2563eb;outline-offset:-1px;}
 .custom-dp-foot{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
 .custom-dp-foot button{background:none;border:none;cursor:pointer;font-size:11px;color:#2563eb;font-family:var(--font-mono);}
+.custom-tp{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:600;box-shadow:0 8px 28px rgba(0,0,0,.18);animation:popIn .1s ease;font-family:var(--font-mono);display:flex;gap:6px;}
+.custom-tp-col{display:flex;flex-direction:column;max-height:200px;overflow-y:auto;min-width:48px;}
+.custom-tp-col button{background:none;border:none;cursor:pointer;font-size:13px;padding:5px 8px;border-radius:5px;color:var(--text-primary);text-align:center;}
+.custom-tp-col button:hover{background:#f0f2f5;}
+.custom-tp-col button.selected{background:#2563eb;color:#fff;}
 @keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 .mp-title{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .mp-opt{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:3px;cursor:pointer;font-size:11px;transition:background .1s;}
@@ -1642,7 +1647,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-pickup-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
+          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
         </div>
       </div>
@@ -1735,7 +1740,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
+          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
       </div>
@@ -8005,6 +8010,59 @@ function renderCustomDatePicker(){
 document.addEventListener('mousedown', e => {
   if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
     closeCustomDatePicker();
+  }
+});
+let _customTpInput = null;
+function openCustomTimePicker(inputEl){
+  closeCustomTimePicker();
+  _customTpInput = inputEl;
+  const [curH, curM] = (inputEl.value || '09:00').split(':').map(Number);
+  const tp = document.createElement('div');
+  tp.className = 'custom-tp';
+  tp.id = 'custom-tp';
+  let hoursHtml = '', minsHtml = '';
+  for(let h=0; h<24; h++){
+    const hs = String(h).padStart(2,'0');
+    hoursHtml += `<button type="button" class="${h===curH?'selected':''}" data-h="${hs}" onclick="customTpPick('${hs}',null)">${hs}</button>`;
+  }
+  for(let m=0; m<60; m+=5){
+    const ms = String(m).padStart(2,'0');
+    minsHtml += `<button type="button" class="${m===curM?'selected':''}" data-m="${ms}" onclick="customTpPick(null,'${ms}')">${ms}</button>`;
+  }
+  tp.innerHTML = `<div class="custom-tp-col" id="custom-tp-hours">${hoursHtml}</div><div class="custom-tp-col" id="custom-tp-mins">${minsHtml}</div>`;
+  document.body.appendChild(tp);
+  const r = inputEl.getBoundingClientRect();
+  const tpW = 110, tpH = 200;
+  let left = r.left, top = r.bottom + 4;
+  if(left + tpW > window.innerWidth - 8) left = window.innerWidth - tpW - 8;
+  if(top + tpH > window.innerHeight - 8) top = r.top - tpH - 4;
+  tp.style.left = Math.max(8,left) + 'px';
+  tp.style.top = Math.max(8,top) + 'px';
+  tp.querySelector('.selected')?.scrollIntoView({block:'center'});
+}
+function closeCustomTimePicker(){
+  document.getElementById('custom-tp')?.remove();
+  _customTpInput = null;
+}
+function customTpPick(h, m){
+  if(!_customTpInput) return;
+  const [curH, curM] = (_customTpInput.value || '09:00').split(':');
+  const newH = h !== null ? h : curH;
+  const newM = m !== null ? m : curM;
+  _customTpInput.value = newH + ':' + newM;
+  _customTpInput.dispatchEvent(new Event('change', {bubbles:true}));
+  _customTpInput.dispatchEvent(new Event('input', {bubbles:true}));
+  if(h !== null){
+    document.getElementById('custom-tp-hours')?.querySelectorAll('button').forEach(b=>b.classList.toggle('selected', b.dataset.h===h));
+  }
+  if(m !== null){
+    document.getElementById('custom-tp-mins')?.querySelectorAll('button').forEach(b=>b.classList.toggle('selected', b.dataset.m===m));
+    closeCustomTimePicker();
+  }
+}
+document.addEventListener('mousedown', e => {
+  if(document.getElementById('custom-tp') && !e.target.closest('#custom-tp') && !e.target.closest('.custom-tp-trigger')){
+    closeCustomTimePicker();
   }
 });
 // Remaining native <input type="date"> fields (reports, nav-jump, service
