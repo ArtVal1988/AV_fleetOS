@@ -711,7 +711,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .fin-cur{flex:0.5;min-width:50px;max-width:60px;}
 .fin-rate2{flex:0.8;min-width:78px;max-width:96px;}
 .fin-vat{flex:0.6;min-width:56px;max-width:68px;}
-.fin-deposit{flex:1.5;min-width:150px;}
+.fin-deposit{flex:1.5;min-width:130px;}
 #bm-rate-label{white-space:nowrap;letter-spacing:.5px;}
 
 
@@ -769,7 +769,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-box .ext-fin-field{flex-direction:row;align-items:center;gap:6px;}
 .ext-box label{color:#854f0b!important;}
 #bm-ext-rate{flex:0 0 70px!important;width:70px!important;}
-#bm-ext-rate2{flex:0 0 40px!important;width:40px!important;}
+#bm-ext-rate2{flex:0 0 50px!important;width:50px!important;}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
@@ -1693,7 +1693,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:40px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:50px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
@@ -8025,7 +8025,7 @@ function openCustomTimePicker(inputEl){
     const hs = String(h).padStart(2,'0');
     hoursHtml += `<button type="button" class="${h===curH?'selected':''}" data-h="${hs}" onclick="customTpPick('${hs}',null)">${hs}</button>`;
   }
-  for(let m=0; m<60; m+=5){
+  for(let m=0; m<60; m+=10){
     const ms = String(m).padStart(2,'0');
     minsHtml += `<button type="button" class="${m===curM?'selected':''}" data-m="${ms}" onclick="customTpPick(null,'${ms}')">${ms}</button>`;
   }
