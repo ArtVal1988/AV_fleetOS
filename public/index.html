@@ -895,6 +895,19 @@ textarea{resize:vertical;min-height:56px;}
 
 /* STATUS MINI PICKER */
 .mini-picker{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:400;min-width:200px;box-shadow:0 8px 28px rgba(0,0,0,.16);animation:popIn .1s ease;}
+.custom-dp{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;z-index:600;min-width:230px;box-shadow:0 8px 28px rgba(0,0,0,.18);animation:popIn .1s ease;font-family:var(--font-mono);}
+.custom-dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--text-primary);}
+.custom-dp-head button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);padding:2px 8px;border-radius:4px;}
+.custom-dp-head button:hover{background:#f0f2f5;}
+.custom-dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+.custom-dp-dow{font-size:9px;color:var(--text-muted);font-weight:700;padding:3px 0;}
+.custom-dp-day{font-size:12px;padding:6px 0;border-radius:5px;cursor:pointer;border:none;background:none;color:var(--text-primary);}
+.custom-dp-day:hover{background:#f0f2f5;}
+.custom-dp-day.muted{color:#c8cdd6;}
+.custom-dp-day.selected{background:#2563eb;color:#fff;}
+.custom-dp-day.today{outline:1px solid #2563eb;outline-offset:-1px;}
+.custom-dp-foot{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
+.custom-dp-foot button{background:none;border:none;cursor:pointer;font-size:11px;color:#2563eb;font-family:var(--font-mono);}
 @keyframes popIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 .mp-title{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
 .mp-opt{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:3px;cursor:pointer;font-size:11px;transition:background .1s;}
@@ -1614,12 +1627,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
         <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
         <span style="color:#9ca3af;font-size:12px">від</span>
-        <input type="date" id="bm-period-from" class="lr-date" style="flex:0 0 140px" oninput="
+        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
           document.getElementById('bm-pickup-date').value=this.value;
           document.getElementById('bm-start').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
         <span style="color:#9ca3af;font-size:12px">до</span>
-        <input type="date" id="bm-period-to" class="lr-date" style="flex:0 0 140px" oninput="
+        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="
           document.getElementById('bm-return-date').value=this.value;
           document.getElementById('bm-end').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
@@ -1628,7 +1641,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-pickup-date" class="lr-date" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-pickup-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
         </div>
@@ -1649,9 +1662,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
-                <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
+                <input type="date" id="bm-ext-from" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
                 <span class="ext-period-prefix">до</span>
-                <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
+                <input type="date" id="bm-ext-to" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
               </div>
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
@@ -1721,7 +1734,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
           <input type="time" id="bm-return-time" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff()">
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
@@ -7901,6 +7914,101 @@ window.restoreVehicleFromArchive = function(id){
 
 // ── Close modals on Escape or overlay background click ──────────
 // Chromium quirk workaround: a focused <input type="date">'s native picker
+let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0;
+function openCustomDatePicker(inputEl){
+  closeCustomDatePicker();
+  _customDpInput = inputEl;
+  const base = inputEl.value ? new Date(inputEl.value+'T00:00:00') : new Date();
+  _customDpViewYear = base.getFullYear();
+  _customDpViewMonth = base.getMonth();
+  const dp = document.createElement('div');
+  dp.className = 'custom-dp';
+  dp.id = 'custom-dp';
+  document.body.appendChild(dp);
+  renderCustomDatePicker();
+  const r = inputEl.getBoundingClientRect();
+  const dpW = 230, dpH = 280;
+  let left = r.left, top = r.bottom + 4;
+  if(left + dpW > window.innerWidth - 8) left = window.innerWidth - dpW - 8;
+  if(top + dpH > window.innerHeight - 8) top = r.top - dpH - 4;
+  dp.style.left = Math.max(8,left) + 'px';
+  dp.style.top = Math.max(8,top) + 'px';
+}
+function closeCustomDatePicker(){
+  document.getElementById('custom-dp')?.remove();
+  _customDpInput = null;
+}
+function customDpChangeMonth(delta){
+  _customDpViewMonth += delta;
+  if(_customDpViewMonth < 0){ _customDpViewMonth = 11; _customDpViewYear--; }
+  if(_customDpViewMonth > 11){ _customDpViewMonth = 0; _customDpViewYear++; }
+  renderCustomDatePicker();
+}
+function customDpPick(dateStr){
+  if(!_customDpInput) return;
+  const el = _customDpInput;
+  el.value = dateStr;
+  el.dispatchEvent(new Event('change', {bubbles:true}));
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+  closeCustomDatePicker();
+}
+function customDpClear(){
+  if(!_customDpInput) return;
+  const el = _customDpInput;
+  el.value = '';
+  el.dispatchEvent(new Event('change', {bubbles:true}));
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+  closeCustomDatePicker();
+}
+function renderCustomDatePicker(){
+  const dp = document.getElementById('custom-dp');
+  if(!dp) return;
+  const MONTHS_UK=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const y = _customDpViewYear, m = _customDpViewMonth;
+  const todayStr = dStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  const selVal = _customDpInput?.value || '';
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+  let cells = '';
+  for(let i=0;i<firstDow;i++){
+    const d = daysInPrevMonth - firstDow + 1 + i;
+    cells += `<button type="button" class="custom-dp-day muted" disabled>${d}</button>`;
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = dStr(y, m, d);
+    const cls = ['custom-dp-day'];
+    if(ds === selVal) cls.push('selected');
+    if(ds === todayStr) cls.push('today');
+    cells += `<button type="button" class="${cls.join(' ')}" onclick="customDpPick('${ds}')">${d}</button>`;
+  }
+  const totalCells = firstDow + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for(let d=1; d<=trailing; d++){
+    cells += `<button type="button" class="custom-dp-day muted" disabled>${d}</button>`;
+  }
+  dp.innerHTML = `
+    <div class="custom-dp-head">
+      <button type="button" onclick="customDpChangeMonth(-1)">‹</button>
+      <span>${MONTHS_UK[m]} ${y}</span>
+      <button type="button" onclick="customDpChangeMonth(1)">›</button>
+    </div>
+    <div class="custom-dp-grid">
+      <div class="custom-dp-dow">Пн</div><div class="custom-dp-dow">Вт</div><div class="custom-dp-dow">Ср</div><div class="custom-dp-dow">Чт</div><div class="custom-dp-dow">Пт</div><div class="custom-dp-dow">Сб</div><div class="custom-dp-dow">Нд</div>
+      ${cells}
+    </div>
+    <div class="custom-dp-foot">
+      <button type="button" onclick="customDpClear()">Очистити</button>
+      <button type="button" onclick="customDpPick('${todayStr}')">Сьогодні</button>
+    </div>`;
+}
+document.addEventListener('mousedown', e => {
+  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
+    closeCustomDatePicker();
+  }
+});
+// Remaining native <input type="date"> fields (reports, nav-jump, service
+// modals) still get this best-effort focus-workaround for the same
 // popup can sometimes fail to release focus when the user clicks a nearby
 // field inside a scrollable modal, causing the calendar to flicker/reopen.
 // blur() alone isn't reliably honored by the browser while the native
