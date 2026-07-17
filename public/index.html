@@ -764,12 +764,12 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field{display:flex;flex-direction:column;gap:3px;}
 .ext-fin-field label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;}
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
-.ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;min-width:0;}
+.ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px 12px;flex-wrap:nowrap;min-width:0;}
 .ext-box-blue{border:2px solid #2563eb;}
 .ext-box .ext-fin-field{flex-direction:row;align-items:center;gap:6px;}
 .ext-box label{color:#854f0b!important;}
 #bm-ext-rate{flex:0 0 70px!important;width:70px!important;}
-#bm-ext-rate2{flex:0 0 46px!important;width:46px!important;}
+#bm-ext-rate2{flex:0 0 40px!important;width:40px!important;}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
@@ -1645,7 +1645,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
         <div class="ext-fin-row">
-          <div class="ext-box">
+          <div class="ext-box ext-box-blue">
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
@@ -1659,7 +1659,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="ext-box ext-box-blue" style="flex:1">
             <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" style="width:44px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
+              <input type="number" id="bm-ext-days" class="no-spinner" style="width:34px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <label>Ціна</label>
@@ -1675,7 +1675,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:46px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:40px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
@@ -5184,7 +5184,14 @@ function updateExtensionPaidUI(){
   paidEl.value = paid;
   const remaining = Math.max(0, Math.round((total - paid)*100)/100);
   const cur = getPillCurrency('ext-total-cur-btn');
-  document.getElementById('bm-ext-remaining').textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
+  const remainingEl = document.getElementById('bm-ext-remaining');
+  if(remaining <= 0 && total > 0){
+    remainingEl.textContent = 'Оплачено';
+    remainingEl.style.color = '#16a34a';
+  } else {
+    remainingEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
+    remainingEl.style.color = '';
+  }
 
   const closeRow = document.getElementById('bm-ext-close-row');
   if(closeRow) closeRow.style.display = (total > 0 && paid >= total) ? '' : 'none';
