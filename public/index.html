@@ -1649,9 +1649,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
-                <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
+                <input type="date" id="bm-ext-from" onchange="this.blur();onExtDatesChanged()">
                 <span class="ext-period-prefix">до</span>
-                <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
+                <input type="date" id="bm-ext-to" onchange="this.blur();onExtDatesChanged()">
               </div>
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
