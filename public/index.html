@@ -1649,9 +1649,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
-                <input type="date" id="bm-ext-from" onchange="setTimeout(onExtDatesChanged,0)">
+                <input type="date" id="bm-ext-from" onchange="onExtDatesChanged()">
                 <span class="ext-period-prefix">до</span>
-                <input type="date" id="bm-ext-to" onchange="setTimeout(onExtDatesChanged,0)">
+                <input type="date" id="bm-ext-to" onchange="onExtDatesChanged()">
               </div>
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
@@ -1659,11 +1659,11 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="ext-box ext-box-blue" style="flex:1">
             <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" style="width:34px;text-align:center" min="1" onfocus="closeExtDatePickers()" oninput="extDaysOverridden=true;recalcExtensionCost()">
+              <input type="number" id="bm-ext-days" class="no-spinner" style="width:34px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <label>Ціна</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:70px;text-align:center" onfocus="closeExtDatePickers()" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:70px;text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
             </div>
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
@@ -1675,7 +1675,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:40px;text-align:center" placeholder="0.00" step="0.01" onfocus="closeExtDatePickers()" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:40px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
@@ -5053,10 +5053,6 @@ function toggleExtensionSection(){
   }
 }
 
-function closeExtDatePickers(){
-  document.getElementById('bm-ext-from')?.blur();
-  document.getElementById('bm-ext-to')?.blur();
-}
 function addOneDayStr(dateStr){
   const d = new Date(dateStr+'T00:00:00');
   d.setDate(d.getDate()+1);
