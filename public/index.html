@@ -765,11 +765,11 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-field label{font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#854f0b;font-weight:600;white-space:nowrap;}
 .ext-fin-field input,.ext-fin-field select{width:100%;box-sizing:border-box;}
 .ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:8px 12px;flex-wrap:nowrap;min-width:0;}
+.ext-box-blue{border:2px solid #2563eb;}
 .ext-box .ext-fin-field{flex-direction:row;align-items:center;gap:6px;}
 .ext-box label{color:#854f0b!important;}
 #bm-ext-rate{flex:0 0 70px!important;width:70px!important;}
 #bm-ext-rate2{flex:0 0 46px!important;width:46px!important;}
-#bm-ext-total-rate, #bm-ext-paid-rate{width:44px!important;padding:4px 5px;font-size:11px;border:1px solid #bfdbfe;border-radius:3px;background:#fff;text-align:right;font-family:var(--font-mono);}
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
@@ -1656,16 +1656,14 @@ input.dm-pf-val.tel{font-size:14px;}
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
           </div>
-          <div class="ext-box">
+          <div class="ext-box ext-box-blue" style="flex:1">
             <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
               <input type="number" id="bm-ext-days" class="no-spinner" style="width:44px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
             </div>
-          </div>
-          <div class="ext-box" style="flex:1;background:none;border:none;padding:0;gap:8px">
-            <div class="logistics-row" style="margin-bottom:0;flex:1">
-              <div class="lr-label">Вартість</div>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner lr-date" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+            <div class="ext-fin-field" style="width:auto">
+              <label>Ціна</label>
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:70px;text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
             </div>
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
@@ -1675,14 +1673,14 @@ input.dm-pf-val.tel{font-size:14px;}
               <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
               <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
             </div>
-            <div class="logistics-row" id="bm-ext-rate2-field" style="margin-bottom:0;display:none">
-              <div class="lr-label">Курс</div>
-              <input type="number" id="bm-ext-rate2" class="no-spinner lr-time" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
+              <label>Курс</label>
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:46px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
         <div class="ext-fin-row" style="margin-top:8px">
-          <div class="ext-box">
+          <div class="ext-box ext-box-blue">
             <div class="ext-fin-field" style="width:auto">
               <label>Загалом</label>
               <div class="ext-calc-input-cur">
@@ -1695,12 +1693,8 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
               </div>
             </div>
-            <div class="ext-fin-field" id="bm-ext-total-rate-field" style="width:auto;display:none">
-              <label>Курс</label>
-              <input type="number" id="bm-ext-total-rate" class="no-spinner" placeholder="0.00" step="0.01">
-            </div>
           </div>
-          <div class="ext-box">
+          <div class="ext-box ext-box-blue">
             <div class="ext-fin-field" style="width:auto">
               <label>Оплачено</label>
               <div class="ext-calc-input-cur">
@@ -1712,10 +1706,6 @@ input.dm-pf-val.tel{font-size:14px;}
                 <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
                 <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
               </div>
-            </div>
-            <div class="ext-fin-field" id="bm-ext-paid-rate-field" style="width:auto;display:none">
-              <label>Курс</label>
-              <input type="number" id="bm-ext-paid-rate" class="no-spinner" placeholder="0.00" step="0.01">
             </div>
           </div>
           <div class="ext-fin-field" style="margin-left:auto;text-align:right">
@@ -3505,8 +3495,8 @@ function editBooking(bid){
     extPaidCurTouched = paidCur !== extCur;
     setExtTotalCurrency(totalCur, extTotalCurTouched);
     setExtPaidCurrency(paidCur, extPaidCurTouched);
-    document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
-    document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
+    if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
+    if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     onExtCurrencyChange();
     updateExtensionPaidUI();
   } else {
@@ -3671,9 +3661,9 @@ function saveBooking(){
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
       totalCurrency: getPillCurrency('ext-total-cur-btn'),
-      totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate').value)||0,
+      totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
       paidCurrency: getPillCurrency('ext-paid-cur-btn'),
-      paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate').value)||0,
+      paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
     rate:parseThousands(document.getElementById('bm-rate').value),
@@ -5049,8 +5039,8 @@ function toggleExtensionSection(){
     document.getElementById('bm-ext-currency').value = cur;
     extRateCurrencyAnchor = cur;
     document.getElementById('bm-ext-rate2').value = document.getElementById('bm-exchange-rate').value || '';
-    document.getElementById('bm-ext-total-rate').value = document.getElementById('bm-ext-rate2').value;
-    document.getElementById('bm-ext-paid-rate').value = document.getElementById('bm-ext-rate2').value;
+    if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = document.getElementById('bm-ext-rate2').value;
+    if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = document.getElementById('bm-ext-rate2').value;
     onExtCurrencyChange();
     onExtDatesChanged();
   } else {
@@ -5211,9 +5201,9 @@ function closeAndStartNewExtension(){
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
     totalCurrency: getPillCurrency('ext-total-cur-btn'),
-    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate').value)||0,
+    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
     paidCurrency: getPillCurrency('ext-paid-cur-btn'),
-    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate').value)||0,
+    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   currentExtHistory.push(closed);
