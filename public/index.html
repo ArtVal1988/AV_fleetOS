@@ -7903,11 +7903,16 @@ window.restoreVehicleFromArchive = function(id){
 // Chromium quirk workaround: a focused <input type="date">'s native picker
 // popup can sometimes fail to release focus when the user clicks a nearby
 // field inside a scrollable modal, causing the calendar to flicker/reopen.
-// Force it to blur the instant a mousedown starts elsewhere.
+// blur() alone isn't reliably honored by the browser while the native
+// picker is open, so explicitly focus the real click target instead.
 document.addEventListener('mousedown', e => {
   const active = document.activeElement;
   if(active && active.tagName === 'INPUT' && active.type === 'date' && active !== e.target){
-    active.blur();
+    const target = e.target.closest('input, select, textarea, button, [tabindex]');
+    if(target && target !== active && typeof target.focus === 'function'){
+      active.blur();
+      setTimeout(()=>target.focus(), 0);
+    }
   }
 }, true);
 document.addEventListener('keydown', e => {
