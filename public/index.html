@@ -176,6 +176,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 @media (max-width: 640px){
   #specs-quick-actions{display:flex!important;gap:4px!important;}
   #specs-quick-actions button{font-size:9px!important;padding:5px 2px!important;}
+  #vehicles-panel-overlay > div{width:100%!important;max-width:100%!important;height:100vh!important;max-height:100vh!important;border-radius:0!important;}
+  #veh-panel-header{flex-wrap:wrap!important;padding:14px 14px 12px!important;gap:8px!important;}
+  #veh-panel-header input#veh-search{order:10;flex:1 1 100%!important;max-width:100%!important;}
+  #vehicles-panel-overlay > div > div[style*="padding:20px 28px"]{padding:14px!important;}
+  #veh-panel-newcat-row{flex-wrap:wrap!important;}
+  #veh-panel-newcat-row input,#veh-panel-newcat-row button{flex:1 1 100%!important;}
+  .veh-row{flex-wrap:wrap!important;padding:10px!important;}
+  .veh-row-actions{display:flex!important;gap:6px!important;flex:1 1 100%!important;margin-top:2px!important;}
+  .veh-row-actions button{flex:1!important;padding:7px 4px!important;font-size:10px!important;}
   .topbar{padding:8px 8px 6px;}
   .topbar>div:first-child{gap:4px!important;}
   .topbar-right{gap:6px!important;}
@@ -1319,7 +1328,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <div id="vehicles-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+    <div id="veh-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🚗 Транспортні засоби</div>
       <input id="veh-search" type="text" placeholder="Пошук за номером, маркою, моделлю…" oninput="renderVehiclesPanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
@@ -1327,7 +1336,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button onclick="closeVehiclesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <div style="display:flex;gap:8px;margin-bottom:18px">
+      <div id="veh-panel-newcat-row" style="display:flex;gap:8px;margin-bottom:18px">
         <input id="veh-new-cat" type="text" placeholder="Назва нового розділу…"
           style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addVehicleCategory();}">
@@ -7297,12 +7306,13 @@ function renderVehiclesPanelList(){
           style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px;flex-shrink:0">🗑</button>
       </div>
       ${vehicles.length ? vehicles.map(v => `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+        <div class="veh-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
             ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
           </div>
+          <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">
             ✎ Редагувати
@@ -7316,6 +7326,7 @@ function renderVehiclesPanelList(){
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-family:inherit;font-weight:600">
             📦 В архів
           </button>`}
+          </div>
         </div>
       `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:4px 2px">Немає авто в цьому розділі</div>'}
     </div>`;
