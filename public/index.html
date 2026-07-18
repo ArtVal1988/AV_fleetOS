@@ -173,7 +173,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .calendar-scroll{scroll-padding-left:96px;}
   #specs-quick-actions{display:flex!important;}
 }
-@media (max-width: 640px){
+@media (max-width: 640px), (max-height: 500px) and (orientation: landscape){
   #specs-quick-actions{display:flex!important;gap:4px!important;}
   #specs-quick-actions button{font-size:9px!important;padding:5px 2px!important;}
   #vehicles-panel-overlay > div{width:100%!important;max-width:100%!important;height:100vh!important;max-height:100vh!important;border-radius:0!important;}
@@ -2670,6 +2670,13 @@ addB({vehicleId:29,status:'rented',clientType:'fop_no_vat',start:'2026-06-15',en
 const fmt=s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${y}`;};
 const fmtMoney=(n,c)=>n?`${Number(n).toLocaleString('uk-UA')} ${c}`:'—';
 function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
+// Matches the CSS `@media (max-width:640px), (max-height:500px) and
+// (orientation:landscape)` condition — so JS-driven mobile behavior (sidebar
+// collapse, specs popup mode, etc.) stays in sync with the stylesheet when
+// the phone is rotated to landscape.
+function isMobileViewport(){
+  return window.innerWidth <= 640 || (window.innerHeight <= 500 && window.innerWidth > window.innerHeight);
+}
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(viewStartDate);dt.setDate(viewStartDate.getDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
@@ -2745,7 +2752,7 @@ function render(){renderMonthLabel();renderLegend();renderCalendar();}
 
 function renderMonthLabel(){
   const endD=colDate(VIEW_DAYS);
-  const isMobile = window.innerWidth <= 640;
+  const isMobile = isMobileViewport();
   const fmt2=dt=>isMobile
     ? String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')
     : String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+dt.getFullYear();
@@ -2774,7 +2781,7 @@ function buildVehCell(v){
   var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
-      '<div class="veh-name-click" onclick="highlightRow('+v.id+');if(window.innerWidth<=640)showVehicleSpecs(event,'+v.id+')" title="Виділити рядок">'+
+      '<div class="veh-name-click" onclick="highlightRow('+v.id+');if(isMobileViewport())showVehicleSpecs(event,'+v.id+')" title="Виділити рядок">'+
         '<span class="veh-plate-badge">'+v.plate+'</span>'+
         '<span class="veh-name">'+stripYear(v.name)+'</span>'+
       '</div>'+
@@ -3178,7 +3185,7 @@ document.addEventListener('click', e => {
 
 /* ── SELECT BOOKING (right panel) ── */
 function selectBooking(bid,e){
-  if(window.innerWidth<=640){
+  if(isMobileViewport()){
     tt.classList.add('mobile-tap');
     document.getElementById('tooltip-mobile-backdrop').classList.add('visible');
     showTooltip(e||window.event,bid);
@@ -4047,7 +4054,7 @@ function buildKaskoPhotoSection(v){
 function toggleSidebar(){
   const app = document.querySelector('.app');
   if(!app) return;
-  if(window.innerWidth <= 640){
+  if(isMobileViewport()){
     const hidden = app.classList.toggle('sb-hidden-mobile');
     try { localStorage.setItem('fleet_sb_mobile', hidden?'1':'0'); } catch(e){}
     return;
@@ -4063,7 +4070,7 @@ try{
       if(a) a.classList.add('sb-collapsed');
     });
   }
-  if(window.innerWidth<=640 && localStorage.getItem('fleet_sb_mobile')==='1'){
+  if(isMobileViewport() && localStorage.getItem('fleet_sb_mobile')==='1'){
     document.addEventListener('DOMContentLoaded',()=>{
       const a=document.querySelector('.app');
       if(a) a.classList.add('sb-hidden-mobile');
@@ -4159,7 +4166,7 @@ async function showVehicleSpecs(e, vid){
   `;
 
   popup.style.display = 'block';
-  const isMobile = window.innerWidth <= 640;
+  const isMobile = isMobileViewport();
   if(isMobile){
     // Sit to the right of the sticky vehicle column, sized to whatever
     // space is actually left, so it never overlaps the plate/name AND
@@ -8103,7 +8110,7 @@ document.addEventListener('mousedown', e => {
 // whatever is underneath (e.g. opening the day-cell status/reservation
 // picker). The user needs a second, separate tap to act on that cell.
 document.addEventListener('click', e => {
-  if(window.innerWidth > 640) return;
+  if(!isMobileViewport()) return;
   const popup = document.getElementById('vehicle-specs-popup');
   if(!popup || popup.style.display !== 'block') return;
   if(e.target.closest('#vehicle-specs-popup, .veh-name-click, .veh-act-btn')) return;
