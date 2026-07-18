@@ -31,6 +31,7 @@ app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/stickers', require('./routes/stickers'));
 app.use('/api/settings', require('./routes/settings'));
+app.use('/api/price-check', require('./routes/price-check'));
 
 // ── Backup endpoint ──────────────────────────────────────────────
 const { auth, adminOnly } = require('./routes/auth');
