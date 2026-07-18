@@ -877,6 +877,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b1{background:#f5f3ff;border-left-color:#a78bfa;}
 .msec-b2{background:#eff6ff;border-left-color:#60a5fa;}
 .msec-b3{background:#f0fdf4;border-left-color:#4ade80;}
+.msec-inner-sep{margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,.08);}
 .msec-b4{background:#fffbeb;border-left-color:#fbbf24;}
 .msec-b5{background:#fef2f2;border-left-color:#f87171;}
 .msec-b6{background:#f9fafb;border-left-color:#d1d5db;}
@@ -1677,6 +1678,172 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
+      <div class="logistics-row" style="margin-top:8px">
+        <div class="lr-label" id="bm-return-label">↓ Повернення</div>
+        <div class="lr-inputs">
+          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
+          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
+          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
+        </div>
+      </div>
+      </div><!-- /bm-normal-dates-wrap -->
+    <div class="msec-inner-sep" id="bm-block-extras">
+      <!-- EXTRAS TOGGLE -->
+      <button type="button" class="extras-toggle" id="extras-toggle-btn" onclick="toggleExtrasPanel()">
+        <span id="extras-toggle-icon">⊕</span>
+        <span>Додаткові послуги / обладнання</span>
+        <span id="extras-active-count" style="display:none"></span>
+        <span class="extras-toggle-chevron" id="extras-chevron">▾</span>
+      </button>
+
+      <!-- EXTRAS PANEL (selection UI) — collapsed by default; opens via the toggle above -->
+      <div class="extras-panel" id="extras-panel" style="display:none">
+        <div class="extras-list" id="extras-services-list">
+          <div class="extra-pair-group">
+          <div class="extra-pair-label">↑ Отримання</div>
+          <!-- Отримання: адреса + неробоча година в один рядок -->
+          <div class="extra-pair-row">
+            <div class="extra-item extra-pair-item" data-key="pickup_address">
+              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_address')">
+                <span class="extra-radio" id="ex-radio-pickup_address">○</span>
+              </button>
+              <span class="extra-icon">📍</span>
+              <span class="extra-name">За адресою</span>
+              <div class="extra-price-wrap" id="ex-price-wrap-pickup_address" style="display:none">
+                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_address" placeholder="0" oninput="formatExtraPriceInput(this)">
+                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_address" onclick="setExtraCur('pickup_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_address" onclick="setExtraCur('pickup_address','uah')">₴</button></span>
+              </div>
+            </div>
+            <div class="extra-item extra-pair-item" data-key="pickup_offhours">
+              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_offhours')">
+                <span class="extra-radio" id="ex-radio-pickup_offhours">○</span>
+              </button>
+              <span class="extra-icon">🌙</span>
+              <span class="extra-name">Неробоча година</span>
+              <div class="extra-price-wrap" id="ex-price-wrap-pickup_offhours" style="display:none">
+                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
+                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_offhours" onclick="setExtraCur('pickup_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_offhours" onclick="setExtraCur('pickup_offhours','uah')">₴</button></span>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="extra-pair-group">
+          <div class="extra-pair-label">↓ Повернення</div>
+          <!-- Повернення: адреса + неробоча година в один рядок -->
+          <div class="extra-pair-row">
+            <div class="extra-item extra-pair-item" data-key="return_address">
+              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_address')">
+                <span class="extra-radio" id="ex-radio-return_address">○</span>
+              </button>
+              <span class="extra-icon">📍</span>
+              <span class="extra-name">За адресою</span>
+              <div class="extra-price-wrap" id="ex-price-wrap-return_address" style="display:none">
+                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_address" placeholder="0" oninput="formatExtraPriceInput(this)">
+                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_address" onclick="setExtraCur('return_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_address" onclick="setExtraCur('return_address','uah')">₴</button></span>
+              </div>
+            </div>
+            <div class="extra-item extra-pair-item" data-key="return_offhours">
+              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_offhours')">
+                <span class="extra-radio" id="ex-radio-return_offhours">○</span>
+              </button>
+              <span class="extra-icon">🌙</span>
+              <span class="extra-name">Неробоча година</span>
+              <div class="extra-price-wrap" id="ex-price-wrap-return_offhours" style="display:none">
+                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
+                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_offhours" onclick="setExtraCur('return_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_offhours" onclick="setExtraCur('return_offhours','uah')">₴</button></span>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <div class="extras-list" id="equipment-list"></div>
+        <button type="button" class="case-add-btn" style="margin-top:6px" onclick="addEquipmentRow()">+ Додати обладнання / доплату</button>
+      </div>
+
+      <!-- EXTRAS SUMMARY CHIPS — shown below the selection panel, always visible regardless of open/collapsed -->
+      <div class="extras-chips-row" id="extras-chips-row" style="display:none"></div>
+    </div>
+    <div class="msec-inner-sep" id="bm-block-3">
+      <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
+      <div class="fin-row">
+        <div class="fin-field fin-days" style="flex:0 0 60px">
+          <label>Кількість</label>
+          <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
+            style="text-align:center;font-family:var(--font-mono);">
+        </div>
+        <div class="fin-field fin-rate">
+          <label id="bm-rate-label">Вартість</label>
+          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+        </div>
+        <div class="fin-field fin-cur">
+          <label>Валюта</label>
+          <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
+            <option value="$">$</option>
+            <option value="₴">₴</option>
+          </select>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+            <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
+            <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
+          </div>
+        </div>
+        <div class="fin-field fin-rate2" id="bm-rate-row" style="display:none">
+          <label id="bm-rate-label2">Курс</label>
+          <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01"
+            oninput="updateVatPreview()">
+        </div>
+        <div class="fin-field fin-vat" id="bm-vat-field" style="display:none">
+          <label>ПДВ %</label>
+          <input type="number" id="bm-vat" value="20" min="0" max="100"
+            style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
+        </div>
+        <div class="fin-field fin-deposit" id="bm-deposit-field">
+          <label>Депозит</label>
+          <div class="dep-inline-wrap">
+            <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" oninput="formatThousandsInput(this)">
+            <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
+            <button type="button" id="dep-cur-btn-uah" class="dep-cur-pill" onclick="setDepositCur('₴')">₴</button>
+            <button type="button" id="dep-cur-btn-eur" class="dep-cur-pill" onclick="setDepositCur('€')">€</button>
+          </div>
+        </div>
+      </div>
+      <!-- Dual total preview -->
+      <div id="bm-dual-total" style="display:none;margin-top:10px">
+        <div class="vat-table-row" id="dp-perday-vat-row" style="display:none">
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу з ПДВ</span>
+          <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
+          <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
+        </div>
+        <div class="vat-table-row">
+          <span class="vat-row-label">
+            <span id="dual-days-label">діб × —</span>
+          </span>
+          <span class="vat-orig" id="dp-gross">—</span>
+          <span class="vat-uah" id="dp-gross-uah">—</span>
+        </div>
+        <div class="vat-table-row" id="dp-tax-row" style="display:none">
+          <span class="vat-row-label">ПДВ <span id="dp-pct-label"></span></span>
+          <span class="vat-orig" id="dp-vat" style="color:#92400e">—</span>
+          <span class="vat-uah" id="dp-vat-uah" style="color:#92400e">—</span>
+        </div>
+        <div class="vat-table-row" id="dp-extras-row" style="display:none">
+          <span class="vat-row-label">Послуги</span>
+          <span class="vat-orig" id="dp-extras">—</span>
+          <span class="vat-uah" id="dp-extras-uah">—</span>
+        </div>
+        <div class="vat-table-row" style="background:#eff6ff;border:2px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
+          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загальна вартість:</span>
+          <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
+          <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
+        </div>
+      </div>
+      <input type="hidden" id="bm-discount" value="0">
+
+
+    </div>
+    </div>
+
+    <div class="msec msec-b2" id="bm-block-ext-section">
       <div id="bm-ext-toggle-wrap">
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
@@ -1761,170 +1928,8 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div class="logistics-row" style="margin-top:8px">
-        <div class="lr-label" id="bm-return-label">↓ Повернення</div>
-        <div class="lr-inputs">
-          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
-          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
-        </div>
-      </div>
-      </div><!-- /bm-normal-dates-wrap -->
     </div>
-    <div class="msec msec-b3" id="bm-block-extras">
-      <!-- EXTRAS TOGGLE -->
-      <button type="button" class="extras-toggle" id="extras-toggle-btn" onclick="toggleExtrasPanel()">
-        <span id="extras-toggle-icon">⊕</span>
-        <span>Додаткові послуги / обладнання</span>
-        <span id="extras-active-count" style="display:none"></span>
-        <span class="extras-toggle-chevron" id="extras-chevron">▾</span>
-      </button>
 
-      <!-- EXTRAS PANEL (selection UI) — collapsed by default; opens via the toggle above -->
-      <div class="extras-panel" id="extras-panel" style="display:none">
-        <div class="extras-list" id="extras-services-list">
-          <div class="extra-pair-group">
-          <div class="extra-pair-label">↑ Отримання</div>
-          <!-- Отримання: адреса + неробоча година в один рядок -->
-          <div class="extra-pair-row">
-            <div class="extra-item extra-pair-item" data-key="pickup_address">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_address')">
-                <span class="extra-radio" id="ex-radio-pickup_address">○</span>
-              </button>
-              <span class="extra-icon">📍</span>
-              <span class="extra-name">За адресою</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-pickup_address" style="display:none">
-                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_address" placeholder="0" oninput="formatExtraPriceInput(this)">
-                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_address" onclick="setExtraCur('pickup_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_address" onclick="setExtraCur('pickup_address','uah')">₴</button></span>
-              </div>
-            </div>
-            <div class="extra-item extra-pair-item" data-key="pickup_offhours">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_offhours')">
-                <span class="extra-radio" id="ex-radio-pickup_offhours">○</span>
-              </button>
-              <span class="extra-icon">🌙</span>
-              <span class="extra-name">Неробоча година</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-pickup_offhours" style="display:none">
-                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
-                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_offhours" onclick="setExtraCur('pickup_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_offhours" onclick="setExtraCur('pickup_offhours','uah')">₴</button></span>
-              </div>
-            </div>
-          </div>
-          </div>
-          <div class="extra-pair-group">
-          <div class="extra-pair-label">↓ Повернення</div>
-          <!-- Повернення: адреса + неробоча година в один рядок -->
-          <div class="extra-pair-row">
-            <div class="extra-item extra-pair-item" data-key="return_address">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_address')">
-                <span class="extra-radio" id="ex-radio-return_address">○</span>
-              </button>
-              <span class="extra-icon">📍</span>
-              <span class="extra-name">За адресою</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-return_address" style="display:none">
-                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_address" placeholder="0" oninput="formatExtraPriceInput(this)">
-                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_address" onclick="setExtraCur('return_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_address" onclick="setExtraCur('return_address','uah')">₴</button></span>
-              </div>
-            </div>
-            <div class="extra-item extra-pair-item" data-key="return_offhours">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_offhours')">
-                <span class="extra-radio" id="ex-radio-return_offhours">○</span>
-              </button>
-              <span class="extra-icon">🌙</span>
-              <span class="extra-name">Неробоча година</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-return_offhours" style="display:none">
-                <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
-                <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_offhours" onclick="setExtraCur('return_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_offhours" onclick="setExtraCur('return_offhours','uah')">₴</button></span>
-              </div>
-            </div>
-          </div>
-          </div>
-        </div>
-
-        <div class="extras-list" id="equipment-list"></div>
-        <button type="button" class="case-add-btn" style="margin-top:6px" onclick="addEquipmentRow()">+ Додати обладнання / доплату</button>
-      </div>
-
-      <!-- EXTRAS SUMMARY CHIPS — shown below the selection panel, always visible regardless of open/collapsed -->
-      <div class="extras-chips-row" id="extras-chips-row" style="display:none"></div>
-    </div>
-    <div class="msec msec-b3" id="bm-block-3">
-      <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
-      <div class="fin-row">
-        <div class="fin-field fin-days" style="flex:0 0 60px">
-          <label>Кількість</label>
-          <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
-            style="text-align:center;font-family:var(--font-mono);">
-        </div>
-        <div class="fin-field fin-rate">
-          <label id="bm-rate-label">Вартість</label>
-          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
-        </div>
-        <div class="fin-field fin-cur">
-          <label>Валюта</label>
-          <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
-            <option value="$">$</option>
-            <option value="₴">₴</option>
-          </select>
-          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-            <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
-            <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
-          </div>
-        </div>
-        <div class="fin-field fin-rate2" id="bm-rate-row" style="display:none">
-          <label id="bm-rate-label2">Курс</label>
-          <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01"
-            oninput="updateVatPreview()">
-        </div>
-        <div class="fin-field fin-vat" id="bm-vat-field" style="display:none">
-          <label>ПДВ %</label>
-          <input type="number" id="bm-vat" value="20" min="0" max="100"
-            style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
-        </div>
-        <div class="fin-field fin-deposit" id="bm-deposit-field">
-          <label>Депозит</label>
-          <div class="dep-inline-wrap">
-            <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" oninput="formatThousandsInput(this)">
-            <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
-            <button type="button" id="dep-cur-btn-uah" class="dep-cur-pill" onclick="setDepositCur('₴')">₴</button>
-            <button type="button" id="dep-cur-btn-eur" class="dep-cur-pill" onclick="setDepositCur('€')">€</button>
-          </div>
-        </div>
-      </div>
-      <!-- Dual total preview -->
-      <div id="bm-dual-total" style="display:none;margin-top:10px">
-        <div class="vat-table-row" id="dp-perday-vat-row" style="display:none">
-          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу з ПДВ</span>
-          <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
-          <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
-        </div>
-        <div class="vat-table-row">
-          <span class="vat-row-label">
-            <span id="dual-days-label">діб × —</span>
-          </span>
-          <span class="vat-orig" id="dp-gross">—</span>
-          <span class="vat-uah" id="dp-gross-uah">—</span>
-        </div>
-        <div class="vat-table-row" id="dp-tax-row" style="display:none">
-          <span class="vat-row-label">ПДВ <span id="dp-pct-label"></span></span>
-          <span class="vat-orig" id="dp-vat" style="color:#92400e">—</span>
-          <span class="vat-uah" id="dp-vat-uah" style="color:#92400e">—</span>
-        </div>
-        <div class="vat-table-row" id="dp-extras-row" style="display:none">
-          <span class="vat-row-label">Послуги</span>
-          <span class="vat-orig" id="dp-extras">—</span>
-          <span class="vat-uah" id="dp-extras-uah">—</span>
-        </div>
-        <div class="vat-table-row" style="background:#eff6ff;border:2px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
-          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загальна вартість:</span>
-          <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
-          <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
-        </div>
-      </div>
-      <input type="hidden" id="bm-discount" value="0">
-
-
-    </div>
     <div class="msec msec-b4" id="bm-block-4">
       <div class="km-row-compact">
         <div class="km-compact-field">
@@ -6372,7 +6377,7 @@ function updateBookingDetailsVisibility(){
   const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
 
   wrap.style.display = 'flex'; // block 2 (dates) always stays visible
-  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-4','bm-block-5'].forEach(id=>{
+  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-block-4','bm-block-5'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = hide ? 'none' : '';
   });
