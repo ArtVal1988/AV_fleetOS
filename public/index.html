@@ -278,7 +278,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .ext-box:has(#bm-ext-from){flex:1 1 100%!important;}
   .ext-box:has(#bm-ext-days){flex:1 1 100%!important;}
   .ext-box:has(#bm-ext-days) .ext-fin-field{flex:0 0 auto!important;}
-  .ext-box:has(#bm-ext-days) input{height:38px;box-sizing:border-box;}
+  #bm-ext-days,#bm-ext-rate,#bm-ext-rate2{height:36px!important;box-sizing:border-box!important;padding:0 6px!important;}
+  #bm-ext-days{width:32px!important;}
+  #bm-ext-rate{width:64px!important;}
+  #bm-ext-rate2{width:48px!important;}
+  #bm-ext-total,#bm-ext-paid{height:36px!important;box-sizing:border-box!important;width:70px!important;}
+  .ext-box:has(#bm-ext-total),.ext-box:has(#bm-ext-paid){align-items:center!important;}
+  #bm-ext-from,#bm-ext-to{width:62px!important;text-align:center;}
   .ext-box:has(#bm-ext-total){flex:1 1 45%!important;}
   .ext-box:has(#bm-ext-paid){flex:1 1 45%!important;}
   #bm-ext-fields .ext-fin-field[style*="margin-left:auto"]{margin-left:0!important;text-align:center!important;width:100%!important;margin-top:6px!important;}
@@ -1863,9 +1869,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field ext-fin-period">
               <div class="ext-period-inputs" id="bm-ext-period-inputs">
                 <span class="ext-period-prefix">з</span>
-                <input type="date" readonly id="bm-ext-from" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
+                <input type="text" readonly id="bm-ext-from" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
                 <span class="ext-period-prefix">до</span>
-                <input type="date" readonly id="bm-ext-to" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
+                <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
               </div>
               <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
             </div>
@@ -3539,8 +3545,8 @@ function editBooking(bid){
     extDaysOverridden=false;
     document.getElementById('bm-ext-active').checked=true;
     document.getElementById('bm-ext-fields').style.display='';
-    document.getElementById('bm-ext-from').value=b.extension.fromDate||'';
-    document.getElementById('bm-ext-to').value=b.extension.toDate||'';
+    setExtDateField('bm-ext-from', b.extension.fromDate||'');
+    setExtDateField('bm-ext-to', b.extension.toDate||'');
     document.getElementById('bm-ext-days').value=b.extension.days||Math.max(1,Math.round((new Date(b.extension.toDate)-new Date(b.extension.fromDate))/86400000));
     document.getElementById('bm-ext-rate').value=b.extension.rate?Number(b.extension.rate).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-total').value=b.extension.cost?Number(b.extension.cost).toLocaleString('uk-UA'):'';
@@ -3713,8 +3719,8 @@ function saveBooking(){
     ret:{date:document.getElementById('bm-return-date').value,time:document.getElementById('bm-return-time').value,loc:document.getElementById('bm-return-loc').value.trim()},
     extension: document.getElementById('bm-ext-active').checked ? {
       active: true,
-      fromDate: document.getElementById('bm-ext-from').value,
-      toDate: document.getElementById('bm-ext-to').value,
+      fromDate: getExtDateField('bm-ext-from'),
+      toDate: getExtDateField('bm-ext-to'),
       days: parseInt(document.getElementById('bm-ext-days').value)||0,
       rate: parseThousands(document.getElementById('bm-ext-rate').value),
       cost: parseThousands(document.getElementById('bm-ext-total').value),
@@ -5091,8 +5097,8 @@ function toggleExtensionSection(){
     extTotalCurTouched = false; extPaidCurTouched = false;
     const curEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
     if(curEnd){
-      document.getElementById('bm-ext-from').value = curEnd;
-      document.getElementById('bm-ext-to').value = addOneDayStr(curEnd);
+      setExtDateField('bm-ext-from', curEnd);
+      setExtDateField('bm-ext-to', addOneDayStr(curEnd));
     }
     document.getElementById('bm-ext-rate').value = document.getElementById('bm-rate').value || '';
     document.getElementById('bm-ext-paid').value = 0;
@@ -5112,14 +5118,23 @@ function toggleExtensionSection(){
   }
 }
 
+function setExtDateField(id, iso){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.dataset.iso = iso || '';
+  el.value = extShortFmt(iso || '');
+}
+function getExtDateField(id){
+  return document.getElementById(id)?.dataset.iso || '';
+}
 function addOneDayStr(dateStr){
   const d = new Date(dateStr+'T00:00:00');
   d.setDate(d.getDate()+1);
   return dStr(d.getFullYear(), d.getMonth(), d.getDate());
 }
 function onExtDatesChanged(){
-  const from = document.getElementById('bm-ext-from').value;
-  const to = document.getElementById('bm-ext-to').value;
+  const from = getExtDateField('bm-ext-from');
+  const to = getExtDateField('bm-ext-to');
   const errEl = document.getElementById('bm-ext-period-error');
   const wrapEl = document.getElementById('bm-ext-period-inputs');
   if(from && to && to <= from){
@@ -5261,8 +5276,8 @@ function updateExtensionPaidUI(){
 function closeAndStartNewExtension(){
   const cur = getPillCurrency('ext-total-cur-btn');
   const closed = {
-    fromDate: document.getElementById('bm-ext-from').value,
-    toDate: document.getElementById('bm-ext-to').value,
+    fromDate: getExtDateField('bm-ext-from'),
+    toDate: getExtDateField('bm-ext-to'),
     days: parseInt(document.getElementById('bm-ext-days').value)||0,
     rate: parseThousands(document.getElementById('bm-ext-rate').value),
     cost: parseThousands(document.getElementById('bm-ext-total').value),
@@ -5282,8 +5297,8 @@ function closeAndStartNewExtension(){
   extDaysOverridden = false; extTotalOverridden = false;
   extTotalCurTouched = false; extPaidCurTouched = false;
   const fromD = closed.toDate;
-  document.getElementById('bm-ext-from').value = fromD;
-  document.getElementById('bm-ext-to').value = fromD ? addOneDayStr(fromD) : '';
+  setExtDateField('bm-ext-from', fromD);
+  setExtDateField('bm-ext-to', fromD ? addOneDayStr(fromD) : '');
   document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
   document.getElementById('bm-ext-days').value = '';
@@ -7963,10 +7978,19 @@ window.restoreVehicleFromArchive = function(id){
 // ── Close modals on Escape or overlay background click ──────────
 // Chromium quirk workaround: a focused <input type="date">'s native picker
 let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0;
+function extShortFmt(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${(y||'').slice(2)}`;
+}
+function getDpValue(inputEl){
+  return inputEl.classList.contains('ext-date-short') ? (inputEl.dataset.iso||'') : inputEl.value;
+}
 function openCustomDatePicker(inputEl){
   closeCustomDatePicker();
   _customDpInput = inputEl;
-  const base = inputEl.value ? new Date(inputEl.value+'T00:00:00') : new Date();
+  const curVal = getDpValue(inputEl);
+  const base = curVal ? new Date(curVal+'T00:00:00') : new Date();
   _customDpViewYear = base.getFullYear();
   _customDpViewMonth = base.getMonth();
   const dp = document.createElement('div');
@@ -7995,7 +8019,12 @@ function customDpChangeMonth(delta){
 function customDpPick(dateStr){
   if(!_customDpInput) return;
   const el = _customDpInput;
-  el.value = dateStr;
+  if(el.classList.contains('ext-date-short')){
+    el.dataset.iso = dateStr;
+    el.value = extShortFmt(dateStr);
+  } else {
+    el.value = dateStr;
+  }
   el.dispatchEvent(new Event('change', {bubbles:true}));
   el.dispatchEvent(new Event('input', {bubbles:true}));
   closeCustomDatePicker();
@@ -8003,6 +8032,9 @@ function customDpPick(dateStr){
 function customDpClear(){
   if(!_customDpInput) return;
   const el = _customDpInput;
+  if(el.classList.contains('ext-date-short')){
+    el.dataset.iso = '';
+  }
   el.value = '';
   el.dispatchEvent(new Event('change', {bubbles:true}));
   el.dispatchEvent(new Event('input', {bubbles:true}));
@@ -8014,7 +8046,7 @@ function renderCustomDatePicker(){
   const MONTHS_UK=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
   const y = _customDpViewYear, m = _customDpViewMonth;
   const todayStr = dStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-  const selVal = _customDpInput?.value || '';
+  const selVal = (_customDpInput && getDpValue(_customDpInput)) || '';
   const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const daysInPrevMonth = new Date(y, m, 0).getDate();
