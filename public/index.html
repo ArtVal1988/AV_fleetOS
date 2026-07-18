@@ -4064,7 +4064,7 @@ function toggleSidebar(){
 }
 // Restore sidebar state immediately
 try{
-  if(localStorage.getItem('fleet_sb')==='1'){
+  if(!isMobileViewport() && localStorage.getItem('fleet_sb')==='1'){
     document.addEventListener('DOMContentLoaded',()=>{
       const a=document.querySelector('.app');
       if(a) a.classList.add('sb-collapsed');
