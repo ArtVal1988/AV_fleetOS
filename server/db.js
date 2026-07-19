@@ -63,6 +63,18 @@ db.exec(`
   );
 `);
 
+// ── Migrations for pre-existing tables from earlier schema versions ──────
+// (CREATE TABLE IF NOT EXISTS is a no-op if the table already exists under
+// an older shape, so any columns added later need an explicit ALTER here.)
+function ensureColumn(table, column, definition) {
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  } catch (e) {
+    if (!/duplicate column name/i.test(e.message || '')) throw e;
+  }
+}
+ensureColumn('documents', 'uploaded_by', 'INTEGER');
+
 // ── Seed admin ───────────────────────────────────────────────────
 const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(
   process.env.ADMIN_USERNAME || 'admin'
