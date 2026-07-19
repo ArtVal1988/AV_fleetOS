@@ -963,7 +963,7 @@ textarea{resize:vertical;min-height:56px;}
 .docs-modal-overlay.open{opacity:1;pointer-events:all;}
 .docs-modal{background:#fff;border:1px solid #e5e7eb;border-radius:14px;width:600px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;overflow-x:hidden;transform:translateY(20px);transition:transform .2s;box-shadow:0 20px 60px rgba(0,0,0,.2);-webkit-overflow-scrolling:touch;}
 .docs-modal-overlay.open .docs-modal{transform:translateY(0);}
-.docs-modal-body input, .docs-modal-body select, .docs-modal-body textarea{pointer-events:none;opacity:.7;background:#f9fafb;}
+.docs-modal-body input, .docs-modal-body select, .docs-modal-body textarea{opacity:.7;background:#f9fafb;}
 .docs-modal-body.dm-edit-active input, .docs-modal-body.dm-edit-active select, .docs-modal-body.dm-edit-active textarea{pointer-events:auto;opacity:1;background:#fff;}
 .docs-modal-body input[type=file], .docs-modal-body.dm-edit-active input[type=file]{pointer-events:none;opacity:0;}
 .docs-modal-head{padding:18px 24px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:5;gap:14px;overflow-x:hidden;}
@@ -5962,9 +5962,15 @@ function fmtMon(n,c){return n?Number(n).toLocaleString('uk-UA')+' '+(c||'₴'):'
 let docsVehicleId = null;
 
 let docsEditMode = false;
+function applyDocsFieldEditability(){
+  document.querySelectorAll('#dm-body input:not([type=file])').forEach(el=>{ el.readOnly = !docsEditMode; });
+  document.querySelectorAll('#dm-body textarea').forEach(el=>{ el.readOnly = !docsEditMode; });
+  document.querySelectorAll('#dm-body select').forEach(el=>{ el.disabled = !docsEditMode; });
+}
 
 function toggleDocsEditMode(){
   docsEditMode = !docsEditMode;
+  applyDocsFieldEditability();
   const btn = document.getElementById('dm-edit-btn');
   const saveBtn = document.getElementById('dm-save-btn');
   const body = document.getElementById('dm-body');
@@ -6158,6 +6164,7 @@ function renderDocsModalBody(v){
   </div>`;
 
   document.getElementById('dm-body').innerHTML = topGrid + ownerHtml + trustedHtml + checkHtml + buildHandoverPhotoSection(v);
+  applyDocsFieldEditability();
 }
 
 function setPoaExpiry(vid, value){
