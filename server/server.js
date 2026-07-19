@@ -32,6 +32,12 @@ app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/stickers', require('./routes/stickers'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/price-check', require('./routes/price-check'));
+app.use('/api/documents', require('./routes/documents'));
+
+// Uploaded document/photo files — served with normal caching (they're
+// content-addressed by random filename, safe to cache) but access to the
+// listing/upload/delete endpoints above still requires auth.
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Backup endpoint ──────────────────────────────────────────────
 const { auth, adminOnly } = require('./routes/auth');

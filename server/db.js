@@ -49,6 +49,18 @@ db.exec(`
     value      TEXT    NOT NULL,
     updated_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS documents (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    vehicle_id    INTEGER NOT NULL,
+    doc_type      TEXT    NOT NULL,
+    filename      TEXT    NOT NULL,
+    original_name TEXT    NOT NULL,
+    mime_type     TEXT    NOT NULL,
+    size          INTEGER NOT NULL,
+    uploaded_by   INTEGER,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // ── Seed admin ───────────────────────────────────────────────────
