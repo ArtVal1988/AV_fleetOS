@@ -19,8 +19,37 @@ const ALLOWED_MIME = new Set([
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
 
+function sanitizeFolderName(str) {
+  return String(str || '')
+    .replace(/[\/\\:*?"<>|]/g, '')   // strip filesystem-unsafe characters
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80);
+}
+
+// Human-browsable folder per vehicle: "Документи/<номер> <назва авто>/".
+// Vehicle plate/name live in vehicles.service_data (JSON), not in their own
+// columns — look them up there. Falls back to an ID-based folder if the
+// vehicle was never saved through the app (no service_data row yet).
+function getVehicleFolderName(vid) {
+  try {
+    const row = db.prepare('SELECT service_data FROM vehicles WHERE id = ?').get(vid);
+    if (row) {
+      const v = JSON.parse(row.service_data || '{}');
+      const raw = sanitizeFolderName(`${v.plate || ''} ${v.name || ''}`);
+      if (raw) return raw;
+    }
+  } catch { /* fall through to ID-based folder */ }
+  return `авто_${vid}`;
+}
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  destination: (req, file, cb) => {
+    const vid = Number(req.params.vid);
+    const dir = path.join(UPLOAD_DIR, 'Документи', getVehicleFolderName(vid));
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname || '') || '';
     cb(null, crypto.randomBytes(16).toString('hex') + ext);
@@ -36,6 +65,12 @@ const upload = multer({
   },
 });
 
+// Build a proper URL from a filesystem-relative path (encode each segment,
+// keep '/' separators — files can sit in Cyrillic/space-containing folders).
+function relPathToUrl(relPath) {
+  return '/uploads/' + relPath.split(path.sep).map(encodeURIComponent).join('/');
+}
+
 // POST /api/documents/:vid/:key — upload one file for a vehicle/doc-type
 router.post('/:vid/:key', auth, (req, res) => {
   upload.single('file')(req, res, (err) => {
@@ -45,10 +80,11 @@ router.post('/:vid/:key', auth, (req, res) => {
     const key = req.params.key;
     if (!Number.isFinite(vid)) return res.status(400).json({ error: 'Невірний ID авто' });
 
+    const relPath = path.relative(UPLOAD_DIR, req.file.path);
     const info = db.prepare(
       `INSERT INTO documents (vehicle_id, doc_type, filename, original_name, mime_type, size, uploaded_by)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(vid, key, req.file.filename, req.file.originalname, req.file.mimetype, req.file.size, req.user?.id || null);
+    ).run(vid, key, relPath, req.file.originalname, req.file.mimetype, req.file.size, req.user?.id || null);
 
     res.json({
       id: info.lastInsertRowid,
@@ -56,7 +92,7 @@ router.post('/:vid/:key', auth, (req, res) => {
       name: req.file.originalname,
       type: req.file.mimetype,
       size: req.file.size,
-      url: '/uploads/' + req.file.filename,
+      url: relPathToUrl(relPath),
     });
   });
 });
@@ -66,7 +102,7 @@ router.get('/:vid', auth, (req, res) => {
   const vid = Number(req.params.vid);
   if (!Number.isFinite(vid)) return res.status(400).json({ error: 'Невірний ID авто' });
   const rows = db.prepare('SELECT * FROM documents WHERE vehicle_id = ? ORDER BY created_at').all(vid);
-  res.json(rows);
+  res.json(rows.map(r => ({ ...r, url: relPathToUrl(r.filename) })));
 });
 
 // DELETE /api/documents/:id — remove a document (DB row + underlying file)
