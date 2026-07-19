@@ -1101,9 +1101,10 @@ input.dm-pf-val.tel{font-size:14px;}
 .dm-attach-thumb{position:relative;width:52px;height:52px;border-radius:5px;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0;cursor:pointer;}
 .dm-attach-thumb img{width:100%;height:100%;object-fit:cover;}
 .dm-attach-thumb .dm-del{position:absolute;top:-1px;right:-1px;width:16px;height:16px;background:#ef4444;color:#fff;border:none;border-radius:0 0 0 4px;font-size:9px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
-.dm-attach-thumb:hover .dm-del{display:flex;}
+.dm-edit-active .dm-attach-thumb .dm-del{display:flex;}
 .dm-attach-file{display:flex;align-items:center;gap:4px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:4px;padding:3px 8px;font-size:10px;color:#374151;position:relative;max-width:100%;}
-.dm-attach-file .dm-del-f{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1;}
+.dm-attach-file .dm-del-f{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1;display:none;}
+.dm-edit-active .dm-attach-file .dm-del-f{display:inline;}
 .dm-attach-file .dm-del-f:hover{color:#ef4444;}
 .dm-attach-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
 .dm-add-file-btn{display:none;align-items:center;gap:4px;background:none;border:1px dashed #d1d5db;border-radius:4px;padding:4px 10px;font-size:10px;color:#9ca3af;cursor:pointer;transition:all .15s;font-family:var(--font-mono);white-space:nowrap;}
