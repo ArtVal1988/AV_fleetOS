@@ -1106,7 +1106,8 @@ input.dm-pf-val.tel{font-size:14px;}
 .dm-attach-file .dm-del-f{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1;}
 .dm-attach-file .dm-del-f:hover{color:#ef4444;}
 .dm-attach-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
-.dm-add-file-btn{display:flex;align-items:center;gap:4px;background:none;border:1px dashed #d1d5db;border-radius:4px;padding:4px 10px;font-size:10px;color:#9ca3af;cursor:pointer;transition:all .15s;font-family:var(--font-mono);white-space:nowrap;}
+.dm-add-file-btn{display:none;align-items:center;gap:4px;background:none;border:1px dashed #d1d5db;border-radius:4px;padding:4px 10px;font-size:10px;color:#9ca3af;cursor:pointer;transition:all .15s;font-family:var(--font-mono);white-space:nowrap;}
+.dm-edit-active .dm-add-file-btn{display:flex;}
 .dm-add-file-btn:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
 .dm-file-count{background:#2563eb;color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:3px;font-weight:600;}
 
@@ -4007,7 +4008,7 @@ function buildAttachArea(v, key){
     });
     html+='</div>';
   }
-  html+='<button class="dm-add-file-btn" onclick="openFileInput('+v.id+',\''+key+'\')" style="'+(docsEditMode?'':'display:none')+'">'+
+  html+='<button class="dm-add-file-btn" onclick="openFileInput('+v.id+',\''+key+'\')">'+
     '📎 Прикріпити'+
     (files.length?'<span class="dm-file-count">'+files.length+'</span>':'')+
   '</button>';
