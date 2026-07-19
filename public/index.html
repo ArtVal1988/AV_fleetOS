@@ -1694,7 +1694,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div class="logistics-row" style="margin-top:8px">
+      <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
@@ -1702,6 +1702,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
         </div>
       </div>
+      <div id="bm-return-anchor-normal"></div>
       </div><!-- /bm-normal-dates-wrap -->
     <div class="msec-inner-sep" id="bm-block-extras">
       <!-- EXTRAS TOGGLE -->
@@ -1945,6 +1946,8 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
     </div>
+
+    <div id="bm-return-anchor-ext"></div>
 
     <div class="msec msec-b4" id="bm-block-4">
       <div class="km-row-compact">
@@ -2905,6 +2908,7 @@ function openBookingModal(vid=null,start=null,end=null){
   clearTimeout(ttHideTimer); tt.classList.remove('visible');
   document.getElementById('bm-ext-active').checked=false;
   document.getElementById('bm-ext-fields').style.display='none';
+  moveReturnRow(false);
   extDaysOverridden=false; extTotalOverridden=false;
   currentExtHistory = [];
   renderExtTimeline();
@@ -3030,6 +3034,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-active').checked=false;
     document.getElementById('bm-ext-fields').style.display='none';
   }
+  moveReturnRow(!!(b.extension && b.extension.active));
   currentExtHistory = (b.extensionHistory||[]).slice();
   renderExtTimeline();
   document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
@@ -4596,11 +4601,17 @@ let extDaysOverridden = false;
 let extTotalOverridden = false;
 let extTotalCurTouched = false, extPaidCurTouched = false;
 
+function moveReturnRow(toExtSection){
+  const row = document.getElementById('bm-return-row');
+  const anchor = document.getElementById(toExtSection ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
+  if(row && anchor) anchor.parentNode.insertBefore(row, anchor);
+}
 function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
   block.style.display = active ? '' : 'none';
   renderExtTimeline();
+  moveReturnRow(active);
   if(active){
     extDaysOverridden = false;
     extTotalOverridden = false;
