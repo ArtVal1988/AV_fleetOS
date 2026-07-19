@@ -1891,11 +1891,11 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="ext-box ext-box-blue" style="flex:1">
             <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" style="width:34px;text-align:center" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
+              <input type="number" id="bm-ext-days" class="no-spinner" style="width:32px;height:36px;text-align:center;box-sizing:border-box" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <label>Ціна</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:70px;text-align:center" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:64px;height:36px;text-align:center;box-sizing:border-box" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
             </div>
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
@@ -1907,7 +1907,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:50px;text-align:center" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:48px;height:36px;text-align:center;box-sizing:border-box" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
