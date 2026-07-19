@@ -221,7 +221,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* Guarantee the close button is always reachable, regardless of how much
      the header's other content (long vehicle name, status label) wants to
      overflow — this was the main "can't close the order" bug. */
-  .modal-head{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:12px 48px 12px 14px!important;position:relative;row-gap:0;}
+  .modal-head{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:12px 48px 12px 14px!important;position:sticky!important;top:0;z-index:5;background:#fff;row-gap:0;}
   .modal-head .modal-x{position:absolute;top:8px;right:8px;z-index:6;font-size:18px;background:#eef0f3;color:#6b7280;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(0,0,0,.06);}
   .modal-head>div:last-child{flex-wrap:nowrap;padding-right:0;flex-shrink:1;min-width:0;}
   .modal-title{display:none;}
