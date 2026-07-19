@@ -3968,9 +3968,9 @@ async function loadVehicleDocuments(vid){
   render();
 }
 
-function viewAttachment(data, name){
+function viewAttachment(data, name, mimeType){
   const media = document.getElementById('attach-viewer-media');
-  const isImg = data.startsWith('data:image');
+  const isImg = (mimeType && mimeType.startsWith('image/')) || data.startsWith('data:image');
   media.innerHTML = isImg
     ? '<img src="'+data+'" alt="'+name+'">'
     : '<embed src="'+data+'" type="application/pdf">';
@@ -3993,7 +3993,7 @@ function buildAttachArea(v, key){
   if(imgs.length){
     html+='<div class="dm-attach-grid">';
     imgs.forEach((f,i)=>{
-      html+='<div class="dm-attach-thumb" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\')">'+
+      html+='<div class="dm-attach-thumb" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')">'+
         '<img src="'+f.url+'" alt="'+f.name+'">'+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
       '</div>';
@@ -4054,7 +4054,7 @@ function buildKaskoPhotoSection(v){
   let html='<div style="margin-top:12px"><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px;font-weight:600">📷 Фото авто на момент страхування</div>';
   html+='<div class="im-photo-grid">';
   photos.forEach((p,i)=>{
-    html+='<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\')">'+
+    html+='<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\',\''+(p.type||'')+'\')">'+
       '<img src="'+p.data+'" alt="'+p.name+'">'+
       '<button class="im-photo-del" onclick="event.stopPropagation();removeKaskoPhoto('+v.id+','+i+')">✕</button>'+
     '</div>';
@@ -5823,7 +5823,7 @@ function renderCaseFilesList(){
   if(!caseFilesTemp.length){ el.innerHTML = ''; return; }
   el.innerHTML = caseFilesTemp.map((f,i)=>
     '<div class="cm-file-row">'+
-      '<span class="cm-file-icon" style="cursor:pointer" onclick="viewAttachment(\''+f.data+'\',\''+f.name+'\')" title="Переглянути">'+(f.type&&f.type.startsWith('image/')?'🖼':'📄')+'</span>'+
+      '<span class="cm-file-icon" style="cursor:pointer" onclick="viewAttachment(\''+f.data+'\',\''+f.name+'\',\''+(f.type||'')+'\')" title="Переглянути">'+(f.type&&f.type.startsWith('image/')?'🖼':'📄')+'</span>'+
       '<input type="text" class="cm-file-title" value="'+(f.title||'').replace(/"/g,'&quot;')+'" placeholder="Назва файлу" oninput="updateCaseFileTitle('+i+',this.value)">'+
       '<span class="cm-file-name" title="'+f.name+'">'+f.name+'</span>'+
       '<button class="cm-file-del" onclick="removeCaseFile('+i+')">✕</button>'+
@@ -6181,7 +6181,7 @@ function buildHandoverPhotoSection(v){
   let html = '<div class="dm-sec"><div class="dm-sec-head"><span class="dm-sec-icon">📷</span><span class="dm-sec-title">Фото авто на момент передачі компанії</span></div>';
   html += '<div class="im-photo-grid">';
   photos.forEach((p,i) => {
-    html += '<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\')">'+
+    html += '<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\',\''+(p.type||'')+'\')">'+
       '<img src="'+p.data+'" alt="'+p.name+'">'+
       '<button class="im-photo-del" onclick="event.stopPropagation();removeHandoverPhoto('+v.id+','+i+')">✕</button>'+
     '</div>';
