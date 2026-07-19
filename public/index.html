@@ -1126,6 +1126,10 @@ input.dm-pf-val.tel{font-size:14px;}
 .attach-viewer-btn:hover{background:rgba(255,255,255,.22);}
 .attach-viewer-close{position:fixed;top:16px;right:16px;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;opacity:1;z-index:910;display:flex;align-items:center;justify-content:center;}
 .attach-viewer-close:hover{opacity:1;}
+.attach-viewer-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:910;display:none;align-items:center;justify-content:center;line-height:1;}
+.attach-viewer-nav:hover{background:rgba(0,0,0,.75);}
+.attach-viewer-prev{left:12px;}
+.attach-viewer-next{right:12px;}
 .im-photo-thumb img{width:100%;height:100%;object-fit:cover;}
 .im-photo-del{position:absolute;top:0;right:0;width:18px;height:18px;background:rgba(239,68,68,.85);color:#fff;border:none;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:0 0 0 4px;}
 .im-photo-thumb:hover .im-photo-del{display:flex;}
@@ -3968,6 +3972,48 @@ async function loadVehicleDocuments(vid){
   render();
 }
 
+let _attachGalleries = {};
+let _attachGalleryId = null, _attachGalleryIndex = 0;
+function registerAttachGallery(galleryId, items){ _attachGalleries[galleryId] = items; }
+function viewAttachmentGallery(galleryId, index){
+  const items = _attachGalleries[galleryId];
+  if(!items || !items[index]) return;
+  _attachGalleryId = galleryId;
+  _attachGalleryIndex = index;
+  renderAttachViewerCurrent();
+}
+function attachViewerNav(delta){
+  const items = _attachGalleryId ? _attachGalleries[_attachGalleryId] : null;
+  if(!items || items.length < 2) return;
+  _attachGalleryIndex = (_attachGalleryIndex + delta + items.length) % items.length;
+  renderAttachViewerCurrent();
+}
+function renderAttachViewerCurrent(){
+  const items = _attachGalleries[_attachGalleryId];
+  const item = items[_attachGalleryIndex];
+  const media = document.getElementById('attach-viewer-media');
+  const isImg = (item.type && item.type.startsWith('image/')) || (item.src||'').startsWith('data:image');
+  media.innerHTML = isImg
+    ? '<img src="'+item.src+'" alt="'+item.name+'">'
+    : '<embed src="'+item.src+'" type="application/pdf">';
+  const label = items.length > 1 ? item.name+' ('+(_attachGalleryIndex+1)+'/'+items.length+')' : item.name;
+  document.getElementById('attach-viewer-name').textContent = label;
+  const dl = document.getElementById('attach-viewer-download');
+  dl.href = item.src;
+  dl.setAttribute('download', item.name||'file');
+  document.getElementById('attach-viewer').classList.add('open');
+  const prevBtn = document.getElementById('attach-viewer-prev');
+  const nextBtn = document.getElementById('attach-viewer-next');
+  const showNav = items.length > 1;
+  if(prevBtn) prevBtn.style.display = showNav ? 'flex' : 'none';
+  if(nextBtn) nextBtn.style.display = showNav ? 'flex' : 'none';
+}
+document.addEventListener('keydown', e => {
+  if(!document.getElementById('attach-viewer')?.classList.contains('open')) return;
+  if(e.key === 'ArrowLeft') attachViewerNav(-1);
+  if(e.key === 'ArrowRight') attachViewerNav(1);
+  if(e.key === 'Escape') closeAttachViewer();
+});
 function viewAttachment(data, name, mimeType){
   const media = document.getElementById('attach-viewer-media');
   const isImg = (mimeType && mimeType.startsWith('image/')) || data.startsWith('data:image');
@@ -3979,21 +4025,29 @@ function viewAttachment(data, name, mimeType){
   dl.href = data;
   dl.setAttribute('download', name||'file');
   document.getElementById('attach-viewer').classList.add('open');
+  const prevBtn = document.getElementById('attach-viewer-prev');
+  const nextBtn = document.getElementById('attach-viewer-next');
+  _attachGalleryId = null;
+  if(prevBtn) prevBtn.style.display = 'none';
+  if(nextBtn) nextBtn.style.display = 'none';
 }
 function closeAttachViewer(){
   document.getElementById('attach-viewer').classList.remove('open');
   document.getElementById('attach-viewer-media').innerHTML='';
+  _attachGalleryId = null;
 }
 
 function buildAttachArea(v, key){
   const files=(v.docs?.files?.[key])||[];
   const imgs=files.filter(f=>f.type.startsWith('image/'));
   const docs=files.filter(f=>!f.type.startsWith('image/'));
+  const galleryId = 'docs-'+v.id+'-'+key;
+  registerAttachGallery(galleryId, imgs.map(f=>({src:f.url, name:f.name, type:f.type})));
   let html='<div class="dm-attach-area" onclick="event.stopPropagation()">';
   if(imgs.length){
     html+='<div class="dm-attach-grid">';
     imgs.forEach((f,i)=>{
-      html+='<div class="dm-attach-thumb" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')">'+
+      html+='<div class="dm-attach-thumb" onclick="viewAttachmentGallery(\''+galleryId+'\','+i+')">'+
         '<img src="'+f.url+'" alt="'+f.name+'">'+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
       '</div>';
@@ -8399,7 +8453,9 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 <div class="attach-viewer-overlay" id="attach-viewer">
   <div class="attach-viewer-inner">
     <button class="attach-viewer-close" onclick="closeAttachViewer()">✕</button>
+    <button class="attach-viewer-nav attach-viewer-prev" id="attach-viewer-prev" onclick="attachViewerNav(-1)">‹</button>
     <div id="attach-viewer-media"></div>
+    <button class="attach-viewer-nav attach-viewer-next" id="attach-viewer-next" onclick="attachViewerNav(1)">›</button>
     <div class="attach-viewer-bar">
       <span class="attach-viewer-name" id="attach-viewer-name"></span>
       <a class="attach-viewer-btn" id="attach-viewer-download" download>⬇ Завантажити</a>
