@@ -143,10 +143,25 @@ git remote set-url origin https://<TOKEN>@github.com/ArtVal1988/AV_fleetOS.git
     Перевірено: `CATEGORIES`/`ALL_VEHICLES` (флот авто) — чисті, без
     захардкоджених значень, весь список підвантажується з сервера.
 
+11. **КРИТИЧНО #2: `update.sh`/`update-staging.sh` НЕ копіювали
+    `server/package.json`** (виявлено 19.07.2026, спричинило прод 502).
+    Коли додався новий npm-пакет (`multer` для `/api/documents`), скрипт
+    деплою копіював `server.js`/`db.js`/`routes/*.js`, але НЕ
+    `package.json` — тому `npm install --production` на сервері бачив
+    СТАРИЙ package.json (без multer) і чесно рапортував "up to date",
+    нічого не встановлюючи. Процес падав з `Cannot find module 'multer'`.
+    Виправлено: обидва скрипти тепер явно копіюють і `package.json` теж.
+    **Урок:** при додаванні НОВОЇ npm-залежності — завжди перевіряти, що
+    деплой-скрипт копіює `package.json`, а не лише файли коду. Якщо після
+    деплою 502 і в логах `Cannot find module` — перше, що перевіряти:
+    `diff /var/www/AV_fleetOS/server/package.json
+    /var/www/AV_fleetOS-server/package.json`.
+
 ## Інструменти для деплою/перевірки на сервері
 
 - `/root/update.sh` — деплой на **прод** (git reset --hard + копіювання
-  public/ і server/ + npm install + pm2 restart AV_fleetOS)
+  public/, server.js, db.js, package.json, routes/* + npm install +
+  pm2 restart AV_fleetOS)
 - `/root/update-staging.sh` — те саме, але на **staging** (порт 3001,
   окрема БД, pm2-процес AV_fleetOS-staging)
 - `/root/verify-deploy.sh [prod|staging]` — звіряє md5 кожного файлу з
