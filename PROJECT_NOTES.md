@@ -157,6 +157,31 @@ git remote set-url origin https://<TOKEN>@github.com/ArtVal1988/AV_fleetOS.git
     `diff /var/www/AV_fleetOS/server/package.json
     /var/www/AV_fleetOS-server/package.json`.
 
+12. **НАЙХИТРІШИЙ БАГ СЕСІЇ: `flex: 0 0 <px>` на елементі всередині
+    `flex-direction:column`-контейнера керує ВИСОТОЮ, не шириною**
+    (19.07.2026, поле "Ціна" продовження оренди чіплялось за 64px висоти,
+    хоча ВСІ height-правила — inline, stylesheet, навіть примусовий JS
+    `style.setProperty('height','20px','important')` — казали 36px/20px, а
+    computed height вперто лишалась 64px = точно значенню ширини). Причина:
+    `.ext-fin-field` має `display:flex;flex-direction:column`. Правило
+    `.ext-fin-field input#bm-ext-rate{flex:0 0 64px!important;width:64px!important;}`
+    мало на меті задати ШИРИНУ через третій параметр flex (flex-basis), але
+    flex-basis завжди керує розміром по ГОЛОВНІЙ ОСІ контейнера — а в
+    column-контейнері головна вісь ВЕРТИКАЛЬНА. Тобто "64px" застосувався
+    як ВИСОТА, а не ширина, і через `flex-shrink:0` елемент не міг
+    зменшитись нижче цього значення НАВІТЬ якщо `height` каже інше —
+    flex-basis з flex-grow:0/flex-shrink:0 є абсолютно жорстким і виграє
+    в flex-алгоритмі розкладки над звичайним `height`.
+    Виправлення: `flex:0 0 auto!important` (замість пікселів), розмір
+    задавати ЛИШЕ через `width`. **Урок для діагностики на майбутнє:** якщо
+    `height`/`width` не піддаються ЖОДНИМ способом (навіть форсованому JS
+    з `!important`) — перевіряти `flex-basis` (третє значення в `flex:`
+    shorthand) на предмет випадково заданого пікселя в
+    `flex-direction:column`-контейнері (або навпаки — ширина/`flex-basis`
+    в `row`-контейнері). `getComputedStyle(el).flexBasis` і
+    `getComputedStyle(el.parentElement).flexDirection` — перші команди для
+    перевірки цієї гіпотези.
+
 ## Інструменти для деплою/перевірки на сервері
 
 - `/root/update.sh` — деплой на **прод** (git reset --hard + копіювання
