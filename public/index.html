@@ -3779,7 +3779,7 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
     const rpTiers = {}; (rpData?.tiers||[]).forEach(t=>rpTiers[t.label]=t.usd);
 
     const cell = (val, color) => val!=null
-      ? `<div style="text-align:center;font-weight:700;color:${color}">${val} $</div>`
+      ? `<div style="text-align:center;font-weight:400;color:${color}">${val} $</div>`
       : `<div style="text-align:center;color:#d1d5db">—</div>`;
 
     const headerRow = `
@@ -3793,14 +3793,14 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       ${cell(rpTiers[key], '#166534')}`).join('');
 
     const depositRow = (trData?.deposit || rpData?.deposit) ? `
-      ${cell(trData?.deposit, '#1d4ed8')}
-      <div style="text-align:center;color:#9ca3af;font-size:9px">Застава</div>
-      ${cell(rpData?.deposit, '#166534')}` : '';
+      <div style="text-align:center;font-weight:400;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $' : '—'}</div>
+      <div style="text-align:center;color:#9ca3af;font-size:9px;background:#fef3c7;border-radius:4px;padding:2px 0">Застава</div>
+      <div style="text-align:center;font-weight:400;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $' : '—'}</div>` : '';
 
     const footerRow = `
-      <div style="text-align:center">${priceLink ? `<a href="${priceLink}" target="_blank" style="font-size:10px;color:#1d4ed8">Відкрити →</a>` : ''}</div>
+      <div style="text-align:center">${priceLink ? `<a href="${priceLink}" target="_blank" style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 10px;text-decoration:none">Посилання</a>` : ''}</div>
       <div></div>
-      <div style="text-align:center">${priceLink2 ? `<a href="${priceLink2}" target="_blank" style="font-size:10px;color:#166534">Відкрити →</a>` : ''}</div>`;
+      <div style="text-align:center">${priceLink2 ? `<a href="${priceLink2}" target="_blank" style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px 10px;text-decoration:none">Посилання</a>` : ''}</div>`;
 
     section.innerHTML = `
       <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
