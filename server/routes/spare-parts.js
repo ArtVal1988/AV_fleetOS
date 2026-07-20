@@ -10,12 +10,12 @@ router.get('/', auth, (req, res) => {
 
 // POST /api/spare-parts — add a new part
 router.post('/', auth, (req, res) => {
-  const { name, quantity, price, supplier } = req.body;
+  const { name, partNumber, quantity, price, supplier } = req.body;
   if (!name || !String(name).trim()) return res.status(400).json({ error: 'Назва обов\'язкова' });
   const info = db.prepare(
-    `INSERT INTO spare_parts (name, quantity, price, supplier, updated_at)
-     VALUES (?, ?, ?, ?, datetime('now'))`
-  ).run(String(name).trim(), Number(quantity) || 0, Number(price) || 0, supplier ? String(supplier).trim() : null);
+    `INSERT INTO spare_parts (name, part_number, quantity, price, supplier, updated_at)
+     VALUES (?, ?, ?, ?, ?, datetime('now'))`
+  ).run(String(name).trim(), partNumber ? String(partNumber).trim() : null, Number(quantity) || 0, Number(price) || 0, supplier ? String(supplier).trim() : null);
   const row = db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(info.lastInsertRowid);
   res.json(row);
 });
@@ -25,11 +25,12 @@ router.put('/:id', auth, (req, res) => {
   const id = Number(req.params.id);
   const existing = db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Не знайдено' });
-  const { name, quantity, price, supplier } = req.body;
+  const { name, partNumber, quantity, price, supplier } = req.body;
   db.prepare(
-    `UPDATE spare_parts SET name=?, quantity=?, price=?, supplier=?, updated_at=datetime('now') WHERE id=?`
+    `UPDATE spare_parts SET name=?, part_number=?, quantity=?, price=?, supplier=?, updated_at=datetime('now') WHERE id=?`
   ).run(
     name != null ? String(name).trim() : existing.name,
+    partNumber != null ? String(partNumber).trim() : existing.part_number,
     quantity != null ? Number(quantity) : existing.quantity,
     price != null ? Number(price) : existing.price,
     supplier != null ? String(supplier).trim() : existing.supplier,

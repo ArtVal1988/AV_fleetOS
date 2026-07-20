@@ -1432,6 +1432,10 @@ input.dm-pf-val.tel{font-size:14px;}
       <label class="vf-lbl">Назва</label>
       <input id="sp-form-name" type="text" class="vf-inp" placeholder="Гальмівні колодки передні" style="width:100%">
     </div>
+    <div style="margin-bottom:10px">
+      <label class="vf-lbl">Номер запчастини (артикул)</label>
+      <input id="sp-form-partnum" type="text" class="vf-inp" placeholder="GDB1330" style="width:100%">
+    </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <div style="flex:1">
         <label class="vf-lbl">Кількість на складі</label>
@@ -7022,7 +7026,7 @@ function closeSparePartsPanel(){
 function renderSparePartsList(){
   const list = document.getElementById('spare-parts-list');
   const q = (document.getElementById('sp-search')?.value||'').trim().toLowerCase();
-  const matches = p => !q || p.name.toLowerCase().includes(q) || (p.supplier||'').toLowerCase().includes(q);
+  const matches = p => !q || p.name.toLowerCase().includes(q) || (p.supplier||'').toLowerCase().includes(q) || (p.part_number||'').toLowerCase().includes(q);
   const items = SPARE_PARTS.filter(matches);
   if(!items.length){
     list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Немає запчастин. Натисніть "+ Додати запчастину".</div>';
@@ -7032,7 +7036,7 @@ function renderSparePartsList(){
     const low = p.quantity <= 0;
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:${low?'#fef2f2':'rgba(255,255,255,.75)'}">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#1a1d26">${p.name}</div>
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${p.name}${p.part_number?` <span style="font-weight:400;color:#9ca3af;font-family:var(--font-mono)">· ${p.part_number}</span>`:''}</div>
         <div style="font-size:11px;color:#6b7280;margin-top:2px">${p.supplier?('Постачальник: '+p.supplier+' · '):''}${p.price?p.price.toLocaleString('uk-UA')+' ₴/шт':'ціна не вказана'}</div>
       </div>
       <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:${low?'#dc2626':'#166534'};background:${low?'#fee2e2':'#f0fdf4'};border-radius:6px;padding:4px 10px;white-space:nowrap">${p.quantity} шт</span>
@@ -7046,6 +7050,7 @@ function openSparePartForm(id){
   document.getElementById('sp-form-title').textContent = p ? 'Редагувати запчастину' : 'Нова запчастина';
   document.getElementById('sp-form-id').value = id || '';
   document.getElementById('sp-form-name').value = p?.name || '';
+  document.getElementById('sp-form-partnum').value = p?.part_number || '';
   document.getElementById('sp-form-qty').value = p?.quantity ?? '';
   document.getElementById('sp-form-price').value = p?.price ?? '';
   document.getElementById('sp-form-supplier').value = p?.supplier || '';
@@ -7060,6 +7065,7 @@ async function saveSparePartForm(){
   if(!name){ alert('Вкажіть назву запчастини'); return; }
   const data = {
     name,
+    partNumber: document.getElementById('sp-form-partnum').value.trim(),
     quantity: parseFloat(document.getElementById('sp-form-qty').value) || 0,
     price: parseFloat(document.getElementById('sp-form-price').value) || 0,
     supplier: document.getElementById('sp-form-supplier').value.trim(),

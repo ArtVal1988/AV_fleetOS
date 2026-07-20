@@ -65,6 +65,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS spare_parts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     name          TEXT    NOT NULL,
+    part_number   TEXT,
     quantity      REAL    NOT NULL DEFAULT 0,
     price         REAL    NOT NULL DEFAULT 0,
     supplier      TEXT,
@@ -84,6 +85,7 @@ function ensureColumn(table, column, definition) {
   }
 }
 ensureColumn('documents', 'uploaded_by', 'INTEGER');
+ensureColumn('spare_parts', 'part_number', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
 const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(
