@@ -169,13 +169,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .th-vehicle,.td-vehicle{min-width:96px!important;width:96px!important;max-width:96px!important;padding:8px 4px!important;}
   .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none!important;}
   .td-vehicle .veh-plate-badge{font-size:11px!important;padding:3px 2px!important;letter-spacing:0!important;width:82px!important;}
-  .mobile-only-btn{display:inline-flex!important;}
-  /* Експериментальний компактний огляд — показати весь місяць без
-     горизонтального скролу (натискається кнопкою 🔍 біля навігації). */
-  .compact-calendar .td-day,.compact-calendar .th-day{width:10px!important;min-width:10px!important;padding:2px 0!important;}
-  .compact-calendar .th-vehicle,.compact-calendar .td-vehicle{min-width:70px!important;width:70px!important;max-width:70px!important;}
-  .compact-calendar .td-vehicle .veh-plate-badge{width:60px!important;font-size:9px!important;padding:2px 1px!important;}
-  .compact-calendar .th-day-num,.compact-calendar .th-day-dow{font-size:7px!important;}
   .th-vehicle{font-size:0!important;}
   .calendar-scroll{scroll-padding-left:96px;}
   #specs-quick-actions{display:flex!important;}
@@ -1612,7 +1605,6 @@ input.dm-pf-val.tel{font-size:14px;}
         <button class="mn-btn" onclick="shiftMonth(1)">›</button>
       </div>
       <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
-      <button class="mn-btn mobile-only-btn" id="compact-view-btn" onclick="toggleCompactCalendar()" title="Показати весь місяць на екрані" style="display:none">🔍</button>
       <!-- NAV PICKER POPUP -->
       <div class="nav-picker" id="nav-picker" style="display:none">
       <div class="np-section">
@@ -4362,13 +4354,6 @@ function shiftMonth(d){
   viewYear=viewStartDate.getFullYear();
   viewMonth=viewStartDate.getMonth();
   render();
-}
-function toggleCompactCalendar(){
-  const app = document.querySelector('.app');
-  const btn = document.getElementById('compact-view-btn');
-  const on = app.classList.toggle('compact-calendar');
-  if(btn) btn.style.background = on ? '#2563eb' : '';
-  if(btn) btn.style.color = on ? '#fff' : '';
 }
 function goToday(){
   viewStartDate=new Date(today);
