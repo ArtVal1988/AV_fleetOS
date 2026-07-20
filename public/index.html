@@ -3567,6 +3567,33 @@ function viewAttachment(data, name, mimeType){
   if(prevBtn) prevBtn.style.display = 'none';
   if(nextBtn) nextBtn.style.display = 'none';
 }
+async function shareCurrentAttachment(){
+  const dl = document.getElementById('attach-viewer-download');
+  const url = dl.href;
+  const name = dl.getAttribute('download') || 'file';
+  const fullUrl = url.startsWith('data:') ? url : (url.startsWith('http') ? url : location.origin + url);
+
+  if(navigator.share){
+    try{
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], name, {type: blob.type || 'application/octet-stream'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:name});
+        return;
+      }
+    }catch(e){ /* fall through to link-share below */ }
+    if(!url.startsWith('data:')){
+      try{ await navigator.share({url: fullUrl, title:name}); return; }catch(e){}
+    }
+  }
+  // Fallback: copy link to clipboard
+  try{
+    await navigator.clipboard.writeText(fullUrl);
+    alert('Посилання скопійовано в буфер обміну — вставте в потрібний чат.');
+  }catch(e){
+    prompt('Скопіюйте посилання вручну:', fullUrl);
+  }
+}
 function closeAttachViewer(){
   document.getElementById('attach-viewer').classList.remove('open');
   document.getElementById('attach-viewer-media').innerHTML='';
@@ -8159,6 +8186,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     <div class="attach-viewer-bar">
       <span class="attach-viewer-name" id="attach-viewer-name"></span>
       <a class="attach-viewer-btn" id="attach-viewer-download" download>⬇ Завантажити</a>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-share" onclick="shareCurrentAttachment()">📤 Надіслати</button>
     </div>
   </div>
 </div>
