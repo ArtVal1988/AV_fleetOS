@@ -2341,7 +2341,7 @@ function buildVehCell(v){
   var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
-      '<div class="veh-name-click" onclick="highlightRow('+v.id+');if(isMobileViewport())showVehicleSpecs(event,'+v.id+')" title="Виділити рядок">'+
+      '<div class="veh-name-click" onclick="mobileVehNameTap(event,'+v.id+')" title="Виділити рядок">'+
         '<span class="veh-plate-badge">'+v.plate+'</span>'+
         '<span class="veh-name">'+stripYear(v.name)+'</span>'+
       '</div>'+
@@ -3718,6 +3718,15 @@ try{
 }catch(e){}
 
 /* ── ROW HIGHLIGHT ── */
+function mobileVehNameTap(e, vid){
+  if(isMobileViewport()){
+    const wasAlreadyHighlighted = (highlightedVid === vid);
+    highlightRow(vid);
+    if(wasAlreadyHighlighted) showVehicleSpecs(e, vid);
+  } else {
+    highlightRow(vid);
+  }
+}
 function highlightRow(vid){
   if(highlightedVid===vid){
     highlightedVid=null;
