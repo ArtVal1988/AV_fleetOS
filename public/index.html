@@ -3798,9 +3798,9 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $' : '—'}</div>` : '';
 
     const footerRow = `
-      <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 10px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>
+      <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>
       <div></div>
-      <div style="text-align:center">${priceLink2 ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink2)}, this)' style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px 10px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>`;
+      <div style="text-align:center">${priceLink2 ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink2)}, this)' style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>`;
 
     section.innerHTML = `
       <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
