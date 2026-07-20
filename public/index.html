@@ -915,8 +915,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-ext{background:#fffbeb;border-left-color:#fbbf24;}
 #bm-return-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 #bm-pickup-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
-.fin-box{position:relative;background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 10px 8px;}
-.fin-box label{position:absolute!important;top:4px;left:10px;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af!important;white-space:nowrap;}
+.fin-label-style label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af!important;}
 .msec-b5{background:#fef2f2;border-left-color:#f87171;}
 .msec-b6{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid rgba(37,99,235,.15);}
@@ -1812,12 +1811,12 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec-inner-sep" id="bm-block-3">
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row">
-        <div class="fin-field fin-days fin-box" style="flex:0 0 60px">
+        <div class="fin-field fin-days fin-label-style" style="flex:0 0 60px">
           <label>Кількість</label>
           <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
             style="text-align:center;font-family:var(--font-mono);">
         </div>
-        <div class="fin-field fin-rate fin-box">
+        <div class="fin-field fin-rate fin-label-style">
           <label id="bm-rate-label">Вартість</label>
           <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
         </div>
@@ -1831,7 +1830,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
           </div>
         </div>
-        <div class="fin-field fin-rate2 fin-box" id="bm-rate-row" style="display:none">
+        <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="display:none">
           <label id="bm-rate-label2">Курс</label>
           <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01"
             oninput="updateVatPreview()">
@@ -1841,7 +1840,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="number" id="bm-vat" value="20" min="0" max="100"
             style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
         </div>
-        <div class="fin-field fin-deposit fin-box" id="bm-deposit-field">
+        <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field">
           <label>Депозит</label>
           <div class="dep-inline-wrap">
             <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" oninput="formatThousandsInput(this)">
