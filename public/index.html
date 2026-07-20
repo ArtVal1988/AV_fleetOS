@@ -4034,6 +4034,7 @@ function saveCurrentKm(vid){
   const left = (v.service.nextKm||0) - val;
   v.service.status = left<=0?'danger':left<=2000?'warn':'ok';
   hideKmEditForm(vid);
+  persistVehicle(v);
   renderToKmBar(v);
   renderToTabs(v);
   render(); // update icon colors in calendar
@@ -5196,6 +5197,7 @@ function saveWork(){
   }
 
   document.getElementById('add-work-modal').classList.remove('open');
+  persistVehicle(v);
   renderToKmBar(v); renderToTabs(v); render();
 }
 
@@ -5401,6 +5403,7 @@ function saveCase(){
     v.insuranceCases.push({id:maxId+1, ...data});
   }
   closeCaseModal();
+  persistVehicle(v);
   renderInsuranceModal(v);
 }
 function deleteCase(){
@@ -5492,6 +5495,7 @@ function saveCalOsago(){
     ? notesText + ' (' + _currentUser.name + ', ' + fmt(new Date().toISOString().split('T')[0]) + ')'
     : notesText;
   v.osago={insurer:document.getElementById('co-insurer').value.trim(),policyNum:document.getElementById('co-policy').value.trim(),end,notes};
+  persistVehicle(v);
   document.getElementById('cal-osago-modal').classList.remove('open');
   renderInsuranceModal(v); render();
 }
@@ -5567,6 +5571,7 @@ function saveCalKasko(){
     payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:calKPaid[q]||false}));
   }
   v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,paymentType:calKPayType,totalPremium:parseFloat(document.getElementById('ck-total').value)||0,deductible:parseFloat(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
+  persistVehicle(v);
   document.getElementById('cal-kasko-modal').classList.remove('open');
   renderInsuranceModal(v); render();
 }
@@ -5875,6 +5880,7 @@ function saveTrustedPerson(vid){
     inn:      document.getElementById('tr-inn-'+vid).value.trim(),
   };
   renderDocsModalBody(v);
+  persistVehicle(v);
   render();
 }
 function removeTrustedPerson(vid){
