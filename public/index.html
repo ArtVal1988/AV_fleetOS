@@ -4395,7 +4395,7 @@ function renderDashboard(){
     <div class="msec-b5">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        ${dashAlertList('🛡 ОСАГО спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
+        ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
         ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(v.kasko.end))}
         ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => (v.service.nextKm-v.service.lastKm>0? (v.service.nextKm-v.service.lastKm)+' км залишилось':'Пора на ТО'))}
         ${dashAlertList('📄 Неповний комплект документів', missingDocs, v => v.docs.missingCount+' відсутньо')}
@@ -5212,6 +5212,7 @@ function openInsuranceModal(vid){
   document.getElementById('im-vehname').textContent = stripYear(v.name);
   renderInsuranceModal(v);
   document.getElementById('ins-modal').classList.add('open');
+  loadVehicleDocuments(vid).then(()=>{ if(insVehicleId===vid) renderInsuranceModal(v); });
 }
 function closeInsuranceModal(){ document.getElementById('ins-modal').classList.remove('open'); insVehicleId=null; }
 
@@ -5219,10 +5220,10 @@ function renderInsuranceModal(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   const fmtMn = n => n ? Number(n).toLocaleString('uk-UA')+' ₴' : '—';
 
-  // ── ОСАГО ────────────────────────────────
+  // ── ОСЦПВ ────────────────────────────────
   let osagoHtml = '';
   if(!v.osago){
-    osagoHtml = '<div class="im-no-policy">🛡️<br>Поліс ОСАГО не додано<br><button class="im-add-btn" onclick="openCalOsagoEdit('+v.id+')">+ Додати ОСАГО</button></div>';
+    osagoHtml = '<div class="im-no-policy">🛡️<br>Поліс ОСЦПВ не додано<br><button class="im-add-btn" onclick="openCalOsagoEdit('+v.id+')">+ Додати ОСЦПВ</button></div>';
   } else {
     const d = daysFromNow(v.osago.end);
     const col = insColor(d);
@@ -5242,7 +5243,9 @@ function renderInsuranceModal(v){
       (v.osago.notes?'<div class="im-fields">' +
         '<div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+v.osago.notes+'</div></div>' +
       '</div>':'') +
-      '<div class="im-action-row"><div class="im-btn hi" onclick="openCalOsagoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalOsago('+v.id+')">↻ Поновити</div></div>';
+      '<div class="im-action-row"><div class="im-btn hi" onclick="openCalOsagoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalOsago('+v.id+')">↻ Поновити</div>'+
+      ((v.docs?.files?.['osago-policy']?.length) ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(v.docs.files['osago-policy'][0].url)+','+JSON.stringify(v.docs.files['osago-policy'][0].name)+','+JSON.stringify(v.docs.files['osago-policy'][0].type)+')\'>📄 Переглянути</div>' : '')+
+      '</div>';
   }
 
   // ── КАСКО ────────────────────────────────
@@ -5286,7 +5289,7 @@ function renderInsuranceModal(v){
   }
 
   document.getElementById('im-body').innerHTML =
-    '<div class="im-section"><div class="im-sec-head"><div class="im-sec-label osago">ОСАГО — Обов’язкове</div><span class="im-type-badge">обов’язкове</span></div>'+osagoHtml+'</div>' +
+    '<div class="im-section"><div class="im-sec-head"><div class="im-sec-label osago">ОСЦПВ — Обов’язкове</div><span class="im-type-badge">обов’язкове</span></div>'+osagoHtml+'</div>' +
     '<div class="im-section"><div class="im-sec-head"><div class="im-sec-label kasko">КАСКО — Добровільне</div><span class="im-type-badge">добровільне</span></div>'+kaskoHtml+'</div>' +
     buildInsuranceCasesSection(v);
 }
@@ -5307,7 +5310,7 @@ function buildInsuranceCasesSection(v){
     body = cases.slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map(c=>{
       const cat = CASE_CATEGORIES.find(x=>x.key===c.category)||CASE_CATEGORIES[CASE_CATEGORIES.length-1];
       const st = CASE_STATUSES.find(x=>x.key===c.status)||CASE_STATUSES[0];
-      const policyLbl = c.policy==='osago'?'ОСАГО':'КАСКО';
+      const policyLbl = c.policy==='osago'?'ОСЦПВ':'КАСКО';
       const fileCount = (c.files||[]).length;
       const showAmounts = c.status==='paid' || Number(c.damageAmount)>0;
       const amountsRow = showAmounts ?
@@ -5450,7 +5453,7 @@ function renderCaseFilesList(){
   ).join('');
 }
 
-/* ОСАГО edit */
+/* ОСЦПВ edit */
 function getInsurerSuggestions(){
   const counts = {};
   ALL_VEHICLES.forEach(v=>{
@@ -5463,7 +5466,7 @@ function getInsurerSuggestions(){
 function openCalOsagoEdit(vid){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v)return;
   insVehicleId=vid;
-  document.getElementById('cam-title').textContent='ОСАГО · '+v.plate;
+  document.getElementById('cam-title').textContent='ОСЦПВ · '+v.plate;
   const o=v.osago||{};
   document.getElementById('co-insurer').value=o.insurer||'';
   document.getElementById('co-policy').value=o.policyNum||'';
@@ -8043,11 +8046,11 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
 <div class="docs-modal-overlay" id="cal-osago-modal">
   <div class="docs-modal" style="width:440px">
     <div class="docs-modal-head">
-      <div><div class="docs-modal-title" id="cam-title">ОСАГО</div></div>
+      <div><div class="docs-modal-title" id="cam-title">ОСЦПВ</div></div>
       <button class="docs-modal-x" onclick="document.getElementById('cal-osago-modal').classList.remove('open')">✕</button>
     </div>
     <div class="docs-modal-body">
-      <div class="msec-title" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">Деталі полісу ОСАГО</div>
+      <div class="msec-title" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">Деталі полісу ОСЦПВ</div>
       <datalist id="insurer-datalist"></datalist>
       <div class="fgrid">
         <div class="fg full"><label>Страхова компанія</label><input type="text" id="co-insurer" list="insurer-datalist" placeholder="АХА Страхування"></div>
@@ -8062,7 +8065,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     </div>
     <div class="modal-footer" style="padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-ghost" onclick="document.getElementById('cal-osago-modal').classList.remove('open')">Скасувати</button>
-      <button class="btn btn-primary" onclick="saveCalOsago()">Зберегти ОСАГО</button>
+      <button class="btn btn-primary" onclick="saveCalOsago()">Зберегти ОСЦПВ</button>
     </div>
   </div>
 </div>
@@ -8116,7 +8119,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
       <div class="fgrid">
         <div class="fg"><label>Дата випадку</label><input type="date" id="cm-date"></div>
         <div class="fg"><label>Поліс</label>
-          <select id="cm-policy"><option value="kasko">КАСКО</option><option value="osago">ОСАГО</option></select>
+          <select id="cm-policy"><option value="kasko">КАСКО</option><option value="osago">ОСЦПВ</option></select>
         </div>
         <div class="fg"><label>Категорія</label><select id="cm-category"></select></div>
         <div class="fg"><label>Статус</label><select id="cm-status"></select></div>
