@@ -3305,6 +3305,7 @@ function saveBooking(){
         veh.service.lastDate=document.getElementById('bm-return-date')?.value||new Date().toISOString().split('T')[0];
         const left=(veh.service.nextKm||0)-endKm;
         veh.service.status=left<=0?'danger':left<=2000?'warn':'ok';
+        persistVehicle(veh);
       }
     }
   }
@@ -4327,7 +4328,16 @@ function updateKmDiff(){
       }
     } else {
       badge.style.display='none';
-      if(avgBadge) avgBadge.style.display='none';
+      if(avgBadge){
+        if(s>0 && e>0 && e<s){
+          avgBadge.innerHTML = `⚠️ <span>Пробіг в кінці менший за пробіг на початку!</span>`;
+          avgBadge.style.background = '#fef2f2';
+          avgBadge.style.color = '#991b1b';
+          avgBadge.style.display='flex';
+        } else {
+          avgBadge.style.display='none';
+        }
+      }
     }
   }
 }
