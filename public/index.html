@@ -3684,8 +3684,7 @@ async function showVehicleSpecs(e, vid){
       </div>`).join('');
     const optionsHtml = (s.options && s.options.length)
       ? `<div style="margin-top:8px">
-          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">✨ Опції</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px">
+          <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
             ${s.options.map(o=>`<span style="background:#eff6ff;color:#1d4ed8;border-radius:10px;padding:2px 8px;font-size:10px">${o}</span>`).join('')}
           </div>
         </div>`
@@ -3695,7 +3694,6 @@ async function showVehicleSpecs(e, vid){
 
   const priceSectionHtml = (s?.priceLink || s?.priceLink2)
     ? `<div id="vs-price-section" style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb">
-        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
         <div style="text-align:center;padding:8px 0;color:#9ca3af;font-size:11px">⏳ Завантаження...</div>
       </div>`
     : '';
@@ -3770,8 +3768,7 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
     if(document.getElementById('vehicle-specs-popup').dataset.vid != String(vid)) return; // switched vehicles meanwhile
 
     if(!trData && !rpData){
-      section.innerHTML = `<div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
-        <div style="color:#dc2626;font-size:11px">Не вдалося знайти ціни на сторінках.</div>`;
+      section.innerHTML = `<div style="color:#dc2626;font-size:11px">Не вдалося знайти ціни на сторінках.</div>`;
       return;
     }
 
@@ -3803,7 +3800,6 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       <div style="text-align:center">${priceLink2 ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink2)}, this)' style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>`;
 
     section.innerHTML = `
-      <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:5px">💰 Актуальна ціна</div>
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:4px 8px;align-items:center;font-size:11px">
         ${headerRow}
         ${tierRows}
