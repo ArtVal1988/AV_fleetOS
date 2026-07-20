@@ -5113,27 +5113,9 @@ function renderToTabs(v){
 
   const allWorks = works.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  // All materials across all works
-  const allMats = {};
-  works.forEach(w=>(w.materials||[]).forEach(m=>{
-    if(!allMats[m.name]) allMats[m.name]={name:m.name,qty:0,total:0};
-    allMats[m.name].qty += m.qty||1;
-    allMats[m.name].total += (m.price||0)*(m.qty||1);
-  }));
-
   document.getElementById('to-tab-all').innerHTML =
     (allWorks.length ? allWorks.map(workRow).join('') : '<div class="to-empty">Проведених робіт ще немає</div>') +
     '<button class="to-add-btn" onclick="openAddWorkModal(\'planned\')">+ Додати роботу</button>';
-
-  const matRows = Object.values(allMats).map(m=>
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:4px;font-size:12px;margin-bottom:4px">' +
-      '<span style="flex:1">'+m.name+'</span>' +
-      '<span style="color:#6b7280;margin:0 12px">×'+m.qty+'</span>' +
-      '<span style="font-weight:600;color:#2563eb">'+Number(m.total).toLocaleString('uk-UA')+' ₴</span>' +
-    '</div>'
-  ).join('');
-  document.getElementById('to-tab-materials').innerHTML =
-    (matRows||'<div class="to-empty">Матеріалів не записано</div>');
 }
 
 function openAddWorkModal(type){
@@ -7992,12 +7974,10 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
       <!-- Tabs -->
       <div class="to-tabs">
         <div class="to-tab active" onclick="switchToTab('all',this)">Проведені технічні роботи</div>
-        <div class="to-tab" onclick="switchToTab('materials',this)">Матеріали</div>
       </div>
     </div>
     <div>
       <div class="to-tab-pane active" id="to-tab-all"></div>
-      <div class="to-tab-pane" id="to-tab-materials"></div>
     </div>
   </div>
 </div>
