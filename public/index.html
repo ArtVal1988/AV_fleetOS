@@ -3793,9 +3793,9 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       ${cell(rpTiers[key], '#166534')}`).join('');
 
     const depositRow = (trData?.deposit || rpData?.deposit) ? `
-      <div style="text-align:center;font-weight:400;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $' : '—'}</div>
+      <div style="text-align:center;font-weight:700;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $' : '—'}</div>
       <div style="text-align:center;color:#9ca3af;font-size:9px;background:#fef3c7;border-radius:4px;padding:2px 0">Застава</div>
-      <div style="text-align:center;font-weight:400;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $' : '—'}</div>` : '';
+      <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $' : '—'}</div>` : '';
 
     const footerRow = `
       <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 10px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>
