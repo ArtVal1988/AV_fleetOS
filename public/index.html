@@ -5050,6 +5050,7 @@ function setLastServiceKm(vid, value){
   if(!v.service) v.service={};
   v.service.lastKm = km;
   recalcNextService(v);
+  persistVehicle(v);
   renderToKmBar(v);
   render();
 }
