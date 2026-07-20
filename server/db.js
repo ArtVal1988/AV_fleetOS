@@ -61,6 +61,16 @@ db.exec(`
     uploaded_by   INTEGER,
     created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS spare_parts (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT    NOT NULL,
+    quantity      REAL    NOT NULL DEFAULT 0,
+    price         REAL    NOT NULL DEFAULT 0,
+    supplier      TEXT,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+    updated_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 // ── Migrations for pre-existing tables from earlier schema versions ──────

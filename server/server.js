@@ -33,6 +33,7 @@ app.use('/api/stickers', require('./routes/stickers'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/price-check', require('./routes/price-check'));
 app.use('/api/documents', require('./routes/documents'));
+app.use('/api/spare-parts', require('./routes/spare-parts'));
 
 // Uploaded document/photo files — served with normal caching (they're
 // content-addressed by random filename, safe to cache) but access to the

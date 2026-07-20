@@ -1406,6 +1406,50 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<div id="spare-parts-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div id="sp-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🔩 Запчастини</div>
+      <input id="sp-search" type="text" placeholder="Пошук за назвою, постачальником…" oninput="renderSparePartsList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
+      <button onclick="openSparePartForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати запчастину</button>
+      <button onclick="closeSparePartsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="spare-parts-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="spare-part-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:520;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:14px;width:380px;max-width:calc(100vw - 24px);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px" id="sp-form-title">Нова запчастина</div>
+    <input type="hidden" id="sp-form-id">
+    <div style="margin-bottom:10px">
+      <label class="vf-lbl">Назва</label>
+      <input id="sp-form-name" type="text" class="vf-inp" placeholder="Гальмівні колодки передні" style="width:100%">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1">
+        <label class="vf-lbl">Кількість на складі</label>
+        <input id="sp-form-qty" type="number" class="vf-inp" placeholder="0" style="width:100%">
+      </div>
+      <div style="flex:1">
+        <label class="vf-lbl">Ціна закупівлі ₴</label>
+        <input id="sp-form-price" type="number" class="vf-inp" placeholder="0" style="width:100%">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label class="vf-lbl">Постачальник</label>
+      <input id="sp-form-supplier" type="text" class="vf-inp" placeholder="Назва постачальника" style="width:100%">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeSparePartForm()" style="background:none;border:1px solid #e5e7eb;color:#6b7280;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:12px;cursor:pointer">Скасувати</button>
+      <button onclick="saveSparePartForm()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD / EDIT VEHICLE MODAL -->
 <div id="vehicle-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:600;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -1522,6 +1566,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <nav>
     <div class="nav-item" data-label="Дашборд" onclick="openDashboard()"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
     <div class="nav-item" data-label="Транспортні засоби" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
+    <div class="nav-item" data-label="Запчастини" onclick="openSparePartsPanel()"><span class="nav-icon">🔩</span><span class="nav-label">Запчастини</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
@@ -4937,6 +4982,7 @@ function openToModal(vid){
   document.querySelectorAll('.to-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
   document.querySelectorAll('.to-tab-pane').forEach((p,i)=>p.classList.toggle('active',i===0));
   document.getElementById('to-modal').classList.add('open');
+  renderSparePartsDatalistOptions();
 }
 function closeToModal(){ document.getElementById('to-modal').classList.remove('open'); toVehicleId=null; }
 
@@ -5088,7 +5134,7 @@ function openAddWorkModal(type){
   document.getElementById('aw-mileage').value=v.currentKm||'';
   document.getElementById('aw-labor').value='';
   document.getElementById('aw-garage').value='';
-  document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
+  document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
   document.getElementById('add-work-modal').classList.add('open');
 }
 function openAddWorkForm(){ openAddWorkModal('planned'); }
@@ -5096,7 +5142,7 @@ function openAddWorkForm(){ openAddWorkModal('planned'); }
 function addMatRow(){
   const row = document.createElement('div');
   row.className='to-mat-add-row';
-  row.innerHTML='<input type="text" placeholder="Назва запчастини" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button>';
+  row.innerHTML='<input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button>';
   document.getElementById('aw-mat-list').appendChild(row);
 }
 
@@ -5115,6 +5161,16 @@ function saveWork(){
   const workType = document.getElementById('aw-type').value;
   const workMileage = parseInt(document.getElementById('aw-mileage').value)||0;
   const workStatus = workDate && new Date(workDate) <= new Date() ? 'done' : 'planned';
+
+  // Check stock for any material that matches the parts catalog exactly.
+  const matchedMats = mats.map(m => ({ m, part: SPARE_PARTS.find(p=>p.name.toLowerCase()===m.name.toLowerCase()) }))
+    .filter(x => x.part);
+  const insufficient = matchedMats.filter(x => x.m.qty > x.part.quantity);
+  if(insufficient.length){
+    const msg = insufficient.map(x=>`"${x.part.name}" — на складі ${x.part.quantity} шт, потрібно ${x.m.qty}`).join('\n');
+    if(!confirm(`Недостатньо на складі:\n${msg}\n\nВсе одно зберегти роботу (склад піде в мінус)?`)) return;
+  }
+
   v.works.push({
     id:nextWorkId++,
     type:workType,
@@ -5126,6 +5182,12 @@ function saveWork(){
     labor:parseFloat(document.getElementById('aw-labor').value)||0,
     garage:document.getElementById('aw-garage').value.trim(),
     materials:mats,
+  });
+
+  // Deduct matched materials from the spare-parts stock.
+  matchedMats.forEach(x => {
+    apiFetch('POST', '/spare-parts/'+x.part.id+'/deduct', {amount:x.m.qty});
+    x.part.quantity -= x.m.qty; // reflect locally without waiting for the round-trip
   });
 
   // Планове ТО, яке вже виконане — автоматично оновлює "Останнє ТО"
@@ -6891,6 +6953,106 @@ function closeUsersPanel(){
 }
 
 // ── VEHICLES PANEL (list) ────────────────────────────────────────
+let SPARE_PARTS = [];
+function renderSparePartsDatalistOptions(){
+  const dl = document.getElementById('spare-parts-datalist');
+  if(dl) dl.innerHTML = SPARE_PARTS.map(p=>`<option value="${p.name}">`).join('');
+}
+function onMatNameInput(input){
+  renderSparePartsDatalistOptions();
+  const part = SPARE_PARTS.find(p=>p.name.toLowerCase()===input.value.trim().toLowerCase());
+  const row = input.closest('.to-mat-add-row');
+  const priceInput = row?.querySelectorAll('input')[3];
+  const hint = document.getElementById('aw-mat-stock-hint');
+  if(!part){ if(hint) hint.textContent=''; return; }
+  if(priceInput && !priceInput.value) priceInput.value = part.price || '';
+  const qtyInput = row?.querySelectorAll('input')[2];
+  const requestedQty = parseFloat(qtyInput?.value) || 1;
+  if(hint){
+    if(part.quantity <= 0){
+      hint.innerHTML = `⚠️ "${part.name}" — на складі немає в наявності!`;
+      hint.style.color = '#dc2626';
+    } else if(requestedQty > part.quantity){
+      hint.innerHTML = `⚠️ "${part.name}" — на складі лише ${part.quantity} шт (потрібно ${requestedQty})`;
+      hint.style.color = '#dc2626';
+    } else {
+      hint.innerHTML = `✓ На складі: ${part.quantity} шт`;
+      hint.style.color = '#166534';
+    }
+  }
+}
+async function loadSparePartsFromServer(){
+  if(!_token) return;
+  const r = await apiFetch('GET', '/spare-parts');
+  if(Array.isArray(r)) SPARE_PARTS = r;
+}
+function openSparePartsPanel(){
+  document.getElementById('spare-parts-panel-overlay').style.display='flex';
+  document.getElementById('sp-search').value='';
+  loadSparePartsFromServer().then(renderSparePartsList);
+  renderSparePartsList();
+}
+function closeSparePartsPanel(){
+  document.getElementById('spare-parts-panel-overlay').style.display='none';
+}
+function renderSparePartsList(){
+  const list = document.getElementById('spare-parts-list');
+  const q = (document.getElementById('sp-search')?.value||'').trim().toLowerCase();
+  const matches = p => !q || p.name.toLowerCase().includes(q) || (p.supplier||'').toLowerCase().includes(q);
+  const items = SPARE_PARTS.filter(matches);
+  if(!items.length){
+    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Немає запчастин. Натисніть "+ Додати запчастину".</div>';
+    return;
+  }
+  list.innerHTML = items.map(p => {
+    const low = p.quantity <= 0;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:${low?'#fef2f2':'rgba(255,255,255,.75)'}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${p.name}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">${p.supplier?('Постачальник: '+p.supplier+' · '):''}${p.price?p.price.toLocaleString('uk-UA')+' ₴/шт':'ціна не вказана'}</div>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:${low?'#dc2626':'#166534'};background:${low?'#fee2e2':'#f0fdf4'};border-radius:6px;padding:4px 10px;white-space:nowrap">${p.quantity} шт</span>
+      <button onclick="openSparePartForm(${p.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">✎</button>
+      <button onclick="deleteSparePart(${p.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #fecaca;background:#fff;color:#dc2626;font-family:inherit;font-weight:600">✕</button>
+    </div>`;
+  }).join('');
+}
+function openSparePartForm(id){
+  const p = id ? SPARE_PARTS.find(x=>x.id===id) : null;
+  document.getElementById('sp-form-title').textContent = p ? 'Редагувати запчастину' : 'Нова запчастина';
+  document.getElementById('sp-form-id').value = id || '';
+  document.getElementById('sp-form-name').value = p?.name || '';
+  document.getElementById('sp-form-qty').value = p?.quantity ?? '';
+  document.getElementById('sp-form-price').value = p?.price ?? '';
+  document.getElementById('sp-form-supplier').value = p?.supplier || '';
+  document.getElementById('spare-part-form-overlay').style.display='flex';
+}
+function closeSparePartForm(){
+  document.getElementById('spare-part-form-overlay').style.display='none';
+}
+async function saveSparePartForm(){
+  const id = document.getElementById('sp-form-id').value;
+  const name = document.getElementById('sp-form-name').value.trim();
+  if(!name){ alert('Вкажіть назву запчастини'); return; }
+  const data = {
+    name,
+    quantity: parseFloat(document.getElementById('sp-form-qty').value) || 0,
+    price: parseFloat(document.getElementById('sp-form-price').value) || 0,
+    supplier: document.getElementById('sp-form-supplier').value.trim(),
+  };
+  if(id) await apiFetch('PUT', '/spare-parts/'+id, data);
+  else await apiFetch('POST', '/spare-parts', data);
+  await loadSparePartsFromServer();
+  closeSparePartForm();
+  renderSparePartsList();
+}
+async function deleteSparePart(id){
+  if(!confirm('Видалити цю запчастину зі списку?')) return;
+  await apiFetch('DELETE', '/spare-parts/'+id);
+  await loadSparePartsFromServer();
+  renderSparePartsList();
+}
+
 function openVehiclesPanel(){
   document.getElementById('vehicles-panel-overlay').style.display='flex';
   document.getElementById('veh-search').value='';
@@ -7384,12 +7546,14 @@ async function doChangePassword(){
 }
 
 async function syncFromServer(){
-  const [sBookings, sVehicles, sStickers, sSettings] = await Promise.all([
+  const [sBookings, sVehicles, sStickers, sSettings, sParts] = await Promise.all([
     apiFetch('GET','/bookings'),
     apiFetch('GET','/vehicles'),
     apiFetch('GET','/stickers'),
     apiFetch('GET','/settings'),
+    apiFetch('GET','/spare-parts'),
   ]);
+  if(Array.isArray(sParts)) SPARE_PARTS = sParts;
   if(sBookings){ bookings.length=0; sBookings.forEach(b=>bookings.push(b)); nextBid=bookings.length?Math.max(...bookings.map(b=>b.id))+1:1; }
   if(sVehicles){
     ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); });
@@ -7829,9 +7993,11 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
       </div>
       <div style="margin-top:12px">
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">Матеріали та запчастини</div>
+        <datalist id="spare-parts-datalist"></datalist>
+        <div id="aw-mat-stock-hint" style="font-size:10px;color:#9ca3af;margin-bottom:4px;min-height:13px"></div>
         <div id="aw-mat-list">
           <div class="to-mat-add-row">
-            <input type="text" placeholder="Назва запчастини" style="font-size:11px">
+            <input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px">
             <input type="text" placeholder="Номер" style="font-size:11px">
             <input type="number" placeholder="К-сть" style="font-size:11px">
             <input type="number" placeholder="Ціна ₴" style="font-size:11px">
