@@ -805,6 +805,14 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px;flex-wrap:nowrap;min-width:0;}
 .ext-box-blue{border:1px solid #2563eb;}
 .ext-box label{color:#854f0b!important;}
+.ext-cur-display{font-family:var(--font-mono);font-weight:700;font-size:13px;color:#2563eb;padding:4px 8px;}
+@media (min-width:641px){
+  #bm-ext-from,#bm-ext-to{width:88px!important;text-align:center;}
+  .ext-box:has(#bm-ext-from),.ext-box:has(#bm-ext-days){min-height:60px!important;}
+  .ext-box:has(#bm-ext-days) label,.ext-box:has(#bm-ext-total) label,.ext-box:has(#bm-ext-paid) label{width:100%;text-align:center;}
+  .ext-box .dep-inline-wrap{align-self:center!important;}
+  .ext-box .dep-cur-pill{padding:6px 6px!important;}
+}
 #bm-ext-days,#bm-ext-rate,#bm-ext-rate2{height:36px!important;box-sizing:border-box!important;padding:0 6px!important;}
 .ext-fin-field input#bm-ext-rate{flex:0 0 auto!important;width:64px!important;}
 .ext-fin-field input#bm-ext-rate2{flex:0 0 auto!important;width:48px!important;}
@@ -1920,10 +1928,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
-              <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-                <button type="button" id="ext-total-cur-btn-usd" class="dep-cur-pill active" onclick="setExtTotalCurrency('$')">$</button>
-                <button type="button" id="ext-total-cur-btn-uah" class="dep-cur-pill" onclick="setExtTotalCurrency('₴')">₴</button>
-              </div>
+              <span class="ext-cur-display" id="ext-total-cur-display">$</span>
             </div>
           </div>
           <div class="ext-box ext-box-blue">
@@ -1934,10 +1939,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
-              <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
-                <button type="button" id="ext-paid-cur-btn-usd" class="dep-cur-pill active" onclick="setExtPaidCurrency('$')">$</button>
-                <button type="button" id="ext-paid-cur-btn-uah" class="dep-cur-pill" onclick="setExtPaidCurrency('₴')">₴</button>
-              </div>
+              <span class="ext-cur-display" id="ext-paid-cur-display">$</span>
             </div>
           </div>
           <div class="ext-fin-field" style="margin-left:auto;text-align:right">
@@ -3025,12 +3027,6 @@ function editBooking(bid){
     document.getElementById('bm-ext-currency').value=extCur;
     extRateCurrencyAnchor = extCur;
     document.getElementById('bm-ext-rate2').value=b.extension.exchangeRate||'';
-    const totalCur = b.extension.totalCurrency || extCur;
-    const paidCur = b.extension.paidCurrency || extCur;
-    extTotalCurTouched = totalCur !== extCur;
-    extPaidCurTouched = paidCur !== extCur;
-    setExtTotalCurrency(totalCur, extTotalCurTouched);
-    setExtPaidCurrency(paidCur, extPaidCurTouched);
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     onExtCurrencyChange();
@@ -3197,9 +3193,9 @@ function saveBooking(){
       currency: document.getElementById('bm-ext-currency').value,
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
-      totalCurrency: getPillCurrency('ext-total-cur-btn'),
+      totalCurrency: document.getElementById('bm-ext-currency').value,
       totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
-      paidCurrency: getPillCurrency('ext-paid-cur-btn'),
+      paidCurrency: document.getElementById('bm-ext-currency').value,
       paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
@@ -4694,22 +4690,16 @@ function getPillCurrency(prefix){
     return document.getElementById(id)?.classList.contains('active');
   }) || '$';
 }
-function setExtTotalCurrency(cur, touched){
-  if(touched !== false) extTotalCurTouched = true;
-  ['$','₴'].forEach(c=>{
-    const id = c==='$'?'ext-total-cur-btn-usd':'ext-total-cur-btn-uah';
-    document.getElementById(id)?.classList.toggle('active', c===cur);
-  });
+function setExtTotalCurrency(cur){
+  const disp = document.getElementById('ext-total-cur-display');
+  if(disp) disp.textContent = cur;
   const rateField = document.getElementById('bm-ext-total-rate-field');
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
   updateExtensionPaidUI();
 }
-function setExtPaidCurrency(cur, touched){
-  if(touched !== false) extPaidCurTouched = true;
-  ['$','₴'].forEach(c=>{
-    const id = c==='$'?'ext-paid-cur-btn-usd':'ext-paid-cur-btn-uah';
-    document.getElementById(id)?.classList.toggle('active', c===cur);
-  });
+function setExtPaidCurrency(cur){
+  const disp = document.getElementById('ext-paid-cur-display');
+  if(disp) disp.textContent = cur;
   const rateField = document.getElementById('bm-ext-paid-rate-field');
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
 }
@@ -4751,8 +4741,8 @@ function onExtCurrencyChange(){
   });
   const rate2Field = document.getElementById('bm-ext-rate2-field');
   if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
-  if(!extTotalCurTouched) setExtTotalCurrency(cur, false);
-  if(!extPaidCurTouched) setExtPaidCurrency(cur, false);
+  setExtTotalCurrency(cur);
+  setExtPaidCurrency(cur);
   updateExtensionPaidUI();
 }
 function setExtCurrency(cur){
@@ -4785,7 +4775,7 @@ function updateExtensionPaidUI(){
   if(paid > total) paid = total;
   paidEl.value = paid;
   const remaining = Math.max(0, Math.round((total - paid)*100)/100);
-  const cur = getPillCurrency('ext-total-cur-btn');
+  const cur = document.getElementById('bm-ext-currency').value;
   const remainingEl = document.getElementById('bm-ext-remaining');
   if(remaining <= 0 && total > 0){
     remainingEl.textContent = 'Оплачено';
@@ -4800,7 +4790,7 @@ function updateExtensionPaidUI(){
 }
 
 function closeAndStartNewExtension(){
-  const cur = getPillCurrency('ext-total-cur-btn');
+  const cur = document.getElementById('bm-ext-currency').value;
   const closed = {
     fromDate: getExtDateField('bm-ext-from'),
     toDate: getExtDateField('bm-ext-to'),
@@ -4809,9 +4799,9 @@ function closeAndStartNewExtension(){
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
-    totalCurrency: getPillCurrency('ext-total-cur-btn'),
+    totalCurrency: document.getElementById('bm-ext-currency').value,
     totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
-    paidCurrency: getPillCurrency('ext-paid-cur-btn'),
+    paidCurrency: document.getElementById('bm-ext-currency').value,
     paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
@@ -7514,7 +7504,7 @@ let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0;
 function extShortFmt(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
-  return `${d}.${m}.${(y||'').slice(2)}`;
+  return isMobileViewport() ? `${d}.${m}.${(y||'').slice(2)}` : `${d}.${m}.${y||''}`;
 }
 function getDpValue(inputEl){
   return inputEl.classList.contains('ext-date-short') ? (inputEl.dataset.iso||'') : inputEl.value;
