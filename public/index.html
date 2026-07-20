@@ -1663,23 +1663,23 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div class="fg-pair" style="grid-template-columns:1.6fr 1fr">
-        <div class="fg" id="bm-company-row" style="display:none">
+        <div class="fg fin-label-style" id="bm-company-row" style="display:none">
           <label id="bm-company-label">Назва компанії</label>
           <input type="text" id="bm-company" placeholder="ТОВ «Назва» або ФОП Іваненко О.В.">
         </div>
-        <div class="fg" id="bm-edrpou-row" style="display:none">
+        <div class="fg fin-label-style" id="bm-edrpou-row" style="display:none">
           <label>ЄДРПОУ</label>
           <input type="text" id="bm-edrpou" placeholder="12345678" maxlength="10">
         </div>
       </div>
       <div class="fg-pair" style="grid-template-columns:0.8fr 1.2fr">
-        <div class="fg" style="position:relative">
+        <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
           <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
             oninput="onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
-        <div class="fg">
+        <div class="fg fin-label-style">
           <label>Телефон</label>
             <div class="phone-messenger-row" style="position:relative">
               <input type="text" id="bm-phone" placeholder="+38 050 000 00 00" class="phone-input" oninput="onPhoneInput()">
@@ -1836,7 +1836,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01"
             oninput="updateVatPreview()">
         </div>
-        <div class="fin-field fin-vat" id="bm-vat-field" style="display:none">
+        <div class="fin-field fin-vat fin-label-style" id="bm-vat-field" style="display:none">
           <label>ПДВ %</label>
           <input type="number" id="bm-vat" value="20" min="0" max="100"
             style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
