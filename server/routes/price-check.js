@@ -4,7 +4,7 @@ const { auth } = require('./auth');
 // Only allow fetching from known, trusted rental-listing domains — this
 // endpoint fetches arbitrary URLs server-side, so an allowlist prevents it
 // being used as an open proxy (SSRF risk) for internal or unrelated sites.
-const ALLOWED_HOSTS = ['toprent.ua', 'www.toprent.ua'];
+const ALLOWED_HOSTS = ['toprent.ua', 'www.toprent.ua', 'rentplus.com.ua', 'www.rentplus.com.ua'];
 
 function stripTags(html) {
   return html
