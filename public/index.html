@@ -1138,6 +1138,9 @@ input.dm-pf-val.tel{font-size:14px;}
 .dm-attach-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
 .dm-add-file-btn{display:none;align-items:center;gap:4px;background:none;border:1px dashed #d1d5db;border-radius:4px;padding:4px 10px;font-size:10px;color:#9ca3af;cursor:pointer;transition:all .15s;font-family:var(--font-mono);white-space:nowrap;}
 .dm-edit-active .dm-add-file-btn{display:flex;}
+#co-attach-area .dm-add-file-btn{display:flex!important;}
+#co-attach-area .dm-attach-thumb .dm-del{display:flex!important;}
+#co-attach-area .dm-attach-file .dm-del-f{display:inline!important;}
 .dm-add-file-btn:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
 .dm-file-count{background:#2563eb;color:#fff;border-radius:10px;font-size:9px;padding:1px 5px;margin-left:3px;font-weight:600;}
 
@@ -3438,6 +3441,7 @@ function openFileInput(vid, key){
 
 function handleDocAttach(e, vid, key){
   const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
+  if(!v.docs) v.docs={};
   if(!v.docs.files) v.docs.files={};
   if(!v.docs.files[key]) v.docs.files[key]=[];
   const files = Array.from(e.target.files);
@@ -3483,6 +3487,7 @@ async function loadVehicleDocuments(vid){
   if(!v) return;
   const rows = await apiFetch('GET','/documents/'+vid);
   if(!rows) return;
+  if(!v.docs) v.docs = {};
   v.docs.files = {};
   rows.forEach(r => {
     if(!v.docs.files[r.doc_type]) v.docs.files[r.doc_type] = [];
@@ -3493,6 +3498,9 @@ async function loadVehicleDocuments(vid){
   });
   recalcMissingDocs(v);
   if(docsVehicleId === vid) renderDocsModalBody(v);
+  if(insVehicleId === vid && document.getElementById('co-attach-area')){
+    document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
+  }
   render();
 }
 
@@ -5457,6 +5465,15 @@ function renderCaseFilesList(){
 }
 
 /* ОСАГО edit */
+function getInsurerSuggestions(){
+  const counts = {};
+  ALL_VEHICLES.forEach(v=>{
+    [v.osago?.insurer, v.kasko?.insurer].forEach(name=>{
+      if(name && name.trim()) counts[name.trim()] = (counts[name.trim()]||0)+1;
+    });
+  });
+  return Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+}
 function openCalOsagoEdit(vid){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v)return;
   insVehicleId=vid;
@@ -5465,9 +5482,11 @@ function openCalOsagoEdit(vid){
   document.getElementById('co-insurer').value=o.insurer||'';
   document.getElementById('co-policy').value=o.policyNum||'';
   document.getElementById('co-end').value=o.end||'';
-  document.getElementById('co-premium').value=o.premium||'';
   document.getElementById('co-notes').value=o.notes||'';
+  document.getElementById('insurer-datalist').innerHTML = getInsurerSuggestions().map(n=>`<option value="${n}">`).join('');
+  document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
   document.getElementById('cal-osago-modal').classList.add('open');
+  loadVehicleDocuments(vid);
 }
 function renewCalOsago(vid){
   openCalOsagoEdit(vid);
@@ -5478,7 +5497,12 @@ function renewCalOsago(vid){
 function saveCalOsago(){
   const v=ALL_VEHICLES.find(x=>x.id===insVehicleId); if(!v)return;
   const end=document.getElementById('co-end').value; if(!end){alert('Вкажіть дату');return;}
-  v.osago={insurer:document.getElementById('co-insurer').value.trim(),policyNum:document.getElementById('co-policy').value.trim(),end,premium:parseFloat(document.getElementById('co-premium').value)||0,notes:document.getElementById('co-notes').value.trim()};
+  const notesText = document.getElementById('co-notes').value.trim();
+  const prevNotes = v.osago?.notes || '';
+  const notes = (notesText && notesText !== prevNotes && _currentUser)
+    ? notesText + ' (' + _currentUser.name + ', ' + fmt(new Date().toISOString().split('T')[0]) + ')'
+    : notesText;
+  v.osago={insurer:document.getElementById('co-insurer').value.trim(),policyNum:document.getElementById('co-policy').value.trim(),end,notes};
   document.getElementById('cal-osago-modal').classList.remove('open');
   renderInsuranceModal(v); render();
 }
@@ -8038,11 +8062,15 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     </div>
     <div class="docs-modal-body">
       <div class="msec-title" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">Деталі полісу ОСАГО</div>
+      <datalist id="insurer-datalist"></datalist>
       <div class="fgrid">
-        <div class="fg full"><label>Страхова компанія</label><input type="text" id="co-insurer" placeholder="АХА Страхування"></div>
-        <div class="fg full"><label>Номер полісу</label><input type="text" id="co-policy" placeholder="АС/12345678"></div>
+        <div class="fg full"><label>Страхова компанія</label><input type="text" id="co-insurer" list="insurer-datalist" placeholder="АХА Страхування"></div>
+        <div class="fg"><label>Номер полісу</label><input type="text" id="co-policy" placeholder="АС/12345678"></div>
         <div class="fg"><label>Дата закінчення</label><input type="date" id="co-end"></div>
-        <div class="fg"><label>Сума премії (₴)</label><input type="number" id="co-premium" placeholder="8400"></div>
+        <div class="fg full">
+          <label>Поліс (PDF)</label>
+          <div id="co-attach-area"></div>
+        </div>
         <div class="fg full"><label>Нотатки</label><textarea id="co-notes" style="min-height:56px;width:100%;" placeholder="Додаткова інформація..."></textarea></div>
       </div>
     </div>
