@@ -281,11 +281,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   #bm-ext-days,#bm-ext-rate,#bm-ext-rate2{height:36px!important;box-sizing:border-box!important;padding:0 6px!important;}
   .ext-box:has(#bm-ext-days),.ext-box:has(#bm-ext-rate){min-height:60px!important;}
   .ext-box:has(#bm-ext-total),.ext-box:has(#bm-ext-paid){flex-wrap:nowrap!important;}
-  #bm-ext-total,#bm-ext-paid{width:52px!important;height:36px!important;box-sizing:border-box!important;}
   #bm-ext-days{width:32px!important;}
   #bm-ext-rate{width:64px!important;}
   #bm-ext-rate2{width:48px!important;}
-  #bm-ext-total,#bm-ext-paid{height:36px!important;box-sizing:border-box!important;width:70px!important;}
+  #bm-ext-total,#bm-ext-paid{height:36px!important;box-sizing:border-box!important;width:76px!important;}
   .ext-box:has(#bm-ext-total),.ext-box:has(#bm-ext-paid){align-items:center!important;}
   #bm-ext-from,#bm-ext-to{width:62px!important;text-align:center;}
   .ext-box:has(#bm-ext-total){flex:1 1 45%!important;}
@@ -1935,7 +1934,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <label>Загалом</label>
               <div class="ext-calc-input-cur">
-                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:60px" oninput="onExtTotalInput(this)">
+                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:76px" oninput="onExtTotalInput(this)">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
@@ -1946,7 +1945,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <label>Оплачено</label>
               <div class="ext-calc-input-cur">
-                <input type="number" id="bm-ext-paid" class="no-spinner" style="width:60px" oninput="updateExtensionPaidUI()">
+                <input type="number" id="bm-ext-paid" class="no-spinner" style="width:76px" oninput="updateExtensionPaidUI()">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
