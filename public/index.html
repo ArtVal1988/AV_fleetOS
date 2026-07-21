@@ -3486,10 +3486,14 @@ function handleDocAttach(e, vid, key){
     alert('Потрібно увійти в систему, щоб завантажувати файли.');
     return;
   }
-  files.forEach(async file => {
+  files.forEach(async (file, idx) => {
     if(file.size > 10*1024*1024){ alert(file.name+': файл понад 10 МБ'); return; }
+    const ext = (file.name.match(/\.[^.]+$/) || [''])[0];
+    const suffix = files.length > 1 ? ' ('+(idx+1)+')' : '';
+    const safeName = (v.plate+' '+stripYear(v.name)).replace(/[\/\\:*?"<>|]/g,'').trim()+suffix;
+    const renamedFile = new File([file], safeName+ext, {type: file.type});
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', renamedFile);
     try{
       const res = await fetch(API_BASE+'/documents/'+vid+'/'+key, {
         method: 'POST',
@@ -3501,6 +3505,9 @@ function handleDocAttach(e, vid, key){
       v.docs.files[key].push(saved);
       recalcMissingDocs(v);
       renderDocsModalBody(v);
+      if(insVehicleId === vid && document.getElementById('co-attach-area')){
+        document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
+      }
       render();
     }catch(err){
       alert(file.name+': помилка мережі при завантаженні');
@@ -3514,6 +3521,9 @@ function removeDocFile(vid, key, idx){
   v.docs.files[key].splice(idx,1);
   recalcMissingDocs(v);
   renderDocsModalBody(v);
+  if(insVehicleId === vid && document.getElementById('co-attach-area')){
+    document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
+  }
   render();
   if(file?.id && _token) apiFetch('DELETE','/documents/'+file.id);
 }
