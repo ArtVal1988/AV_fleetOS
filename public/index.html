@@ -3490,7 +3490,9 @@ function handleDocAttach(e, vid, key){
     if(file.size > 10*1024*1024){ alert(file.name+': файл понад 10 МБ'); return; }
     const ext = (file.name.match(/\.[^.]+$/) || [''])[0];
     const suffix = files.length > 1 ? ' ('+(idx+1)+')' : '';
-    const safeName = (v.plate+' '+stripYear(v.name)).replace(/[\/\\:*?"<>|]/g,'').trim()+suffix;
+    const docTypeLabels = {'osago-policy':'ОСЦПВ','kasko-policy':'КАСКО','vin':'VIN','sts':'Техпаспорт'};
+    const typeLabel = docTypeLabels[key] || key;
+    const safeName = [v.plate, stripYear(v.name), typeLabel].join('_').replace(/[\/\\:*?"<>|]/g,'').trim()+suffix;
     const renamedFile = new File([file], safeName+ext, {type: file.type});
     const fd = new FormData();
     fd.append('file', renamedFile);

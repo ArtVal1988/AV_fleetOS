@@ -51,10 +51,19 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '') || '';
+    const ext = path.extname(fixEncoding(file.originalname) || '') || '';
     cb(null, crypto.randomBytes(16).toString('hex') + ext);
   },
 });
+
+// Multipart filenames arrive as UTF-8 bytes but Node/multer decode them as
+// latin1 by default (per the multipart spec's historical ASCII assumption) —
+// without this, Cyrillic/non-ASCII names show up as mojibake ("hieroglyphs").
+function fixEncoding(name) {
+  if (!name) return name;
+  try { return Buffer.from(name, 'latin1').toString('utf8'); }
+  catch { return name; }
+}
 
 const upload = multer({
   storage,
@@ -81,15 +90,16 @@ router.post('/:vid/:key', auth, (req, res) => {
     if (!Number.isFinite(vid)) return res.status(400).json({ error: 'Невірний ID авто' });
 
     const relPath = path.relative(UPLOAD_DIR, req.file.path);
+    const fixedOriginalName = fixEncoding(req.file.originalname);
     const info = db.prepare(
       `INSERT INTO documents (vehicle_id, doc_type, filename, original_name, mime_type, size, uploaded_by)
        VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).run(vid, key, relPath, req.file.originalname, req.file.mimetype, req.file.size, req.user?.id || null);
+    ).run(vid, key, relPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
 
     res.json({
       id: info.lastInsertRowid,
       doc_type: key,
-      name: req.file.originalname,
+      name: fixedOriginalName,
       type: req.file.mimetype,
       size: req.file.size,
       url: relPathToUrl(relPath),
