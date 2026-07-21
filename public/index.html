@@ -3683,7 +3683,7 @@ function buildAttachArea(v, key){
   if(docs.length){
     html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">';
     docs.forEach((f,i)=>{
-      html+='<div class="dm-attach-file">📄<span class="dm-attach-name" title="'+f.name+'">'+f.name+'</span>'+
+      html+='<div class="dm-attach-file" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')" style="cursor:pointer">📄<span class="dm-attach-name" title="'+f.name+'">'+f.name+'</span>'+
         '<button class="dm-del-f" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+imgs.length+i+')">✕</button>'+
       '</div>';
     });
