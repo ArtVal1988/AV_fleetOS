@@ -19,6 +19,8 @@ const ALLOWED_MIME = new Set([
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
 
+const ALLOWED_EXT = new Set(['.png','.jpg','.jpeg','.webp','.gif','.heic','.heif','.pdf','.doc','.docx']);
+
 function sanitizeFolderName(str) {
   return String(str || '')
     .replace(/[\/\\:*?"<>|]/g, '')   // strip filesystem-unsafe characters
@@ -69,7 +71,8 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (ALLOWED_MIME.has(file.mimetype)) cb(null, true);
+    const ext = path.extname(fixEncoding(file.originalname) || '').toLowerCase();
+    if (ALLOWED_MIME.has(file.mimetype) || ALLOWED_EXT.has(ext)) cb(null, true);
     else cb(new Error('Непідтримуваний тип файлу'));
   },
 });

@@ -1022,7 +1022,7 @@ textarea{resize:vertical;min-height:56px;}
 .dm-card{background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;}
 
 /* STS grid inside card */
-.dm-sts-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:8px;}
+.dm-sts-grid{display:grid;grid-template-columns:2.2fr 1fr;gap:8px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .vf-lbl{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600;margin-bottom:4px;}
 .vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
@@ -1173,6 +1173,8 @@ input.dm-pf-val.tel{font-size:14px;}
 .im-photo-del{position:absolute;top:0;right:0;width:18px;height:18px;background:rgba(239,68,68,.85);color:#fff;border:none;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;border-radius:0 0 0 4px;}
 .im-photo-thumb:hover .im-photo-del{display:flex;}
 .im-photo-add{width:72px;height:72px;border-radius:6px;border:1px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:3px;transition:all .15s;background:none;}
+.im-photo-add-compact{width:44px;height:44px;}
+.im-photo-add-icon-compact{font-size:20px;font-weight:400;color:#9ca3af;line-height:1;}
 .im-photo-add:hover{border-color:#2563eb;background:#eff6ff;}
 .im-photo-add-icon{font-size:18px;}
 .im-photo-add-lbl{font-size:9px;color:#9ca3af;letter-spacing:.3px;}
@@ -5835,7 +5837,7 @@ function renderDocsModalBody(v){
     </div>`;
   }
 
-  const ownerHtml = v.owner ? personCard(v.owner, 'Власник', 'owner', '🧑', 'dm-owner') : '';
+  const ownerHtml = personCard(v.owner || {}, 'Власник', 'owner', '🧑', 'dm-owner');
 
   // Trusted person — show card with remove btn, or "add" button
   const trustedHtml = v.trusted
@@ -5950,9 +5952,8 @@ function buildHandoverPhotoSection(v){
       '<button class="im-photo-del" onclick="event.stopPropagation();removeHandoverPhoto('+v.id+','+i+')">✕</button>'+
     '</div>';
   });
-  html += '<div class="im-photo-add" onclick="openHandoverPhotoInput('+v.id+')">'+
-    '<div class="im-photo-add-icon">📷</div>'+
-    '<div class="im-photo-add-lbl">Додати фото</div>'+
+  html += '<div class="im-photo-add im-photo-add-compact" onclick="openHandoverPhotoInput('+v.id+')">'+
+    '<div class="im-photo-add-icon-compact">+</div>'+
   '</div>';
   html += '</div></div>';
   return html;
@@ -6037,7 +6038,8 @@ function saveDocChanges(){
   if(vin !== undefined) v.vin = vin;
 
   // Власник
-  if(v.owner && document.getElementById('dm-owner-name')){
+  if(document.getElementById('dm-owner-name')){
+    if(!v.owner) v.owner = {};
     v.owner.name = val('dm-owner-name') || v.owner.name;
     v.owner.phone = val('dm-owner-phone') || '';
     v.owner.passport = val('dm-owner-passport') || '';
