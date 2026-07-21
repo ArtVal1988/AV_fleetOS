@@ -2336,12 +2336,28 @@ function stripYear(name){
 
 function dot(color){ return '<span class="vact-dot" style="background:'+color+'"></span>'; }
 
+function getInsuranceDueStatus(v){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const check = (endStr) => {
+    if(!endStr) return null;
+    const end = new Date(endStr); end.setHours(0,0,0,0);
+    const daysLeft = Math.round((end-today)/86400000);
+    if(daysLeft<0) return 'danger';
+    if(daysLeft<=30) return 'warn';
+    return null;
+  };
+  const statuses = [check(v.osago?.end), check(v.kasko?.end)].filter(Boolean);
+  if(statuses.includes('danger')) return 'danger';
+  if(statuses.includes('warn')) return 'warn';
+  return null;
+}
 function buildVehCell(v){
   var sc = v.service?.status==='danger'?'#ef4444':v.service?.status==='warn'?'#f59e0b':'#9ca3af';
-  var ic = v.insurance?.status==='danger'?'#ef4444':v.insurance?.status==='warn'?'#f59e0b':'#9ca3af';
+  var insDue = getInsuranceDueStatus(v);
+  var ic = insDue==='danger'?'#ef4444':insDue==='warn'?'#f59e0b':'#9ca3af';
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
   var sdot = (v.service?.status==='warn'||v.service?.status==='danger') ? dot(sc) : '';
-  var idot = (v.insurance?.status==='warn'||v.insurance?.status==='danger') ? dot(ic) : '';
+  var idot = insDue ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
       '<div class="veh-name-click" onclick="mobileVehNameTap(event,'+v.id+')" title="Виділити рядок">'+
