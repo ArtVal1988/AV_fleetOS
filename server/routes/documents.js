@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const sharp = require('sharp');
 const db = require('../db');
 const { auth } = require('./auth');
 
@@ -83,9 +84,24 @@ function relPathToUrl(relPath) {
   return '/uploads/' + relPath.split(path.sep).map(encodeURIComponent).join('/');
 }
 
+// Only these image types are safe to pass through sharp/libvips for
+// thumbnailing — HEIC/HEIF support varies by build, so skip those rather
+// than risk a crash; the original still opens fine on click regardless.
+const THUMBNAIL_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+async function makeThumbnail(originalPath, dir) {
+  const thumbName = crypto.randomBytes(16).toString('hex') + '_thumb.jpg';
+  const thumbPath = path.join(dir, thumbName);
+  await sharp(originalPath)
+    .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 70 })
+    .toFile(thumbPath);
+  return thumbName;
+}
+
 // POST /api/documents/:vid/:key — upload one file for a vehicle/doc-type
 router.post('/:vid/:key', auth, (req, res) => {
-  upload.single('file')(req, res, (err) => {
+  upload.single('file')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message || 'Не вдалося завантажити файл' });
     if (!req.file) return res.status(400).json({ error: 'Файл не отримано' });
     const vid = Number(req.params.vid);
@@ -94,10 +110,23 @@ router.post('/:vid/:key', auth, (req, res) => {
 
     const relPath = path.relative(UPLOAD_DIR, req.file.path);
     const fixedOriginalName = fixEncoding(req.file.originalname);
+
+    let thumbRelPath = null;
+    if (THUMBNAIL_MIME.has(req.file.mimetype)) {
+      try {
+        const thumbName = await makeThumbnail(req.file.path, path.dirname(req.file.path));
+        thumbRelPath = path.relative(UPLOAD_DIR, path.join(path.dirname(req.file.path), thumbName));
+      } catch (e) {
+        // Thumbnail generation failing shouldn't block the upload itself —
+        // the UI just falls back to the full image for that one file.
+        thumbRelPath = null;
+      }
+    }
+
     const info = db.prepare(
-      `INSERT INTO documents (vehicle_id, doc_type, filename, original_name, mime_type, size, uploaded_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-    ).run(vid, key, relPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
+      `INSERT INTO documents (vehicle_id, doc_type, filename, thumb_filename, original_name, mime_type, size, uploaded_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).run(vid, key, relPath, thumbRelPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
 
     res.json({
       id: info.lastInsertRowid,
@@ -106,6 +135,7 @@ router.post('/:vid/:key', auth, (req, res) => {
       type: req.file.mimetype,
       size: req.file.size,
       url: relPathToUrl(relPath),
+      thumbUrl: thumbRelPath ? relPathToUrl(thumbRelPath) : null,
     });
   });
 });
@@ -115,7 +145,11 @@ router.get('/:vid', auth, (req, res) => {
   const vid = Number(req.params.vid);
   if (!Number.isFinite(vid)) return res.status(400).json({ error: 'Невірний ID авто' });
   const rows = db.prepare('SELECT * FROM documents WHERE vehicle_id = ? ORDER BY created_at').all(vid);
-  res.json(rows.map(r => ({ ...r, url: relPathToUrl(r.filename) })));
+  res.json(rows.map(r => ({
+    ...r,
+    url: relPathToUrl(r.filename),
+    thumbUrl: r.thumb_filename ? relPathToUrl(r.thumb_filename) : null,
+  })));
 });
 
 // DELETE /api/documents/:id — remove a document (DB row + underlying file)
@@ -125,6 +159,7 @@ router.delete('/:id', auth, (req, res) => {
   if (!row) return res.status(404).json({ error: 'Не знайдено' });
   db.prepare('DELETE FROM documents WHERE id = ?').run(id);
   fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {}); // best-effort cleanup
+  if (row.thumb_filename) fs.unlink(path.join(UPLOAD_DIR, row.thumb_filename), () => {});
   res.json({ ok: true });
 });
 

@@ -3560,7 +3560,7 @@ async function loadVehicleDocuments(vid){
     if(!v.docs.files[r.doc_type]) v.docs.files[r.doc_type] = [];
     v.docs.files[r.doc_type].push({
       id: r.id, name: r.original_name, type: r.mime_type, size: r.size,
-      url: '/uploads/'+r.filename
+      url: r.url, thumbUrl: r.thumbUrl || null
     });
   });
   recalcMissingDocs(v);
@@ -3674,7 +3674,7 @@ function buildAttachArea(v, key){
     html+='<div class="dm-attach-grid">';
     imgs.forEach((f,i)=>{
       html+='<div class="dm-attach-thumb" onclick="viewAttachmentGallery(\''+galleryId+'\','+i+')">'+
-        '<img src="'+f.url+'" alt="'+f.name+'">'+
+        '<img src="'+(f.thumbUrl||f.url)+'" alt="'+f.name+'" loading="lazy">'+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
       '</div>';
     });

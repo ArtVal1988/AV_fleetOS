@@ -55,6 +55,7 @@ db.exec(`
     vehicle_id    INTEGER NOT NULL,
     doc_type      TEXT    NOT NULL,
     filename      TEXT    NOT NULL,
+    thumb_filename TEXT,
     original_name TEXT    NOT NULL,
     mime_type     TEXT    NOT NULL,
     size          INTEGER NOT NULL,
@@ -86,6 +87,7 @@ function ensureColumn(table, column, definition) {
 }
 ensureColumn('documents', 'uploaded_by', 'INTEGER');
 ensureColumn('documents', 'created_at', 'TEXT');
+ensureColumn('documents', 'thumb_filename', 'TEXT');
 ensureColumn('spare_parts', 'part_number', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
