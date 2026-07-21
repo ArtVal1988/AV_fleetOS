@@ -95,8 +95,8 @@ router.post('/:vid/:key', auth, (req, res) => {
     const relPath = path.relative(UPLOAD_DIR, req.file.path);
     const fixedOriginalName = fixEncoding(req.file.originalname);
     const info = db.prepare(
-      `INSERT INTO documents (vehicle_id, doc_type, filename, original_name, mime_type, size, uploaded_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO documents (vehicle_id, doc_type, filename, original_name, mime_type, size, uploaded_by, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
     ).run(vid, key, relPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
 
     res.json({

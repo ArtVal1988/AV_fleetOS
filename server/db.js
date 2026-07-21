@@ -85,6 +85,7 @@ function ensureColumn(table, column, definition) {
   }
 }
 ensureColumn('documents', 'uploaded_by', 'INTEGER');
+ensureColumn('documents', 'created_at', 'TEXT');
 ensureColumn('spare_parts', 'part_number', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
