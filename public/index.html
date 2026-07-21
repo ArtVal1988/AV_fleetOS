@@ -3492,7 +3492,7 @@ function handleDocAttach(e, vid, key){
     const suffix = files.length > 1 ? ' ('+(idx+1)+')' : '';
     const docTypeLabels = {'osago-policy':'ОСЦПВ','kasko-policy':'КАСКО','vin':'VIN','sts':'Техпаспорт'};
     const typeLabel = docTypeLabels[key] || key;
-    const safeName = [v.plate, stripYear(v.name), typeLabel].join('_').replace(/[\/\\:*?"<>|]/g,'').trim()+suffix;
+    const safeName = [v.plate.replace(/\s+/g,''), stripYear(v.name), typeLabel].join('_').replace(/[\/\\:*?"<>|]/g,'').trim()+suffix;
     const renamedFile = new File([file], safeName+ext, {type: file.type});
     const fd = new FormData();
     fd.append('file', renamedFile);
