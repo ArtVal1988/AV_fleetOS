@@ -3536,10 +3536,13 @@ function handleDocAttach(e, vid, key){
   });
 }
 
-function removeDocFile(vid, key, idx){
+function removeDocFile(vid, key, fileId){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
-  const file = v.docs.files[key][idx];
-  v.docs.files[key].splice(idx,1);
+  const arr = v.docs.files[key]||[];
+  const idx = arr.findIndex(f=>f.id===fileId);
+  if(idx===-1) return;
+  const file = arr[idx];
+  arr.splice(idx,1);
   recalcMissingDocs(v);
   renderDocsModalBody(v);
   if(insVehicleId === vid && document.getElementById('co-attach-area')){
@@ -3677,7 +3680,7 @@ function buildAttachArea(v, key){
       html+='<div class="dm-attach-thumb" onclick="viewAttachmentGallery(\''+galleryId+'\','+i+')">'+
         '<img src="'+(f.thumbUrl||f.url)+'" alt="'+f.name+'" loading="lazy">'+
         (f.type==='application/pdf' ? '<span class="dm-attach-pdf-badge">PDF</span>' : '')+
-        '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
+        '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+f.id+')">✕</button>'+
       '</div>';
     });
     html+='</div>';
@@ -3686,7 +3689,7 @@ function buildAttachArea(v, key){
     html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">';
     docs.forEach((f,i)=>{
       html+='<div class="dm-attach-file" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')" style="cursor:pointer">📄<span class="dm-attach-name" title="'+f.name+'">'+f.name+'</span>'+
-        '<button class="dm-del-f" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+imgs.length+i+')">✕</button>'+
+        '<button class="dm-del-f" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+f.id+')">✕</button>'+
       '</div>';
     });
     html+='</div>';
