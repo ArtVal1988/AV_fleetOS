@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const sharp = require('sharp');
+const { execFile } = require('child_process');
 const db = require('../db');
 const { auth } = require('./auth');
 
@@ -99,6 +100,34 @@ async function makeThumbnail(originalPath, dir) {
   return thumbName;
 }
 
+// Renders page 1 of a PDF to a JPEG via `pdftoppm` (part of poppler-utils —
+// must be installed on the server: `apt install poppler-utils`), then runs
+// it through the same sharp resize/compress step as regular photos.
+function pdftoppmToFile(pdfPath, outBaseNoExt) {
+  return new Promise((resolve, reject) => {
+    execFile('pdftoppm', ['-jpeg', '-f', '1', '-l', '1', '-scale-to', '800', '-singlefile', pdfPath, outBaseNoExt], (err) => {
+      if (err) return reject(err);
+      resolve(outBaseNoExt + '.jpg');
+    });
+  });
+}
+
+async function makePdfThumbnail(pdfPath, dir) {
+  const rawBase = path.join(dir, crypto.randomBytes(16).toString('hex') + '_pdfraw');
+  const rawJpegPath = await pdftoppmToFile(pdfPath, rawBase);
+  try {
+    const thumbName = crypto.randomBytes(16).toString('hex') + '_thumb.jpg';
+    const thumbPath = path.join(dir, thumbName);
+    await sharp(rawJpegPath)
+      .resize(400, 400, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 70 })
+      .toFile(thumbPath);
+    return thumbName;
+  } finally {
+    fs.unlink(rawJpegPath, () => {}); // clean up the full-size intermediate render
+  }
+}
+
 // POST /api/documents/:vid/:key — upload one file for a vehicle/doc-type
 router.post('/:vid/:key', auth, (req, res) => {
   upload.single('file')(req, res, async (err) => {
@@ -119,6 +148,15 @@ router.post('/:vid/:key', auth, (req, res) => {
       } catch (e) {
         // Thumbnail generation failing shouldn't block the upload itself —
         // the UI just falls back to the full image for that one file.
+        thumbRelPath = null;
+      }
+    } else if (req.file.mimetype === 'application/pdf') {
+      try {
+        const thumbName = await makePdfThumbnail(req.file.path, path.dirname(req.file.path));
+        thumbRelPath = path.relative(UPLOAD_DIR, path.join(path.dirname(req.file.path), thumbName));
+      } catch (e) {
+        // pdftoppm missing or the PDF is unreadable — fall back to the
+        // generic 📄 icon in the UI, upload still succeeds either way.
         thumbRelPath = null;
       }
     }

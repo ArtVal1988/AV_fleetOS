@@ -1135,6 +1135,7 @@ input.dm-pf-val.tel{font-size:14px;}
 .dm-attach-area{margin-top:8px;padding-top:8px;border-top:1px solid #f0f2f5;}
 .dm-attach-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
 .dm-attach-thumb{position:relative;width:52px;height:52px;border-radius:5px;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0;cursor:pointer;}
+.dm-attach-pdf-badge{position:absolute;bottom:1px;left:1px;background:#dc2626;color:#fff;font-size:7px;font-weight:700;padding:1px 3px;border-radius:2px;letter-spacing:.3px;}
 .dm-attach-thumb img{width:100%;height:100%;object-fit:cover;}
 .dm-attach-thumb .dm-del{position:absolute;top:-1px;right:-1px;width:16px;height:16px;background:#ef4444;color:#fff;border:none;border-radius:0 0 0 4px;font-size:9px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
 .dm-edit-active .dm-attach-thumb .dm-del{display:flex;}
@@ -3665,8 +3666,8 @@ function closeAttachViewer(){
 
 function buildAttachArea(v, key){
   const files=(v.docs?.files?.[key])||[];
-  const imgs=files.filter(f=>f.type.startsWith('image/'));
-  const docs=files.filter(f=>!f.type.startsWith('image/'));
+  const imgs=files.filter(f=>f.type.startsWith('image/') || f.thumbUrl);
+  const docs=files.filter(f=>!(f.type.startsWith('image/') || f.thumbUrl));
   const galleryId = 'docs-'+v.id+'-'+key;
   registerAttachGallery(galleryId, imgs.map(f=>({src:f.url, name:f.name, type:f.type})));
   let html='<div class="dm-attach-area" onclick="event.stopPropagation()">';
@@ -3675,6 +3676,7 @@ function buildAttachArea(v, key){
     imgs.forEach((f,i)=>{
       html+='<div class="dm-attach-thumb" onclick="viewAttachmentGallery(\''+galleryId+'\','+i+')">'+
         '<img src="'+(f.thumbUrl||f.url)+'" alt="'+f.name+'" loading="lazy">'+
+        (f.type==='application/pdf' ? '<span class="dm-attach-pdf-badge">PDF</span>' : '')+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+i+')">✕</button>'+
       '</div>';
     });
