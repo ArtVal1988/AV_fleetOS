@@ -3044,7 +3044,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
-  document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
+  document.getElementById('bm-status').innerHTML='<option value="" selected disabled>— Оберіть статус —</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
   document.getElementById('bm-start').value=start||colDateStr(1);
   document.getElementById('bm-end').value=end||colDateStr(1);
@@ -3270,6 +3270,7 @@ function saveBooking(){
   const end=document.getElementById('bm-end').value;
   const vid=parseInt(document.getElementById('bm-vehicle').value);
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
+  if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
 
   // Block genuine double-booking for the same vehicle. A 1-day touch
   // (existing booking ends the day this one starts, or vice versa) is a
