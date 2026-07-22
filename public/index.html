@@ -1782,18 +1782,18 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-pickup-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
-          <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc">
+          <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras()">
+          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras()">
+          <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras()">
         </div>
       </div>
 
       <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview()">
-          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff()">
-          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc">
+          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras()">
+          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras()">
+          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras()">
         </div>
       </div>
       <div id="bm-return-anchor-normal"></div>
@@ -3189,6 +3189,7 @@ function editBooking(bid){
   document.getElementById('extras-panel').style.display='none';
   document.getElementById('extras-toggle-btn').classList.remove('open');
   loadExtrasToForm(b.extras||{});
+  autoDetectExtras();
   customEquipment = (b.equipment||[]).map(item => ({...item, id: equipIdSeq++}));
   renderEquipmentList();
   updateExtrasTotal();
@@ -6773,6 +6774,47 @@ function toggleNotesPanel(){
   btn.classList.toggle('open', open);
 }
 
+const BM_DEFAULT_ADDRESS = 'Офіс, вул. Антоновича, 112';
+function setExtraActive(key, active){
+  if(extrasActive[key] === active) return;
+  extrasActive[key] = active;
+  const radio = document.getElementById('ex-radio-' + key);
+  const wrap  = document.getElementById('ex-price-wrap-' + key);
+  const item  = document.querySelector(`.extra-item[data-key="${key}"]`);
+  if(radio) radio.textContent = active ? '●' : '○';
+  if(wrap)  wrap.style.display = active ? 'flex' : 'none';
+  if(item)  item.classList.toggle('active', active);
+  updateExtrasTotal();
+  updateExtrasCount();
+}
+function isOffHoursTime(dateStr, timeStr){
+  if(!dateStr || !timeStr) return false;
+  const d = new Date(dateStr+'T00:00:00');
+  const dow = d.getDay(); // 0=Нд,6=Сб
+  const isWeekend = (dow===0 || dow===6);
+  const [h,m] = timeStr.split(':').map(Number);
+  const minutes = h*60 + (m||0);
+  const startM = isWeekend ? 10*60 : 9*60;
+  const endM   = isWeekend ? 17*60 : 18*60;
+  return minutes < startM || minutes >= endM;
+}
+// Auto-activates the relevant "extra" (address / off-hours) when the actual
+// pickup/return address or time no longer matches the standard case. Only
+// ever turns extras ON automatically — never turns them off, in case the
+// user wants to keep one active/priced even after correcting a field.
+function autoDetectExtras(){
+  const pickupLoc = document.getElementById('bm-pickup-loc')?.value.trim();
+  const returnLoc = document.getElementById('bm-return-loc')?.value.trim();
+  if(pickupLoc && pickupLoc !== BM_DEFAULT_ADDRESS) setExtraActive('pickup_address', true);
+  if(returnLoc && returnLoc !== BM_DEFAULT_ADDRESS) setExtraActive('return_address', true);
+
+  if(isOffHoursTime(document.getElementById('bm-pickup-date')?.value, document.getElementById('bm-pickup-time')?.value)){
+    setExtraActive('pickup_offhours', true);
+  }
+  if(isOffHoursTime(document.getElementById('bm-return-date')?.value, document.getElementById('bm-return-time')?.value)){
+    setExtraActive('return_offhours', true);
+  }
+}
 function toggleExtra(key){
   extrasActive[key] = !extrasActive[key];
   const radio   = document.getElementById('ex-radio-' + key);
