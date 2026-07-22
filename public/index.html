@@ -3102,6 +3102,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-start-km').value='';
   document.getElementById('bm-end-km').value='';
   document.getElementById('bm-km-diff').style.display='none';
+  const avgBadgeReset = document.getElementById('bm-km-avg');
+  if(avgBadgeReset) avgBadgeReset.style.display='none';
   document.getElementById('extras-toggle-btn').classList.remove('open');
   loadExtrasToForm({});
   customEquipment = [];
