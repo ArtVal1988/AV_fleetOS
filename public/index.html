@@ -1814,24 +1814,24 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="extra-pair-label">↑ Отримання</div>
           <!-- Отримання: адреса + неробоча година в один рядок -->
           <div class="extra-pair-row">
-            <div class="extra-item extra-pair-item" data-key="pickup_address">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_address')">
+            <div class="extra-item extra-pair-item" data-key="pickup_address" onclick="toggleExtra('pickup_address')" style="cursor:pointer">
+              <button type="button" class="extra-toggle-btn" onclick="event.stopPropagation();toggleExtra('pickup_address')">
                 <span class="extra-radio" id="ex-radio-pickup_address">○</span>
               </button>
               <span class="extra-icon">📍</span>
               <span class="extra-name">За адресою</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-pickup_address" style="display:none">
+              <div class="extra-price-wrap" id="ex-price-wrap-pickup_address" style="display:none" onclick="event.stopPropagation()">
                 <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_address" placeholder="0" oninput="formatExtraPriceInput(this)">
                 <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_address" onclick="setExtraCur('pickup_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_address" onclick="setExtraCur('pickup_address','uah')">₴</button></span>
               </div>
             </div>
-            <div class="extra-item extra-pair-item" data-key="pickup_offhours">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('pickup_offhours')">
+            <div class="extra-item extra-pair-item" data-key="pickup_offhours" onclick="toggleExtra('pickup_offhours')" style="cursor:pointer">
+              <button type="button" class="extra-toggle-btn" onclick="event.stopPropagation();toggleExtra('pickup_offhours')">
                 <span class="extra-radio" id="ex-radio-pickup_offhours">○</span>
               </button>
               <span class="extra-icon">🌙</span>
               <span class="extra-name">Неробоча година</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-pickup_offhours" style="display:none">
+              <div class="extra-price-wrap" id="ex-price-wrap-pickup_offhours" style="display:none" onclick="event.stopPropagation()">
                 <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-pickup_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
                 <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-pickup_offhours" onclick="setExtraCur('pickup_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-pickup_offhours" onclick="setExtraCur('pickup_offhours','uah')">₴</button></span>
               </div>
@@ -1842,24 +1842,24 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="extra-pair-label">↓ Повернення</div>
           <!-- Повернення: адреса + неробоча година в один рядок -->
           <div class="extra-pair-row">
-            <div class="extra-item extra-pair-item" data-key="return_address">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_address')">
+            <div class="extra-item extra-pair-item" data-key="return_address" onclick="toggleExtra('return_address')" style="cursor:pointer">
+              <button type="button" class="extra-toggle-btn" onclick="event.stopPropagation();toggleExtra('return_address')">
                 <span class="extra-radio" id="ex-radio-return_address">○</span>
               </button>
               <span class="extra-icon">📍</span>
               <span class="extra-name">За адресою</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-return_address" style="display:none">
+              <div class="extra-price-wrap" id="ex-price-wrap-return_address" style="display:none" onclick="event.stopPropagation()">
                 <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_address" placeholder="0" oninput="formatExtraPriceInput(this)">
                 <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_address" onclick="setExtraCur('return_address','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_address" onclick="setExtraCur('return_address','uah')">₴</button></span>
               </div>
             </div>
-            <div class="extra-item extra-pair-item" data-key="return_offhours">
-              <button type="button" class="extra-toggle-btn" onclick="toggleExtra('return_offhours')">
+            <div class="extra-item extra-pair-item" data-key="return_offhours" onclick="toggleExtra('return_offhours')" style="cursor:pointer">
+              <button type="button" class="extra-toggle-btn" onclick="event.stopPropagation();toggleExtra('return_offhours')">
                 <span class="extra-radio" id="ex-radio-return_offhours">○</span>
               </button>
               <span class="extra-icon">🌙</span>
               <span class="extra-name">Неробоча година</span>
-              <div class="extra-price-wrap" id="ex-price-wrap-return_offhours" style="display:none">
+              <div class="extra-price-wrap" id="ex-price-wrap-return_offhours" style="display:none" onclick="event.stopPropagation()">
                 <input type="text" inputmode="numeric" class="extra-price-input" id="ex-price-return_offhours" placeholder="0" oninput="formatExtraPriceInput(this)">
                 <span class="extras-cur-toggle"><button type="button" class="extras-cur-btn active" id="ex-cur-btn-orig-return_offhours" onclick="setExtraCur('return_offhours','orig')">$</button><button type="button" class="extras-cur-btn" id="ex-cur-btn-uah-return_offhours" onclick="setExtraCur('return_offhours','uah')">₴</button></span>
               </div>
@@ -6847,17 +6847,13 @@ function autoDetectExtras(which){
   const checkReturn = !which || which==='return';
   if(checkPickup){
     const pickupLoc = document.getElementById('bm-pickup-loc')?.value.trim();
-    if(pickupLoc && pickupLoc !== BM_DEFAULT_ADDRESS) setExtraActive('pickup_address', true);
-    if(isOffHoursTime(document.getElementById('bm-pickup-date')?.value, document.getElementById('bm-pickup-time')?.value)){
-      setExtraActive('pickup_offhours', true);
-    }
+    setExtraActive('pickup_address', !!(pickupLoc && pickupLoc !== BM_DEFAULT_ADDRESS));
+    setExtraActive('pickup_offhours', isOffHoursTime(document.getElementById('bm-pickup-date')?.value, document.getElementById('bm-pickup-time')?.value));
   }
   if(checkReturn){
     const returnLoc = document.getElementById('bm-return-loc')?.value.trim();
-    if(returnLoc && returnLoc !== BM_DEFAULT_ADDRESS) setExtraActive('return_address', true);
-    if(isOffHoursTime(document.getElementById('bm-return-date')?.value, document.getElementById('bm-return-time')?.value)){
-      setExtraActive('return_offhours', true);
-    }
+    setExtraActive('return_address', !!(returnLoc && returnLoc !== BM_DEFAULT_ADDRESS));
+    setExtraActive('return_offhours', isOffHoursTime(document.getElementById('bm-return-date')?.value, document.getElementById('bm-return-time')?.value));
   }
 }
 function toggleExtra(key){
