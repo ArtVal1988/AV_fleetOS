@@ -931,6 +931,10 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b6{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid rgba(37,99,235,.15);}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.pay-type-btns{display:flex;gap:6px;}
+.ptb{flex:1;padding:9px 8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.ptb:hover{border-color:#93c5fd;color:#374151;}
+.ptb.active{background:#eff6ff;border-color:#2563eb;color:#1d4ed8;}
 .fg{display:flex;flex-direction:column;gap:4px;}
 .fg.full{grid-column:1/-1;}
 label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
@@ -5661,7 +5665,7 @@ function autoCalcKaskoEndDate(){
   const d = new Date(startVal+'T00:00:00');
   d.setFullYear(d.getFullYear()+1);
   d.setDate(d.getDate()-1);
-  document.getElementById('ck-end').value = d.toISOString().split('T')[0];
+  document.getElementById('ck-end').value = dStr(d.getFullYear(), d.getMonth(), d.getDate());
 }
 function setCalPayType(t){
   calKPayType=t;
@@ -5671,7 +5675,7 @@ function setCalPayType(t){
 }
 function buildCalKaskoPayments(){
   const start=document.getElementById('ck-start').value;
-  const total=parseFloat(document.getElementById('ck-total').value)||0;
+  const total=parseThousands(document.getElementById('ck-total').value)||0;
   const list=document.getElementById('ck-payments-list');
   if(calKPayType==='single'){
     list.innerHTML='<div class="im-pay-row">' +
@@ -5703,10 +5707,10 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-policy').value=k.policyNum||'';
   document.getElementById('ck-start').value=k.start||'';
   document.getElementById('ck-end').value=k.end||'';
-  document.getElementById('ck-sum').value=k.insuredSum||'';
-  document.getElementById('ck-tariff').value=k.tariff||'';
-  document.getElementById('ck-total').value=k.totalPremium||'';
-  document.getElementById('ck-deductible').value=k.deductible||'';
+  document.getElementById('ck-sum').value=k.insuredSum?Number(k.insuredSum).toLocaleString('uk-UA'):'';
+  document.getElementById('ck-tariff').value=k.tariff?String(k.tariff).replace('.',','):'';
+  document.getElementById('ck-total').value=k.totalPremium?Number(k.totalPremium).toLocaleString('uk-UA'):'';
+  document.getElementById('ck-deductible').value=k.deductible?Number(k.deductible).toLocaleString('uk-UA'):'';
   document.getElementById('ck-notes').value=k.notes||'';
   calKPayType=k.paymentType||'single'; calKPaid={};
   (k.payments||[]).forEach(p=>{calKPaid[p.quarter??0]=p.paid;});
@@ -5719,8 +5723,8 @@ function renewCalKasko(vid){
   openCalKaskoEdit(vid);
   const ns=new Date(); ns.setDate(1);
   const ne=new Date(ns); ne.setFullYear(ne.getFullYear()+1); ne.setDate(ne.getDate()-1);
-  document.getElementById('ck-start').value=ns.toISOString().split('T')[0];
-  document.getElementById('ck-end').value=ne.toISOString().split('T')[0];
+  document.getElementById('ck-start').value=dStr(ns.getFullYear(),ns.getMonth(),ns.getDate());
+  document.getElementById('ck-end').value=dStr(ne.getFullYear(),ne.getMonth(),ne.getDate());
   document.getElementById('ck-policy').value='';
   calKPaid={}; buildCalKaskoPayments();
 }
@@ -5733,7 +5737,7 @@ function saveCalKasko(){
   } else {
     payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:calKPaid[q]||false}));
   }
-  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,insuredSum:parseFloat(document.getElementById('ck-sum').value)||0,tariff:parseFloat(document.getElementById('ck-tariff').value)||0,paymentType:calKPayType,totalPremium:parseFloat(document.getElementById('ck-total').value)||0,deductible:parseFloat(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
+  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,insuredSum:parseThousands(document.getElementById('ck-sum').value)||0,tariff:parseFloat((document.getElementById('ck-tariff').value||'').replace(',','.'))||0,paymentType:calKPayType,totalPremium:parseThousands(document.getElementById('ck-total').value)||0,deductible:parseThousands(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
   persistVehicle(v);
   document.getElementById('cal-kasko-modal').classList.remove('open');
   renderInsuranceModal(v); render();
@@ -8316,10 +8320,11 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
         <div class="fg"><label>Дата закінчення</label><input type="date" id="ck-end"></div>
       </div>
       <div class="fgrid" style="grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">
-        <div class="fg"><label>Страхова сума (₴)</label><input type="number" id="ck-sum" placeholder="450000"></div>
-        <div class="fg"><label>Тариф (%)</label><input type="number" step="0.01" id="ck-tariff" placeholder="5.5"></div>
-        <div class="fg"><label>Платіж (₴)</label><input type="number" id="ck-total" placeholder="24000"></div>
-        <div class="fg"><label>Франшиза (₴)</label><input type="number" id="ck-deductible" placeholder="18000"></div>
+      <div class="fgrid" style="grid-template-columns:1.4fr 0.8fr 1fr 1fr;gap:8px;margin-top:10px">
+        <div class="fg"><label>Страхова сума (₴)</label><input type="text" inputmode="numeric" id="ck-sum" placeholder="450 000" oninput="formatThousandsInput(this)"></div>
+        <div class="fg"><label>Тариф (%)</label><input type="text" inputmode="decimal" id="ck-tariff" placeholder="5,55" style="text-align:center"></div>
+        <div class="fg"><label>Платіж (₴)</label><input type="text" inputmode="numeric" id="ck-total" placeholder="24 000" oninput="formatThousandsInput(this)"></div>
+        <div class="fg"><label>Франшиза (₴)</label><input type="text" inputmode="numeric" id="ck-deductible" placeholder="18 000" oninput="formatThousandsInput(this)"></div>
       </div>
       <div class="fgrid" style="margin-top:10px">
         <div class="fg full"><label>Тип оплати</label>
