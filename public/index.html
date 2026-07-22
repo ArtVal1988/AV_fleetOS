@@ -1782,18 +1782,18 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-pickup-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras()">
-          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras()">
-          <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras()">
+          <input type="date" readonly id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
+          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')">
+          <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
 
       <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras()">
-          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras()">
-          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras()">
+          <input type="date" readonly id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
+          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')">
+          <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
       <div id="bm-return-anchor-normal"></div>
@@ -6842,17 +6842,22 @@ function isOffHoursTime(dateStr, timeStr){
 // pickup/return address or time no longer matches the standard case. Only
 // ever turns extras ON automatically — never turns them off, in case the
 // user wants to keep one active/priced even after correcting a field.
-function autoDetectExtras(){
-  const pickupLoc = document.getElementById('bm-pickup-loc')?.value.trim();
-  const returnLoc = document.getElementById('bm-return-loc')?.value.trim();
-  if(pickupLoc && pickupLoc !== BM_DEFAULT_ADDRESS) setExtraActive('pickup_address', true);
-  if(returnLoc && returnLoc !== BM_DEFAULT_ADDRESS) setExtraActive('return_address', true);
-
-  if(isOffHoursTime(document.getElementById('bm-pickup-date')?.value, document.getElementById('bm-pickup-time')?.value)){
-    setExtraActive('pickup_offhours', true);
+function autoDetectExtras(which){
+  const checkPickup = !which || which==='pickup';
+  const checkReturn = !which || which==='return';
+  if(checkPickup){
+    const pickupLoc = document.getElementById('bm-pickup-loc')?.value.trim();
+    if(pickupLoc && pickupLoc !== BM_DEFAULT_ADDRESS) setExtraActive('pickup_address', true);
+    if(isOffHoursTime(document.getElementById('bm-pickup-date')?.value, document.getElementById('bm-pickup-time')?.value)){
+      setExtraActive('pickup_offhours', true);
+    }
   }
-  if(isOffHoursTime(document.getElementById('bm-return-date')?.value, document.getElementById('bm-return-time')?.value)){
-    setExtraActive('return_offhours', true);
+  if(checkReturn){
+    const returnLoc = document.getElementById('bm-return-loc')?.value.trim();
+    if(returnLoc && returnLoc !== BM_DEFAULT_ADDRESS) setExtraActive('return_address', true);
+    if(isOffHoursTime(document.getElementById('bm-return-date')?.value, document.getElementById('bm-return-time')?.value)){
+      setExtraActive('return_offhours', true);
+    }
   }
 }
 function toggleExtra(key){
