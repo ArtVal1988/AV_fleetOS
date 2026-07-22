@@ -5655,6 +5655,14 @@ function saveCalOsago(){
 
 /* КАСКО edit */
 let calKPayType='single', calKPaid={};
+function autoCalcKaskoEndDate(){
+  const startVal = document.getElementById('ck-start')?.value;
+  if(!startVal) return;
+  const d = new Date(startVal+'T00:00:00');
+  d.setFullYear(d.getFullYear()+1);
+  d.setDate(d.getDate()-1);
+  document.getElementById('ck-end').value = d.toISOString().split('T')[0];
+}
 function setCalPayType(t){
   calKPayType=t;
   document.getElementById('ck-ptb-single').classList.toggle('active',t==='single');
@@ -5695,6 +5703,8 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-policy').value=k.policyNum||'';
   document.getElementById('ck-start').value=k.start||'';
   document.getElementById('ck-end').value=k.end||'';
+  document.getElementById('ck-sum').value=k.insuredSum||'';
+  document.getElementById('ck-tariff').value=k.tariff||'';
   document.getElementById('ck-total').value=k.totalPremium||'';
   document.getElementById('ck-deductible').value=k.deductible||'';
   document.getElementById('ck-notes').value=k.notes||'';
@@ -5723,7 +5733,7 @@ function saveCalKasko(){
   } else {
     payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:calKPaid[q]||false}));
   }
-  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,paymentType:calKPayType,totalPremium:parseFloat(document.getElementById('ck-total').value)||0,deductible:parseFloat(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
+  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,insuredSum:parseFloat(document.getElementById('ck-sum').value)||0,tariff:parseFloat(document.getElementById('ck-tariff').value)||0,paymentType:calKPayType,totalPremium:parseFloat(document.getElementById('ck-total').value)||0,deductible:parseFloat(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
   persistVehicle(v);
   document.getElementById('cal-kasko-modal').classList.remove('open');
   renderInsuranceModal(v); render();
@@ -8300,13 +8310,19 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     <div class="docs-modal-body">
       <div class="msec-title" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:10px">Деталі полісу КАСКО</div>
       <div class="fgrid">
-        <div class="fg full"><label>Страхова компанія</label><input type="text" id="ck-insurer" placeholder="УНІКА"></div>
-        <div class="fg full"><label>Номер полісу</label><input type="text" id="ck-policy" placeholder="КС/98765432"></div>
-        <div class="fg"><label>Дата початку</label><input type="date" id="ck-start"></div>
+        <div class="fg"><label>Страхова компанія</label><input type="text" id="ck-insurer" placeholder="УНІКА"></div>
+        <div class="fg"><label>Номер полісу</label><input type="text" id="ck-policy" placeholder="КС/98765432"></div>
+        <div class="fg"><label>Дата початку</label><input type="date" id="ck-start" onchange="autoCalcKaskoEndDate()"></div>
         <div class="fg"><label>Дата закінчення</label><input type="date" id="ck-end"></div>
-        <div class="fg"><label>Загальна сума (₴)</label><input type="number" id="ck-total" placeholder="24000"></div>
+      </div>
+      <div class="fgrid" style="grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px">
+        <div class="fg"><label>Страхова сума (₴)</label><input type="number" id="ck-sum" placeholder="450000"></div>
+        <div class="fg"><label>Тариф (%)</label><input type="number" step="0.01" id="ck-tariff" placeholder="5.5"></div>
+        <div class="fg"><label>Платіж (₴)</label><input type="number" id="ck-total" placeholder="24000"></div>
         <div class="fg"><label>Франшиза (₴)</label><input type="number" id="ck-deductible" placeholder="18000"></div>
-        <div class="fg"><label>Тип оплати</label>
+      </div>
+      <div class="fgrid" style="margin-top:10px">
+        <div class="fg full"><label>Тип оплати</label>
           <div class="pay-type-btns" style="margin-top:5px">
             <button class="ptb active" id="ck-ptb-single" onclick="setCalPayType('single')">Один платіж</button>
             <button class="ptb" id="ck-ptb-quarterly" onclick="setCalPayType('quarterly')">Щоквартально</button>
