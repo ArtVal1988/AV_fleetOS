@@ -1879,15 +1879,15 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div class="msec-inner-sep" id="bm-block-3">
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
-      <div class="fin-row">
-        <div class="fin-field fin-days fin-label-style" style="flex:0 0 40px;min-width:40px">
-          <label>Кількість</label>
+      <div class="fin-row" style="justify-content:space-between">
+        <div class="fin-field fin-days fin-label-style" style="flex:0 0 55px;min-width:55px">
+          <label style="white-space:nowrap">Кількість</label>
           <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
-            style="text-align:center;font-family:var(--font-mono);width:40px">
+            style="text-align:center;font-family:var(--font-mono);width:55px">
         </div>
-        <div class="fin-field fin-rate fin-label-style" style="flex:0 0 64px;min-width:64px">
-          <label id="bm-rate-label">Вартість</label>
-          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" style="width:64px" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+        <div class="fin-field fin-rate fin-label-style" style="flex:0 0 75px;min-width:75px">
+          <label id="bm-rate-label" style="white-space:nowrap">Вартість</label>
+          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" style="width:75px" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
         </div>
         <div class="fin-field fin-cur">
           <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
@@ -1900,24 +1900,24 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
         <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="display:none;flex:0 0 48px;min-width:48px">
-          <label id="bm-rate-label2">Курс</label>
+          <label id="bm-rate-label2" style="white-space:nowrap">Курс</label>
           <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01" style="width:48px"
             oninput="updateVatPreview()">
         </div>
         <div class="fin-field fin-vat fin-label-style" id="bm-vat-field" style="display:none">
-          <label>ПДВ %</label>
+          <label style="white-space:nowrap">ПДВ %</label>
           <input type="number" id="bm-vat" value="20" min="0" max="100"
             style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
         </div>
-        <div class="fin-field fin-label-style" id="bm-paymethod-field">
-          <label>Оплата</label>
+        <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
+          <label style="white-space:nowrap">Оплата</label>
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
             <button type="button" id="pm-btn-cash" class="dep-cur-pill active" onclick="setPayMethod('cash')" title="Готівка">💵</button>
             <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="setPayMethod('card')" title="Картка">💳</button>
           </div>
         </div>
-        <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field">
-          <label>Депозит</label>
+        <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
+          <label style="white-space:nowrap">Депозит</label>
           <div class="dep-inline-wrap">
             <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" style="width:64px;flex:0 0 64px" oninput="formatThousandsInput(this)">
             <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
@@ -1925,9 +1925,9 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" id="dep-cur-btn-eur" class="dep-cur-pill" onclick="setDepositCur('€')">€</button>
           </div>
         </div>
-        <div class="fin-field fin-label-style" id="bm-deposit-paymethod-field">
-          <label>Оплата застави</label>
-          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+        <div class="fin-field fin-label-style" id="bm-deposit-paymethod-field" style="flex:0 0 auto;min-width:0">
+          <label style="opacity:0;white-space:nowrap">·</label>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0;justify-content:flex-end">
             <button type="button" id="dep-pm-btn-cash" class="dep-cur-pill active" onclick="setDepositPayMethod('cash')" title="Готівка">💵</button>
             <button type="button" id="dep-pm-btn-card" class="dep-cur-pill" onclick="setDepositPayMethod('card')" title="Картка">💳</button>
           </div>
