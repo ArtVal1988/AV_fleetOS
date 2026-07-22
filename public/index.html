@@ -1907,6 +1907,13 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="number" id="bm-vat" value="20" min="0" max="100"
             style="background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
         </div>
+        <div class="fin-field fin-label-style" id="bm-paymethod-field">
+          <label>Оплата</label>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+            <button type="button" id="pm-btn-cash" class="dep-cur-pill active" onclick="setPayMethod('cash')" title="Готівка">💵</button>
+            <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="setPayMethod('card')" title="Картка">💳</button>
+          </div>
+        </div>
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field">
           <label>Депозит</label>
           <div class="dep-inline-wrap">
@@ -1914,6 +1921,13 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
             <button type="button" id="dep-cur-btn-uah" class="dep-cur-pill" onclick="setDepositCur('₴')">₴</button>
             <button type="button" id="dep-cur-btn-eur" class="dep-cur-pill" onclick="setDepositCur('€')">€</button>
+          </div>
+        </div>
+        <div class="fin-field fin-label-style" id="bm-deposit-paymethod-field">
+          <label>Оплата застави</label>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+            <button type="button" id="dep-pm-btn-cash" class="dep-cur-pill active" onclick="setDepositPayMethod('cash')" title="Готівка">💵</button>
+            <button type="button" id="dep-pm-btn-card" class="dep-cur-pill" onclick="setDepositPayMethod('card')" title="Картка">💳</button>
           </div>
         </div>
       </div>
@@ -3061,6 +3075,8 @@ function openBookingModal(vid=null,start=null,end=null){
   onCurrencyChange();
   document.getElementById('bm-deposit').value='';
   setDepositCur('$');
+  setPayMethod('cash');
+  setDepositPayMethod('cash');
   document.getElementById('bm-days-override').value='';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
@@ -3165,6 +3181,8 @@ function editBooking(bid){
   onCurrencyChange();
   document.getElementById('bm-deposit').value=b.deposit?Number(b.deposit).toLocaleString('uk-UA'):'';
   setDepositCur(b.depositCur || b.currency || '$');
+  setPayMethod(b.payMethod || 'cash');
+  setDepositPayMethod(b.depositPayMethod || 'cash');
   const liveCur = document.getElementById('bm-currency').value||'$';
   document.getElementById('bm-days-override').value=b.daysOverride||'';
   daysOverrideTouched = !!(b.daysOverride>0);
@@ -3326,6 +3344,8 @@ function saveBooking(){
     currency:document.getElementById('bm-currency').value,
     deposit:parseThousands(document.getElementById('bm-deposit').value),
     depositCur:(['$','₴','€'].find(c => document.getElementById(c==='$'?'dep-cur-btn-usd':c==='₴'?'dep-cur-btn-uah':'dep-cur-btn-eur')?.classList.contains('active')) || '$'),
+    payMethod: bmPayMethod,
+    depositPayMethod: bmDepositPayMethod,
     daysOverride:parseInt(document.getElementById('bm-days-override')?.value)||0,
     discount:parseFloat(document.getElementById('bm-discount').value)||0,
 
@@ -6496,6 +6516,17 @@ function setDepositCur(currency){
     if(btn) btn.classList.toggle('active', c === currency);
   });
 }
+let bmPayMethod = 'cash', bmDepositPayMethod = 'cash';
+function setPayMethod(method){
+  bmPayMethod = method;
+  document.getElementById('pm-btn-cash')?.classList.toggle('active', method==='cash');
+  document.getElementById('pm-btn-card')?.classList.toggle('active', method==='card');
+}
+function setDepositPayMethod(method){
+  bmDepositPayMethod = method;
+  document.getElementById('dep-pm-btn-cash')?.classList.toggle('active', method==='cash');
+  document.getElementById('dep-pm-btn-card')?.classList.toggle('active', method==='card');
+}
 function onCurrencyChange(){
   const cur = document.getElementById('bm-currency').value;
   const curSelect = document.getElementById('bm-currency');
@@ -6785,6 +6816,14 @@ function setExtraActive(key, active){
   if(radio) radio.textContent = active ? '●' : '○';
   if(wrap)  wrap.style.display = active ? 'flex' : 'none';
   if(item)  item.classList.toggle('active', active);
+  if(active){
+    const panel = document.getElementById('extras-panel');
+    const btn   = document.getElementById('extras-toggle-btn');
+    if(panel && panel.style.display === 'none'){
+      panel.style.display = 'block';
+      btn?.classList.add('open');
+    }
+  }
   updateExtrasTotal();
   updateExtrasCount();
 }
