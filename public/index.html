@@ -46,11 +46,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sticker-card{position:relative;flex-shrink:0;width:150px;height:62px;border-radius:8px;padding:5px 9px 5px;font-size:10px;line-height:1.25;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .sticker-card.pinned{box-shadow:0 0 0 2px rgba(0,0,0,.15),0 1px 3px rgba(0,0,0,.08);}
 .sticker-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
-.sticker-pin{position:absolute;top:6px;right:48px;background:none;border:none;cursor:pointer;font-size:12px;opacity:.35;transition:opacity .15s;padding:2px;}
-.sticker-edit{position:absolute;top:6px;right:26px;background:none;border:none;cursor:pointer;font-size:11px;opacity:0;transition:opacity .15s;color:inherit;padding:2px 4px;}
-.sticker-card:hover .sticker-edit{opacity:.5;}
-.sticker-edit:hover{opacity:1!important;}
-.sticker-pin:hover{opacity:.8;}
+.sticker-actions{position:absolute;top:3px;right:3px;display:flex;align-items:center;gap:1px;}
+.sticker-pin,.sticker-edit,.sticker-del{background:none;border:none;cursor:pointer;font-size:11px;opacity:0;transition:opacity .15s;color:inherit;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:4px;line-height:1;}
+.sticker-pin{opacity:.35;}
+.sticker-card:hover .sticker-edit,.sticker-card:hover .sticker-del{opacity:.6;}
+.sticker-edit:hover,.sticker-del:hover{opacity:1!important;background:rgba(0,0,0,.08);}
+.sticker-pin:hover{opacity:.8;background:rgba(0,0,0,.08);}
 .sticker-pin.active{opacity:1;}
 .sticker-card.c-red{background:#fee2e2;border:1px solid #fca5a5;color:#7f1d1d;}
 .sticker-card.c-blue{background:#dbeafe;border:1px solid #93c5fd;color:#1e3a8a;}
@@ -58,9 +59,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sticker-text{font-weight:500;margin-bottom:6px;word-break:break-word;white-space:pre-wrap;}
 .sticker-label{font-size:8px;letter-spacing:.5px;text-transform:uppercase;font-weight:700;opacity:.65;margin-bottom:3px;}
 .sticker-author{font-size:10px;opacity:.75;text-align:right;font-style:italic;}
-.sticker-del{position:absolute;top:3px;right:4px;background:none;border:none;cursor:pointer;font-size:11px;opacity:0;transition:opacity .15s;color:inherit;padding:2px 4px;line-height:1;}
-.sticker-card:hover .sticker-del{opacity:.6;}
-.sticker-del:hover{opacity:1!important;}
 .sticker-add-btn{flex-shrink:0;align-self:center;background:none;border:1px dashed #c7cbd4;border-radius:8px;padding:10px 16px;font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .sticker-add-btn:hover{border-color:#2563eb;color:#2563eb;background:#f5f8ff;}
 .sticker-popup-overlay{position:fixed;inset:0;background:rgba(30,35,50,.5);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -207,9 +205,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .sticker-text{-webkit-line-clamp:2;}
   .sticker-label{font-size:7px;margin-bottom:1px;}
   .sticker-author{font-size:8px;}
-  .sticker-pin{top:3px;right:30px;font-size:9px;}
-  .sticker-edit{top:3px;right:16px;font-size:9px;opacity:.5;}
-  .sticker-del{font-size:9px;top:2px;right:2px;}
+  .sticker-pin,.sticker-edit,.sticker-del{font-size:9px;opacity:.5;}
   .content-split{padding:0 2px 10px 10px;}
   .calendar-scroll{border-right:none;border-radius:8px 0 0 8px;}
   .calendar-scroll{scroll-snap-type:x proximity;}
@@ -2404,9 +2400,11 @@ function renderStickers(){
   const ordered = [...stickers].sort((a,b) => (b.pinned?1:0) - (a.pinned?1:0));
   row.innerHTML = ordered.map(s => `
     <div class="sticker-card c-${s.color}${s.pinned?' pinned':''}">
-      <button class="sticker-pin${s.pinned?' active':''}" onclick="togglePinSticker(${s.id})" title="${s.pinned?'Відкріпити':'Закріпити'}">${s.pinned?'📌':'📍'}</button>
-      <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати">✎</button>
-      <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
+      <div class="sticker-actions">
+        <button class="sticker-pin${s.pinned?' active':''}" onclick="togglePinSticker(${s.id})" title="${s.pinned?'Відкріпити':'Закріпити'}">${s.pinned?'📌':'📍'}</button>
+        <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати">✎</button>
+        <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити">✕</button>
+      </div>
       <div class="sticker-label">${s.title || s.author || STICKER_LABELS[s.color] || 'Анонім'}</div>
       <div class="sticker-text" onclick="showStickerFullText(event,${s.id})" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
     </div>
@@ -2455,6 +2453,7 @@ function removeSticker(id){
   if(!confirm('Видалити цей стікер?')) return;
   stickers = stickers.filter(s=>s.id!==id);
   renderStickers();
+  if(_token) apiFetch('DELETE', '/stickers/'+id);
 }
 
 function renderCalendar(){
