@@ -3301,6 +3301,12 @@ function saveBooking(){
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
 
+  const clientType = document.getElementById('bm-client-type').value;
+  if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
+    alert('Вкажіть ЄДРПОУ');
+    return;
+  }
+
   const orderStatuses = ['rented', 'res-docs', 'reserved'];
   if(orderStatuses.includes(document.getElementById('bm-status').value)){
     const clientName = document.getElementById('bm-name').value.trim();
