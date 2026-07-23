@@ -2990,15 +2990,11 @@ function openEmptyCellPicker(e,vid,d){
   const cdt=colDate(d);
   const mp=document.getElementById('mini-picker');
   mp.innerHTML=`
-    <div class="mp-title">Статус · ${String(cdt.getDate()).padStart(2,'0')}.${String(cdt.getMonth()+1).padStart(2,'0')}.${cdt.getFullYear()}</div>
-    ${STATUSES.map(s=>`<div class="mp-opt" onclick="quickSetStatus('${s.key}',${vid},'${ds}')">
-      <div class="mp-dot" style="background:${s.color}"></div>${s.label}
-    </div>`).join('')}
-    <div class="mp-or">або</div>
+    <div class="mp-title">${String(cdt.getDate()).padStart(2,'0')}.${String(cdt.getMonth()+1).padStart(2,'0')}.${cdt.getFullYear()}</div>
     <button class="mp-book-btn" onclick="closeMiniPicker();openBookingModal(${vid},'${ds}','${ds}')">📋 Створити замовлення</button>`;
   let x=e.clientX+8, y=e.clientY-8;
   if(x+215>window.innerWidth)x=window.innerWidth-220;
-  if(y+400>window.innerHeight)y=window.innerHeight-405;
+  if(y+120>window.innerHeight)y=window.innerHeight-125;
   mp.style.left=x+'px'; mp.style.top=y+'px'; mp.style.display='block';
 }
 function quickSetStatus(status,vid,date){
