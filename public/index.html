@@ -1892,16 +1892,14 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
             style="text-align:center;font-family:var(--font-mono);width:70px">
         </div>
-        <div class="fin-field fin-rate fin-label-style" style="flex:0 0 90px;min-width:90px">
+        <div class="fin-field fin-label-style" style="flex:0 0 auto">
           <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%">Вартість</label>
-          <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" style="width:90px;text-align:center" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
-        </div>
-        <div class="fin-field fin-cur">
-          <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
-            <option value="$">$</option>
-            <option value="₴">₴</option>
-          </select>
-          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+          <div class="dep-inline-wrap">
+            <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:60px;flex:0 0 60px;text-align:center" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+            <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
+              <option value="$">$</option>
+              <option value="₴">₴</option>
+            </select>
             <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
             <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
           </div>
