@@ -6953,24 +6953,13 @@ function renderExtrasChips(){
 }
 function updateExtrasTotal(){
   const currency = document.getElementById('bm-currency')?.value || '$';
-  const hideUah = currency === '₴';
   EXTRAS_CONFIG.forEach(e => {
     const btn = document.getElementById('ex-cur-btn-orig-' + e.key);
     if(btn) btn.textContent = currency;
-    const uahBtn = document.getElementById('ex-cur-btn-uah-' + e.key);
-    if(uahBtn){
-      uahBtn.style.display = hideUah ? 'none' : '';
-      if(hideUah) setExtraCurSilent(e.key, 'orig');
-    }
   });
   customEquipment.forEach(item => {
     const btn = document.getElementById('equip-cur-btn-orig-' + item.id);
     if(btn) btn.textContent = currency;
-    const uahBtn = document.getElementById('equip-cur-btn-uah-' + item.id);
-    if(uahBtn){
-      uahBtn.style.display = hideUah ? 'none' : '';
-      if(hideUah) setEquipCurSilent(item.id, 'orig');
-    }
   });
   renderExtrasChips();
   updateVatPreview();
