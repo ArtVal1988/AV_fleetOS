@@ -2662,6 +2662,7 @@ function showTooltip(e,bid){
     <div class="tt-mobile-edit-row">
       <button type="button" class="btn btn-primary" style="width:100%" onclick="editBooking(${bid})">✏ Редагувати замовлення</button>
     </div>`;
+  ttW=tt.offsetWidth||240; ttH=tt.offsetHeight||160;
   positionTooltip(e);
   tt.classList.add('visible');
 }
@@ -2686,6 +2687,7 @@ function showTooltipSplit(e,bid1,bid2){
         <div style="font-size:11px;color:#6b7280">${b2.customer?.phone||''}</div>
       </div>
     </div>`;
+  ttW=tt.offsetWidth||240; ttH=tt.offsetHeight||160;
   positionTooltip(e);
   tt.classList.add('visible');
 }
@@ -2770,14 +2772,20 @@ function hideTooltip(){
   if(tt.classList.contains('mobile-tap')) return;
   ttHideTimer=setTimeout(()=>{tt.classList.remove('visible'); ttShownBid=null;},120);
 }
+let ttW=240, ttH=160;
 function positionTooltip(e){
-  const w=tt.offsetWidth||240, h=tt.offsetHeight||160;
   let x=e.clientX+14, y=e.clientY-10;
-  if(x+w>window.innerWidth-8)x=e.clientX-w-10;
-  if(y+h>window.innerHeight-8)y=window.innerHeight-h-8;
+  if(x+ttW>window.innerWidth-8)x=e.clientX-ttW-10;
+  if(y+ttH>window.innerHeight-8)y=window.innerHeight-ttH-8;
   tt.style.left=x+'px'; tt.style.top=y+'px';
 }
-document.addEventListener('mousemove',e=>{if(tt.classList.contains('visible'))positionTooltip(e);});
+let ttMoveRAF=null, ttLastEvent=null;
+document.addEventListener('mousemove',e=>{
+  if(!tt.classList.contains('visible')) return;
+  ttLastEvent=e;
+  if(ttMoveRAF) return; // already scheduled for this frame
+  ttMoveRAF=requestAnimationFrame(()=>{ positionTooltip(ttLastEvent); ttMoveRAF=null; });
+});
 document.addEventListener('click', e => {
   if(selectedBid === null) return;
   // Don't interfere with clicks on interactive elements, modals, or anything that manages its own selection
