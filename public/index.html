@@ -6640,12 +6640,20 @@ function updateVatPreview(){
   const startVal = document.getElementById('bm-start').value;
   const endVal   = document.getElementById('bm-end').value;
   const dualTotal = document.getElementById('bm-dual-total');
+
+  // Day count depends only on dates, not on price — compute it whenever we
+  // have dates, even before a rate has been entered.
+  const daysInput = document.getElementById('bm-days-override');
+  if(startVal && endVal){
+    const autoDaysAlways = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
+    if(daysInput && !daysOverrideTouched) daysInput.value = autoDaysAlways;
+  }
+
   // Show dual total whenever we have a rate and dates — needed for all client types now
   // (days override, services, and surcharge must always be visible/editable).
   if(!startVal || !endVal || !rate){ if(dualTotal) dualTotal.style.display='none'; return; }
 
   const autoDays = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
-  const daysInput = document.getElementById('bm-days-override');
   if(daysInput && !daysOverrideTouched) daysInput.value = autoDays;
   const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
 
