@@ -1895,7 +1895,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fin-field fin-label-style" style="flex:0 0 auto">
           <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%">Вартість</label>
           <div class="dep-inline-wrap">
-            <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:76px;flex:0 0 76px;text-align:center" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+            <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:76px;flex:0 0 76px;text-align:center;font-size:14px" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
             <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
               <option value="$">$</option>
               <option value="₴">₴</option>
@@ -1923,7 +1923,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
           <div class="dep-inline-wrap">
-            <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" style="width:80px;flex:0 0 80px;text-align:center" oninput="formatThousandsInput(this)">
+            <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" style="width:80px;flex:0 0 80px;text-align:center;font-size:14px" oninput="formatThousandsInput(this)">
             <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
             <button type="button" id="dep-cur-btn-uah" class="dep-cur-pill" onclick="setDepositCur('₴')">₴</button>
             <button type="button" id="dep-cur-btn-eur" class="dep-cur-pill" onclick="setDepositCur('€')">€</button>
