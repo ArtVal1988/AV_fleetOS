@@ -6623,7 +6623,7 @@ function updateVatPreview(){
   const totalPerDay = Math.round((rate + vatPerDay) * 100) / 100;
 
   const toUah = v => !anchorNonUah ? v : (needsConv ? v * exRate : null);
-  const toForeign = v => anchorNonUah ? v : (exRate > 0 ? v / exRate : null);
+  const toForeign = v => anchorNonUah ? v : null;
   const fmtU  = v => v !== null ? (isCompany ? fmt2(v) : Math.round(v).toLocaleString('uk-UA')) + ' ₴' : '—';
   const fmtF  = v => v !== null ? (isCompany ? fmt2(v) : Math.round(v).toLocaleString('uk-UA')) + ' ' + foreignSym : '—';
   const fmtO  = v => isCompany ? fmt2(v) : v;
@@ -6711,7 +6711,7 @@ function updateVatPreview(){
   // exchange rate symmetrically with the ₴ side (toForeign mirrors toUah).
   const dpExtrasRow = document.getElementById('dp-extras-row');
   const extrasUahColumn = (!anchorNonUah ? extrasOrigNative : (needsConv ? extrasOrigNative * exRate : 0)) + extrasUahNative;
-  const extrasForeignColumn = anchorNonUah ? extrasTotal : (exRate > 0 ? extrasUahColumn / exRate : null);
+  const extrasForeignColumn = anchorNonUah ? extrasTotal : null;
   if(dpExtrasRow) dpExtrasRow.style.display = (extrasTotal > 0 || extrasUahNative > 0) ? '' : 'none';
   if(extrasTotal > 0 || extrasUahNative > 0){
     document.getElementById('dp-extras').textContent = extrasForeignColumn !== null ? fmtF(extrasForeignColumn) : '—';
@@ -6719,7 +6719,7 @@ function updateVatPreview(){
   }
 
   const grandTotalUahColumn = (!anchorNonUah ? (gross+vatTotal+extrasOrigNative) : (needsConv ? (gross+vatTotal+extrasOrigNative) * exRate : 0)) + extrasUahNative;
-  const grandTotalForeignColumn = anchorNonUah ? grandTotal : (exRate > 0 ? grandTotalUahColumn / exRate : null);
+  const grandTotalForeignColumn = anchorNonUah ? grandTotal : null;
   document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : '—';
   document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmt2(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
 }
