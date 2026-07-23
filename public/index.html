@@ -6686,8 +6686,8 @@ function updateVatPreview(){
   }
 
   if(dualTotal){ dualTotal.style.display = ''; }
-  document.getElementById('dual-days-label').textContent = `${days} діб × ${rate.toLocaleString('uk-UA')} ${anchorCur}`;
-  document.getElementById('dual-days-label').style.color = anchorCur==='₴' ? '#166534' : '#1d4ed8';
+  document.getElementById('dual-days-label').textContent = `${days} діб × ${rate.toLocaleString('uk-UA')} ${cur}`;
+  document.getElementById('dual-days-label').style.color = cur==='₴' ? '#166534' : '#1d4ed8';
   document.getElementById('dual-days-label').style.fontWeight = '600';
   document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
   document.getElementById('dp-gross-uah').textContent = fmtU(toUah(gross));
