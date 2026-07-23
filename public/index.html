@@ -6591,14 +6591,13 @@ function updateVatPreview(){
   const vatPct  = isVat ? (parseFloat(document.getElementById('bm-vat').value) || 0) : 0;
   const cur     = document.getElementById('bm-currency').value;
   const exRate  = parseFloat(document.getElementById('bm-exchange-rate').value) || 0;
-  // The rate ("Вартість за добу") is anchored to whichever currency was active
-  // when it was actually typed — switching the dropdown afterwards must NOT
-  // silently reinterpret that number as being in the new currency.
-  const anchorCur = rateCurrencyAnchor || cur;
-  const anchorNonUah = anchorCur !== '₴';
+  // The typed number always belongs to whichever currency is currently
+  // selected — switching the dropdown relabels it to the new currency
+  // without converting the digits (no multiplying/dividing by the rate).
+  const anchorNonUah = cur !== '₴';
   const needsConv = anchorNonUah && exRate > 0;
   const nonUah  = cur !== '₴';
-  const foreignSym = anchorNonUah ? anchorCur : '$'; // left column is always the foreign-currency reference ($ when the anchored currency is ₴)
+  const foreignSym = anchorNonUah ? cur : '$'; // left column is always the foreign-currency reference ($ when the anchored currency is ₴)
   const canShowForeign = anchorNonUah || exRate > 0;
 
   // Exchange rate is shown only when the order currency is $ or € (₴ needs no conversion).
