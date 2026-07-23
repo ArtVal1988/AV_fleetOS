@@ -3296,6 +3296,15 @@ function saveBooking(){
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
 
+  const orderStatuses = ['rented', 'res-docs', 'reserved'];
+  if(orderStatuses.includes(document.getElementById('bm-status').value)){
+    const clientName = document.getElementById('bm-name').value.trim();
+    const clientPhone = document.getElementById('bm-phone').value.trim();
+    if(!clientName){ alert('Вкажіть прізвище клієнта'); return; }
+    if(!clientPhone){ alert('Вкажіть номер телефону клієнта'); return; }
+    if(!start || !end){ alert('Вкажіть дати оренди'); return; }
+  }
+
   // Block genuine double-booking for the same vehicle. A 1-day touch
   // (existing booking ends the day this one starts, or vice versa) is a
   // normal same-day handover and is allowed; anything wider is a real conflict.
