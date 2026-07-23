@@ -1662,9 +1662,9 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="text" id="sticker-title" class="sticker-author-input" placeholder="Короткий заголовок (видно всім)" maxlength="40" style="margin-bottom:8px;font-weight:700">
       <textarea id="sticker-text" class="sticker-textarea" placeholder="Опис (відкривається по кліку)..." maxlength="280"></textarea>
       <div class="sticker-color-row">
-        <button type="button" class="sticker-color-btn active" id="sc-btn-red" style="background:#fee2e2;border-color:#f87171" onclick="setStickerColor('red')">🔴 Терміново</button>
-        <button type="button" class="sticker-color-btn" id="sc-btn-blue" style="background:#dbeafe;border-color:#60a5fa" onclick="setStickerColor('blue')">🔵 Контроль</button>
-        <button type="button" class="sticker-color-btn" id="sc-btn-green" style="background:#dcfce7;border-color:#4ade80" onclick="setStickerColor('green')">🟢 Інформація</button>
+        <button type="button" class="sticker-color-btn active" id="sc-btn-red" style="background:#fee2e2;border-color:#f87171" onclick="setStickerColor('red')" title="Червоний"></button>
+        <button type="button" class="sticker-color-btn" id="sc-btn-blue" style="background:#dbeafe;border-color:#60a5fa" onclick="setStickerColor('blue')" title="Синій"></button>
+        <button type="button" class="sticker-color-btn" id="sc-btn-green" style="background:#dcfce7;border-color:#4ade80" onclick="setStickerColor('green')" title="Зелений"></button>
       </div>
       <input type="text" id="sticker-author" class="sticker-author-input" placeholder="Ваше ім'я">
       <div class="sticker-popup-actions">
@@ -2405,7 +2405,7 @@ function renderStickers(){
         <button class="sticker-edit" onclick="openStickerForm(${s.id})" title="Редагувати"><span style="pointer-events:none">✎</span></button>
         <button class="sticker-del" onclick="removeSticker(${s.id})" title="Видалити"><span style="pointer-events:none">✕</span></button>
       </div>
-      <div class="sticker-label">${s.title || s.author || STICKER_LABELS[s.color] || 'Анонім'}</div>
+      ${(s.title || s.author) ? `<div class="sticker-label">${s.title || s.author}</div>` : ''}
       <div class="sticker-text" onclick="showStickerFullText(event,${s.id})" title="${(s.text||'').replace(/"/g,'&quot;')}">${s.text}</div>
     </div>
   `).join('');
@@ -4107,7 +4107,7 @@ function renderStickerFullTextContent(s){
 
   popup.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">
-      <div style="font-size:12px;font-weight:800;color:#1a1d26">${(s.title||'').replace(/</g,'&lt;') || STICKER_LABELS[s.color] || ''}</div>
+      <div style="font-size:12px;font-weight:800;color:#1a1d26">${(s.title||'').replace(/</g,'&lt;')}</div>
       <button onclick="document.getElementById('sticker-fulltext-popup').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px">✕</button>
     </div>
     <div style="white-space:pre-wrap;word-break:break-word;color:#1a1d26;margin-bottom:6px">${(s.text||'').replace(/</g,'&lt;')}</div>
