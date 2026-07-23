@@ -2548,8 +2548,11 @@ function renderCalendar(){
 /* ── TOOLTIP ── */
 const tt=document.getElementById('tooltip');
 let ttHideTimer=null;
+let ttShownBid=null;
 function showTooltip(e,bid){
   clearTimeout(ttHideTimer);
+  if(ttShownBid===bid){ positionTooltip(e); return; } // same booking as already shown — just follow the cursor, skip rebuilding the whole tooltip
+  ttShownBid=bid;
   const b=bookings.find(x=>x.id===bid);
   if(!b)return;
   const v=getVehicle(b.vehicleId);
@@ -2662,7 +2665,7 @@ function showTooltip(e,bid){
   positionTooltip(e);
   tt.classList.add('visible');
 }
-function showTooltipEmpty(e){clearTimeout(ttHideTimer); tt.classList.remove('visible');}
+function showTooltipEmpty(e){clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;}
 
 function showTooltipSplit(e,bid1,bid2){
   clearTimeout(ttHideTimer);
@@ -2691,7 +2694,7 @@ function selectSplitCell(e,bid1,bid2){
   e.stopPropagation();
   closeMiniPicker();
   clearTimeout(ttHideTimer);
-  tt.classList.remove('visible');
+  tt.classList.remove('visible'); ttShownBid=null;
   const b1=bookings.find(x=>x.id===bid1), b2=bookings.find(x=>x.id===bid2);
   if(!b1||!b2)return;
   selectedBid=bid1; // default select first
@@ -2765,7 +2768,7 @@ function expandBooking(bid){
 }
 function hideTooltip(){
   if(tt.classList.contains('mobile-tap')) return;
-  ttHideTimer=setTimeout(()=>tt.classList.remove('visible'),120);
+  ttHideTimer=setTimeout(()=>{tt.classList.remove('visible'); ttShownBid=null;},120);
 }
 function positionTooltip(e){
   const w=tt.offsetWidth||240, h=tt.offsetHeight||160;
@@ -3051,7 +3054,7 @@ function clearHighlight(){
 /* ── BOOKING MODAL ── */
 function openBookingModal(vid=null,start=null,end=null){
   closeMiniPicker();
-  clearTimeout(ttHideTimer); tt.classList.remove('visible');
+  clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   document.getElementById('bm-ext-active').checked=false;
   document.getElementById('bm-ext-fields').style.display='none';
   moveReturnRow(false);
@@ -5138,7 +5141,7 @@ function markExtensionPaid(bid){
 let toVehicleId = null, nextWorkId = 900;
 
 function openToModal(vid){
-  clearTimeout(ttHideTimer); tt.classList.remove('visible');
+  clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   const v = ALL_VEHICLES.find(x=>x.id===vid);
   if(!v) return;
   toVehicleId = vid;
@@ -5376,7 +5379,7 @@ let insVehicleId = null, calKaskoPayType = 'single', calKasPaid = {};
 let caseEditingVid = null, caseEditingId = null, caseFilesTemp = [];
 
 function openInsuranceModal(vid){
-  clearTimeout(ttHideTimer); tt.classList.remove('visible');
+  clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   const v = ALL_VEHICLES.find(x=>x.id===vid);
   if(!v) return;
   insVehicleId = vid;
@@ -5817,7 +5820,7 @@ function toggleDocsEditMode(){
 }
 
 function openDocsModal(vid){
-  clearTimeout(ttHideTimer); tt.classList.remove('visible');
+  clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   const v = ALL_VEHICLES.find(x=>x.id===vid);
   if(!v) return;
   docsVehicleId = vid;
