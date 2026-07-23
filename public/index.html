@@ -335,7 +335,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
 
 /* DAY CELLS */
-.td-day{width:26px;min-width:26px;text-align:center;padding:2px 1px;vertical-align:middle;cursor:pointer;position:relative;background:#ffffff;border-right:1px solid #f0f2f5;}
+.td-day{width:26px;min-width:26px;text-align:center;padding:1px;vertical-align:middle;cursor:pointer;position:relative;background:#ffffff;border-right:1px solid #f0f2f5;}
 .td-day.weekend-col{background:rgba(37,99,235,.025);}
 .td-day.today-col{}
 .td-day.today-col .cell-date-num{color:#0055ff;font-weight:700;opacity:1;}
@@ -344,7 +344,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
 .td-day.empty-cell-pending{background:#dbeafe!important;outline:2px solid #2563eb;outline-offset:-2px;}
 .td-day.empty-cell-pending .day-cell.empty{background:transparent;color:#1d4ed8!important;}
-.cell-date-num{font-size:9px;font-weight:400;opacity:.75;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);line-height:1;pointer-events:none;font-family:'Verdana',sans-serif;color:var(--muted);}
+.cell-date-num{font-size:9px;font-weight:400;opacity:.85;line-height:1;pointer-events:none;font-family:'Verdana',sans-serif;color:var(--muted);}
 .cell-date-booked{opacity:.75;color:#fff;}
 .day-cell.empty:hover .cell-date-num{opacity:.9;}
 .day-cell.booked{cursor:pointer;}
