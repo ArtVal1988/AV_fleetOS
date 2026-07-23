@@ -6545,7 +6545,7 @@ function updateMsgIconState(type){
   const btn = document.getElementById('msg-' + type);
   if(btn){
     const cfg = MSG_CONFIG[type];
-    btn.title = hasContact ? (cfg?.label || type) + ': ' + contact : (cfg?.label || type);
+    btn.title = hasContact ? contact : (cfg?.label || type);
   }
 }
 function updateAllMsgIconStates(){
