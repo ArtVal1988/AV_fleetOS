@@ -3305,6 +3305,12 @@ function saveBooking(){
     if(!start || !end){ alert('Вкажіть дати оренди'); return; }
   }
 
+  for(const e of EXTRAS_CONFIG){
+    if(!extrasActive[e.key]) continue;
+    const price = parseThousands(document.getElementById('ex-price-' + e.key)?.value);
+    if(!price || price <= 0){ alert('Вкажіть суму для послуги «' + e.label + '»'); return; }
+  }
+
   // Block genuine double-booking for the same vehicle. A 1-day touch
   // (existing booking ends the day this one starts, or vice versa) is a
   // normal same-day handover and is allowed; anything wider is a real conflict.
