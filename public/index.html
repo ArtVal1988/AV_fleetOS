@@ -2528,14 +2528,13 @@ function renderCalendar(){
           const darkCount = Math.round(extDays * pct);
           progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
         }
-        const statusIcon=cellStatus==='rented'||cellStatus==='extension'||cellStatus==='ext-partial'?'●':cellStatus==='reserved'||cellStatus==='res-docs'?'◆':cellStatus==='repair'?'✕':cellStatus==='personal'?'★':'◉';
         const cellColor = cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af');
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}"
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
           onclick="selectBooking(${booking.id},event)">
-          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellColor};color:#fff"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${isStart?`<span class="cell-start-icon">${statusIcon}</span>`:''}${progressStripHtml}</div></td>`;
+          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellColor};color:#fff"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
       }).join('');
       const isHl = highlightedVid===v.id;
       html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle" style="'+tdVehStyle+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
