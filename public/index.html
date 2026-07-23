@@ -7853,7 +7853,9 @@ async function syncFromServer(){
 const _origSave = saveBooking;
 window.saveBooking = async function(){
   const wasEditBid = editBid;
+  const countBefore = bookings.length;
   _origSave();
+  if(!wasEditBid && bookings.length === countBefore) return; // _origSave() bailed out early (e.g. validation error) — nothing was actually added, don't touch the server
   const b = wasEditBid ? bookings.find(x=>x.id===wasEditBid) : bookings[bookings.length-1];
   if(!b||!_token) return;
   if(wasEditBid){ apiFetch('PUT','/bookings/'+b.id, b); }
