@@ -1767,7 +1767,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
           <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
-            oninput="onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+            oninput="filterNameInput(this);onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="fg fin-label-style">
@@ -2079,12 +2079,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="km-row-compact">
         <div class="km-compact-field">
           <span class="km-compact-label">На початку</span>
-          <input type="text" inputmode="numeric" id="bm-start-km" placeholder="0" oninput="formatThousandsInput(this);updateKmDiff()">
+          <input type="text" inputmode="numeric" id="bm-start-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
           <span class="km-compact-unit">км</span>
         </div>
         <div class="km-compact-field">
           <span class="km-compact-label">В кінці:</span>
-          <input type="text" inputmode="numeric" id="bm-end-km" placeholder="0" oninput="formatThousandsInput(this);updateKmDiff()">
+          <input type="text" inputmode="numeric" id="bm-end-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
           <span class="km-compact-unit">км</span>
         </div>
         <div class="km-diff-badge" id="bm-km-diff" style="display:none">
@@ -6442,6 +6442,18 @@ function closeMsgPopup(){
 }
 
 function onMsgPopupInput(type, value){
+  const PHONE_ONLY_TYPES = ['viber','whatsapp','signal'];
+  if(PHONE_ONLY_TYPES.includes(type)){
+    const input = document.getElementById('msg-popup-input');
+    const cleaned = value.replace(/[^\d+\s]/g, '');
+    if(cleaned !== value && input){
+      const cursorFromEnd = value.length - (input.selectionStart||value.length);
+      value = cleaned;
+      input.value = value;
+      const pos = Math.max(0, value.length - cursorFromEnd);
+      input.setSelectionRange(pos, pos);
+    }
+  }
   if(!activeMessengers[type]) activeMessengers[type] = {active:false, contact:''};
   activeMessengers[type].contact = value;
   activeMessengers[type].active = !!value.trim();
@@ -6523,6 +6535,15 @@ function getClientsIndex(){
       map.set(key, {name: b.name.trim(), phone: b.phone||''});
     });
   return [...map.values()];
+}
+function filterNameInput(el){
+  const cursorFromEnd = el.value.length - el.selectionStart;
+  const cleaned = el.value.replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ'\u2019\-\s]/g, '');
+  if(cleaned !== el.value){
+    el.value = cleaned;
+    const pos = Math.max(0, el.value.length - cursorFromEnd);
+    el.setSelectionRange(pos, pos);
+  }
 }
 function onClientNameInput(el){
   const q = el.value.trim().toLowerCase();
@@ -6640,6 +6661,11 @@ function formatExtraPriceInput(el){
   if(num > 9999){ num = 9999; }
   el.value = num ? num.toLocaleString('uk-UA') : '';
   updateExtrasTotal();
+}
+function formatKmInput(el){
+  const digits = el.value.replace(/[^\d]/g, '');
+  const num = Math.min(parseInt(digits)||0, 999999);
+  el.value = num ? num.toLocaleString('uk-UA') : '';
 }
 function formatThousandsInput(el){
   const digits = el.value.replace(/[^\d]/g, '');
