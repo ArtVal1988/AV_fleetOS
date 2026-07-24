@@ -2644,13 +2644,13 @@ function showTooltip(e,bid){
       <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
       ${orig?`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Початковий період</span><span class="tt-val">${fmt(orig.start)}–${fmt(orig.end)}</span></div>`:''}
       <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Продовжено по</span><span class="tt-val">${fmt(b.end)}</span></div>
-      <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Оплата</span><span class="tt-val" style="color:${b.extensionPaid?'#22c55e':'#ef4444'};font-weight:700">${b.extensionPaid?'внесена ✓':'не внесена ⚠'}</span></div>
+      <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Оплата</span><span class="tt-val" style="color:${b.extensionPaid?'#22c55e':'#ef4444'};font-weight:700">${b.extensionPaid?'✓':'не внесена ⚠'}</span></div>
     `;
   } else if(b.extension && b.extension.active){
     const ext = b.extension;
     const st = getExtStatus(ext);
     const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
-    const label = st==='paid'?'сплачено ✓':st==='partial'?`частково (${ext.amountPaid||0}/${ext.cost||0})`:'борг ⚠';
+    const label = st==='paid'?'✓':st==='partial'?`частково (${ext.amountPaid||0}/${ext.cost||0})`:'борг ⚠';
     extBlock = `
       <div class="tt-divider"></div>
       <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
