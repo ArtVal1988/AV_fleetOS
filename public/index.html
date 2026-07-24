@@ -2705,6 +2705,7 @@ function showTooltipEmpty(e){clearTimeout(ttHideTimer); tt.classList.remove('vis
 
 function showTooltipSplit(e,bid1,bid2){
   clearTimeout(ttHideTimer);
+  ttShownBid=null; // split tooltip isn't tied to a single booking id — force the next regular hover to rebuild fresh
   const b1=bookings.find(x=>x.id===bid1), b2=bookings.find(x=>x.id===bid2);
   if(!b1||!b2)return;
   const st1=SM[b1.status], st2=SM[b2.status];
