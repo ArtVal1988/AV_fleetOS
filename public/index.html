@@ -2666,6 +2666,7 @@ function showTooltip(e,bid){
     ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?'+'+fmt2tt(vatUah)+'₴':'+'+fmt2tt(vatAmount)+cur+(vatUah!==null?' · +'+fmt2tt(vatUah)+'₴':'')}</span></div>`:''}
     ${b.rate?`<div class="tt-cost">${canShowUahOnly?fmt2tt(totalUah)+' ₴':fmt2tt(total)+' '+cur+(totalUah!==null&&cur!=='₴'?` <span style="font-size:12px;color:#166534;font-weight:700">· ${fmt2tt(totalUah)} ₴</span>`:'')}</div>`:''}
     ${b.deposit?`<div class="tt-deposit-pill"><span>Застава</span><span>${fmt2tt(b.deposit)} ${b.depositCur||cur}</span></div>`:''}
+    ${b.payMethod?`<div class="tt-row" style="margin-top:2px"><span class="tt-label">Оплата</span><span class="tt-val">${b.payMethod==='card'?'💳 Картка':'💵 Готівка'}</span></div>`:''}
     ${extBlock}
     ${notesBlock}
     <div class="tt-mobile-edit-row">
