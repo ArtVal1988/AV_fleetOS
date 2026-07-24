@@ -2558,13 +2558,27 @@ function renderCalendar(){
         const isSel=booking.id===selectedBid;
         const dayExt = getDayExtension(booking, ds);
         const extStatus = dayExt ? getExtStatus(dayExt) : null;
-        const cellStatus = extStatus === 'unpaid' ? 'extension' : extStatus === 'partial' ? 'ext-partial' : booking.status;
+        let cellStatus, mainTotal, mainPaid;
+        if(extStatus === 'unpaid') cellStatus = 'extension';
+        else if(extStatus === 'partial') cellStatus = 'ext-partial';
+        else if(!dayExt && booking.partialPaymentActive){
+          mainTotal = calcTotal(booking) - ((booking.extension?.active) ? (booking.extension.cost||0) : 0);
+          mainPaid = booking.amountPaid||0;
+          cellStatus = mainPaid <= 0 ? 'extension' : (mainTotal > 0 && mainPaid >= mainTotal) ? booking.status : 'ext-partial';
+        }
+        else cellStatus = booking.status;
         let progressStripHtml = '';
         if(extStatus === 'partial'){
           const extDays = countDays(dayExt.fromDate, dayExt.toDate);
           const dayIdx = countDays(dayExt.fromDate, ds) - 1;
           const pct = dayExt.cost > 0 ? (dayExt.amountPaid||0) / dayExt.cost : 0;
           const darkCount = Math.round(extDays * pct);
+          progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
+        } else if(cellStatus === 'ext-partial' && !dayExt && mainTotal){
+          const mainDays = countDays(booking.start, booking.end);
+          const dayIdx = countDays(booking.start, ds) - 1;
+          const pct = mainPaid / mainTotal;
+          const darkCount = Math.round(mainDays * pct);
           progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
         }
         const cellColor = cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af');
