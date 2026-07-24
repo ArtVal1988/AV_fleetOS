@@ -1989,17 +1989,17 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
-      <div id="bm-ext-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between">
+      <div id="bm-ext-toggle-wrap">
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
         ↷ Продовження оренди
       </label>
-      <button type="button" onclick="closeExtensionSection()" title="Закрити продовження" style="background:none;border:1px solid #e5e7eb;border-radius:5px;width:22px;height:22px;cursor:pointer;color:#9ca3af;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0">✕</button>
       </div>
 
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
 
-      <div id="bm-ext-fields" class="ext-fields-block" style="display:none">
+      <div id="bm-ext-fields" class="ext-fields-block" style="display:none;position:relative">
+        <button type="button" onclick="clearActiveExtension()" title="Прибрати це продовження" style="position:absolute;top:-6px;right:-6px;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:50%;width:22px;height:22px;cursor:pointer;color:#dc2626;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.15)">✕</button>
         <div class="ext-fin-row">
           <div class="ext-box ext-box-blue" style="margin-right:8px">
             <div class="ext-fin-field ext-fin-period">
@@ -4921,8 +4921,8 @@ function moveReturnRow(toExtSection){
   const anchor = document.getElementById(toExtSection ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
   if(row && anchor) anchor.parentNode.insertBefore(row, anchor);
 }
-function closeExtensionSection(){
-  if(!confirm('Закрити продовження оренди? Поточні незбережені дані продовження буде очищено.')) return;
+function clearActiveExtension(){
+  if(!confirm('Прибрати це продовження? Незбережені дані буде очищено (історія попередніх продовжень залишиться).')) return;
   const cb = document.getElementById('bm-ext-active');
   cb.checked = false;
   toggleExtensionSection();
@@ -5147,12 +5147,11 @@ function closeAndStartNewExtension(){
 function renderExtTimeline(){
   const wrap = document.getElementById('bm-ext-timeline');
   if(!wrap) return;
-  const active = document.getElementById('bm-ext-active')?.checked;
-  if(!active){ wrap.style.display='none'; return; }
+  if(!currentExtHistory.length && !editBid){ wrap.style.display='none'; return; }
 
   const b = editBid ? bookings.find(x=>x.id===editBid) : null;
   let originalRowHtml = '';
-  if(b){
+  if(b && currentExtHistory.length){
     const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
     const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
     originalRowHtml = `
