@@ -1981,17 +1981,20 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
-        <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#6b7280;cursor:pointer">
-          <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()"> Часткова оплата
-        </label>
-        <div id="bm-partial-fields" style="display:none;margin-top:6px;background:#fffbeb;border:1px solid #f0d060;border-radius:6px;padding:8px 10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <label style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e;flex-shrink:0">Оплачено</label>
-            <input type="text" inputmode="numeric" id="bm-partial-paid" placeholder="0" style="width:90px;text-align:center" oninput="formatThousandsInput(this);updatePartialPaymentUI()">
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;font-weight:700">
-            <span id="bm-partial-status" style="color:#92400e">Залишок боргу</span>
-            <span id="bm-partial-remaining" style="color:#dc2626">—</span>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;flex-wrap:wrap">
+          <span id="bm-partial-badge" style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;background:#e5e7eb;color:#6b7280;flex-shrink:0">—</span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#6b7280;cursor:pointer;flex-shrink:0">
+            <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()"> Часткова оплата
+          </label>
+          <div id="bm-partial-fields" style="display:none;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px">
+              <label style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e;flex-shrink:0">Оплачено</label>
+              <input type="text" inputmode="numeric" id="bm-partial-paid" placeholder="0" style="width:80px;text-align:center" oninput="formatThousandsInput(this);updatePartialPaymentUI()">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Залишок боргу</span>
+              <span id="bm-partial-remaining" style="color:#dc2626;font-weight:700;font-size:12px">—</span>
+            </div>
           </div>
         </div>
       </div>
@@ -3149,6 +3152,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-partial-active').checked = false;
   document.getElementById('bm-partial-fields').style.display = 'none';
   document.getElementById('bm-partial-paid').value = '';
+  updatePartialBadge();
   document.getElementById('bm-days-override').value='';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
@@ -3258,9 +3262,10 @@ function editBooking(bid){
   setPayMethod(b.payMethod || 'cash');
   setDepositPayMethod(b.depositPayMethod || 'cash');
   document.getElementById('bm-partial-active').checked = !!b.partialPaymentActive;
-  document.getElementById('bm-partial-fields').style.display = b.partialPaymentActive ? '' : 'none';
+  document.getElementById('bm-partial-fields').style.display = b.partialPaymentActive ? 'flex' : 'none';
   document.getElementById('bm-partial-paid').value = b.amountPaid ? Number(b.amountPaid).toLocaleString('uk-UA') : '';
   if(b.partialPaymentActive) setTimeout(updatePartialPaymentUI, 0);
+  else updatePartialBadge();
   const liveCur = document.getElementById('bm-currency').value||'$';
   document.getElementById('bm-days-override').value=b.daysOverride||'';
   daysOverrideTouched = !!(b.daysOverride>0);
@@ -5115,8 +5120,29 @@ function onExtTotalInput(el){
 }
 function togglePartialPayment(){
   const active = document.getElementById('bm-partial-active').checked;
-  document.getElementById('bm-partial-fields').style.display = active ? '' : 'none';
+  document.getElementById('bm-partial-fields').style.display = active ? 'flex' : 'none';
+  updatePartialBadge();
   if(active) updatePartialPaymentUI();
+}
+function updatePartialBadge(){
+  const badge = document.getElementById('bm-partial-badge');
+  if(!badge) return;
+  const active = document.getElementById('bm-partial-active')?.checked;
+  if(!active){
+    badge.textContent = '—';
+    badge.style.background = '#e5e7eb';
+    badge.style.color = '#6b7280';
+    return;
+  }
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  const sourceId = cur === '₴' ? 'dp-total-uah' : 'dp-total';
+  const total = parseThousands((document.getElementById(sourceId)?.textContent||'').replace(/[^\d\s,.]/g,''));
+  const paid = parseThousands(document.getElementById('bm-partial-paid')?.value);
+  const remaining = Math.max(0, total - paid);
+  const isPaidFull = remaining <= 0.009 && total > 0;
+  badge.textContent = isPaidFull ? '✓ Оплачено' : 'Борг';
+  badge.style.background = isPaidFull ? '#dcfce7' : '#fee2e2';
+  badge.style.color = isPaidFull ? '#166534' : '#dc2626';
 }
 function updatePartialPaymentUI(){
   const cur = document.getElementById('bm-currency')?.value || '$';
@@ -5125,19 +5151,10 @@ function updatePartialPaymentUI(){
   const total = parseThousands((totalEl?.textContent||'').replace(/[^\d\s,.]/g,''));
   const paid = parseThousands(document.getElementById('bm-partial-paid')?.value);
   const remaining = Math.max(0, total - paid);
-  const statusEl = document.getElementById('bm-partial-status');
   const remEl = document.getElementById('bm-partial-remaining');
   if(!remEl) return;
-  if(remaining <= 0.009 && total > 0){
-    statusEl.textContent = '✓ Оплачено повністю';
-    statusEl.style.color = '#166534';
-    remEl.textContent = '';
-  } else {
-    statusEl.textContent = 'Залишок боргу';
-    statusEl.style.color = '#92400e';
-    remEl.style.color = '#dc2626';
-    remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
-  }
+  remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
+  updatePartialBadge();
 }
 function updateExtensionPaidUI(){
   const totalEl = document.getElementById('bm-ext-total');
