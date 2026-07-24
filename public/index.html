@@ -2564,7 +2564,7 @@ function renderCalendar(){
         else if(!dayExt && booking.partialPaymentActive){
           mainTotal = calcTotal(booking) - ((booking.extension?.active) ? (booking.extension.cost||0) : 0);
           mainPaid = booking.amountPaid||0;
-          cellStatus = mainPaid <= 0 ? 'extension' : (mainTotal > 0 && mainPaid >= mainTotal) ? booking.status : 'ext-partial';
+          cellStatus = (mainTotal > 0 && mainPaid >= mainTotal) ? booking.status : 'extension';
         }
         else cellStatus = booking.status;
         let progressStripHtml = '';
@@ -2574,7 +2574,7 @@ function renderCalendar(){
           const pct = dayExt.cost > 0 ? (dayExt.amountPaid||0) / dayExt.cost : 0;
           const darkCount = Math.round(extDays * pct);
           progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
-        } else if(cellStatus === 'ext-partial' && !dayExt && mainTotal){
+        } else if(!dayExt && mainTotal && mainPaid > 0 && mainPaid < mainTotal){
           const mainDays = countDays(booking.start, booking.end);
           const dayIdx = countDays(booking.start, ds) - 1;
           const pct = mainPaid / mainTotal;
