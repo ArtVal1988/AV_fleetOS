@@ -7175,10 +7175,20 @@ function renderNotesLog(notesStr, containerId, emptyMsg){
     return;
   }
   el.style.display='flex';
-  el.innerHTML=entries.map(e=>e.isLog?
-    `<div class="note-entry" style="${e.important?'border-left-color:#f59e0b;background:#fffbeb':''}"><div class="note-meta"><span class="note-author">${e.author}</span><span class="note-time">${e.time}</span>${e.important?' <span style="color:#f59e0b;font-weight:700">★ Важливо</span>':''}</div><div class="note-text">${e.text}</div></div>`:
-    `<div class="note-entry"><div class="note-text" style="color:#6b7280">${e.text}</div></div>`
+  el.innerHTML=entries.map((e,i)=>e.isLog?
+    `<div class="note-entry" style="${e.important?'border-left-color:#f59e0b;background:#fffbeb':''};position:relative"><div class="note-meta"><span class="note-author">${e.author}</span><span class="note-time">${e.time}</span>${e.important?' <span style="color:#f59e0b;font-weight:700">★ Важливо</span>':''}<button type="button" onclick="removeNoteEntry('${containerId}',${i})" title="Видалити нотатку" style="position:absolute;top:6px;right:6px;background:none;border:none;cursor:pointer;color:#9ca3af;font-size:12px;padding:2px 5px;line-height:1">✕</button></div><div class="note-text">${e.text}</div></div>`:
+    `<div class="note-entry" style="position:relative"><div class="note-text" style="color:#6b7280">${e.text}</div><button type="button" onclick="removeNoteEntry('${containerId}',${i})" title="Видалити нотатку" style="position:absolute;top:6px;right:6px;background:none;border:none;cursor:pointer;color:#9ca3af;font-size:12px;padding:2px 5px;line-height:1">✕</button></div>`
   ).join('');
+}
+function removeNoteEntry(containerId, index){
+  if(!confirm('Видалити цю нотатку?')) return;
+  const hiddenId = containerId==='bm-notes-log' ? 'bm-notes-hidden' : null;
+  if(!hiddenId) return; // only the booking-form log supports deletion for now
+  const hidden = document.getElementById(hiddenId);
+  const lines = (hidden.value||'').split('\n').filter(l=>l.trim());
+  lines.splice(index,1);
+  hidden.value = lines.join('\n');
+  renderNotesLog(hidden.value, containerId, 'Нотаток ще немає');
 }
 function renderBpNotes(notesStr){
   const entries=parseNotesLog(notesStr);
