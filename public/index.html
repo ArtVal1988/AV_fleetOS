@@ -1989,11 +1989,12 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
-      <div id="bm-ext-toggle-wrap">
+      <div id="bm-ext-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between">
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
         ↷ Продовження оренди
       </label>
+      <button type="button" onclick="closeExtensionSection()" title="Закрити продовження" style="background:none;border:1px solid #e5e7eb;border-radius:5px;width:22px;height:22px;cursor:pointer;color:#9ca3af;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0">✕</button>
       </div>
 
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
@@ -4920,6 +4921,12 @@ function moveReturnRow(toExtSection){
   const anchor = document.getElementById(toExtSection ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
   if(row && anchor) anchor.parentNode.insertBefore(row, anchor);
 }
+function closeExtensionSection(){
+  if(!confirm('Закрити продовження оренди? Поточні незбережені дані продовження буде очищено.')) return;
+  const cb = document.getElementById('bm-ext-active');
+  cb.checked = false;
+  toggleExtensionSection();
+}
 function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
@@ -5155,16 +5162,48 @@ function renderExtTimeline(){
       </div>`;
   }
 
-  const historyRowsHtml = currentExtHistory.map(h => `
-    <div class="ext-history-row">
-      <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-      <span class="eh-amt">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency} · сплачено</span>
+  const historyRowsHtml = currentExtHistory.map((h,i) => `
+    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+      <div style="flex:1;min-width:0">
+        <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
+        <span class="eh-amt">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency} · сплачено</span>
+      </div>
+      <div style="display:flex;gap:2px;flex-shrink:0">
+        <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
+        <button type="button" onclick="deleteExtHistoryEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
+      </div>
     </div>`).join('');
 
   wrap.innerHTML = originalRowHtml + historyRowsHtml;
   wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
 }
 
+function deleteExtHistoryEntry(index){
+  if(!confirm('Видалити цей запис продовження з історії?')) return;
+  currentExtHistory.splice(index,1);
+  renderExtTimeline();
+}
+function editExtHistoryEntry(index){
+  const h = currentExtHistory[index];
+  if(!h) return;
+  if(!confirm('Повернути цей період у форму для редагування? Поточні дані активного продовження (якщо є) будуть замінені.')) return;
+  currentExtHistory.splice(index,1);
+  document.getElementById('bm-ext-active').checked = true;
+  document.getElementById('bm-ext-fields').style.display = '';
+  setExtDateField('bm-ext-from', h.fromDate);
+  setExtDateField('bm-ext-to', h.toDate);
+  document.getElementById('bm-ext-days').value = h.days || '';
+  document.getElementById('bm-ext-rate').value = h.rate ? Number(h.rate).toLocaleString('uk-UA') : '';
+  document.getElementById('bm-ext-currency').value = h.currency || '$';
+  extRateCurrencyAnchor = h.currency || '$';
+  document.getElementById('bm-ext-total').value = h.cost ? Number(h.cost).toLocaleString('uk-UA') : '';
+  document.getElementById('bm-ext-paid').value = h.amountPaid || 0;
+  onExtCurrencyChange();
+  onExtDatesChanged();
+  updateExtensionPaidUI();
+  renderExtTimeline();
+  moveReturnRow(true);
+}
 function getExtStatus(ext){
   const paid = ext.amountPaid || 0;
   const cost = ext.cost || 0;
