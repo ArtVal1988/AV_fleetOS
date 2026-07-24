@@ -3260,7 +3260,6 @@ function editBooking(bid){
   document.getElementById('extras-panel').style.display='none';
   document.getElementById('extras-toggle-btn').classList.remove('open');
   loadExtrasToForm(b.extras||{});
-  autoDetectExtras();
   customEquipment = (b.equipment||[]).map(item => ({...item, id: equipIdSeq++}));
   renderEquipmentList();
   updateExtrasTotal();
@@ -3360,8 +3359,8 @@ function saveBooking(){
 
   for(const e of EXTRAS_CONFIG){
     if(!extrasActive[e.key]) continue;
-    const price = parseThousands(document.getElementById('ex-price-' + e.key)?.value);
-    if(!price || price <= 0){ alert('Вкажіть суму для послуги «' + e.label + '»'); return; }
+    const rawVal = (document.getElementById('ex-price-' + e.key)?.value || '').trim();
+    if(!rawVal){ alert('Вкажіть суму для послуги «' + e.label + '» (можна 0, якщо безкоштовно)'); return; }
   }
 
   // Block genuine double-booking for the same vehicle. A 1-day touch
