@@ -6646,7 +6646,7 @@ function parseThousands(str){
   return parseFloat(String(str||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.]/g, '')) || 0;
 }
 function formatRateInput(el){
-  let v = el.value.replace(/[^\d,]/g, ''); // digits + one comma (decimal separator)
+  let v = el.value.replace(/[^\d,.]/g, '').replace(/\./g, ','); // digits + comma or period (both treated as decimal separator)
   const firstComma = v.indexOf(',');
   if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
   let [intPart, decPart] = v.split(',');
