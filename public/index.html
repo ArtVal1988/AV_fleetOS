@@ -2559,8 +2559,7 @@ function renderCalendar(){
         const dayExt = getDayExtension(booking, ds);
         const extStatus = dayExt ? getExtStatus(dayExt) : null;
         let cellStatus, mainTotal, mainPaid;
-        if(extStatus === 'unpaid') cellStatus = 'extension';
-        else if(extStatus === 'partial') cellStatus = 'ext-partial';
+        if(extStatus === 'unpaid' || extStatus === 'partial') cellStatus = 'extension';
         else if(!dayExt && booking.partialPaymentActive){
           mainTotal = calcTotal(booking) - ((booking.extension?.active) ? (booking.extension.cost||0) : 0);
           mainPaid = booking.amountPaid||0;
