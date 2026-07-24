@@ -2158,7 +2158,6 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     </div>
     <div class="msec msec-b6">
-      <div class="msec-title">Нотатки</div>
       <button type="button" class="extras-toggle" id="notes-toggle-btn" onclick="toggleNotesPanel()">
         <span id="notes-toggle-icon">⊕</span>
         <span>Показати / додати нотатку</span>
@@ -3244,9 +3243,9 @@ function editBooking(bid){
   document.getElementById('bm-new-note').value='';
   if(document.getElementById('bm-note-important')) document.getElementById('bm-note-important').checked=false;
   renderNotesLog(b.notes||'','bm-notes-log','Нотаток ще немає');
-  // Always start collapsed, same as the extras panel — just show a count badge.
-  document.getElementById('notes-panel').style.display='none';
-  document.getElementById('notes-toggle-btn').classList.remove('open');
+  const hasExistingNotes = parseNotesLog(b.notes||'').length > 0;
+  document.getElementById('notes-panel').style.display = hasExistingNotes ? 'block' : 'none';
+  document.getElementById('notes-toggle-btn').classList.toggle('open', hasExistingNotes);
   const noteCount = parseNotesLog(b.notes||'').length;
   const notesCountEl = document.getElementById('notes-active-count');
   if(notesCountEl){
