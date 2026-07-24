@@ -1900,7 +1900,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fin-field fin-label-style" style="flex:0 0 auto">
           <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%">Вартість</label>
           <div class="dep-inline-wrap">
-            <input type="text" inputmode="numeric" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:76px;flex:0 0 76px;text-align:center;font-size:14px" oninput="formatThousandsInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
+            <input type="text" inputmode="decimal" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:76px;flex:0 0 76px;text-align:center;font-size:14px" oninput="formatRateInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
             <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
               <option value="$">$</option>
               <option value="₴">₴</option>
@@ -6617,7 +6617,21 @@ function formatThousandsInput(el){
   el.value = digits ? Number(digits).toLocaleString('uk-UA') : '';
 }
 function parseThousands(str){
-  return parseFloat(String(str||'').replace(/[^\d.]/g, '')) || 0;
+  return parseFloat(String(str||'').replace(/\s/g,'').replace(',','.').replace(/[^\d.]/g, '')) || 0;
+}
+function formatRateInput(el){
+  let v = el.value.replace(/[^\d,]/g, ''); // digits + one comma (decimal separator)
+  const firstComma = v.indexOf(',');
+  if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
+  let [intPart, decPart] = v.split(',');
+  if(decPart !== undefined) decPart = decPart.slice(0, 2); // max 2 decimal digits
+  let num = parseFloat((intPart||'0') + '.' + (decPart||'0')) || 0;
+  if(num > 10000){
+    num = 10000;
+    intPart = '10000'; decPart = decPart !== undefined ? '00' : undefined;
+  }
+  const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
+  el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
 }
 function fmt2(n){
   return (Math.round((n||0)*100)/100).toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2});
