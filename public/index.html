@@ -2065,7 +2065,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <div style="display:flex;gap:8px">
-            <button type="button" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8" onclick="saveBooking()">💾 Зберегти</button>
+            <button type="button" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8" onclick="_skipCloseOnSave=true;saveBooking()">💾 Зберегти</button>
             <button type="button" class="case-add-btn" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534" onclick="closeAndStartNewExtension()">+ Додати продовження</button>
           </div>
         </div>
@@ -2256,6 +2256,7 @@ let viewYear=today.getFullYear(), viewMonth=today.getMonth();
 let viewStartDate=new Date(today);
 const VIEW_DAYS=31;
 let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, highlightedVid=null;
+let _skipCloseOnSave=false;
 
 let stickers=[], nextStickerId=1, stickerColorDraft='red';
 function addSticker(o){ stickers.push({id:nextStickerId++, ...o}); }
@@ -3454,7 +3455,8 @@ function saveBooking(){
       }
     }
   }
-  closeBookingModal();
+  if(_skipCloseOnSave){ _skipCloseOnSave = false; }
+  else { closeBookingModal(); }
   if(editBid&&selectedBid===editBid)renderPanel(editBid);
   render();
 }
