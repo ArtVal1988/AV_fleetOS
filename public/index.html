@@ -2707,7 +2707,8 @@ function showTooltip(e,bid){
     <div class="tt-divider" style="margin:6px 0"></div>
     ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod):''}</span></div>`:''}
     ${b.partialPaymentActive?(()=>{
-      const remaining = Math.max(0, (total||0) - (b.amountPaid||0));
+      const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
+      const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
       const isPaidFull = remaining <= 0.009;
       return `<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-val" style="text-align:left;color:${isPaidFull?'#166534':'#dc2626'};font-weight:700">${isPaidFull?'✓ Оплачено':'⚠ Борг'}</span><span class="tt-val" style="font-weight:700;color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'':fmtSmart(remaining)+' '+cur}</span></div>`;
     })():''}
@@ -5118,11 +5119,12 @@ function togglePartialPayment(){
   if(active) updatePartialPaymentUI();
 }
 function updatePartialPaymentUI(){
-  const totalEl = document.getElementById('dp-total');
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  const sourceId = cur === '₴' ? 'dp-total-uah' : 'dp-total';
+  const totalEl = document.getElementById(sourceId);
   const total = parseThousands((totalEl?.textContent||'').replace(/[^\d\s,.]/g,''));
   const paid = parseThousands(document.getElementById('bm-partial-paid')?.value);
   const remaining = Math.max(0, total - paid);
-  const cur = document.getElementById('bm-currency')?.value || '$';
   const statusEl = document.getElementById('bm-partial-status');
   const remEl = document.getElementById('bm-partial-remaining');
   if(!remEl) return;
