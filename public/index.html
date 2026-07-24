@@ -2683,6 +2683,7 @@ function showTooltip(e,bid){
     ${pickupRow}
     ${retRow}
     ${servicesBlock}
+    ${!isSpecialStatus?`
     <div class="tt-divider"></div>
     <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val">${days}${b.rate?' × '+b.rate+cur:''}</span></div>
     ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
@@ -2690,6 +2691,7 @@ function showTooltip(e,bid){
     <div class="tt-divider" style="margin:6px 0"></div>
     ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod):''}</span></div>`:''}
     ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val">${fmtSmart(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod):''}</span></div>`:''}
+    `:''}
     ${extBlock}
     ${notesBlock}
     <div class="tt-mobile-edit-row">
