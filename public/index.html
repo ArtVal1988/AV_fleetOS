@@ -2272,6 +2272,7 @@ let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, 
 let _skipCloseOnSave=false;
 document.addEventListener('click', e => {
   if(e.target.closest('#bm-ext-save-btn')){
+    console.log('[DEBUG] click handler fired for #bm-ext-save-btn');
     saveExtensionEntry();
   }
 });
@@ -3464,9 +3465,9 @@ function saveBooking(){
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
       totalCurrency: document.getElementById('bm-ext-currency').value,
-      totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
+      totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
       paidCurrency: document.getElementById('bm-ext-currency').value,
-      paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
+      paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
     rate:parseThousands(document.getElementById('bm-rate').value),
@@ -5193,6 +5194,8 @@ function updateExtensionPaidUI(){
 }
 
 function saveExtensionEntry(){
+  console.log('[DEBUG] saveExtensionEntry called. bm-ext-rate2 value:', JSON.stringify(document.getElementById('bm-ext-rate2')?.value));
+  console.log('[DEBUG] number of #bm-ext-rate2 elements in DOM:', document.querySelectorAll('#bm-ext-rate2').length);
   const cur = document.getElementById('bm-ext-currency').value;
   const closed = {
     fromDate: getExtDateField('bm-ext-from'),
@@ -5203,9 +5206,9 @@ function saveExtensionEntry(){
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
     totalCurrency: document.getElementById('bm-ext-currency').value,
-    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
+    totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
-    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
+    paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   currentExtHistory.push(closed);
@@ -5230,9 +5233,9 @@ function closeAndStartNewExtension(){
     currency: cur,
     amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
     totalCurrency: document.getElementById('bm-ext-currency').value,
-    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
+    totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
-    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
+    paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   currentExtHistory.push(closed);
