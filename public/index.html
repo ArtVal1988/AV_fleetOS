@@ -5231,6 +5231,11 @@ function saveExtensionEntry(){
   // close the active-entry section entirely, since the user is done.
   document.getElementById('bm-ext-active').checked = false;
   toggleExtensionSection();
+  // toggleExtensionSection() just reverted Повернення to the ORIGINAL
+  // booking end (bm-end), assuming "no longer extended" — but we DID just
+  // commit an extension, so the real current return date is the end of
+  // the period we just saved, not the pre-extension original end.
+  if(closed.toDate) document.getElementById('bm-return-date').value = closed.toDate;
   renderExtTimeline();
 
   _skipCloseOnSave = true;
