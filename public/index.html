@@ -2274,8 +2274,7 @@ let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, 
 let _skipCloseOnSave=false;
 document.addEventListener('click', e => {
   if(e.target.closest('#bm-ext-save-btn')){
-    _skipCloseOnSave = true;
-    saveBooking();
+    saveExtensionEntry();
   }
 });
 
@@ -5202,6 +5201,33 @@ function updateExtensionPaidUI(){
   closeCustomTimePicker();
 }
 
+function saveExtensionEntry(){
+  const cur = document.getElementById('bm-ext-currency').value;
+  const closed = {
+    fromDate: getExtDateField('bm-ext-from'),
+    toDate: getExtDateField('bm-ext-to'),
+    days: parseInt(document.getElementById('bm-ext-days').value)||0,
+    rate: parseThousands(document.getElementById('bm-ext-rate').value),
+    cost: parseThousands(document.getElementById('bm-ext-total').value),
+    currency: cur,
+    amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+    totalCurrency: document.getElementById('bm-ext-currency').value,
+    totalExchangeRate: parseFloat(document.getElementById('bm-ext-total-rate')?.value)||0,
+    paidCurrency: document.getElementById('bm-ext-currency').value,
+    paidExchangeRate: parseFloat(document.getElementById('bm-ext-paid-rate')?.value)||0,
+    closedDate: new Date().toISOString().split('T')[0],
+  };
+  currentExtHistory.push(closed);
+
+  // Unlike closeAndStartNewExtension(), don't open a fresh period — just
+  // close the active-entry section entirely, since the user is done.
+  document.getElementById('bm-ext-active').checked = false;
+  toggleExtensionSection();
+  renderExtTimeline();
+
+  _skipCloseOnSave = true;
+  saveBooking();
+}
 function closeAndStartNewExtension(){
   const cur = document.getElementById('bm-ext-currency').value;
   const closed = {
