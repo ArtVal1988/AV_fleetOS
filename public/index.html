@@ -5100,9 +5100,8 @@ function onExtRateInput(){
   const paidRateEl = document.getElementById('bm-ext-paid-rate');
   const courseDisplay = document.getElementById('bm-ext-course-display');
   const courseValue = document.getElementById('bm-ext-course-value');
-  const isCompanyClient = document.getElementById('bm-client-type')?.value !== 'individual';
   if(courseDisplay && courseValue){
-    if(isCompanyClient && val){
+    if(val){
       courseDisplay.style.display = '';
       courseValue.textContent = val;
     } else {
@@ -5115,35 +5114,17 @@ function onExtRateInput(){
 }
 function onExtCurrencyChange(){
   const cur = document.getElementById('bm-ext-currency').value;
-  const exRate = parseFloat(document.getElementById('bm-ext-rate2').value) || 0;
-
-  if(cur !== extRateCurrencyAnchor && exRate > 0){
-    const wasUah = extRateCurrencyAnchor === '₴';
-    const isUah  = cur === '₴';
-    const rateEl = document.getElementById('bm-ext-rate');
-    const totalEl = document.getElementById('bm-ext-total');
-    const paidEl = document.getElementById('bm-ext-paid');
-    const rawRate = parseFloat(rateEl.value) || 0;
-    const rawTotal = parseThousands(totalEl.value);
-    const rawPaid = parseFloat(paidEl.value) || 0;
-    const factor = wasUah && !isUah ? (v => Math.round(v / exRate * 100) / 100)
-                 : !wasUah && isUah ? (v => Math.round(v * exRate * 100) / 100)
-                 : (v => v);
-    if(rawRate > 0) rateEl.value = factor(rawRate);
-    if(rawTotal > 0) totalEl.value = factor(rawTotal).toLocaleString('uk-UA');
-    if(rawPaid > 0) paidEl.value = factor(rawPaid);
-    extRateCurrencyAnchor = cur;
-  } else if((parseThousands(document.getElementById('bm-ext-rate').value)) <= 0 && parseThousands(document.getElementById('bm-ext-total').value) <= 0){
-    extRateCurrencyAnchor = cur;
-  }
 
   ['$','₴'].forEach(c=>{
     const id = c==='$'?'ext-cur-btn-usd':'ext-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
+  // Курс (bm-ext-rate2) is purely informational for extensions, for every
+  // client type — a long-running rental can span many extensions, each
+  // potentially at a different real-world rate, so it's just recorded as a
+  // note and never drives any conversion math here.
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  const isCompanyType = document.getElementById('bm-client-type')?.value !== 'individual';
-  if(rate2Field) rate2Field.style.display = (cur === '₴' && !isCompanyType) ? 'none' : '';
+  if(rate2Field) rate2Field.style.display = '';
   setExtTotalCurrency(cur);
   setExtPaidCurrency(cur);
   updateExtensionPaidUI();
@@ -6557,8 +6538,6 @@ function setClientType(type, isUserAction = true){
   const extUsdBtn = document.getElementById('ext-cur-btn-usd');
   const extUahBtn = document.getElementById('ext-cur-btn-uah');
   if(extUsdBtn) extUsdBtn.style.display = isCompany ? 'none' : '';
-  const courseDisplayEl = document.getElementById('bm-ext-course-display');
-  if(courseDisplayEl && !isCompany) courseDisplayEl.style.display = 'none';
   if(extUahBtn) extUahBtn.style.display = isCompany ? 'none' : '';
   if(isCompany && document.getElementById('bm-ext-currency').value !== '₴'){
     setExtCurrency('₴');
