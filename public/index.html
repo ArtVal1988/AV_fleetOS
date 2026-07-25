@@ -2304,6 +2304,13 @@ function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padS
 function colDate(d){const dt=new Date(viewStartDate);dt.setDate(viewStartDate.getDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
 function countDays(start,end){const s=new Date(start),e=new Date(end);return Math.max(1,Math.round((e-s)/86400000)+1);}
+function pluralDoba(n){
+  n = Math.abs(n);
+  const mod10 = n % 10, mod100 = n % 100;
+  if(mod10===1 && mod100!==11) return 'доба';
+  if(mod10>=2 && mod10<=4 && (mod100<12 || mod100>14)) return 'доби';
+  return 'діб';
+}
 // Billing day count that accounts for pickup/return TIME, not just calendar dates:
 // a rental day is a full 24h block from the pickup moment. Returning up to 3 hours
 // late is still within the same day count; returning more than 3 hours late rounds
@@ -2825,7 +2832,7 @@ function renderSplitPanel(bid1,bid2){
       ${servicesLine}
       <div style="display:flex;gap:8px;font-size:10px;color:var(--muted);margin-top:6px">
         <span>📅 ${fmt(b.start)}–${fmt(b.end)}</span>
-        <span>· ${days} діб</span>
+        <span>· ${days} ${pluralDoba(days)}</span>
         ${b.rate?`<span style="color:var(--accent);font-weight:600;margin-left:auto">${fmtMoney(total,b.currency)}</span>`:''}
       </div>
       ${b.deposit?`<div style="font-size:10px;margin-top:4px;background:#fffbeb;border:1px solid #f0d060;border-radius:4px;padding:3px 7px;display:inline-block;color:#92400e;font-weight:600">Застава: ${b.deposit.toLocaleString('uk-UA')} ${b.depositCur||b.currency||'$'}</div>`:''}
@@ -2922,7 +2929,7 @@ function renderPanel(bid){
     <div><span class="bp-status-badge" style="background:${st.color}20;color:${st.color}">${st.label}</span></div>
     <div class="bp-car-name">${v?.name||'—'}</div>
     <div class="bp-plate">${v?.plate||'—'}</div>
-    <div class="bp-period">📅 <strong>${fmt(b.start)}</strong> — <strong>${fmt(b.end)}</strong> · ${days} діб</div>`;
+    <div class="bp-period">📅 <strong>${fmt(b.start)}</strong> — <strong>${fmt(b.end)}</strong> · ${days} ${pluralDoba(days)}</div>`;
 
   let bodyHtml='';
 
@@ -3001,7 +3008,7 @@ function renderPanel(bid){
     bodyHtml+=`<div class="bp-section">
       <div class="bps-title">Вартість послуг</div>
       ${b.rate>0?`<div class="bp-cost-row">
-        <span class="bpcr-label">${days} діб × ${fmtMoney(b.rate,b.currency)}${b.vatRate?' (без ПДВ)':''}</span>
+        <span class="bpcr-label">${days} ${pluralDoba(days)} × ${fmtMoney(b.rate,b.currency)}${b.vatRate?' (без ПДВ)':''}</span>
         <div style="text-align:right">
           <span class="bpcr-val">${fmtMoney(gross,b.currency)}</span>
           ${b.exchangeRate&&b.currency!=='₴'?`<div style="font-size:10px;color:#166534;margin-top:1px">${Math.round(gross*b.exchangeRate).toLocaleString('uk-UA')} ₴</div>`:''}
@@ -5293,7 +5300,7 @@ function renderExtTimeline(){
     originalRowHtml = `
       <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26;display:flex;justify-content:space-between;align-items:center;gap:10px">
         <span class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${origDays} діб × ${(b.rate||0).toLocaleString('uk-UA')} ${b.currency||'$'} = ${origTotal.toLocaleString('uk-UA')} ${b.currency||'$'}${b.exchangeRate?' (курс '+b.exchangeRate+')':''} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${origDays} ${pluralDoba(origDays)} × ${(b.rate||0).toLocaleString('uk-UA')} ${b.currency||'$'} = ${origTotal.toLocaleString('uk-UA')} ${b.currency||'$'}${b.exchangeRate?' (курс '+b.exchangeRate+')':''} · сплачено</span>
       </div>`;
   }
 
@@ -5301,7 +5308,7 @@ function renderExtTimeline(){
     <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
         <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''} · сплачено</span>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
@@ -5332,7 +5339,7 @@ function renderExtTimeline(){
     summaryHtml = `
       <div class="ext-history-row" style="background:#eef1f6;border-radius:6px;margin-top:6px;padding:8px 10px;border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800;color:#1d4ed8">
         <span class="eh-dates">${fmt(b.start)}–${fmt(overallEnd)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${totalDays} доби = ${sumText}</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${totalDays} ${pluralDoba(totalDays)} = ${sumText}</span>
       </div>`;
   }
 
@@ -7055,7 +7062,7 @@ function updateVatPreview(){
   }
 
   if(dualTotal){ dualTotal.style.display = ''; }
-  document.getElementById('dual-days-label').textContent = `${days} діб × ${rate.toLocaleString('uk-UA')} ${cur}`;
+  document.getElementById('dual-days-label').textContent = `${days} ${pluralDoba(days)} × ${rate.toLocaleString('uk-UA')} ${cur}`;
   document.getElementById('dual-days-label').style.color = cur==='₴' ? '#166534' : '#1d4ed8';
   document.getElementById('dual-days-label').style.fontWeight = '600';
   document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
