@@ -3121,7 +3121,7 @@ function startPanEdgeTimer(dir){
     const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
     scrollEl.scrollLeft = dir < 0 ? maxScroll : 0;
     panState.startScroll = scrollEl.scrollLeft;
-  }, 140);
+  }, 220);
 }
 document.addEventListener('mousedown', e => {
   if(!e.target.closest('.th-day')) return;
