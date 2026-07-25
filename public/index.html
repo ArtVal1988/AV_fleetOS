@@ -3104,6 +3104,7 @@ document.addEventListener('click',e=>{
 
 /* ── DRAG TO PAN (date header row) ── */
 let panState = null;
+let panShiftCooldown = false;
 document.addEventListener('mousedown', e => {
   if(!e.target.closest('.th-day')) return;
   if(e.button !== 0) return;
@@ -3118,7 +3119,35 @@ document.addEventListener('mousemove', e => {
   if(!scrollEl) return;
   const dx = e.clientX - panState.startX;
   if(Math.abs(dx) > 3) panState.moved = true;
-  scrollEl.scrollLeft = panState.startScroll - dx;
+  const target = panState.startScroll - dx;
+  const maxScroll = scrollEl.scrollWidth - scrollEl.clientWidth;
+
+  if(!panShiftCooldown && target < -20){
+    // Dragged past the left edge — go to the previous month and keep dragging seamlessly
+    panShiftCooldown = true;
+    shiftMonth(-1);
+    requestAnimationFrame(() => {
+      const freshScrollEl = document.querySelector('.calendar-scroll');
+      const freshMax = freshScrollEl.scrollWidth - freshScrollEl.clientWidth;
+      freshScrollEl.scrollLeft = freshMax;
+      if(panState){ panState.startScroll = freshMax; panState.startX = e.clientX; }
+      panShiftCooldown = false;
+    });
+    return;
+  }
+  if(!panShiftCooldown && target > Math.max(0,maxScroll) + 20){
+    // Dragged past the right edge — go to the next month and keep dragging seamlessly
+    panShiftCooldown = true;
+    shiftMonth(1);
+    requestAnimationFrame(() => {
+      const freshScrollEl = document.querySelector('.calendar-scroll');
+      freshScrollEl.scrollLeft = 0;
+      if(panState){ panState.startScroll = 0; panState.startX = e.clientX; }
+      panShiftCooldown = false;
+    });
+    return;
+  }
+  scrollEl.scrollLeft = Math.max(0, Math.min(Math.max(0,maxScroll), target));
 });
 document.addEventListener('mouseup', () => {
   if(panState) document.body.style.userSelect = '';
