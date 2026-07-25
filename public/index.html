@@ -2081,7 +2081,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <div style="display:flex;gap:8px;position:relative;z-index:5">
-            <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:6;pointer-events:auto" onclick="_skipCloseOnSave=true;saveBooking();return false;">💾 Зберегти</button>
+            <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:6;pointer-events:auto">💾 Зберегти</button>
             <button type="button" class="case-add-btn" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;position:relative;z-index:6;pointer-events:auto" onclick="closeAndStartNewExtension()">+ Додати продовження</button>
           </div>
         </div>
@@ -2272,6 +2272,12 @@ let viewStartDate=new Date(today);
 const VIEW_DAYS=31;
 let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, highlightedVid=null;
 let _skipCloseOnSave=false;
+document.addEventListener('click', e => {
+  if(e.target.closest('#bm-ext-save-btn')){
+    _skipCloseOnSave = true;
+    saveBooking();
+  }
+});
 
 let stickers=[], nextStickerId=1, stickerColorDraft='red';
 function addSticker(o){ stickers.push({id:nextStickerId++, ...o}); }
