@@ -2030,11 +2030,11 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="ext-box ext-box-blue" style="flex:1">
             <div class="ext-fin-field" style="width:auto">
               <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" style="width:32px;height:36px;text-align:center;box-sizing:border-box;padding:0 4px" min="1" oninput="extDaysOverridden=true;recalcExtensionCost()">
+              <input type="number" id="bm-ext-days" class="no-spinner" style="width:32px;height:36px;text-align:center;box-sizing:border-box;padding:0 4px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
             </div>
             <div class="ext-fin-field" style="width:auto">
               <label>Ціна</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:64px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;recalcExtensionCost()">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:64px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
             </div>
             <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
               <option value="$">$</option>
