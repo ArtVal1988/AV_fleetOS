@@ -3151,10 +3151,13 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>— Оберіть статус —</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
-  document.getElementById('bm-start').value=start||colDateStr(1);
-  document.getElementById('bm-end').value=end||colDateStr(1);
-  document.getElementById('bm-pickup-date').value=start||colDateStr(1);
-  document.getElementById('bm-return-date').value=end||colDateStr(1);
+  const isGenericCreate = !start && !end;
+  const defaultStart = start||colDateStr(1);
+  const defaultEnd = end || (isGenericCreate ? addOneDayStr(addOneDayStr(defaultStart)) : defaultStart);
+  document.getElementById('bm-start').value=defaultStart;
+  document.getElementById('bm-end').value=defaultEnd;
+  document.getElementById('bm-pickup-date').value=defaultStart;
+  document.getElementById('bm-return-date').value=defaultEnd;
   ['bm-name','bm-phone','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
   document.getElementById('bm-pickup-time').value='09:00';
   document.getElementById('bm-return-time').value='09:00';
