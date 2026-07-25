@@ -5310,6 +5310,33 @@ function renderExtTimeline(){
     </div>`).join('');
 
   wrap.innerHTML = originalRowHtml + historyRowsHtml;
+
+  // Summary row: overall period (original start -> latest end) and total income across everything.
+  let summaryHtml = '';
+  if(b && currentExtHistory.length){
+    const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
+    const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
+    const origCur = b.currency||'$';
+
+    let overallEnd = b.end;
+    currentExtHistory.forEach(h => { if(h.toDate > overallEnd) overallEnd = h.toDate; });
+
+    const totalsByCur = {};
+    totalsByCur[origCur] = (totalsByCur[origCur]||0) + origTotal;
+    currentExtHistory.forEach(h => {
+      totalsByCur[h.currency] = (totalsByCur[h.currency]||0) + (h.cost||0);
+    });
+    const totalDays = countDays(b.start, overallEnd);
+    const sumText = Object.entries(totalsByCur).map(([cur,sum]) => sum.toLocaleString('uk-UA') + ' ' + cur).join(' + ');
+
+    summaryHtml = `
+      <div class="ext-history-row" style="background:#eef1f6;border-radius:6px;margin-top:6px;padding:8px 10px;border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800;color:#1d4ed8">
+        <span class="eh-dates">${fmt(b.start)}–${fmt(overallEnd)}</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${totalDays} доби = ${sumText}</span>
+      </div>`;
+  }
+
+  wrap.innerHTML += summaryHtml;
   wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
 }
 
