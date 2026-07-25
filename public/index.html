@@ -2081,7 +2081,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <div style="display:flex;gap:8px;position:relative;z-index:5">
-            <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:6;pointer-events:auto">💾 Зберегти</button>
+            <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:1000;pointer-events:auto">💾 Зберегти продовження</button>
             <button type="button" class="case-add-btn" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534;position:relative;z-index:6;pointer-events:auto" onclick="closeAndStartNewExtension()">+ Додати продовження</button>
           </div>
         </div>
@@ -2203,7 +2203,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
       ✅ Авто повернено. Замовлення закрито.
     </label>
-    <button class="btn btn-primary" onclick="saveBooking()">Зберегти</button>
+    <button class="btn btn-primary" onclick="saveBooking()">Зберегти замовлення</button>
   </div>
 </div>
 </div>
@@ -5198,6 +5198,8 @@ function updateExtensionPaidUI(){
 
   const closeRow = document.getElementById('bm-ext-close-row');
   if(closeRow) closeRow.style.display = (total > 0 && paid >= total) ? '' : 'none';
+  closeCustomDatePicker();
+  closeCustomTimePicker();
 }
 
 function closeAndStartNewExtension(){
@@ -6519,6 +6521,8 @@ function setClientType(type, isUserAction = true){
   const extUsdBtn = document.getElementById('ext-cur-btn-usd');
   const extUahBtn = document.getElementById('ext-cur-btn-uah');
   if(extUsdBtn) extUsdBtn.style.display = isCompany ? 'none' : '';
+  const courseDisplayEl = document.getElementById('bm-ext-course-display');
+  if(courseDisplayEl && !isCompany) courseDisplayEl.style.display = 'none';
   if(extUahBtn) extUahBtn.style.display = isCompany ? 'none' : '';
   if(isCompany && document.getElementById('bm-ext-currency').value !== '₴'){
     setExtCurrency('₴');
