@@ -146,7 +146,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .cal-table{border-collapse:collapse;min-width:100%;}
 .cal-table thead th{background:#eceef2;position:sticky;top:0;z-index:20;border-bottom:2px solid var(--border);white-space:nowrap;}
 .th-vehicle{min-width:280px;width:280px;max-width:400px;position:sticky;left:0;z-index:30!important;background:#eceef2;text-align:left;padding:6px 10px;border-right:2px solid var(--border);font-size:10px;font-weight:400;letter-spacing:1px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
-.th-day{width:26px;min-width:26px;text-align:center;padding:4px 1px;cursor:default;}
+.th-day{width:26px;min-width:26px;text-align:center;padding:4px 1px;cursor:grab;}
 .th-day-num{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);}
 .th-day.weekend .th-day-num{color:var(--accent);}
 .th-day.today-col .th-day-num{color:var(--accent);font-weight:800;}
@@ -3100,6 +3100,29 @@ document.addEventListener('click',e=>{
       document.querySelectorAll('.empty-cell-pending').forEach(el=>el.classList.remove('empty-cell-pending'));
     }
   }
+});
+
+/* ── DRAG TO PAN (date header row) ── */
+let panState = null;
+document.addEventListener('mousedown', e => {
+  if(!e.target.closest('.th-day')) return;
+  if(e.button !== 0) return;
+  const scrollEl = document.querySelector('.calendar-scroll');
+  if(!scrollEl) return;
+  panState = { startX: e.clientX, startScroll: scrollEl.scrollLeft, moved: false };
+  document.body.style.userSelect = 'none';
+});
+document.addEventListener('mousemove', e => {
+  if(!panState) return;
+  const scrollEl = document.querySelector('.calendar-scroll');
+  if(!scrollEl) return;
+  const dx = e.clientX - panState.startX;
+  if(Math.abs(dx) > 3) panState.moved = true;
+  scrollEl.scrollLeft = panState.startScroll - dx;
+});
+document.addEventListener('mouseup', () => {
+  if(panState) document.body.style.userSelect = '';
+  panState = null;
 });
 
 /* ── DRAG TO CREATE ── */
