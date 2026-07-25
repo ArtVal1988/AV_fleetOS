@@ -3172,6 +3172,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-partial-fields').style.display = 'none';
   document.getElementById('bm-partial-remaining-wrap').style.display = 'none';
   document.getElementById('bm-partial-paid').value = '';
+  updatePartialPaymentAvailability();
   document.getElementById('bm-days-override').value='';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
@@ -3286,6 +3287,7 @@ function editBooking(bid){
   document.getElementById('bm-partial-remaining-wrap').style.display = b.partialPaymentActive ? 'flex' : 'none';
   document.getElementById('bm-partial-paid').value = b.amountPaid ? Number(b.amountPaid).toLocaleString('uk-UA') : '';
   if(b.partialPaymentActive) setTimeout(updatePartialPaymentUI, 0);
+  updatePartialPaymentAvailability();
   const liveCur = document.getElementById('bm-currency').value||'$';
   document.getElementById('bm-days-override').value=b.daysOverride||'';
   daysOverrideTouched = !!(b.daysOverride>0);
@@ -5029,6 +5031,7 @@ function toggleExtensionSection(){
     if(origEnd) document.getElementById('bm-return-date').value = origEnd;
     updateExtensionPaidUI();
   }
+  updatePartialPaymentAvailability();
 }
 
 function setExtDateField(id, iso){
@@ -5149,6 +5152,15 @@ function onExtTotalInput(el){
   extRateCurrencyAnchor = document.getElementById('bm-ext-currency').value;
   updateExtensionPaidUI();
 }
+function updatePartialPaymentAvailability(){
+  const hasExtension = (currentExtHistory && currentExtHistory.length > 0) || document.getElementById('bm-ext-active')?.checked;
+  const cb = document.getElementById('bm-partial-active');
+  const row = cb?.closest('label');
+  if(!cb) return;
+  cb.disabled = !!hasExtension;
+  if(row) row.style.opacity = hasExtension ? '.4' : '1';
+  if(row) row.title = hasExtension ? 'Недоступно після додавання продовження оренди' : '';
+}
 function togglePartialPayment(){
   const active = document.getElementById('bm-partial-active').checked;
   document.getElementById('bm-partial-fields').style.display = active ? 'flex' : 'none';
@@ -5251,6 +5263,7 @@ function closeAndStartNewExtension(){
   onExtCurrencyChange();
   onExtDatesChanged();
   renderExtTimeline();
+  updatePartialPaymentAvailability();
   render();
 }
 
@@ -5291,6 +5304,7 @@ function deleteExtHistoryEntry(index){
   if(!confirm('Видалити цей запис продовження з історії?')) return;
   currentExtHistory.splice(index,1);
   renderExtTimeline();
+  updatePartialPaymentAvailability();
 }
 function editExtHistoryEntry(index){
   const h = currentExtHistory[index];
@@ -5311,6 +5325,7 @@ function editExtHistoryEntry(index){
   onExtDatesChanged();
   updateExtensionPaidUI();
   renderExtTimeline();
+  updatePartialPaymentAvailability();
   moveReturnRow(true);
 }
 function getExtStatus(ext){
