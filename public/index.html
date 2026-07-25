@@ -5162,6 +5162,11 @@ function updatePartialPaymentAvailability(){
   if(row) row.title = hasExtension ? 'Недоступно після додавання продовження оренди' : '';
 }
 function togglePartialPayment(){
+  const hasExtension = (currentExtHistory && currentExtHistory.length > 0) || document.getElementById('bm-ext-active')?.checked;
+  if(hasExtension){
+    document.getElementById('bm-partial-active').checked = false;
+    return;
+  }
   const active = document.getElementById('bm-partial-active').checked;
   document.getElementById('bm-partial-fields').style.display = active ? 'flex' : 'none';
   document.getElementById('bm-partial-remaining-wrap').style.display = active ? 'flex' : 'none';
