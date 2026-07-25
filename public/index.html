@@ -5283,9 +5283,9 @@ function renderExtTimeline(){
     const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
     const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
     originalRowHtml = `
-      <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
+      <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26;display:flex;justify-content:space-between;align-items:center;gap:10px">
         <span class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</span>
-        <span class="eh-amt">${origDays} діб × ${(b.rate||0).toLocaleString('uk-UA')} ${b.currency||'$'} = ${origTotal.toLocaleString('uk-UA')} ${b.currency||'$'} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${origDays} діб × ${(b.rate||0).toLocaleString('uk-UA')} ${b.currency||'$'} = ${origTotal.toLocaleString('uk-UA')} ${b.currency||'$'}${b.exchangeRate?' (курс '+b.exchangeRate+')':''} · сплачено</span>
       </div>`;
   }
 
