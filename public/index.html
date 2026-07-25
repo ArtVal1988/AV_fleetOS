@@ -5291,9 +5291,9 @@ function renderExtTimeline(){
 
   const historyRowsHtml = currentExtHistory.map((h,i) => `
     <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-      <div style="flex:1;min-width:0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
         <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-        <span class="eh-amt">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} діб × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency} = ${(h.cost||0).toLocaleString('uk-UA')} ${h.currency}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''} · сплачено</span>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
