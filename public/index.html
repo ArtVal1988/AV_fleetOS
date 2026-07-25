@@ -2004,11 +2004,12 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
-      <div id="bm-ext-toggle-wrap">
+      <div id="bm-ext-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between">
       <label class="ext-toggle-label">
         <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()">
         ↷ Продовження оренди
       </label>
+      <button type="button" onclick="openExtensionForNewEntry()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ Додати продовження</button>
       </div>
 
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
@@ -4987,6 +4988,18 @@ function clearActiveExtension(){
   const cb = document.getElementById('bm-ext-active');
   cb.checked = false;
   toggleExtensionSection();
+}
+function openExtensionForNewEntry(){
+  const cb = document.getElementById('bm-ext-active');
+  if(!cb.checked){
+    cb.checked = true;
+    toggleExtensionSection();
+    return;
+  }
+  // Section already active — if there's a filled-in current period, commit
+  // it to history and open a fresh one; otherwise nothing to do (already open).
+  const hasData = getExtDateField('bm-ext-from') && getExtDateField('bm-ext-to');
+  if(hasData) closeAndStartNewExtension();
 }
 function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
