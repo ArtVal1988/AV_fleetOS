@@ -2272,7 +2272,6 @@ let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, 
 let _skipCloseOnSave=false;
 document.addEventListener('click', e => {
   if(e.target.closest('#bm-ext-save-btn')){
-    console.log('[DEBUG] click handler fired for #bm-ext-save-btn');
     saveExtensionEntry();
   }
 });
@@ -5194,8 +5193,6 @@ function updateExtensionPaidUI(){
 }
 
 function saveExtensionEntry(){
-  console.log('[DEBUG] saveExtensionEntry called. bm-ext-rate2 value:', JSON.stringify(document.getElementById('bm-ext-rate2')?.value));
-  console.log('[DEBUG] number of #bm-ext-rate2 elements in DOM:', document.querySelectorAll('#bm-ext-rate2').length);
   const cur = document.getElementById('bm-ext-currency').value;
   const closed = {
     fromDate: getExtDateField('bm-ext-from'),
