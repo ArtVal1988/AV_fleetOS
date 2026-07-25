@@ -674,7 +674,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* DUAL-CURRENCY VAT TABLE */
 .vat-table-header{display:grid;grid-template-columns:1fr 100px 110px;gap:6px;margin-bottom:4px;}
 .vat-col-head{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;text-align:right;font-weight:500;}
-.vat-table-row{display:grid;grid-template-columns:1fr 100px 110px;gap:6px;align-items:center;padding:5px 8px;border-radius:4px;margin-bottom:3px;}
+.vat-table-row{display:grid;grid-template-columns:1fr 130px 110px;gap:6px;align-items:center;padding:5px 8px;border-radius:4px;margin-bottom:3px;}
 .vat-base-row{background:#f7f8fb;border:0.5px solid #e5e7eb;}
 .vat-tax-row{background:#fff8e6;border:0.5px solid #f0d060;}
 .vat-total-row{background:#eff6ff;border:0.5px solid #bfdbfe;}
@@ -1917,6 +1917,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </select>
             <button type="button" id="fin-cur-btn-usd" class="dep-cur-pill active" onclick="setFinCurrency('$')">$</button>
             <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
+            <span id="bm-vat-status-label" style="display:none;font-size:10px;font-weight:700;color:#0891b2;padding:0 6px;white-space:nowrap">без ПДВ</span>
           </div>
         </div>
         <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="flex:0 0 48px;min-width:48px">
@@ -1930,10 +1931,11 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
-          <div class="dep-inline-wrap" style="background:none;border:none;padding:0">
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0" id="bm-paymethod-icons-wrap">
             <button type="button" id="pm-btn-cash" class="dep-cur-pill active" onclick="setPayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
             <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="setPayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
           </div>
+          <span id="bm-bank-account-label" style="display:none;font-size:10px;font-weight:700;color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:4px 8px;white-space:nowrap">🏦 Банківський рахунок</span>
         </div>
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
@@ -1955,7 +1957,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Dual total preview -->
       <div id="bm-dual-total" style="display:none;margin-top:10px">
         <div class="vat-table-row" id="dp-perday-vat-row" style="display:none">
-          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу з ПДВ</span>
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу без ПДВ</span>
           <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
           <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
         </div>
@@ -1987,7 +1989,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </label>
           <div id="bm-partial-fields" style="display:none;align-items:center;gap:6px;justify-self:center">
             <label style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e;flex-shrink:0">Оплачено</label>
-            <input type="text" inputmode="numeric" id="bm-partial-paid" placeholder="0" style="width:80px;text-align:center" oninput="formatThousandsInput(this);updatePartialPaymentUI()">
+            <input type="text" inputmode="decimal" id="bm-partial-paid" placeholder="0" style="width:80px;text-align:center" oninput="formatDecimalInput(this);updatePartialPaymentUI()">
           </div>
           <div id="bm-partial-remaining-wrap" style="display:none;align-items:center;gap:6px;justify-self:end">
             <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Залишок боргу</span>
@@ -2062,6 +2064,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <div class="ext-box ext-box-blue">
             <div class="ext-fin-field" style="width:auto">
+              <span id="bm-ext-course-display" style="display:none;font-size:9px;color:#0891b2;font-weight:700;margin-right:6px;white-space:nowrap">Курс: <span id="bm-ext-course-value">—</span></span>
               <label>Оплачено</label>
               <div class="ext-calc-input-cur">
                 <input type="number" id="bm-ext-paid" class="no-spinner" style="width:76px" oninput="updateExtensionPaidUI()">
@@ -2318,15 +2321,16 @@ function countBillableDays(startDate, startTime, endDate, endTime){
 }
 function calcTotal(b){
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
-  const gross=days*b.rate;
-  const vatMult=b.vatRate?(1+b.vatRate/100):1;
+  const gross=days*b.rate; // already VAT-inclusive for VAT payers (rate is entered with VAT included)
   const extensionCost = (b.extension && b.extension.active) ? (b.extension.cost||0) : 0;
-  return Math.round(gross*vatMult*100)/100+(calcExtrasTotal(b)||0)+extensionCost;
+  return Math.round(gross*100)/100+(calcExtrasTotal(b)||0)+extensionCost;
 }
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
-  return Math.round(days*b.rate*(b.vatRate/100)*100)/100;
+  const gross = days*b.rate; // VAT-inclusive
+  const net = gross/(1+b.vatRate/100);
+  return Math.round((gross-net)*100)/100; // VAT portion extracted from the inclusive total
 }
 
 /* ── CELL MAP ── */
@@ -3256,6 +3260,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-rate2').value=b.extension.exchangeRate||'';
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
+    onExtRateInput();
     onExtCurrencyChange();
     updateExtensionPaidUI();
   } else {
@@ -3403,6 +3408,12 @@ function saveBooking(){
     if(!extrasActive[e.key]) continue;
     const rawVal = (document.getElementById('ex-price-' + e.key)?.value || '').trim();
     if(!rawVal){ alert('Вкажіть суму для послуги «' + e.label + '» (можна 0, якщо безкоштовно)'); return; }
+  }
+
+  const isCompanyClient = document.getElementById('bm-client-type').value !== 'individual';
+  if(isCompanyClient && document.getElementById('bm-ext-active')?.checked){
+    const extRate2 = (document.getElementById('bm-ext-rate2')?.value || '').trim();
+    if(!extRate2){ alert('Вкажіть курс для продовження оренди'); return; }
   }
 
   // Block genuine double-booking for the same vehicle. A 1-day touch
@@ -5072,6 +5083,17 @@ function onExtRateInput(){
   const val = document.getElementById('bm-ext-rate2').value;
   const totalRateEl = document.getElementById('bm-ext-total-rate');
   const paidRateEl = document.getElementById('bm-ext-paid-rate');
+  const courseDisplay = document.getElementById('bm-ext-course-display');
+  const courseValue = document.getElementById('bm-ext-course-value');
+  const isCompanyClient = document.getElementById('bm-client-type')?.value !== 'individual';
+  if(courseDisplay && courseValue){
+    if(isCompanyClient && val){
+      courseDisplay.style.display = '';
+      courseValue.textContent = val;
+    } else {
+      courseDisplay.style.display = 'none';
+    }
+  }
   if(totalRateEl) totalRateEl.value = val;
   if(paidRateEl) paidRateEl.value = val;
   recalcExtensionCost();
@@ -5105,7 +5127,8 @@ function onExtCurrencyChange(){
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = (cur === '₴') ? 'none' : '';
+  const isCompanyType = document.getElementById('bm-client-type')?.value !== 'individual';
+  if(rate2Field) rate2Field.style.display = (cur === '₴' && !isCompanyType) ? 'none' : '';
   setExtTotalCurrency(cur);
   setExtPaidCurrency(cur);
   updateExtensionPaidUI();
@@ -6454,6 +6477,38 @@ function setClientType(type, isUserAction = true){
   // VAT field in finances
   document.getElementById('bm-vat-field').style.display   = isVat ? '' : 'none';
 
+  // Business types (ФОП без ПДВ / ФОП з ПДВ / ТОВ з ПДВ): Вартість is always
+  // in ₴ for these — hide the $/₴ currency pills and show a "з ПДВ"/"без ПДВ"
+  // label instead; replace the cash/card payment icons with a bank-account
+  // label (businesses pay by bank transfer, not cash/card in hand). Деposit
+  // stays untouched per explicit instruction — it can still be $/₴/€ and cash/card.
+  const fcUsdBtn = document.getElementById('fin-cur-btn-usd');
+  const fcUahBtn = document.getElementById('fin-cur-btn-uah');
+  const vatStatusLabel = document.getElementById('bm-vat-status-label');
+  const pmIconsWrap = document.getElementById('bm-paymethod-icons-wrap');
+  const bankLabel = document.getElementById('bm-bank-account-label');
+  if(fcUsdBtn) fcUsdBtn.style.display = isCompany ? 'none' : '';
+  if(fcUahBtn) fcUahBtn.style.display = isCompany ? 'none' : '';
+  if(vatStatusLabel){
+    vatStatusLabel.style.display = isCompany ? 'inline-block' : 'none';
+    vatStatusLabel.textContent = isVat ? 'з ПДВ' : 'без ПДВ';
+  }
+  if(pmIconsWrap) pmIconsWrap.style.display = isCompany ? 'none' : 'flex';
+  if(bankLabel) bankLabel.style.display = isCompany ? 'inline-block' : 'none';
+
+  // Extension section: same treatment — business clients always pay
+  // extensions in ₴ too, hide the $/₴ pills, force currency to ₴, but keep
+  // Курс visible/required (they still want the reference rate recorded).
+  const extUsdBtn = document.getElementById('ext-cur-btn-usd');
+  const extUahBtn = document.getElementById('ext-cur-btn-uah');
+  if(extUsdBtn) extUsdBtn.style.display = isCompany ? 'none' : '';
+  if(extUahBtn) extUahBtn.style.display = isCompany ? 'none' : '';
+  if(isCompany && document.getElementById('bm-ext-currency').value !== '₴'){
+    setExtCurrency('₴');
+  } else if(document.getElementById('bm-ext-active')?.checked){
+    onExtCurrencyChange(); // re-evaluate Курс field visibility for the new client type
+  }
+
   // Rate label
   document.getElementById('bm-rate-label').textContent =
     'Вартість';
@@ -6761,6 +6816,15 @@ function formatExtraPriceInput(el){
   el.value = num ? num.toLocaleString('uk-UA') : '';
   updateExtrasTotal();
 }
+function formatDecimalInput(el){
+  let v = el.value.replace(/[^\d,.]/g, '').replace(/\./g, ',');
+  const firstComma = v.indexOf(',');
+  if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
+  let [intPart, decPart] = v.split(',');
+  if(decPart !== undefined) decPart = decPart.slice(0, 2);
+  const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
+  el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
+}
 function formatKmInput(el){
   const digits = el.value.replace(/[^\d]/g, '').slice(0, 6);
   el.value = digits ? Number(digits).toLocaleString('uk-UA') : '';
@@ -6825,9 +6889,11 @@ function updateVatPreview(){
   const vpEl = document.getElementById('bm-vat-preview');
   if(vpEl) vpEl.style.display = isCompany ? '' : 'none';
 
-  // Per-day calcs
-  const vatPerDay   = Math.round(rate * vatPct / 100 * 100) / 100;
-  const totalPerDay = Math.round((rate + vatPerDay) * 100) / 100;
+  // Per-day calcs — Вартість (rate) is now entered ALREADY INCLUDING VAT for
+  // VAT payers (ФОП/ТОВ з ПДВ). The breakdown row extracts and shows the
+  // net (без ПДВ) portion instead of adding VAT on top of a net rate.
+  const netPerDay   = isVat ? Math.round(rate / (1 + vatPct/100) * 100) / 100 : rate;
+  const vatPerDay   = isVat ? Math.round((rate - netPerDay) * 100) / 100 : 0;
 
   const toUah = v => !anchorNonUah ? v : (needsConv ? v * exRate : null);
   const toForeign = v => anchorNonUah ? v : null;
@@ -6838,13 +6904,13 @@ function updateVatPreview(){
   const rateLabel2 = document.getElementById('bm-rate-label2');
   if(rateLabel2) rateLabel2.textContent = nonUah ? 'Курс' : 'Курс $';
 
-  // "Вартість за 1 добу з ПДВ" — only meaningful for VAT payers (ФОП/ТОВ з ПДВ);
-  // shows the per-day rate already including VAT, in both columns.
+  // "Вартість за 1 добу без ПДВ" — only meaningful for VAT payers (ФОП/ТОВ з ПДВ);
+  // shows the net per-day rate with VAT extracted out, in both columns.
   const perDayVatRow = document.getElementById('dp-perday-vat-row');
   if(perDayVatRow) perDayVatRow.style.display = isVat ? '' : 'none';
   if(isVat){
-    document.getElementById('dp-perday-vat').textContent = rate ? fmtF(toForeign(totalPerDay)) : '—';
-    document.getElementById('dp-perday-vat-uah').textContent = rate ? fmtU(toUah(totalPerDay)) : '—';
+    document.getElementById('dp-perday-vat').textContent = rate ? fmtF(toForeign(netPerDay)) : '—';
+    document.getElementById('dp-perday-vat-uah').textContent = rate ? fmtU(toUah(netPerDay)) : '—';
   }
 
   // Total preview (requires start/end dates)
@@ -6868,8 +6934,8 @@ function updateVatPreview(){
   if(daysInput && !daysOverrideTouched) daysInput.value = autoDays;
   const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
 
-  const gross = Math.round(rate * days * 100) / 100;
-  const vatTotal = Math.round(gross * vatPct / 100 * 100) / 100;
+  const gross = Math.round(rate * days * 100) / 100; // already VAT-inclusive for isVat types
+  const vatTotal = isVat ? Math.round((gross - gross / (1 + vatPct/100)) * 100) / 100 : 0; // VAT portion within gross — informational only, NOT added again below
 
   const extrasSplit = getExtrasTotalsSplit();
   const extrasOrigNative = extrasSplit.origSum;   // already in order currency
@@ -6877,7 +6943,7 @@ function updateVatPreview(){
   const extrasUahAsOrig  = exRate > 0 ? Math.round(extrasUahNative/exRate*100)/100 : 0;
   const extrasTotal = Math.round((extrasOrigNative + extrasUahAsOrig) * 100) / 100;
 
-  const grandTotal = Math.round((gross + vatTotal + extrasTotal) * 100) / 100;
+  const grandTotal = Math.round((gross + extrasTotal) * 100) / 100;
 
   // Whenever a ₴-priced extra can't yet be folded into the order currency,
   // flag the exchange-rate field so it's obvious why the $ total looks incomplete.
@@ -6925,7 +6991,7 @@ function updateVatPreview(){
     document.getElementById('dp-extras-uah').textContent = extrasUahColumn > 0 ? (isCompany?fmt2(extrasUahColumn):Math.round(extrasUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
   }
 
-  const grandTotalUahColumn = (!anchorNonUah ? (gross+vatTotal+extrasOrigNative) : (needsConv ? (gross+vatTotal+extrasOrigNative) * exRate : 0)) + extrasUahNative;
+  const grandTotalUahColumn = (!anchorNonUah ? (gross+extrasOrigNative) : (needsConv ? (gross+extrasOrigNative) * exRate : 0)) + extrasUahNative;
   const grandTotalForeignColumn = anchorNonUah ? grandTotal : null;
   document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : '—';
   document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmt2(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
