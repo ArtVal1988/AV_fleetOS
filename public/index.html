@@ -3104,7 +3104,25 @@ document.addEventListener('click',e=>{
 
 /* ── DRAG TO PAN (date header row) ── */
 let panState = null;
-let panShiftCooldown = false;
+let panEdgeTimer = null;
+let panEdgeDir = 0;
+function stopPanEdgeTimer(){
+  if(panEdgeTimer){ clearInterval(panEdgeTimer); panEdgeTimer = null; }
+  panEdgeDir = 0;
+}
+function startPanEdgeTimer(dir){
+  if(panEdgeDir === dir) return; // already running this direction
+  stopPanEdgeTimer();
+  panEdgeDir = dir;
+  panEdgeTimer = setInterval(() => {
+    shiftWindow(dir); // 1 day per tick, smooth continuous pan
+    const scrollEl = document.querySelector('.calendar-scroll');
+    if(!scrollEl || !panState) return;
+    const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+    scrollEl.scrollLeft = dir < 0 ? maxScroll : 0;
+    panState.startScroll = scrollEl.scrollLeft;
+  }, 140);
+}
 document.addEventListener('mousedown', e => {
   if(!e.target.closest('.th-day')) return;
   if(e.button !== 0) return;
@@ -3120,38 +3138,23 @@ document.addEventListener('mousemove', e => {
   const dx = e.clientX - panState.startX;
   if(Math.abs(dx) > 3) panState.moved = true;
   const target = panState.startScroll - dx;
-  const maxScroll = scrollEl.scrollWidth - scrollEl.clientWidth;
+  const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
 
-  if(!panShiftCooldown && target < -20){
-    // Dragged past the left edge — go to the previous month and keep dragging seamlessly
-    panShiftCooldown = true;
-    shiftMonth(-1);
-    requestAnimationFrame(() => {
-      const freshScrollEl = document.querySelector('.calendar-scroll');
-      const freshMax = freshScrollEl.scrollWidth - freshScrollEl.clientWidth;
-      freshScrollEl.scrollLeft = freshMax;
-      if(panState){ panState.startScroll = freshMax; panState.startX = e.clientX; }
-      panShiftCooldown = false;
-    });
+  if(target < -20){
+    startPanEdgeTimer(-1);
     return;
   }
-  if(!panShiftCooldown && target > Math.max(0,maxScroll) + 20){
-    // Dragged past the right edge — go to the next month and keep dragging seamlessly
-    panShiftCooldown = true;
-    shiftMonth(1);
-    requestAnimationFrame(() => {
-      const freshScrollEl = document.querySelector('.calendar-scroll');
-      freshScrollEl.scrollLeft = 0;
-      if(panState){ panState.startScroll = 0; panState.startX = e.clientX; }
-      panShiftCooldown = false;
-    });
+  if(target > maxScroll + 20){
+    startPanEdgeTimer(1);
     return;
   }
-  scrollEl.scrollLeft = Math.max(0, Math.min(Math.max(0,maxScroll), target));
+  stopPanEdgeTimer();
+  scrollEl.scrollLeft = Math.max(0, Math.min(maxScroll, target));
 });
 document.addEventListener('mouseup', () => {
   if(panState) document.body.style.userSelect = '';
   panState = null;
+  stopPanEdgeTimer();
 });
 
 /* ── DRAG TO CREATE ── */
