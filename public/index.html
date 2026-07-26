@@ -2591,20 +2591,23 @@ function renderCalendar(){
         }
         else cellStatus = booking.status;
         let progressStripHtml = '';
+        let isPaidPortion = false;
         if(extStatus === 'partial'){
           const extDays = countDays(dayExt.fromDate, dayExt.toDate);
           const dayIdx = countDays(dayExt.fromDate, ds) - 1;
           const pct = dayExt.cost > 0 ? (dayExt.amountPaid||0) / dayExt.cost : 0;
           const darkCount = Math.round(extDays * pct);
-          progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
+          isPaidPortion = dayIdx < darkCount;
+          progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         } else if(!dayExt && mainTotal && mainPaid > 0 && mainPaid < mainTotal){
           const mainDays = countDays(booking.start, booking.end);
           const dayIdx = countDays(booking.start, ds) - 1;
           const pct = mainPaid / mainTotal;
           const darkCount = Math.round(mainDays * pct);
-          progressStripHtml = `<div class="ext-cell-progress ${dayIdx < darkCount ? 'dark' : 'light'}"></div>`;
+          isPaidPortion = dayIdx < darkCount;
+          progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         }
-        const cellColor = cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af');
+        const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af'));
         // Half-day booking (e.g. 2.5 діб): the last calendar cell in the
         // date range shows half-colored to reflect the fractional day.
         const totalSpanDays = countDays(booking.start, be);
