@@ -11,6 +11,29 @@ function fmtDateUk(iso) {
   return `${d}.${m}.${y}`;
 }
 
+const UK_MONTHS = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+function fmtDateUkFull(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${parseInt(d)} ${UK_MONTHS[parseInt(m)-1]} ${y} року`;
+}
+
+// Builds the full legal identification string used in the contract's
+// opening paragraph: "ПІБ, дата народження року народження. Паспорт №X,
+// виданий дата року МІСЦЕ" — the ідентифікаційний номер (INN) is left OUT
+// here since the template's own fixed text already says "ідентифікаційний
+// номер #код2" right after this placeholder.
+function buildClientLegalDescription(client, fallbackName) {
+  if (!client) return fallbackName || '';
+  const parts = [client.name || fallbackName || ''];
+  if (client.birthdate) parts[0] += `, ${fmtDateUk(client.birthdate)} року народження`;
+  const passportBits = [];
+  if (client.passportNum) passportBits.push(`Паспорт №${client.passportNum}`);
+  if (client.passportDate) passportBits.push(`виданий ${fmtDateUk(client.passportDate)} року`);
+  if (passportBits.length) parts.push(passportBits.join(', ') + (client.passportIssuer ? ' ' + client.passportIssuer : ''));
+  return parts.join('. ');
+}
+
 // Replace #placeholder tokens in the docx's document.xml with real values.
 // Values are XML-escaped since they get inserted directly into the markup.
 function escapeXml(str) {
@@ -71,10 +94,10 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     if (type === 'contract') {
       const values = {
         'номер': String(b.id),
-        'дата': fmtDateUk(todayIso),
+        'дата': fmtDateUkFull(todayIso),
         'фирма1': vehicleName,
         'код1': v.plate || '',
-        'фирма2': b.customer?.company || clientName,
+        'фирма2': b.customer?.company || buildClientLegalDescription(c, clientName),
         'код2': b.customer?.edrpou || c?.inn || '',
         'лицо2': clientName,
         'адрес2': clientPhone,
@@ -84,7 +107,7 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     } else {
       const values = {
         'номер': String(b.id),
-        'дата': fmtDateUk(todayIso),
+        'дата': fmtDateUkFull(todayIso),
         'фирма1': vehicleName,
         'код1': v.plate || '',
         'счет1': v.vin || '',
