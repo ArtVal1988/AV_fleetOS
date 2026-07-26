@@ -82,9 +82,34 @@ const FIELD_CATALOG = [
 ];
 
 function getFieldValue(key, ctx) {
+  if (!key) return '';
+  if (key.startsWith('static:')) {
+    return key.slice('static:'.length);
+  }
+  if (key.startsWith('path:')) {
+    return resolveDataPath(key.slice('path:'.length), ctx);
+  }
   const entry = FIELD_CATALOG.find(f => f.key === key);
   if (!entry) return '';
   try { return entry.get(ctx) || ''; } catch (e) { return ''; }
+}
+
+// Safe, limited dot-path resolver — NOT eval(), just plain property lookups
+// on the booking/vehicle/client context objects. Lets an admin reference any
+// field without needing a new catalog entry for every possible data point,
+// e.g. "booking.rate", "vehicle.specs.color", "client.passportNum".
+function resolveDataPath(pathStr, ctx) {
+  const root = { booking: ctx.booking, vehicle: ctx.vehicle, client: ctx.client || {} };
+  const parts = String(pathStr).trim().split('.').filter(Boolean);
+  let cur = root;
+  for (const part of parts) {
+    if (cur === null || cur === undefined) return '';
+    if (!Object.prototype.hasOwnProperty.call(cur, part) && typeof cur !== 'object') return '';
+    cur = cur[part];
+  }
+  if (cur === null || cur === undefined) return '';
+  if (typeof cur === 'object') return ''; // don't dump raw objects into a document
+  return String(cur);
 }
 
 // ── Mapping storage (reuses the settings table) ─────────────────

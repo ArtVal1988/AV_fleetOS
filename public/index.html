@@ -1596,7 +1596,10 @@ input.dm-pf-val.tel{font-size:14px;}
     <div style="padding:20px 28px">
       <div style="font-size:11px;color:#6b7280;margin-bottom:18px;line-height:1.5">
         Завантажте .docx-файл шаблону з полями у форматі <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px">#назва_поля</code>.
-        Для кожного знайденого поля оберіть, звідки брати значення при генерації документа.
+        Для кожного знайденого поля оберіть, звідки брати значення при генерації документа — з готового списку, вписати завжди однаковий текст, або вказати довільний шлях до даних.
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin-top:8px;font-family:var(--font-mono)">
+          Приклади шляхів: <b>booking.rate</b> (тариф) · <b>booking.deposit</b> (застава) · <b>booking.currency</b> (валюта) · <b>vehicle.specs.color</b> (колір авто) · <b>vehicle.plate</b> (номерний знак) · <b>client.address</b> (адреса клієнта)
+        </div>
       </div>
 
       <div id="dt-section-contract" style="margin-bottom:28px">
@@ -8031,19 +8034,40 @@ function renderDocTemplateFields(type, placeholders){
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
   wrap.innerHTML = placeholders.map(ph => {
     const current = DOC_MAPPING[type]?.[ph] || '';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px">
-      <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}</span>
-      <span style="color:#9ca3af;font-size:11px">→</span>
-      <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
-        <option value="">— не заповнювати —</option>
-        ${options}
-      </select>
+    const isStatic = current.startsWith('static:');
+    const isPath = current.startsWith('path:');
+    const isCatalog = current && !isStatic && !isPath;
+    return `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}</span>
+        <span style="color:#9ca3af;font-size:11px">→</span>
+        <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+          <option value="">— не заповнювати —</option>
+          <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
+          <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
+          <option disabled>──────────</option>
+          ${options}
+        </select>
+      </div>
+      <input type="text" class="dt-field-extra" data-type="${type}" data-placeholder="${ph}"
+        style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
+        placeholder="${isPath?'наприклад: booking.rate або vehicle.specs.color':'текст, який завжди буде тут'}"
+        value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
     </div>`;
   }).join('');
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
-    sel.value = DOC_MAPPING[type]?.[ph] || '';
+    const val = DOC_MAPPING[type]?.[ph] || '';
+    if(val.startsWith('static:')) sel.value = '__static__';
+    else if(val.startsWith('path:')) sel.value = '__path__';
+    else sel.value = val;
   });
+}
+function onDocFieldSelectChange(sel){
+  const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
+  const showExtra = sel.value === '__static__' || sel.value === '__path__';
+  extra.style.display = showExtra ? 'block' : 'none';
+  extra.placeholder = sel.value === '__path__' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
 }
 async function uploadDocTemplate(type, input){
   const file = input.files[0];
@@ -8064,7 +8088,15 @@ async function saveDocTemplateMapping(){
   const newMapping = { contract: {}, act: {} };
   document.querySelectorAll('.dt-field-select').forEach(sel => {
     const type = sel.dataset.type, ph = sel.dataset.placeholder;
-    if(sel.value) newMapping[type][ph] = sel.value;
+    if(!sel.value) return;
+    if(sel.value === '__static__' || sel.value === '__path__'){
+      const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
+      const extraVal = (extra?.value || '').trim();
+      if(!extraVal) return;
+      newMapping[type][ph] = (sel.value === '__static__' ? 'static:' : 'path:') + extraVal;
+    } else {
+      newMapping[type][ph] = sel.value;
+    }
   });
   await apiFetch('PUT', '/generate-document/mapping', newMapping);
   DOC_MAPPING = newMapping;
