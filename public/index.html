@@ -1931,7 +1931,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="flex:0 0 48px;min-width:48px">
           <label id="bm-rate-label2" style="white-space:nowrap;text-align:center;width:100%">Курс</label>
-          <input type="number" id="bm-exchange-rate" placeholder="0.00" step="0.01" style="width:48px;text-align:center;font-size:14px"
+          <input type="number" id="bm-exchange-rate" placeholder="00,0" step="0.1" style="width:48px;text-align:center;font-size:14px"
             oninput="updateVatPreview()">
         </div>
         <div class="fin-field fin-vat fin-label-style" id="bm-vat-field" style="display:none;flex:0 0 40px;min-width:40px">
@@ -2065,7 +2065,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
               <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:48px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="0.00" step="0.01" oninput="onExtRateInput()">
+              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:48px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="00,0" step="0.1" oninput="onExtRateInput()">
             </div>
           </div>
         </div>
@@ -2792,7 +2792,7 @@ function showTooltip(e,bid){
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
         const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
         const isPaidFull = remaining <= 0.009;
-        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓ Оплачено':'⚠ Борг '+fmtSmart(remaining)+' '+cur}</span>`;
+        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓ Оплачено':'⚠ Борг '+fmt1(remaining)+' '+cur}</span>`;
       })():''}
     </div>
     ${nameRow}
@@ -2802,12 +2802,12 @@ function showTooltip(e,bid){
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val">${days}${b.rate?' × '+b.rate+cur:''}</span></div>
+    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val">${days}${b.rate?' × '+fmt1(b.rate)+cur:''}</span></div>
     ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
     ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?'+'+fmt2tt(vatUah)+'₴':'+'+fmt2tt(vatAmount)+cur+(vatUah!==null?' · +'+fmt2tt(vatUah)+'₴':'')}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
-    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod):''}</span></div>`:''}
-    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val">${fmtSmart(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod):''}</span></div>`:''}
+    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val">${canShowUahOnly?fmt1(totalUah)+' ₴':fmt1(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod):''}</span></div>`:''}
+    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val">${fmt1(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod):''}</span></div>`:''}
     `:''}
     ${extBlock}
     ${notesBlock}
