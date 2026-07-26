@@ -1863,7 +1863,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
           <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
-            oninput="filterNameInput(this);onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+            oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+          <input type="hidden" id="bm-client-id" value="">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="fg fin-label-style">
@@ -3318,7 +3319,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-end').value=defaultEnd;
   document.getElementById('bm-pickup-date').value=defaultStart;
   document.getElementById('bm-return-date').value=defaultEnd;
-  ['bm-name','bm-phone','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
+  ['bm-name','bm-phone','bm-client-id','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
   document.getElementById('bm-pickup-time').value='09:00';
   document.getElementById('bm-return-time').value='09:00';
   document.getElementById('bm-pickup-loc').value='Офіс, вул. Антоновича, 112';
@@ -3392,6 +3393,7 @@ function editBooking(bid){
   document.getElementById('bm-end').value=b.end;
   document.getElementById('bm-name').value=b.customer?.name||'';
   document.getElementById('bm-phone').value=b.customer?.phone||'';
+  if(document.getElementById('bm-client-id')) document.getElementById('bm-client-id').value = b.customer?.clientId || '';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
@@ -3612,6 +3614,7 @@ function saveBooking(){
       phone:document.getElementById('bm-phone').value.trim(),
       company:document.getElementById('bm-company').value.trim(),
       edrpou:document.getElementById('bm-edrpou').value.trim(),
+      clientId: document.getElementById('bm-client-id')?.value ? parseInt(document.getElementById('bm-client-id').value) : null,
     },
     vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?parseFloat(document.getElementById('bm-vat').value)||20:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
@@ -6930,15 +6933,22 @@ function formatPhoneUA(raw){
 }
 // ── CLIENT AUTOCOMPLETE (suggests returning clients by name, autofills phone) ──
 function getClientsIndex(){
-  // Build a de-duplicated list of past clients from all bookings, most recent entry wins.
+  // Prefer the proper Клієнти database (has passport/license data for
+  // documents) — fall back to a de-duplicated list from past bookings for
+  // clients who were never added there.
   const map = new Map();
   bookings
     .filter(b => b.name && b.name.trim())
     .sort((a,b) => (a.start||'').localeCompare(b.start||''))
     .forEach(b => {
       const key = b.name.trim().toLowerCase();
-      map.set(key, {name: b.name.trim(), phone: b.phone||''});
+      map.set(key, {name: b.name.trim(), phone: b.phone||'', clientId: null});
     });
+  (CLIENTS||[]).forEach(c => {
+    if(!c.name || !c.name.trim()) return;
+    const key = c.name.trim().toLowerCase();
+    map.set(key, {name: c.name.trim(), phone: c.phone||'', clientId: c.id});
+  });
   return [...map.values()];
 }
 function filterNameInput(el){
@@ -6959,7 +6969,7 @@ function onClientNameInput(el){
     .slice(0, 8);
   if(!matches.length){ dd.style.display='none'; dd.innerHTML=''; return; }
   dd.innerHTML = matches.map(c => `
-    <div onmousedown="selectClientSuggestion('${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}')"
+    <div onmousedown="selectClientSuggestion('${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}',${c.clientId||'null'})"
       style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:12px" 
       onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
       <div style="font-weight:600;color:#1a1d26">${c.name}</div>
@@ -6968,11 +6978,13 @@ function onClientNameInput(el){
   `).join('');
   dd.style.display='block';
 }
-function selectClientSuggestion(name, phone){
+function selectClientSuggestion(name, phone, clientId){
   document.getElementById('bm-name').value = name;
   if(phone){
     document.getElementById('bm-phone').value = phone;
   }
+  const idField = document.getElementById('bm-client-id');
+  if(idField) idField.value = clientId || '';
   closeClientSuggest();
 }
 function closeClientSuggest(){
