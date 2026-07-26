@@ -8009,6 +8009,8 @@ async function deleteClientFromForm(){
 // ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
 let DOC_FIELDS = [];
 let DOC_MAPPING = { contract: {}, act: {} };
+let DOC_SCANNED = { contract: [], act: [] };
+let DOC_CUSTOM = { contract: [], act: [] };
 async function openDocTemplatesPanel(){
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
   const [fields, mappingData] = await Promise.all([
@@ -8018,28 +8020,44 @@ async function openDocTemplatesPanel(){
   if(Array.isArray(fields)) DOC_FIELDS = fields;
   if(mappingData){
     DOC_MAPPING = mappingData.mapping || { contract: {}, act: {} };
-    renderDocTemplateFields('contract', mappingData.contractPlaceholders || []);
-    renderDocTemplateFields('act', mappingData.actPlaceholders || []);
+    DOC_SCANNED.contract = mappingData.contractPlaceholders || [];
+    DOC_SCANNED.act = mappingData.actPlaceholders || [];
+    // Any mapping key that isn't in the scanned list was added manually in
+    // a previous session — keep showing it so it doesn't silently vanish.
+    DOC_CUSTOM.contract = Object.keys(DOC_MAPPING.contract||{}).filter(k=>!DOC_SCANNED.contract.includes(k));
+    DOC_CUSTOM.act = Object.keys(DOC_MAPPING.act||{}).filter(k=>!DOC_SCANNED.act.includes(k));
+    renderDocTemplateFields('contract');
+    renderDocTemplateFields('act');
   }
+}
+function addCustomDocField(type){
+  const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
+  if(!name) return;
+  const clean = name.trim().replace(/^#/,'').replace(/[^а-яА-ЯіІїЇєЄa-zA-Z0-9_]/g,'');
+  if(!clean) return;
+  if(DOC_SCANNED[type].includes(clean) || DOC_CUSTOM[type].includes(clean)){
+    alert('Змінна з такою назвою вже є в списку');
+    return;
+  }
+  DOC_CUSTOM[type].push(clean);
+  renderDocTemplateFields(type);
 }
 function closeDocTemplatesPanel(){
   document.getElementById('doctemplates-panel-overlay').style.display='none';
 }
-function renderDocTemplateFields(type, placeholders){
+function renderDocTemplateFields(type){
   const wrap = document.getElementById('dt-fields-'+type);
-  if(!placeholders.length){
-    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля.</div>';
-    return;
-  }
+  const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
-  wrap.innerHTML = placeholders.map(ph => {
+  const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
+    placeholders.map(ph => {
     const current = DOC_MAPPING[type]?.[ph] || '';
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
-    const isCatalog = current && !isStatic && !isPath;
+    const isCustom = DOC_CUSTOM[type].includes(ph);
     return `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px">
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
         <span style="color:#9ca3af;font-size:11px">→</span>
         <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
           <option value="">— не заповнювати —</option>
@@ -8048,6 +8066,7 @@ function renderDocTemplateFields(type, placeholders){
           <option disabled>──────────</option>
           ${options}
         </select>
+        ${isCustom?`<button type="button" onclick="removeCustomDocField('${type}','${ph}')" title="Видалити цю змінну" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>`:''}
       </div>
       <input type="text" class="dt-field-extra" data-type="${type}" data-placeholder="${ph}"
         style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
@@ -8055,6 +8074,7 @@ function renderDocTemplateFields(type, placeholders){
         value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
     </div>`;
   }).join('');
+  wrap.innerHTML = rowsHtml + `<button type="button" onclick="addCustomDocField('${type}')" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
     const val = DOC_MAPPING[type]?.[ph] || '';
@@ -8062,6 +8082,11 @@ function renderDocTemplateFields(type, placeholders){
     else if(val.startsWith('path:')) sel.value = '__path__';
     else sel.value = val;
   });
+}
+function removeCustomDocField(type, ph){
+  DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
+  delete DOC_MAPPING[type][ph];
+  renderDocTemplateFields(type);
 }
 function onDocFieldSelectChange(sel){
   const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
