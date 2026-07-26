@@ -3502,6 +3502,7 @@ function saveBooking(){
   const vid=parseInt(document.getElementById('bm-vehicle').value);
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
+  if(!currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
 
   const clientType = document.getElementById('bm-client-type').value;
   if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
