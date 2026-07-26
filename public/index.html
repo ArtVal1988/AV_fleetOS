@@ -2732,10 +2732,11 @@ function showTooltip(e,bid){
     `;
   } else if((b.extensionHistory && b.extensionHistory.length) || (b.extension && b.extension.active)){
     const fmtShortYear = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
-    const historyRows = (b.extensionHistory||[]).map(h => {
+    const historyRows = (b.extensionHistory||[]).map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmt1(hDays*(h.rate||0));
-      return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
+      const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.04);border-radius:4px;' : '';
+      return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
