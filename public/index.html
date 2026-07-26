@@ -2738,7 +2738,7 @@ function showTooltip(e,bid){
       return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:var(--text);font-weight:500">${hDays} × ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
+          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
         </span>
       </div>`;
