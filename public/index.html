@@ -5467,7 +5467,7 @@ function renderExtTimeline(){
   }
 
   const historyRowsHtml = currentExtHistory.map((h,i) => `
-    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:${i%2?'#f7f7f8':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
         <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
         <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</span>
