@@ -2620,7 +2620,7 @@ function renderCalendar(){
         // for a day shared between two different bookings.
         const totalSpanDays = countDays(booking.start, be);
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
-        const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div><div class="split-line"></div>` : '';
+        const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div>` : '';
         const cellBg = isHalfLastDay ? 'transparent' : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
