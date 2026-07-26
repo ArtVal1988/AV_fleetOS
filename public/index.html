@@ -3302,6 +3302,7 @@ function openBookingModal(vid=null,start=null,end=null){
   setDepositCur('$');
   setPayMethod('cash');
   setDepositPayMethod('cash');
+  if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = '';
   document.getElementById('bm-partial-active').checked = false;
   document.getElementById('bm-partial-fields').style.display = 'none';
   document.getElementById('bm-partial-remaining-wrap').style.display = 'none';
