@@ -2358,7 +2358,12 @@ function getEffectiveEnd(b){
 function getDayExtension(b, dateStr){
   if(!b.extension || !b.extension.active) return null;
   const ext = b.extension;
-  return (dateStr >= ext.fromDate && dateStr <= ext.toDate) ? ext : null;
+  // The boundary day (where the original period ends and the extension
+  // begins) is the same calendar date on both sides — it was already paid
+  // as part of the original period, so it shouldn't count as an extension
+  // day too (which would incorrectly flag it unpaid/grey).
+  const effectiveFrom = ext.fromDate === b.end ? addOneDayStr(ext.fromDate) : ext.fromDate;
+  return (dateStr >= effectiveFrom && dateStr <= ext.toDate) ? ext : null;
 }
 function buildCellMap(){
   const map=new Map();
