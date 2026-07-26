@@ -2386,6 +2386,47 @@ function getBookingById(id){ return bookingsById.get(id) || bookings.find(x=>x.i
 
 function cellKey(vid,d){const dt=colDate(d);return`${vid}_${dt.getFullYear()}_${dt.getMonth()}_${dt.getDate()}`;}
 
+/* ── DELEGATED CELL EVENTS ──────────────────────────────────────
+   Previously every single day-cell (<td>) had its own onmouseenter/
+   onmouseleave/onclick attributes — with hundreds of vehicle-rows × 31
+   days, that's potentially thousands of individual listeners. Chrome's
+   Performance profiler showed "Hit test" alone eating ~49% of scroll time
+   as a direct result. Attaching ONE listener per event type on the table
+   itself (event delegation) removes that cost almost entirely — the
+   listener is attached once, here, and never touched again even though
+   the table's innerHTML gets fully replaced on every render(). */
+let hoveredCellEl = null;
+function initCalendarDelegatedEvents(){
+  const table = document.getElementById('cal-table');
+  if(!table || table._delegatedEventsAttached) return;
+  table._delegatedEventsAttached = true;
+
+  table.addEventListener('mouseover', e => {
+    const td = e.target.closest('.td-day');
+    if(!td){ return; }
+    if(td === hoveredCellEl) return; // already the active cell — skip rebuilding anything
+    hoveredCellEl = td;
+    if(td.dataset.empty){ showTooltipEmpty(e); }
+    else if(td.dataset.bid1 && td.dataset.bid2){ showTooltipSplit(e, parseInt(td.dataset.bid1), parseInt(td.dataset.bid2)); }
+    else if(td.dataset.bid){ showTooltip(e, parseInt(td.dataset.bid)); }
+  });
+  table.addEventListener('mouseout', e => {
+    const td = e.target.closest('.td-day');
+    if(!td || td !== hoveredCellEl) return;
+    const related = e.relatedTarget;
+    if(related && td.contains(related)) return; // moved to a child of the same cell, not actually leaving it
+    hoveredCellEl = null;
+    hideTooltip();
+  });
+  table.addEventListener('click', e => {
+    const td = e.target.closest('.td-day');
+    if(!td) return;
+    if(td.dataset.empty){ onEmptyClick(e, parseInt(td.dataset.vid), parseInt(td.dataset.day)); }
+    else if(td.dataset.bid1 && td.dataset.bid2){ selectSplitCell(e, parseInt(td.dataset.bid1), parseInt(td.dataset.bid2)); }
+    else if(td.dataset.bid){ selectBooking(parseInt(td.dataset.bid), e); }
+  });
+}
+
 /* ── RENDER ── */
 
 const ICON_SERVICE   = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
@@ -2519,6 +2560,8 @@ function removeSticker(id){
 }
 
 function renderCalendar(){
+  initCalendarDelegatedEvents();
+  hoveredCellEl = null; // old cell DOM nodes are about to be replaced — avoid stale references
   const cellMap=buildCellMap();
   const total=VIEW_DAYS;
   const days=Array.from({length:total},(_,i)=>i+1);
@@ -2550,10 +2593,7 @@ function renderCalendar(){
         const visibleArr=bookingArr?bookingArr.filter(b=>!hiddenStatuses.has(b.status)):[];
         if(!visibleArr.length){
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
-            data-vid="${v.id}" data-day="${d}" data-empty="1"
-            onmouseenter="showTooltipEmpty(event)"
-            onmouseleave="hideTooltip()"
-            onclick="onEmptyClick(event,${v.id},${d})">
+            data-vid="${v.id}" data-day="${d}" data-empty="1">
             <div class="day-cell empty"><span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span></div></td>`;
         }
         // SPLIT CELL: two bookings on same day
@@ -2562,9 +2602,7 @@ function renderCalendar(){
           const c1=SM[b1.status]?.color||'#888', c2=SM[b2.status]?.color||'#888';
           const isSel=b1.id===selectedBid||b2.id===selectedBid;
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
-            onmouseenter="showTooltipSplit(event,${b1.id},${b2.id})"
-            onmouseleave="hideTooltip()"
-            onclick="selectSplitCell(event,${b1.id},${b2.id})">
+            data-bid1="${b1.id}" data-bid2="${b2.id}">
             <div class="day-cell split${isSel?' selected-booking':''}">
               <div class="split-half split-top" style="background:${c1};color:${Number(c1.replace('#','0x'))>0x888888?'#1a1d26':'#fff'}">↓</div>
               <div class="split-half split-bot" style="background:${c2};color:${Number(c2.replace('#','0x'))>0x888888?'#1a1d26':'#fff'}">↑</div>
@@ -2611,10 +2649,7 @@ function renderCalendar(){
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
         const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, transparent 50%)` : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
-          data-bid="${booking.id}"
-          onmouseenter="showTooltip(event,${booking.id})"
-          onmouseleave="hideTooltip()"
-          onclick="selectBooking(${booking.id},event)">
+          data-bid="${booking.id}">
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
       }).join('');
       const isHl = highlightedVid===v.id;
@@ -3085,7 +3120,7 @@ function onEmptyClick(e,vid,d){
   e.stopPropagation();
   if(isMobileViewport()){
     const key = vid+'_'+d;
-    const cellEl = e.currentTarget;
+    const cellEl = e.target.closest('.td-day');
     if(pendingEmptyCellKey === key){
       pendingEmptyCellKey = null;
       cellEl.classList.remove('empty-cell-pending');
