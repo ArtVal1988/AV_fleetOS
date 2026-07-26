@@ -2365,9 +2365,12 @@ function getDayExtension(b, dateStr){
   const effectiveFrom = ext.fromDate === b.end ? addOneDayStr(ext.fromDate) : ext.fromDate;
   return (dateStr >= effectiveFrom && dateStr <= ext.toDate) ? ext : null;
 }
+let bookingsById = new Map();
 function buildCellMap(){
   const map=new Map();
+  bookingsById = new Map();
   bookings.forEach(b=>{
+    bookingsById.set(b.id, b);
     const cur=new Date(b.start);
     const end=new Date(getEffectiveEnd(b));
     while(cur<=end){
@@ -2379,6 +2382,7 @@ function buildCellMap(){
   });
   return map;
 }
+function getBookingById(id){ return bookingsById.get(id) || bookings.find(x=>x.id===id); }
 
 function cellKey(vid,d){const dt=colDate(d);return`${vid}_${dt.getFullYear()}_${dt.getMonth()}_${dt.getDate()}`;}
 
@@ -2630,7 +2634,7 @@ function showTooltip(e,bid){
   clearTimeout(ttHideTimer);
   if(ttShownBid===bid){ positionTooltip(e); return; } // same booking as already shown — just follow the cursor, skip rebuilding the whole tooltip
   ttShownBid=bid;
-  const b=bookings.find(x=>x.id===bid);
+  const b=getBookingById(bid);
   if(!b)return;
   const v=getVehicle(b.vehicleId);
   const st=SM[b.status];
