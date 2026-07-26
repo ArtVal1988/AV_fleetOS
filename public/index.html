@@ -8319,15 +8319,19 @@ window.saveBooking = async function(){
   showSuccessToast(wasEditBid ? 'Коригування успішно збережено' : 'Нове замовлення успішно додано');
 };
 function showSuccessToast(text){
-  const el = document.createElement('div');
-  el.textContent = '✓ ' + text;
-  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#166534;color:#fff;padding:12px 22px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none';
-  document.body.appendChild(el);
-  requestAnimationFrame(() => { el.style.opacity='1'; el.style.transform='translateX(-50%) translateY(0)'; });
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,24,35,.55);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;pointer-events:none';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:32px 40px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);transform:scale(.92);transition:transform .25s';
+  box.innerHTML = `<div style="width:52px;height:52px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:26px;color:#166534">✓</div>
+    <div style="font-size:14px;font-weight:700;color:#1a1d26;text-align:center">${text}</div>`;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => { overlay.style.opacity='1'; box.style.transform='scale(1)'; });
   setTimeout(() => {
-    el.style.opacity='0'; el.style.transform='translateX(-50%) translateY(10px)';
-    setTimeout(() => el.remove(), 300);
-  }, 2600);
+    overlay.style.opacity='0'; box.style.transform='scale(.92)';
+    setTimeout(() => overlay.remove(), 300);
+  }, 1600);
 }
 
 const _origDelete = deleteBooking;
