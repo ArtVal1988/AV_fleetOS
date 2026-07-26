@@ -2615,16 +2615,19 @@ function renderCalendar(){
         }
         const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af'));
         // Half-day booking (e.g. 2.5 діб): the last calendar cell in the
-        // date range shows half-colored to reflect the fractional day.
+        // date range shows diagonally half-colored to reflect the
+        // fractional day, matching the same diagonal-split visual used
+        // for a day shared between two different bookings.
         const totalSpanDays = countDays(booking.start, be);
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
-        const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, transparent 50%)` : cellColor;
+        const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div><div class="split-line"></div>` : '';
+        const cellBg = isHalfLastDay ? 'transparent' : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
           onclick="selectBooking(${booking.id},event)">
-          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff"><span class="cell-date-num cell-date-booked">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
+          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${isHalfLastDay?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
       }).join('');
       const isHl = highlightedVid===v.id;
       html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle" style="'+tdVehStyle+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
