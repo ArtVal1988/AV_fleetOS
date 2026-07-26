@@ -1904,10 +1904,10 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec-inner-sep" id="bm-block-3">
       <!-- Row 1: ставка + валюта + курс + ПДВ% + депозит — all in one row -->
       <div class="fin-row" style="justify-content:space-between">
-        <div class="fin-field fin-days fin-label-style" style="flex:0 0 70px;min-width:70px">
+        <div class="fin-field fin-days fin-label-style" style="flex:0 0 78px;min-width:78px">
           <label style="white-space:nowrap;text-align:center;width:100%">Кількість</label>
-          <input type="number" id="bm-days-override" min="1" oninput="daysOverrideTouched=true;updateVatPreview()"
-            style="text-align:center;font-family:var(--font-mono);width:70px;font-size:14px">
+          <input type="number" id="bm-days-override" min="0.5" step="0.5" oninput="daysOverrideTouched=true;updateVatPreview()"
+            style="text-align:center;font-family:var(--font-mono);width:78px;font-size:14px">
         </div>
         <div class="fin-field fin-label-style" style="flex:0 0 auto">
           <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%">Вартість</label>
@@ -2308,6 +2308,7 @@ function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMo
 function countDays(start,end){const s=new Date(start),e=new Date(end);return Math.max(1,Math.round((e-s)/86400000)+1);}
 function pluralDoba(n){
   n = Math.abs(n);
+  if(!Number.isInteger(n)) return 'доби';
   const mod10 = n % 10, mod100 = n % 100;
   if(mod10===1 && mod100!==11) return 'доба';
   if(mod10>=2 && mod10<=4 && (mod100<12 || mod100>14)) return 'доби';
@@ -3547,7 +3548,7 @@ function saveBooking(){
     partialPaymentActive: document.getElementById('bm-partial-active')?.checked || false,
     amountPaid: parseThousands(document.getElementById('bm-partial-paid')?.value),
     depositPayMethod: bmDepositPayMethod,
-    daysOverride:parseInt(document.getElementById('bm-days-override')?.value)||0,
+    daysOverride:parseFloat(document.getElementById('bm-days-override')?.value)||0,
     discount:parseFloat(document.getElementById('bm-discount').value)||0,
 
     startKm:parseThousands(document.getElementById('bm-start-km')?.value),
@@ -4606,7 +4607,7 @@ function updateKmDiff(){
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
       const autoDays = startVal && endVal ? countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value) : 0;
-      const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
+      const days = daysOverrideTouched && parseFloat(daysInput?.value) > 0 ? parseFloat(daysInput.value) : autoDays;
       if(avgBadge){
         if(days > 0){
           const allowance = days * KM_ALLOWANCE_PER_DAY;
@@ -7088,7 +7089,7 @@ function updateVatPreview(){
 
   const autoDays = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
   if(daysInput && !daysOverrideTouched) daysInput.value = autoDays;
-  const days = daysOverrideTouched && parseInt(daysInput?.value) > 0 ? parseInt(daysInput.value) : autoDays;
+  const days = daysOverrideTouched && parseFloat(daysInput?.value) > 0 ? parseFloat(daysInput.value) : autoDays;
 
   const gross = Math.round(rate * days * 100) / 100; // already VAT-inclusive for isVat types
   const vatTotal = isVat ? Math.round((gross - gross / (1 + vatPct/100)) * 100) / 100 : 0; // VAT portion within gross — informational only, NOT added again below
