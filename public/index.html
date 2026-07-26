@@ -2364,6 +2364,7 @@ function calcVatAmount(b){
 
 /* ── CELL MAP ── */
 let currentExtHistory = [];
+let editingExtHistoryIndex = null; // set when an existing history entry is pulled back for editing, so it can be reinserted at the same position instead of appended to the end
 
 function getEffectiveEnd(b){
   let maxEnd = b.end;
@@ -2737,7 +2738,7 @@ function showTooltip(e,bid){
       return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:var(--text);font-weight:500">${hDays} × ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+h.totalExchangeRate+')':''}</span>
+          <span class="tt-val" style="color:var(--text);font-weight:500">${hDays} × ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
         </span>
       </div>`;
@@ -3272,6 +3273,7 @@ function openBookingModal(vid=null,start=null,end=null){
   moveReturnRow(false);
   extDaysOverridden=false; extTotalOverridden=false;
   currentExtHistory = [];
+  editingExtHistoryIndex = null;
   renderExtTimeline();
   editBid=null;
   document.getElementById('bm-title').textContent='Замовлення';
@@ -3410,6 +3412,7 @@ function editBooking(bid){
   }
   moveReturnRow(!!(b.extension && b.extension.active));
   currentExtHistory = (b.extensionHistory||[]).slice();
+  editingExtHistoryIndex = null;
   renderExtTimeline();
   document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
   document.getElementById('bm-currency').value=b.currency||'$';
@@ -5125,6 +5128,28 @@ function moveReturnRow(toExtSection){
 }
 function clearActiveExtension(){
   if(!confirm('Прибрати це продовження? Незбережені дані буде очищено (історія попередніх продовжень залишиться).')) return;
+  if(editingExtHistoryIndex !== null){
+    // This period came from history (being edited) — put it back as-is
+    // rather than losing it, since the user is cancelling, not deleting.
+    const cur = document.getElementById('bm-ext-currency').value;
+    const restored = {
+      fromDate: getExtDateField('bm-ext-from'),
+      toDate: getExtDateField('bm-ext-to'),
+      days: parseInt(document.getElementById('bm-ext-days').value)||0,
+      rate: parseThousands(document.getElementById('bm-ext-rate').value),
+      cost: parseThousands(document.getElementById('bm-ext-total').value),
+      currency: cur,
+      amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+      totalCurrency: cur,
+      totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      paidCurrency: cur,
+      paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      closedDate: new Date().toISOString().split('T')[0],
+    };
+    currentExtHistory.splice(editingExtHistoryIndex, 0, restored);
+    editingExtHistoryIndex = null;
+    renderExtTimeline();
+  }
   const cb = document.getElementById('bm-ext-active');
   cb.checked = false;
   toggleExtensionSection();
@@ -5366,7 +5391,12 @@ function saveExtensionEntry(){
     paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
-  currentExtHistory.push(closed);
+  if(editingExtHistoryIndex !== null){
+    currentExtHistory.splice(editingExtHistoryIndex, 0, closed);
+    editingExtHistoryIndex = null;
+  } else {
+    currentExtHistory.push(closed);
+  }
 
   // Unlike closeAndStartNewExtension(), don't open a fresh period — just
   // close the active-entry section entirely, since the user is done.
@@ -5431,7 +5461,7 @@ function renderExtTimeline(){
     originalRowHtml = `
       <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26;display:flex;justify-content:space-between;align-items:center;gap:10px">
         <span class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' (курс '+b.exchangeRate+')':''} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' (курс '+fmt1(b.exchangeRate)+')':''} · сплачено</span>
       </div>`;
   }
 
@@ -5439,7 +5469,7 @@ function renderExtTimeline(){
     <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
         <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''} · сплачено</span>
+        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</span>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
@@ -5489,6 +5519,7 @@ function editExtHistoryEntry(index){
   if(!h) return;
   if(!confirm('Повернути цей період у форму для редагування? Поточні дані активного продовження (якщо є) будуть замінені.')) return;
   currentExtHistory.splice(index,1);
+  editingExtHistoryIndex = index;
   document.getElementById('bm-ext-active').checked = true;
   document.getElementById('bm-ext-fields').style.display = '';
   setExtDateField('bm-ext-from', h.fromDate);
