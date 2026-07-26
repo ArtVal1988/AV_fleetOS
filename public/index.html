@@ -7046,6 +7046,11 @@ function setDepositPayMethod(method){
   document.getElementById('dep-pm-btn-mixed')?.classList.toggle('active', method==='mixed');
   const noteWrap = document.getElementById('bm-deposit-mixed-note-wrap');
   if(noteWrap) noteWrap.style.display = method==='mixed' ? 'block' : 'none';
+  const depositField = document.getElementById('bm-deposit');
+  if(depositField){
+    if(method==='mixed'){ depositField.value = ''; depositField.disabled = true; }
+    else { depositField.disabled = false; }
+  }
 }
 function onCurrencyChange(){
   const cur = document.getElementById('bm-currency').value;
