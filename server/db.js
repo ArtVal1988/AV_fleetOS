@@ -44,6 +44,12 @@ db.exec(`
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS clients (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    data       TEXT    NOT NULL DEFAULT '{}',
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key        TEXT    PRIMARY KEY,
     value      TEXT    NOT NULL,

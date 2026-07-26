@@ -30,6 +30,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/stickers', require('./routes/stickers'));
+app.use('/api/clients', require('./routes/clients'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/price-check', require('./routes/price-check'));
 app.use('/api/documents', require('./routes/documents'));
@@ -50,6 +51,7 @@ app.get('/api/backup', auth, adminOnly, (req, res) => {
     bookings: db.prepare('SELECT * FROM bookings').all(),
     vehicles: db.prepare('SELECT * FROM vehicles').all(),
     stickers: db.prepare('SELECT * FROM stickers').all(),
+    clients: db.prepare('SELECT * FROM clients').all(),
     settings: db.prepare('SELECT * FROM settings').all(),
     users: db.prepare('SELECT id, username, name, role, active FROM users').all(),
   };
