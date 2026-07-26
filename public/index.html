@@ -2605,7 +2605,7 @@ function renderCalendar(){
         // date range shows half-colored to reflect the fractional day.
         const totalSpanDays = countDays(booking.start, be);
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
-        const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, #ffffff 50%)` : cellColor;
+        const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, transparent 50%)` : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
