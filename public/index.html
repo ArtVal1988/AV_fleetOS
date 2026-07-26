@@ -337,7 +337,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .veh-row-flex{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;}
 .veh-name-click{display:flex;align-items:center;gap:4px;min-width:0;cursor:pointer;flex:0 1 auto;overflow:hidden;}
 .veh-plate-badge{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.3px;color:#1a1d26;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 4px;white-space:nowrap;flex-shrink:0;width:108px;text-align:center;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;}
-#bm-vehicle{width:92px;max-width:92px;}
+#bm-vehicle{width:100px;max-width:100px;padding:5px!important;box-sizing:border-box;}
 .veh-name{font-size:11px;color:#6b7280;white-space:normal;overflow:visible;line-height:1.3;max-width:100%;flex-shrink:0;}
 .veh-icons{display:flex;gap:2px;opacity:0;transition:opacity .15s;}
 .veh-row:hover .veh-icons{opacity:1;}
@@ -928,6 +928,7 @@ input[type=number]{-moz-appearance:textfield;}
 .modal-head>:last-child{justify-self:end;}
 .modal-head .modal-title{justify-self:center;}
 .bm-head-select{font-family:var(--font-mono);font-size:12px;font-weight:600;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;color:#1a1d26;cursor:pointer;outline:none;width:auto;max-width:200px;flex-shrink:0;}
+#bm-status{max-width:170px;}
 select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:none;font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.3px;color:#1a1d26;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:5px 9px;white-space:nowrap;width:auto;max-width:220px;flex-shrink:0;text-overflow:ellipsis;}
 .bm-head-select:hover{border-color:#9ca3af;}
 .fg-pair{display:grid;gap:12px;margin-bottom:10px;}
@@ -1735,11 +1736,9 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="modal-head">
     <select id="bm-vehicle" class="bm-head-select veh-plate-badge"></select>
     <div style="display:flex;align-items:center;gap:8px">
+      <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">TopRent</button>
       <div class="modal-title" id="bm-title">Замовлення</div>
-      <div style="display:flex;gap:4px" id="bm-company-toggle">
-        <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">TopRent</button>
-        <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">RentPlus</button>
-      </div>
+      <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">RentPlus</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor()"></select>
@@ -6579,11 +6578,12 @@ function renderOrderCompanyToggle(){
   const rpBtn = document.getElementById('bm-company-rentplus');
   if(!trBtn || !rpBtn) return;
   const base = 'border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;';
-  const activeStyle = base+'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8';
+  const trActive = base+'border:1px solid #16a34a;background:#16a34a;color:#fff';
+  const rpActive = base+'border:1px solid #2563eb;background:#2563eb;color:#fff';
   const inactiveStyle = base+'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af';
   const dimStyle = base+'border:1px solid #e5e7eb;background:#f3f4f6;color:#d1d5db';
-  trBtn.style.cssText = currentOrderCompany==='toprent' ? activeStyle : (currentOrderCompany==='rentplus' ? dimStyle : inactiveStyle);
-  rpBtn.style.cssText = currentOrderCompany==='rentplus' ? activeStyle : (currentOrderCompany==='toprent' ? dimStyle : inactiveStyle);
+  trBtn.style.cssText = currentOrderCompany==='toprent' ? trActive : (currentOrderCompany==='rentplus' ? dimStyle : inactiveStyle);
+  rpBtn.style.cssText = currentOrderCompany==='rentplus' ? rpActive : (currentOrderCompany==='toprent' ? dimStyle : inactiveStyle);
 }
 function updateStatusSelectColor(){
   const sel=document.getElementById('bm-status');
