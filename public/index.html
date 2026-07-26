@@ -337,6 +337,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .veh-row-flex{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;}
 .veh-name-click{display:flex;align-items:center;gap:4px;min-width:0;cursor:pointer;flex:0 1 auto;overflow:hidden;}
 .veh-plate-badge{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.3px;color:#1a1d26;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 4px;white-space:nowrap;flex-shrink:0;width:108px;text-align:center;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;}
+#bm-vehicle{width:92px;max-width:92px;}
 .veh-name{font-size:11px;color:#6b7280;white-space:normal;overflow:visible;line-height:1.3;max-width:100%;flex-shrink:0;}
 .veh-icons{display:flex;gap:2px;opacity:0;transition:opacity .15s;}
 .veh-row:hover .veh-icons{opacity:1;}
@@ -1733,7 +1734,13 @@ input.dm-pf-val.tel{font-size:14px;}
 <div class="modal">
   <div class="modal-head">
     <select id="bm-vehicle" class="bm-head-select veh-plate-badge"></select>
-    <div class="modal-title" id="bm-title">Замовлення</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="modal-title" id="bm-title">Замовлення</div>
+      <div style="display:flex;gap:4px" id="bm-company-toggle">
+        <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">TopRent</button>
+        <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">RentPlus</button>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor()"></select>
       <button class="modal-x" onclick="closeBookingModal()">✕</button>
@@ -2750,7 +2757,11 @@ function showTooltip(e,bid){
 
   tt.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
+      <span style="display:flex;align-items:center;gap:5px">
+        <span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
+        ${b.orderCompany==='toprent'?'<span title="TopRent" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#1d4ed8;letter-spacing:.3px">TR</span>':''}
+        ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}
+      </span>
       ${b.partialPaymentActive?(()=>{
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
         const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
@@ -3251,6 +3262,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-pickup-date').value=defaultStart;
   document.getElementById('bm-return-date').value=defaultEnd;
   ['bm-name','bm-phone','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
+  currentOrderCompany = null;
+  renderOrderCompanyToggle();
   document.getElementById('bm-pickup-time').value='09:00';
   document.getElementById('bm-return-time').value='09:00';
   document.getElementById('bm-pickup-loc').value='Офіс, вул. Антоновича, 112';
@@ -3323,6 +3336,8 @@ function editBooking(bid){
   document.getElementById('bm-start').value=b.start;
   document.getElementById('bm-end').value=b.end;
   document.getElementById('bm-name').value=b.customer?.name||'';
+  currentOrderCompany = b.orderCompany || null;
+  renderOrderCompanyToggle();
   document.getElementById('bm-phone').value=b.customer?.phone||'';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
@@ -3539,6 +3554,7 @@ function saveBooking(){
     closed:document.getElementById('bm-closed').checked,
     start,end,
     clientType:document.getElementById('bm-client-type').value,
+    orderCompany: currentOrderCompany,
     customer:{
       name:document.getElementById('bm-name').value.trim(),
       phone:document.getElementById('bm-phone').value.trim(),
@@ -6553,6 +6569,22 @@ function openVehiclePanel(vid, tab){
 }
 
 /* ── CLIENT TYPE & VAT ── */
+let currentOrderCompany = null;
+function setOrderCompany(company){
+  currentOrderCompany = currentOrderCompany === company ? null : company; // clicking the active one deselects it
+  renderOrderCompanyToggle();
+}
+function renderOrderCompanyToggle(){
+  const trBtn = document.getElementById('bm-company-toprent');
+  const rpBtn = document.getElementById('bm-company-rentplus');
+  if(!trBtn || !rpBtn) return;
+  const base = 'border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;';
+  const activeStyle = base+'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8';
+  const inactiveStyle = base+'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af';
+  const dimStyle = base+'border:1px solid #e5e7eb;background:#f3f4f6;color:#d1d5db';
+  trBtn.style.cssText = currentOrderCompany==='toprent' ? activeStyle : (currentOrderCompany==='rentplus' ? dimStyle : inactiveStyle);
+  rpBtn.style.cssText = currentOrderCompany==='rentplus' ? activeStyle : (currentOrderCompany==='toprent' ? dimStyle : inactiveStyle);
+}
 function updateStatusSelectColor(){
   const sel=document.getElementById('bm-status');
   if(!sel) return;
