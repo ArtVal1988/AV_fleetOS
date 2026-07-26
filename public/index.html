@@ -2720,9 +2720,17 @@ function showTooltip(e,bid){
       <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Оплата</span><span class="tt-val" style="color:${b.extensionPaid?'#22c55e':'#ef4444'};font-weight:700">${b.extensionPaid?'✓':'не внесена ⚠'}</span></div>
     `;
   } else if((b.extensionHistory && b.extensionHistory.length) || (b.extension && b.extension.active)){
+    const fmtShortYear = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const historyRows = (b.extensionHistory||[]).map(h => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
-      return `<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text);font-weight:500">${fmt(h.fromDate)}–${fmt(h.toDate)} · ${hDays} ${pluralDoba(hDays)} × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency||'$'}${h.totalExchangeRate?' (курс '+h.totalExchangeRate+')':''}</span><span class="tt-val" style="color:#22c55e;font-weight:700">✓</span></div>`;
+      const total = (hDays*(h.rate||0)).toLocaleString('uk-UA');
+      return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
+        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="tt-val" style="color:var(--text);font-weight:500">${hDays} × ${(h.rate||0).toLocaleString('uk-UA')} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+h.totalExchangeRate+')':''}</span>
+          <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
+        </span>
+      </div>`;
     }).join('');
     let activeRow = '';
     if(b.extension && b.extension.active){
@@ -2730,7 +2738,13 @@ function showTooltip(e,bid){
       const st = getExtStatus(ext);
       const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
       const label = st==='paid'?'✓':st==='partial'?`частково (${ext.amountPaid||0}/${ext.cost||0})`:'борг ⚠';
-      activeRow = `<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text);font-weight:500">${fmt(ext.fromDate)}–${fmt(ext.toDate)}${ext.cost?' · '+ext.cost+(ext.currency||b.currency||'$'):''}</span><span class="tt-val" style="color:${color};font-weight:700">${label}</span></div>`;
+      activeRow = `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
+        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          ${ext.cost?`<span class="tt-val" style="color:var(--text);font-weight:500">${ext.cost} ${ext.currency||b.currency||'$'}</span>`:''}
+          <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
+        </span>
+      </div>`;
     }
     extBlock = `
       <div class="tt-divider"></div>
