@@ -2605,7 +2605,7 @@ function renderCalendar(){
         // date range shows half-colored to reflect the fractional day.
         const totalSpanDays = countDays(booking.start, be);
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
-        const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, #e5e7eb 50%)` : cellColor;
+        const cellBg = isHalfLastDay ? `linear-gradient(to right, ${cellColor} 50%, #ffffff 50%)` : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
           onmouseenter="showTooltip(event,${booking.id})"
@@ -7066,7 +7066,7 @@ function updateVatPreview(){
   const toUah = v => !anchorNonUah ? v : (needsConv ? v * exRate : null);
   const toForeign = v => anchorNonUah ? v : null;
   const fmtU  = v => v !== null ? (isCompany ? fmt2(v) : Math.round(v).toLocaleString('uk-UA')) + ' ₴' : '—';
-  const fmtF  = v => v !== null ? (isCompany ? fmt2(v) : Math.round(v).toLocaleString('uk-UA')) + ' ' + foreignSym : '—';
+  const fmtF  = v => v !== null ? fmt2(v) + ' ' + foreignSym : '—';
   const fmtO  = v => isCompany ? fmt2(v) : v;
 
   const rateLabel2 = document.getElementById('bm-rate-label2');
@@ -8316,7 +8316,19 @@ window.saveBooking = async function(){
   if(!b||!_token) return;
   if(wasEditBid){ apiFetch('PUT','/bookings/'+b.id, b); }
   else { const r=await apiFetch('POST','/bookings',b); if(r?.id) b.id=r.id; }
+  showSuccessToast(wasEditBid ? 'Коригування успішно збережено' : 'Нове замовлення успішно додано');
 };
+function showSuccessToast(text){
+  const el = document.createElement('div');
+  el.textContent = '✓ ' + text;
+  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:#166534;color:#fff;padding:12px 22px;border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none';
+  document.body.appendChild(el);
+  requestAnimationFrame(() => { el.style.opacity='1'; el.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(() => {
+    el.style.opacity='0'; el.style.transform='translateX(-50%) translateY(10px)';
+    setTimeout(() => el.remove(), 300);
+  }, 2600);
+}
 
 const _origDelete = deleteBooking;
 window.deleteBooking = function(bid){
