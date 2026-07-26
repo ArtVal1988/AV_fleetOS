@@ -3228,7 +3228,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>— Оберіть статус —</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
   const isGenericCreate = !start && !end;
-  const defaultStart = start||colDateStr(1);
+  const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const defaultStart = start || (isGenericCreate ? todayStr : colDateStr(1));
   const defaultEnd = end || (isGenericCreate ? addOneDayStr(addOneDayStr(defaultStart)) : defaultStart);
   document.getElementById('bm-start').value=defaultStart;
   document.getElementById('bm-end').value=defaultEnd;
