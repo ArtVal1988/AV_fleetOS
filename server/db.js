@@ -63,6 +63,17 @@ db.exec(`
     created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS activity_log (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    action       TEXT    NOT NULL,
+    entity_type  TEXT    NOT NULL,
+    entity_id    INTEGER,
+    summary      TEXT,
+    snapshot     TEXT,
+    user_name    TEXT,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key        TEXT    PRIMARY KEY,
     value      TEXT    NOT NULL,

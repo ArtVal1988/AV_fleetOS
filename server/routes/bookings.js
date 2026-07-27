@@ -1,6 +1,12 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
+const { logActivity } = require('../activityLog');
+
+function bookingSummary(b) {
+  const name = b?.customer?.name || '';
+  return `${name ? name + ' · ' : ''}${b?.start || ''}–${b?.end || ''}`.trim();
+}
 
 // GET /api/bookings
 router.get('/', auth, (req, res) => {
@@ -38,14 +44,21 @@ router.post('/', auth, (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(b.vehicleId, b.status || 'reserved', b.start, b.end, data, req.user.id);
 
+  logActivity({
+    action: 'create', entityType: 'booking', entityId: result.lastInsertRowid,
+    summary: bookingSummary(b), snapshot: { ...b, id: result.lastInsertRowid },
+    userName: req.user?.name || req.user?.username,
+  });
+
   res.status(201).json({ id: result.lastInsertRowid });
 });
 
 // PUT /api/bookings/:id
 router.put('/:id', auth, (req, res) => {
-  const row = db.prepare('SELECT id FROM bookings WHERE id = ?').get(req.params.id);
+  const row = db.prepare('SELECT id, data FROM bookings WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Замовлення не знайдено' });
 
+  const before = JSON.parse(row.data);
   const b = req.body;
   db.prepare(`
     UPDATE bookings
@@ -54,14 +67,28 @@ router.put('/:id', auth, (req, res) => {
     WHERE id = ?
   `).run(b.vehicleId, b.status, b.start, b.end, JSON.stringify(b), req.params.id);
 
+  logActivity({
+    action: 'update', entityType: 'booking', entityId: req.params.id,
+    summary: bookingSummary(b), snapshot: { before, after: { ...b, id: Number(req.params.id) } },
+    userName: req.user?.name || req.user?.username,
+  });
+
   res.json({ ok: true });
 });
 
 // DELETE /api/bookings/:id
 router.delete('/:id', auth, (req, res) => {
-  const row = db.prepare('SELECT id FROM bookings WHERE id = ?').get(req.params.id);
+  const row = db.prepare('SELECT id, data FROM bookings WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Замовлення не знайдено' });
+  const deletedData = { ...JSON.parse(row.data), id: row.id };
   db.prepare('DELETE FROM bookings WHERE id = ?').run(req.params.id);
+
+  logActivity({
+    action: 'delete', entityType: 'booking', entityId: req.params.id,
+    summary: bookingSummary(deletedData), snapshot: deletedData,
+    userName: req.user?.name || req.user?.username,
+  });
+
   res.json({ ok: true });
 });
 
