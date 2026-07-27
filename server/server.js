@@ -32,6 +32,7 @@ app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/stickers', require('./routes/stickers'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/generate-document', require('./routes/generate-document'));
+app.use('/api/client-documents', require('./routes/client-documents'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/price-check', require('./routes/price-check'));
 app.use('/api/documents', require('./routes/documents'));

@@ -82,6 +82,19 @@ db.exec(`
     created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS client_documents (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id     INTEGER NOT NULL,
+    doc_type      TEXT    NOT NULL,
+    filename      TEXT    NOT NULL,
+    thumb_filename TEXT,
+    original_name TEXT    NOT NULL,
+    mime_type     TEXT    NOT NULL,
+    size          INTEGER NOT NULL,
+    uploaded_by   INTEGER,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS spare_parts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     name          TEXT    NOT NULL,

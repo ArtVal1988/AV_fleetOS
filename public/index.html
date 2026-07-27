@@ -1575,6 +1575,25 @@ input.dm-pf-val.tel{font-size:14px;}
         <label class="vf-lbl">Нотатки</label>
         <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px" placeholder="Додаткова інформація про клієнта..."></textarea>
       </div>
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
+      <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
+      <div id="cf-docs-active" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Паспорт
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('passport', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Посвідчення водія
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('license', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Інше
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('other', this)">
+          </label>
+        </div>
+        <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
     </div>
     <div style="padding:0 28px 22px;display:flex;gap:8px;justify-content:space-between">
       <button id="cf-delete-btn" onclick="deleteClientFromForm()" style="background:none;border:1px solid rgba(240,96,96,.3);color:#f06060;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer;display:none">✕ Видалити</button>
@@ -7983,6 +8002,9 @@ function openClientForm(id){
   document.getElementById('cf-license-date').value = c?.licenseDate || '';
   document.getElementById('cf-notes').value = c?.notes || '';
   document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
+  document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
+  document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
+  if(id) loadClientDocs(id);
   document.getElementById('client-form-overlay').style.display='flex';
 }
 function closeClientForm(){
@@ -8020,6 +8042,54 @@ async function deleteClientFromForm(){
   await loadClientsFromServer();
   closeClientForm();
   renderClientsPanelList();
+}
+
+// ── CLIENT DOCUMENT PHOTOS ──────────────────────────────────────
+let CLIENT_DOCS = [];
+async function loadClientDocs(clientId){
+  const rows = await apiFetch('GET', '/client-documents/'+clientId);
+  CLIENT_DOCS = Array.isArray(rows) ? rows : [];
+  renderClientDocsList();
+}
+function renderClientDocsList(){
+  const wrap = document.getElementById('cf-docs-list');
+  if(!wrap) return;
+  const labels = {passport:'Паспорт', license:'Посвідчення водія', other:'Інше'};
+  if(!CLIENT_DOCS.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає завантажених фото</div>';
+    return;
+  }
+  wrap.innerHTML = CLIENT_DOCS.map(d => {
+    const thumb = d.thumbUrl || (d.type && d.type.startsWith('image/') ? d.url : null);
+    const preview = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
+    return `<div style="position:relative;width:76px">
+      <a href="${d.url}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb">${preview}</a>
+      <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labels[d.doc_type]||d.doc_type}</div>
+      <button type="button" onclick="deleteClientDoc(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`;
+  }).join('');
+}
+async function uploadClientDoc(key, input){
+  const file = input.files[0];
+  if(!file) return;
+  const clientId = document.getElementById('cf-id').value;
+  if(!clientId) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(API_BASE + '/client-documents/' + clientId + '/' + key, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _token },
+    body: formData,
+  });
+  input.value = '';
+  if(!res.ok){ alert('Не вдалося завантажити фото'); return; }
+  await loadClientDocs(clientId);
+}
+async function deleteClientDoc(id){
+  if(!confirm('Видалити це фото?')) return;
+  await apiFetch('DELETE', '/client-documents/'+id);
+  CLIENT_DOCS = CLIENT_DOCS.filter(d=>d.id!==id);
+  renderClientDocsList();
 }
 
 // ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
