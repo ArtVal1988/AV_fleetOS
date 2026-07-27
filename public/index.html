@@ -3848,6 +3848,25 @@ function saveBooking(){
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
   if(COMPANY_REQUIRED_STATUSES.includes(document.getElementById('bm-status').value) && !currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
 
+  // If an extension is currently active (filled in but not yet committed via
+  // "Зберегти продовження"), it still needs to be checked for overlap with
+  // other bookings on the same vehicle before the whole booking gets saved.
+  if(document.getElementById('bm-ext-active')?.checked){
+    const extFrom = getExtDateField('bm-ext-from');
+    const extTo = getExtDateField('bm-ext-to');
+    if(extFrom && extTo){
+      const extConflict = bookings.find(b =>
+        b.vehicleId === vid && b.id !== editBid &&
+        extFrom < getEffectiveEnd(b) && b.start < extTo
+      );
+      if(extConflict){
+        const st = SM[extConflict.status];
+        alert(`Продовження (${fmt(extFrom)}–${fmt(extTo)}) накладається на інше замовлення на це авто: "${st?.label||extConflict.status}" (${fmt(extConflict.start)}–${fmt(getEffectiveEnd(extConflict))}). Змініть дати продовження або спочатку розв'яжіть конфлікт з іншим замовленням.`);
+        return;
+      }
+    }
+  }
+
   const clientType = document.getElementById('bm-client-type').value;
   if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
     alert('Вкажіть ЄДРПОУ');
