@@ -8660,12 +8660,36 @@ function renderActivityLogList(){
     </div>`;
   }).join('');
 }
+function formatBookingSnapshot(b){
+  if(!b) return '(немає даних)';
+  const v = getVehicle(b.vehicleId);
+  const st = SM[b.status];
+  const lines = [];
+  lines.push('Клієнт: ' + (b.customer?.name || '—'));
+  if(b.customer?.phone) lines.push('Телефон: ' + b.customer.phone);
+  lines.push('Авто: ' + (v ? `${v.plate} · ${stripYear(v.name)}` : (b.vehicleId ? '№'+b.vehicleId : '—')));
+  lines.push('Дати: ' + fmt(b.start) + ' – ' + fmt(b.end));
+  lines.push('Статус: ' + (st?.label || b.status || '—'));
+  if(b.rate) lines.push('Тариф: ' + fmt1(b.rate) + ' ' + (b.currency||'$') + ' / добу');
+  if(b.daysOverride) lines.push('Кількість діб: ' + b.daysOverride);
+  if(b.deposit) lines.push('Депозит: ' + fmt1(b.deposit) + ' ' + (b.depositCur||b.currency||'$'));
+  if(b.orderCompany) lines.push('Компанія: ' + (b.orderCompany==='toprent'?'TopRent':'RentPlus'));
+  if(b.notes) lines.push('Нотатки: ' + b.notes);
+  if(b.extensionHistory?.length) lines.push('Продовжень в історії: ' + b.extensionHistory.length);
+  return lines.join('\n');
+}
 function viewAlSnapshot(i){
   const entry = ACTIVITY_LOG[i];
   if(!entry) return;
   const actionLabel = entry.action==='create'?'Створено':entry.action==='update'?'Змінено':'Видалено';
   document.getElementById('al-snapshot-title').textContent = actionLabel + ': ' + (entry.summary || '');
-  document.getElementById('al-snapshot-content').textContent = JSON.stringify(entry.snapshot, null, 2);
+  let content;
+  if(entry.action === 'update' && entry.snapshot?.before && entry.snapshot?.after){
+    content = '── ДО ЗМІНИ ──\n' + formatBookingSnapshot(entry.snapshot.before) + '\n\n── ПІСЛЯ ЗМІНИ ──\n' + formatBookingSnapshot(entry.snapshot.after);
+  } else {
+    content = formatBookingSnapshot(entry.snapshot);
+  }
+  document.getElementById('al-snapshot-content').textContent = content;
   document.getElementById('al-snapshot-overlay').style.display='flex';
 }
 function closeAlSnapshot(){
