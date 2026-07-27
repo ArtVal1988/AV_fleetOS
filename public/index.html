@@ -2619,14 +2619,25 @@ function getEffectiveEnd(b){
   return maxEnd;
 }
 function getDayExtension(b, dateStr){
-  if(!b.extension || !b.extension.active) return null;
-  const ext = b.extension;
-  // The boundary day (where the original period ends and the extension
-  // begins) is the same calendar date on both sides — it was already paid
-  // as part of the original period, so it shouldn't count as an extension
-  // day too (which would incorrectly flag it unpaid/grey).
-  const effectiveFrom = ext.fromDate === b.end ? addOneDayStr(ext.fromDate) : ext.fromDate;
-  return (dateStr >= effectiveFrom && dateStr <= ext.toDate) ? ext : null;
+  // Build the full chain: original booking end, then each history entry in
+  // order, then the currently-active (uncommitted) extension if any. Each
+  // period's "effective from" skips its boundary day when that day is the
+  // same calendar date as the end of the period right before it — that day
+  // was already paid as part of the earlier period, so it shouldn't count
+  // as unpaid/grey just because it's also technically this period's start.
+  let prevEnd = b.end;
+  const history = (b.extensionHistory || []).slice().sort((a,c)=>(a.fromDate||'').localeCompare(c.fromDate||''));
+  for(const h of history){
+    const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
+    if(dateStr >= effectiveFrom && dateStr <= h.toDate) return h;
+    prevEnd = h.toDate;
+  }
+  if(b.extension && b.extension.active){
+    const ext = b.extension;
+    const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
+    if(dateStr >= effectiveFrom && dateStr <= ext.toDate) return ext;
+  }
+  return null;
 }
 let bookingsById = new Map();
 function buildCellMap(){
