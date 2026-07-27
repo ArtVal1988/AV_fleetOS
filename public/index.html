@@ -515,6 +515,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .to-wr-status.progress{background:#fff8e6;color:#92400e;}
 .to-wr-meta{display:flex;gap:12px;font-size:11px;color:#6b7280;flex-wrap:wrap;}
 .to-wr-cost{font-size:12px;font-weight:600;color:#2563eb;margin-top:4px;}
+.to-wr-cost-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;}
+.to-wr-cost-part{font-size:11px;font-weight:700;white-space:nowrap;}
+.to-wr-cost-part.labor{color:#166534;}
+.to-wr-cost-part.parts{color:#9a3412;}
+.to-wr-cost-part.total{color:#1e3a8a;margin-left:auto;}
 .to-mat-list{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;}
 .to-mat-chip{font-size:10px;background:#f0f2f5;border-radius:3px;padding:2px 7px;color:#374151;}
 .to-empty{text-align:center;padding:30px;color:#9ca3af;font-size:12px;}
@@ -6096,7 +6101,11 @@ function renderToTabs(v){
         (w.downtime?'<span>⏱ Простій: '+w.downtime+' год</span>':'') +
       '</div>' +
       (mats?'<div class="to-mat-list">'+mats+'</div>':'') +
-      (total>0?'<div class="to-wr-cost">'+fmtMn(total)+'</div>':'') +
+      (total>0?'<div class="to-wr-cost-row">' +
+        (w.labor>0?'<span class="to-wr-cost-part labor">Вартість робіт: '+fmtMn(w.labor)+'</span>':'<span></span>') +
+        (matCost>0?'<span class="to-wr-cost-part parts">Вартість матеріалів та запасних частин: '+fmtMn(matCost)+'</span>':'<span></span>') +
+        '<span class="to-wr-cost-part total">Загалом: '+fmtMn(total)+'</span>' +
+      '</div>':'') +
     '</div>';
   }
 
