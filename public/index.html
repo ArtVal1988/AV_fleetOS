@@ -3105,7 +3105,7 @@ function showTooltip(e,bid){
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} ${pluralDoba(days)} * ${b.rate.toLocaleString('uk-UA')} ${cur} = ${fmt2(days*b.rate)} ${cur}`:days}</span></div>
+    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * ${b.rate.toLocaleString('uk-UA')} ${cur} = ${fmt2(days*b.rate)} ${cur}`:days}</span></div>
     ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
     ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?'+'+fmt2tt(vatUah)+'₴':'+'+fmt2tt(vatAmount)+cur+(vatUah!==null?' · +'+fmt2tt(vatUah)+'₴':'')}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
