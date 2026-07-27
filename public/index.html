@@ -1944,7 +1944,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-edrpou" placeholder="12345678" maxlength="10">
         </div>
       </div>
-      <div class="fg-pair" style="grid-template-columns:0.8fr 1.2fr">
+      <div class="fg-pair" style="grid-template-columns:1.3fr 0.7fr">
         <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
           <div style="display:flex;align-items:center;gap:4px">
@@ -7118,7 +7118,6 @@ function updateClientLinkButton(){
 function gotoClientCard(){
   const clientId = parseInt(document.getElementById('bm-client-id')?.value);
   if(!clientId) return;
-  closeBookingModal();
   openClientForm(clientId);
 }
 function closeClientSuggest(){
@@ -8054,6 +8053,7 @@ function renderClientBookingHistory(clientId){
 function gotoBookingFromClient(bid){
   closeClientForm();
   closeClientsPanel();
+  closeBookingModal();
   editBooking(bid);
 }
 function closeClientForm(){
