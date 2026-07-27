@@ -1524,6 +1524,13 @@ input.dm-pf-val.tel{font-size:14px;}
         <label class="vf-lbl">ПІБ</label>
         <input id="cf-name" type="text" class="vf-inp" placeholder="Іваненко Олена Петрівна" style="width:100%">
       </div>
+      <div style="margin-bottom:14px">
+        <label class="vf-lbl">Тип клієнта</label>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button type="button" id="cf-res-resident" onclick="setClientResidency('resident')" style="flex:1;padding:8px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">🇺🇦 Резидент України</button>
+          <button type="button" id="cf-res-nonresident" onclick="setClientResidency('nonresident')" style="flex:1;padding:8px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">🌍 Нерезидент</button>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;margin-bottom:14px">
         <div style="flex:1">
           <label class="vf-lbl">Телефон</label>
@@ -1535,45 +1542,98 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <div style="margin-bottom:14px">
-        <label class="vf-lbl">Адреса реєстрації</label>
+        <label class="vf-lbl" id="cf-address-label">Адреса реєстрації</label>
         <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
       </div>
-      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Документ, що посвідчує особу</div>
-      <div style="display:flex;gap:10px;margin-bottom:14px">
-        <div style="flex:1">
-          <label class="vf-lbl">Серія і номер паспорта / номер ID-картки</label>
-          <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456 або 123456789" style="width:100%">
+
+      <div id="cf-resident-fields">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Документ, що посвідчує особу</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Серія і номер паспорта / номер ID-картки</label>
+            <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456 або 123456789" style="width:100%">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:2">
+            <label class="vf-lbl">Ким виданий</label>
+            <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Дата видачі</label>
+            <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="vf-lbl">Ідентифікаційний номер (ІПН)</label>
+          <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
+        </div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Посвідчення водія</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Номер посвідчення</label>
+            <input id="cf-license-num" type="text" class="vf-inp" placeholder="СХА123456" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Категорія</label>
+            <input id="cf-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Дата видачі</label>
+            <input id="cf-license-date" type="date" class="vf-inp" style="width:100%">
+          </div>
         </div>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:14px">
-        <div style="flex:2">
-          <label class="vf-lbl">Ким виданий</label>
-          <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
+
+      <div id="cf-nonresident-fields" style="display:none">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Закордонний паспорт</div>
+        <div style="margin-bottom:14px">
+          <label class="vf-lbl">Громадянство</label>
+          <input id="cf-nr-citizenship" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
         </div>
-        <div style="flex:1">
-          <label class="vf-lbl">Дата видачі</label>
-          <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Номер закордонного паспорта</label>
+            <input id="cf-nr-passport-num" type="text" class="vf-inp" placeholder="AB1234567" style="width:100%">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Дата видачі</label>
+            <input id="cf-nr-passport-date" type="date" class="vf-inp" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Дійсний до</label>
+            <input id="cf-nr-passport-expiry" type="date" class="vf-inp" style="width:100%">
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="vf-lbl">Реєстраційний номер платника податків (за наявності)</label>
+          <input id="cf-nr-taxnum" type="text" class="vf-inp" placeholder="Необов'язково" style="width:100%">
+        </div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Посвідчення водія</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Номер (національне/міжнародне)</label>
+            <input id="cf-nr-license-num" type="text" class="vf-inp" placeholder="Номер посвідчення" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Категорія</label>
+            <input id="cf-nr-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <div style="flex:1">
+            <label class="vf-lbl">Країна видачі</label>
+            <input id="cf-nr-license-country" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
+          </div>
+          <div style="flex:1">
+            <label class="vf-lbl">Дійсне до</label>
+            <input id="cf-nr-license-expiry" type="date" class="vf-inp" style="width:100%">
+          </div>
         </div>
       </div>
-      <div style="margin-bottom:14px">
-        <label class="vf-lbl">Ідентифікаційний номер (ІПН)</label>
-        <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
-      </div>
-      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Посвідчення водія</div>
-      <div style="display:flex;gap:10px;margin-bottom:14px">
-        <div style="flex:1">
-          <label class="vf-lbl">Номер посвідчення</label>
-          <input id="cf-license-num" type="text" class="vf-inp" placeholder="СХА123456" style="width:100%">
-        </div>
-        <div style="flex:1">
-          <label class="vf-lbl">Категорія</label>
-          <input id="cf-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
-        </div>
-        <div style="flex:1">
-          <label class="vf-lbl">Дата видачі</label>
-          <input id="cf-license-date" type="date" class="vf-inp" style="width:100%">
-        </div>
-      </div>
+
       <div style="margin-bottom:14px">
         <label class="vf-lbl">Нотатки</label>
         <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px" placeholder="Додаткова інформація про клієнта..."></textarea>
@@ -8162,7 +8222,17 @@ function openClientForm(id){
   document.getElementById('cf-license-num').value = c?.licenseNum || '';
   document.getElementById('cf-license-cat').value = c?.licenseCat || '';
   document.getElementById('cf-license-date').value = c?.licenseDate || '';
+  document.getElementById('cf-nr-citizenship').value = c?.nrCitizenship || '';
+  document.getElementById('cf-nr-passport-num').value = c?.nrPassportNum || '';
+  document.getElementById('cf-nr-passport-date').value = c?.nrPassportDate || '';
+  document.getElementById('cf-nr-passport-expiry').value = c?.nrPassportExpiry || '';
+  document.getElementById('cf-nr-taxnum').value = c?.nrTaxNum || '';
+  document.getElementById('cf-nr-license-num').value = c?.nrLicenseNum || '';
+  document.getElementById('cf-nr-license-cat').value = c?.nrLicenseCat || '';
+  document.getElementById('cf-nr-license-country').value = c?.nrLicenseCountry || '';
+  document.getElementById('cf-nr-license-expiry').value = c?.nrLicenseExpiry || '';
   document.getElementById('cf-notes').value = c?.notes || '';
+  setClientResidency(c?.residency || 'resident');
   document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
   document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
   document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
@@ -8170,6 +8240,17 @@ function openClientForm(id){
   document.getElementById('cf-history-section').style.display = id ? 'block' : 'none';
   if(id) renderClientBookingHistory(id);
   document.getElementById('client-form-overlay').style.display='flex';
+}
+function setClientResidency(type){
+  const isResident = type !== 'nonresident';
+  document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
+  document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
+  document.getElementById('cf-address-label').textContent = isResident ? 'Адреса реєстрації' : 'Адреса проживання / готель в Україні';
+  const resBtn = document.getElementById('cf-res-resident');
+  const nrBtn = document.getElementById('cf-res-nonresident');
+  resBtn.style.cssText = 'flex:1;padding:8px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;' + (isResident ? 'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8' : 'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af');
+  nrBtn.style.cssText = 'flex:1;padding:8px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;' + (!isResident ? 'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8' : 'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af');
+  resBtn.dataset.selected = isResident;
 }
 function renderClientBookingHistory(clientId){
   const list = document.getElementById('cf-history-list');
@@ -8204,8 +8285,10 @@ async function saveClientForm(){
   const id = document.getElementById('cf-id').value;
   const name = document.getElementById('cf-name').value.trim();
   if(!name){ alert('Вкажіть ПІБ клієнта'); return; }
+  const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
   const data = {
     name,
+    residency,
     phone: document.getElementById('cf-phone').value.trim(),
     birthdate: document.getElementById('cf-birthdate').value,
     address: document.getElementById('cf-address').value.trim(),
@@ -8216,6 +8299,15 @@ async function saveClientForm(){
     licenseNum: document.getElementById('cf-license-num').value.trim(),
     licenseCat: document.getElementById('cf-license-cat').value.trim(),
     licenseDate: document.getElementById('cf-license-date').value,
+    nrCitizenship: document.getElementById('cf-nr-citizenship').value.trim(),
+    nrPassportNum: document.getElementById('cf-nr-passport-num').value.trim(),
+    nrPassportDate: document.getElementById('cf-nr-passport-date').value,
+    nrPassportExpiry: document.getElementById('cf-nr-passport-expiry').value,
+    nrTaxNum: document.getElementById('cf-nr-taxnum').value.trim(),
+    nrLicenseNum: document.getElementById('cf-nr-license-num').value.trim(),
+    nrLicenseCat: document.getElementById('cf-nr-license-cat').value.trim(),
+    nrLicenseCountry: document.getElementById('cf-nr-license-country').value.trim(),
+    nrLicenseExpiry: document.getElementById('cf-nr-license-expiry').value,
     notes: document.getElementById('cf-notes').value.trim(),
   };
   if(id) await apiFetch('PUT', '/clients/'+id, data);
