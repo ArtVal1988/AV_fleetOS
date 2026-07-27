@@ -6145,7 +6145,7 @@ function openAddWorkModal(type){
   document.getElementById('aw-mileage').value=v.currentKm?v.currentKm.toLocaleString('uk-UA'):'';
   document.getElementById('aw-labor').value='';
   document.getElementById('aw-garage').value='';
-  document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
+  document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" list="spare-parts-partnum-datalist" oninput="onMatPartNumInput(this)" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
   recalcPartsCost();
   document.getElementById('add-work-modal').classList.add('open');
 }
@@ -6161,8 +6161,8 @@ function openWorkDetail(workId){
   document.getElementById('aw-mileage').value = w.mileage?w.mileage.toLocaleString('uk-UA'):'';
   document.getElementById('aw-labor').value = w.labor?w.labor.toLocaleString('uk-UA'):'';
   document.getElementById('aw-garage').value = w.garage||'';
-  const matRows = (w.materials||[]).map(m => `<div class="to-mat-add-row"><input type="text" value="${m.name||''}" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" value="${m.partNumber||''}" placeholder="Номер" style="font-size:11px"><input type="number" value="${m.qty||1}" placeholder="К-сть" style="font-size:11px"><input type="number" value="${m.price||0}" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest('.to-mat-add-row').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>`).join('');
-  document.getElementById('aw-mat-list').innerHTML = matRows || '<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
+  const matRows = (w.materials||[]).map(m => `<div class="to-mat-add-row"><input type="text" value="${m.name||''}" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" value="${m.partNumber||''}" placeholder="Номер" list="spare-parts-partnum-datalist" oninput="onMatPartNumInput(this)" style="font-size:11px"><input type="number" value="${m.qty||1}" placeholder="К-сть" style="font-size:11px"><input type="number" value="${m.price||0}" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest('.to-mat-add-row').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>`).join('');
+  document.getElementById('aw-mat-list').innerHTML = matRows || '<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" list="spare-parts-partnum-datalist" oninput="onMatPartNumInput(this)" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
   recalcPartsCost();
   document.getElementById('add-work-modal').classList.add('open');
 }
@@ -6171,7 +6171,7 @@ function openAddWorkForm(){ openAddWorkModal('planned'); }
 function addMatRow(){
   const row = document.createElement('div');
   row.className='to-mat-add-row';
-  row.innerHTML='<input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button>';
+  row.innerHTML='<input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" list="spare-parts-partnum-datalist" oninput="onMatPartNumInput(this)" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button>';
   document.getElementById('aw-mat-list').appendChild(row);
 }
 
@@ -8253,29 +8253,47 @@ let SPARE_PARTS = [];
 function renderSparePartsDatalistOptions(){
   const dl = document.getElementById('spare-parts-datalist');
   if(dl) dl.innerHTML = SPARE_PARTS.map(p=>`<option value="${p.name}">`).join('');
+  const dlNum = document.getElementById('spare-parts-partnum-datalist');
+  if(dlNum) dlNum.innerHTML = SPARE_PARTS.filter(p=>p.part_number).map(p=>`<option value="${p.part_number}">`).join('');
 }
-function onMatNameInput(input){
-  renderSparePartsDatalistOptions();
-  const part = SPARE_PARTS.find(p=>p.name.toLowerCase()===input.value.trim().toLowerCase());
-  const row = input.closest('.to-mat-add-row');
-  const priceInput = row?.querySelectorAll('input')[3];
+function applyMatchedPart(part, row){
+  if(!part || !row) return;
+  const inputs = row.querySelectorAll('input');
+  if(inputs[0]) inputs[0].value = part.name;
+  if(inputs[1]) inputs[1].value = part.part_number || '';
+  const priceInput = inputs[3];
   const hint = document.getElementById('aw-mat-stock-hint');
-  if(!part){ if(hint) hint.textContent=''; return; }
   if(priceInput && !priceInput.value) priceInput.value = part.price || '';
-  const qtyInput = row?.querySelectorAll('input')[2];
+  const qtyInput = inputs[2];
   const requestedQty = parseFloat(qtyInput?.value) || 1;
   if(hint){
     if(part.quantity <= 0){
       hint.innerHTML = `⚠️ "${part.name}" — на складі немає в наявності!`;
       hint.style.color = '#dc2626';
     } else if(requestedQty > part.quantity){
-      hint.innerHTML = `⚠️ "${part.name}" — на складі лише ${part.quantity} шт (потрібно ${requestedQty})`;
+      hint.innerHTML = `⚠️ На складі лише ${part.quantity} шт. "${part.name}" (потрібно ${requestedQty})`;
       hint.style.color = '#dc2626';
     } else {
-      hint.innerHTML = `✓ На складі: ${part.quantity} шт`;
+      hint.innerHTML = `✓ В наявності: ${part.quantity} шт.`;
       hint.style.color = '#166534';
     }
   }
+}
+function onMatNameInput(input){
+  renderSparePartsDatalistOptions();
+  const part = SPARE_PARTS.find(p=>p.name.toLowerCase()===input.value.trim().toLowerCase());
+  const row = input.closest('.to-mat-add-row');
+  const hint = document.getElementById('aw-mat-stock-hint');
+  if(!part){ if(hint) hint.textContent=''; return; }
+  applyMatchedPart(part, row);
+}
+function onMatPartNumInput(input){
+  renderSparePartsDatalistOptions();
+  const part = SPARE_PARTS.find(p=>p.part_number && p.part_number.toLowerCase()===input.value.trim().toLowerCase());
+  const row = input.closest('.to-mat-add-row');
+  const hint = document.getElementById('aw-mat-stock-hint');
+  if(!part){ if(hint) hint.textContent=''; return; }
+  applyMatchedPart(part, row);
 }
 async function loadSparePartsFromServer(){
   if(!_token) return;
@@ -9823,11 +9841,12 @@ function startAutoRefresh(){
       <div style="margin-top:12px">
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">Матеріали та запчастини</div>
         <datalist id="spare-parts-datalist"></datalist>
+        <datalist id="spare-parts-partnum-datalist"></datalist>
         <div id="aw-mat-stock-hint" style="font-size:10px;color:#9ca3af;margin-bottom:4px;min-height:13px"></div>
         <div id="aw-mat-list">
           <div class="to-mat-add-row">
             <input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px">
-            <input type="text" placeholder="Номер" style="font-size:11px">
+            <input type="text" placeholder="Номер" list="spare-parts-partnum-datalist" oninput="onMatPartNumInput(this)" style="font-size:11px">
             <input type="number" placeholder="К-сть" style="font-size:11px">
             <input type="number" placeholder="Ціна ₴" style="font-size:11px">
             <button type="button" onclick="this.closest('.to-mat-add-row').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button>
