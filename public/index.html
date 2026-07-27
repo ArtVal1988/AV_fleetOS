@@ -5894,7 +5894,7 @@ function renderExtTimeline(){
     currentExtHistory.forEach(h => {
       totalsByCur[h.currency] = (totalsByCur[h.currency]||0) + (h.cost||0);
     });
-    const totalDays = countDays(b.start, overallEnd);
+    const totalDays = origDays + currentExtHistory.reduce((s,h)=>s+(h.days||0), 0);
     const sumText = Object.entries(totalsByCur).map(([cur,sum]) => fmt1(sum) + ' ' + cur).join(' + ');
 
     summaryHtml = `
