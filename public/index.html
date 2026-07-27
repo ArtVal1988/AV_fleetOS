@@ -3027,9 +3027,9 @@ function showTooltip(e,bid){
     const historyRows = (b.extensionHistory||[]).map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmt1(hDays*(h.rate||0));
-      const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.04);border-radius:4px;' : '';
+      const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
       return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
-        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
+        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0;position:relative;top:-1.5px">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
@@ -3041,7 +3041,7 @@ function showTooltip(e,bid){
       const ext = b.extension;
       const st = getExtStatus(ext);
       const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
-      const label = st==='paid'?'✓':st==='partial'?`частково (${fmt1(ext.amountPaid||0)}/${fmt1(ext.cost||0)})`:'борг ⚠';
+      const label = st==='paid'?'✓':st==='partial'?'◐':'⚠';
       activeRow = `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
@@ -5795,9 +5795,9 @@ function renderExtTimeline(){
   }
 
   const historyRowsHtml = currentExtHistory.map((h,i) => `
-    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:${i%2?'#f7f7f8':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
+    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
-        <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
+        <span class="eh-dates" style="position:relative;top:-1.5px">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
         <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</span>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
