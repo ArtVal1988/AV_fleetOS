@@ -50,6 +50,19 @@ db.exec(`
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS generated_documents (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id   INTEGER NOT NULL,
+    doc_type     TEXT    NOT NULL,
+    file_name    TEXT    NOT NULL,
+    file_data    BLOB    NOT NULL,
+    client_name  TEXT,
+    vehicle_name TEXT,
+    vehicle_plate TEXT,
+    generated_by TEXT,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key        TEXT    PRIMARY KEY,
     value      TEXT    NOT NULL,

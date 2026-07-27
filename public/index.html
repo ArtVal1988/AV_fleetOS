@@ -1631,6 +1631,21 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<!-- DOCUMENT ARCHIVE PANEL -->
+<div id="docarchive-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🗂 База договорів</div>
+      <input id="da-search" type="text" placeholder="Пошук за клієнтом, авто, номером знаку…" oninput="renderDocArchiveList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:320px">
+      <button onclick="closeDocArchivePanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="docarchive-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD / EDIT VEHICLE MODAL -->
 <div id="vehicle-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:600;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -1754,6 +1769,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-doctemplates" data-label="Шаблони документів" onclick="openDocTemplatesPanel()" style="display:none"><span class="nav-icon">📄</span><span class="nav-label">Шаблони документів</span></div>
+    <div class="nav-item nav-admin-only" id="nav-docarchive" data-label="База договорів" onclick="openDocArchivePanel()" style="display:none"><span class="nav-icon">🗂</span><span class="nav-label">База договорів</span></div>
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
     <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
@@ -7786,7 +7802,7 @@ async function doLogin(){
     localStorage.setItem('av_fleet_token',_token);
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; }
+    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; }
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -8126,6 +8142,68 @@ async function saveDocTemplateMapping(){
   await apiFetch('PUT', '/generate-document/mapping', newMapping);
   DOC_MAPPING = newMapping;
   alert('✅ Налаштування збережено');
+}
+
+// ── DOCUMENT ARCHIVE ─────────────────────────────────────────────
+let DOC_ARCHIVE = [];
+async function openDocArchivePanel(){
+  document.getElementById('docarchive-panel-overlay').style.display='flex';
+  document.getElementById('da-search').value='';
+  const rows = await apiFetch('GET', '/generate-document/archive/list');
+  if(Array.isArray(rows)) DOC_ARCHIVE = rows;
+  renderDocArchiveList();
+}
+function closeDocArchivePanel(){
+  document.getElementById('docarchive-panel-overlay').style.display='none';
+}
+function renderDocArchiveList(){
+  const list = document.getElementById('docarchive-list');
+  const q = (document.getElementById('da-search')?.value||'').trim().toLowerCase();
+  const matches = d => !q || (d.client_name||'').toLowerCase().includes(q) || (d.vehicle_name||'').toLowerCase().includes(q) || (d.vehicle_plate||'').toLowerCase().includes(q);
+  const items = DOC_ARCHIVE.filter(matches);
+  if(!items.length){
+    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Ще немає згенерованих документів.</div>';
+    return;
+  }
+  list.innerHTML = items.map(d => {
+    const dt = new Date(d.created_at);
+    const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    const typeLabel = d.doc_type === 'contract' ? '📄 Договір' : '📄 Акт';
+    const typeColor = d.doc_type === 'contract' ? '#1d4ed8' : '#7c3aed';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${typeColor}15;color:${typeColor};flex-shrink:0">${typeLabel}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${d.client_name||'—'} · ${d.vehicle_plate||''} ${d.vehicle_name||''}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">Замовлення №${d.booking_id} · ${dateStr}${d.generated_by?' · '+d.generated_by:''}</div>
+      </div>
+      <button onclick="downloadArchivedDoc(${d.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">⬇ Завантажити</button>
+      <button onclick="openBookingModalFromArchive(${d.booking_id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-family:inherit;font-weight:600;flex-shrink:0">Замовлення →</button>
+      <button onclick="deleteArchivedDoc(${d.id})" title="Видалити" style="font-size:10px;padding:6px 8px;border-radius:5px;cursor:pointer;border:1px solid #fecaca;background:#fff;color:#dc2626;font-family:inherit;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+async function downloadArchivedDoc(id){
+  const res = await fetch(API_BASE + '/generate-document/archive/' + id, { headers: apiHeaders() });
+  if(!res.ok){ alert('Не вдалося завантажити документ'); return; }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const fileName = match ? decodeURIComponent(match[1]) : 'document.docx';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+async function deleteArchivedDoc(id){
+  if(!confirm('Видалити цей документ з бази? Дію не можна скасувати.')) return;
+  await apiFetch('DELETE', '/generate-document/archive/'+id);
+  DOC_ARCHIVE = DOC_ARCHIVE.filter(d=>d.id!==id);
+  renderDocArchiveList();
+}
+function openBookingModalFromArchive(bookingId){
+  closeDocArchivePanel();
+  editBooking(bookingId);
 }
 
 function openVehiclesPanel(){
@@ -9012,7 +9090,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     _currentUser = await res.json();
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; }
+    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; }
     await syncFromServer();
     startAutoRefresh();
   } catch(e){ showLoginOverlay(); }

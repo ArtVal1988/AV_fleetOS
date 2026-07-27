@@ -233,7 +233,21 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   try {
     const fileBuffer = await fillTemplate(templatePath, values);
     const vehicleName = getFieldValue('vehicle_name', ctx);
+    const clientName = getFieldValue('client_name', ctx);
+    const vehiclePlate = getFieldValue('vehicle_plate', ctx);
     const fileName = (type === 'contract' ? 'Договір' : 'Акт') + `_${ctx.booking.id}_${vehicleName}.docx`;
+
+    // Archive every generated document — a permanent record independent of
+    // later booking edits, so "what was actually handed to the client" is
+    // always retrievable even if the booking data changes afterward.
+    try {
+      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_data, client_name, vehicle_name, vehicle_plate, generated_by)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(Number(bookingId), type, fileName, fileBuffer, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '');
+    } catch (archiveErr) {
+      console.error('Failed to archive generated document (continuing anyway):', archiveErr);
+    }
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
     res.send(fileBuffer);
@@ -241,6 +255,29 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     console.error('Document generation error:', err);
     res.status(500).json({ error: 'Помилка генерації документа' });
   }
+});
+
+// ── Document archive ─────────────────────────────────────────────
+// GET /api/generate-document/archive/list — list all generated documents (no file data, just metadata)
+router.get('/archive/list', auth, (req, res) => {
+  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, created_at
+                            FROM generated_documents ORDER BY created_at DESC`).all();
+  res.json(rows);
+});
+
+// GET /api/generate-document/archive/:id — download a specific archived document
+router.get('/archive/:id', auth, (req, res) => {
+  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Документ не знайдено' });
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(row.file_name)}"`);
+  res.send(row.file_data);
+});
+
+// DELETE /api/generate-document/archive/:id
+router.delete('/archive/:id', auth, adminOnly, (req, res) => {
+  db.prepare('DELETE FROM generated_documents WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
 });
 
 module.exports = router;
