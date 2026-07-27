@@ -55,7 +55,7 @@ db.exec(`
     booking_id   INTEGER NOT NULL,
     doc_type     TEXT    NOT NULL,
     file_name    TEXT    NOT NULL,
-    file_data    BLOB    NOT NULL,
+    file_path    TEXT    NOT NULL,
     client_name  TEXT,
     vehicle_name TEXT,
     vehicle_plate TEXT,

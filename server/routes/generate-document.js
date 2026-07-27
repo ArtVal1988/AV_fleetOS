@@ -1,12 +1,14 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const JSZip = require('jszip');
 const multer = require('multer');
 const db = require('../db');
 const { auth, adminOnly } = require('./auth');
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
+const GENERATED_DOCS_DIR = path.join(__dirname, '..', 'uploads', 'Згенеровані документи');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
 function fmtDateUk(iso) {
@@ -237,13 +239,19 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     const vehiclePlate = getFieldValue('vehicle_plate', ctx);
     const fileName = (type === 'contract' ? 'Договір' : 'Акт') + `_${ctx.booking.id}_${vehicleName}.docx`;
 
-    // Archive every generated document — a permanent record independent of
-    // later booking edits, so "what was actually handed to the client" is
-    // always retrievable even if the booking data changes afterward.
+    // Archive every generated document to disk — a permanent record
+    // independent of later booking edits, so "what was actually handed to
+    // the client" is always retrievable even if the booking data changes
+    // afterward. Stored on the filesystem (not as a DB blob) to keep the
+    // database itself small and make cleanup/monitoring straightforward —
+    // same pattern as the existing vehicle-documents storage.
     try {
-      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_data, client_name, vehicle_name, vehicle_plate, generated_by)
+      fs.mkdirSync(GENERATED_DOCS_DIR, { recursive: true });
+      const diskName = crypto.randomBytes(16).toString('hex') + '.docx';
+      fs.writeFileSync(path.join(GENERATED_DOCS_DIR, diskName), fileBuffer);
+      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(Number(bookingId), type, fileName, fileBuffer, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '');
+        .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '');
     } catch (archiveErr) {
       console.error('Failed to archive generated document (continuing anyway):', archiveErr);
     }
@@ -269,13 +277,19 @@ router.get('/archive/list', auth, (req, res) => {
 router.get('/archive/:id', auth, (req, res) => {
   const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
   if (!row) return res.status(404).json({ error: 'Документ не знайдено' });
+  const filePath = path.join(GENERATED_DOCS_DIR, row.file_path);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл більше не існує на диску' });
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(row.file_name)}"`);
-  res.send(row.file_data);
+  res.sendFile(filePath);
 });
 
 // DELETE /api/generate-document/archive/:id
 router.delete('/archive/:id', auth, adminOnly, (req, res) => {
+  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
+  if (row) {
+    try { fs.unlinkSync(path.join(GENERATED_DOCS_DIR, row.file_path)); } catch { /* file already gone — fine */ }
+  }
   db.prepare('DELETE FROM generated_documents WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
