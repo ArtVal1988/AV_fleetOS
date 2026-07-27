@@ -5730,10 +5730,13 @@ function saveExtensionEntry(){
     closedDate: new Date().toISOString().split('T')[0],
   };
   const vid = parseInt(document.getElementById('bm-vehicle').value);
+  console.log('[OVERLAP DEBUG]', {vid, editBid, closedFrom: closed.fromDate, closedTo: closed.toDate,
+    otherBookingsSameVehicle: bookings.filter(b=>b.vehicleId===vid).map(b=>({id:b.id, start:b.start, effEnd:getEffectiveEnd(b), status:b.status}))});
   const conflict = bookings.find(b =>
     b.vehicleId === vid && b.id !== editBid &&
     closed.fromDate < getEffectiveEnd(b) && b.start < closed.toDate
   );
+  console.log('[OVERLAP DEBUG] conflict found:', conflict);
   if(conflict){
     const st = SM[conflict.status];
     alert(`Продовження (${fmt(closed.fromDate)}–${fmt(closed.toDate)}) накладається на інше замовлення на це авто: "${st?.label||conflict.status}" (${fmt(conflict.start)}–${fmt(getEffectiveEnd(conflict))}). Змініть дати продовження або спочатку розв'яжіть конфлікт з іншим замовленням.`);
