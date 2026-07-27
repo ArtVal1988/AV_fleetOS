@@ -2377,7 +2377,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
-          <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;pointer-events:auto">💾 Зберегти продовження</button>
+          <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:25;pointer-events:auto">💾 Зберегти продовження</button>
         </div>
       </div>
 
@@ -2570,7 +2570,6 @@ let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, 
 let _skipCloseOnSave=false;
 document.addEventListener('click', e => {
   if(e.target.closest('#bm-ext-save-btn')){
-    console.log('[CLICK DEBUG] save-ext button click detected');
     saveExtensionEntry();
   }
 });
@@ -5731,13 +5730,10 @@ function saveExtensionEntry(){
     closedDate: new Date().toISOString().split('T')[0],
   };
   const vid = parseInt(document.getElementById('bm-vehicle').value);
-  console.log('[OVERLAP DEBUG]', {vid, editBid, closedFrom: closed.fromDate, closedTo: closed.toDate,
-    otherBookingsSameVehicle: bookings.filter(b=>b.vehicleId===vid).map(b=>({id:b.id, start:b.start, effEnd:getEffectiveEnd(b), status:b.status}))});
   const conflict = bookings.find(b =>
     b.vehicleId === vid && b.id !== editBid &&
     closed.fromDate < getEffectiveEnd(b) && b.start < closed.toDate
   );
-  console.log('[OVERLAP DEBUG] conflict found:', conflict);
   if(conflict){
     const st = SM[conflict.status];
     alert(`Продовження (${fmt(closed.fromDate)}–${fmt(closed.toDate)}) накладається на інше замовлення на це авто: "${st?.label||conflict.status}" (${fmt(conflict.start)}–${fmt(getEffectiveEnd(conflict))}). Змініть дати продовження або спочатку розв'яжіть конфлікт з іншим замовленням.`);
