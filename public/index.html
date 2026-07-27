@@ -1594,6 +1594,10 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
+      <div id="cf-history-section" style="display:none">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Історія замовлень</div>
+        <div id="cf-history-list"></div>
+      </div>
     </div>
     <div style="padding:0 28px 22px;display:flex;gap:8px;justify-content:space-between">
       <button id="cf-delete-btn" onclick="deleteClientFromForm()" style="background:none;border:1px solid rgba(240,96,96,.3);color:#f06060;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer;display:none">✕ Видалити</button>
@@ -1943,8 +1947,11 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="fg-pair" style="grid-template-columns:0.8fr 1.2fr">
         <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
-          <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
-            oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
+              oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+            <button type="button" id="bm-goto-client-btn" onclick="gotoClientCard()" title="Відкрити картку клієнта" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;align-items:center;justify-content:center;font-size:13px;padding:0">👤</button>
+          </div>
           <input type="hidden" id="bm-client-id" value="">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
@@ -3405,6 +3412,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-pickup-date').value=defaultStart;
   document.getElementById('bm-return-date').value=defaultEnd;
   ['bm-name','bm-phone','bm-client-id','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
+  updateClientLinkButton();
   document.getElementById('bm-pickup-time').value='09:00';
   document.getElementById('bm-return-time').value='09:00';
   document.getElementById('bm-pickup-loc').value='Офіс, вул. Антоновича, 112';
@@ -3481,6 +3489,7 @@ function editBooking(bid){
   document.getElementById('bm-name').value=b.customer?.name||'';
   document.getElementById('bm-phone').value=b.customer?.phone||'';
   if(document.getElementById('bm-client-id')) document.getElementById('bm-client-id').value = b.customer?.clientId || '';
+  updateClientLinkButton();
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
@@ -7097,7 +7106,20 @@ function selectClientSuggestion(name, phone, clientId){
   }
   const idField = document.getElementById('bm-client-id');
   if(idField) idField.value = clientId || '';
+  updateClientLinkButton();
   closeClientSuggest();
+}
+function updateClientLinkButton(){
+  const btn = document.getElementById('bm-goto-client-btn');
+  if(!btn) return;
+  const hasClient = !!document.getElementById('bm-client-id')?.value;
+  btn.style.display = hasClient ? 'flex' : 'none';
+}
+function gotoClientCard(){
+  const clientId = parseInt(document.getElementById('bm-client-id')?.value);
+  if(!clientId) return;
+  closeBookingModal();
+  openClientForm(clientId);
 }
 function closeClientSuggest(){
   const dd = document.getElementById('client-suggest-dropdown');
@@ -8005,7 +8027,34 @@ function openClientForm(id){
   document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
   document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
   if(id) loadClientDocs(id);
+  document.getElementById('cf-history-section').style.display = id ? 'block' : 'none';
+  if(id) renderClientBookingHistory(id);
   document.getElementById('client-form-overlay').style.display='flex';
+}
+function renderClientBookingHistory(clientId){
+  const list = document.getElementById('cf-history-list');
+  if(!list) return;
+  const matches = bookings.filter(b => b.customer?.clientId === clientId).sort((a,b)=>(b.start||'').localeCompare(a.start||''));
+  if(!matches.length){
+    list.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Замовлень ще немає</div>';
+    return;
+  }
+  list.innerHTML = matches.map(b => {
+    const v = getVehicle(b.vehicleId);
+    const st = SM[b.status];
+    return `<div onclick="gotoBookingFromClient(${b.id})" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;cursor:pointer;background:#fff" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+      <span style="width:8px;height:8px;border-radius:50%;background:${st?.color||'#9ca3af'};flex-shrink:0"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#1a1d26">${fmt(b.start)}–${fmt(b.end)} · ${v?.plate||''} ${stripYear(v?.name||'')}</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:1px">${st?.label||b.status||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function gotoBookingFromClient(bid){
+  closeClientForm();
+  closeClientsPanel();
+  editBooking(bid);
 }
 function closeClientForm(){
   document.getElementById('client-form-overlay').style.display='none';
