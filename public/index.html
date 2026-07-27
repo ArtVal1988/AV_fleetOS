@@ -2599,7 +2599,7 @@ function isMobileViewport(){
   return window.innerWidth <= 640 || (window.innerHeight <= 500 && window.innerWidth > window.innerHeight);
 }
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
-function colDate(d){const dt=new Date(viewStartDate);dt.setDate(viewStartDate.getDate()+(d-1));return dt;}
+function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
 function countDays(start,end){const s=new Date(start),e=new Date(end);return Math.max(1,Math.round((e-s)/86400000)+1);}
 function pluralDoba(n){
@@ -2681,18 +2681,24 @@ function buildCellMap(){
     bookingsById.set(b.id, b);
     const cur=new Date(b.start);
     const end=new Date(getEffectiveEnd(b));
+    // UTC-based arithmetic — local-time setDate()/getDate() can silently
+    // lose a day when the date range crosses a daylight-saving-time
+    // transition (confirmed: a booking spanning Sep 2025 to Jul 2026 in the
+    // Europe/Kyiv timezone came up one day short with local-time methods).
+    // The date strings are already parsed as UTC midnight by new Date(...),
+    // so working in UTC throughout avoids the DST clock shift entirely.
     while(cur<=end){
-      const k=`${b.vehicleId}_${cur.getFullYear()}_${cur.getMonth()}_${cur.getDate()}`;
+      const k=`${b.vehicleId}_${cur.getUTCFullYear()}_${cur.getUTCMonth()}_${cur.getUTCDate()}`;
       if(!map.has(k))map.set(k,[]);
       map.get(k).push(b);
-      cur.setDate(cur.getDate()+1);
+      cur.setUTCDate(cur.getUTCDate()+1);
     }
   });
   return map;
 }
 function getBookingById(id){ return bookingsById.get(id) || bookings.find(x=>x.id===id); }
 
-function cellKey(vid,d){const dt=colDate(d);return`${vid}_${dt.getFullYear()}_${dt.getMonth()}_${dt.getDate()}`;}
+function cellKey(vid,d){const dt=colDate(d);return`${vid}_${dt.getUTCFullYear()}_${dt.getUTCMonth()}_${dt.getUTCDate()}`;}
 
 /* ── RENDER ── */
 
