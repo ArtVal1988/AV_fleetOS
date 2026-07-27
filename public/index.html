@@ -2631,8 +2631,7 @@ function countBillableDays(startDate, startTime, endDate, endTime){
 function calcTotal(b){
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
   const gross=days*b.rate; // already VAT-inclusive for VAT payers (rate is entered with VAT included)
-  const extensionCost = (b.extension && b.extension.active) ? (b.extension.cost||0) : 0;
-  return Math.round(gross*100)/100+(calcExtrasTotal(b)||0)+extensionCost;
+  return Math.round(gross*100)/100+(calcExtrasTotal(b)||0);
 }
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
@@ -2899,7 +2898,7 @@ function renderCalendar(){
         let cellStatus, mainTotal, mainPaid;
         if(extStatus === 'unpaid' || extStatus === 'partial') cellStatus = 'extension';
         else if(!dayExt && booking.partialPaymentActive){
-          mainTotal = calcTotal(booking) - ((booking.extension?.active) ? (booking.extension.cost||0) : 0);
+          mainTotal = calcTotal(booking);
           mainPaid = booking.amountPaid||0;
           cellStatus = (mainTotal > 0 && mainPaid >= mainTotal) ? booking.status : 'extension';
         }
