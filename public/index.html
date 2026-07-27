@@ -5066,13 +5066,17 @@ function updateKmDiff(){
       badge.style.display='flex';
 
       // Excess mileage (перепробіг) over the 350 km/day allowance, using the
-      // same day count as the cost calc (respects a manual days-override).
+      // same day count as the cost calc (respects a manual days-override),
+      // plus any extension days — the allowance should cover the whole
+      // rental period, not just the original booking's date range.
       const KM_ALLOWANCE_PER_DAY = 350;
       const startVal = document.getElementById('bm-start').value;
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
       const autoDays = startVal && endVal ? countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value) : 0;
-      const days = daysOverrideTouched && parseFloat(daysInput?.value) > 0 ? parseFloat(daysInput.value) : autoDays;
+      const mainDays = daysOverrideTouched && parseFloat(daysInput?.value) > 0 ? parseFloat(daysInput.value) : autoDays;
+      const extensionDays = (currentExtHistory||[]).reduce((s,h)=>s+(h.days||0), 0) + (parseFloat(document.getElementById('bm-ext-days')?.value) > 0 && document.getElementById('bm-ext-active')?.checked ? parseFloat(document.getElementById('bm-ext-days').value) : 0);
+      const days = mainDays + extensionDays;
       if(avgBadge){
         if(days > 0){
           const allowance = days * KM_ALLOWANCE_PER_DAY;
