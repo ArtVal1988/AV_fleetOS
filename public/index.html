@@ -6102,8 +6102,8 @@ function renderToTabs(v){
       '</div>' +
       (mats?'<div class="to-mat-list">'+mats+'</div>':'') +
       (total>0?'<div class="to-wr-cost-row">' +
-        (w.labor>0?'<span class="to-wr-cost-part labor">Вартість робіт: '+fmtMn(w.labor)+'</span>':'<span></span>') +
-        (matCost>0?'<span class="to-wr-cost-part parts">Вартість матеріалів та запасних частин: '+fmtMn(matCost)+'</span>':'<span></span>') +
+        (w.labor>0?'<span class="to-wr-cost-part labor">Роботи: '+fmtMn(w.labor)+'</span>':'<span></span>') +
+        (matCost>0?'<span class="to-wr-cost-part parts">Матеріали: '+fmtMn(matCost)+'</span>':'<span></span>') +
         '<span class="to-wr-cost-part total">Загалом: '+fmtMn(total)+'</span>' +
       '</div>':'') +
     '</div>';
