@@ -3041,7 +3041,7 @@ function showTooltip(e,bid){
       const ext = b.extension;
       const st = getExtStatus(ext);
       const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
-      const label = st==='paid'?'✓':st==='partial'?'◐':'⚠';
+      const label = st==='paid'?'✓':st==='partial'?`частково (${fmt1(ext.amountPaid||0)}/${fmt1(ext.cost||0)})`:'Борг '+fmt1((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
@@ -3086,7 +3086,7 @@ function showTooltip(e,bid){
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
         const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
         const isPaidFull = remaining <= 0.009;
-        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓ Оплачено':'⚠ Борг '+fmt1(remaining)+' '+cur}</span>`;
+        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓':'⚠'}</span>`;
       })():''}
     </div>
     ${nameRow}
