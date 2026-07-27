@@ -4008,16 +4008,18 @@ function saveBooking(){
   };
   if(editBid){const idx=bookings.findIndex(b=>b.id===editBid);if(idx!==-1)bookings[idx]={...bookings[idx],...data};}
   else bookings.push({id:nextBid++,...data});
-  // Sync mileage to vehicle
+  // Sync mileage to vehicle — a rental return is NOT a service event, so
+  // this updates only the vehicle's current odometer reading, never
+  // v.service.lastKm/lastDate (those change only when an actual ТО/work
+  // entry is saved in Ремонти).
   const endKm = parseThousands(document.getElementById('bm-end-km')?.value);
   const startKm = parseThousands(document.getElementById('bm-start-km')?.value);
   if(endKm>0){
     const veh = ALL_VEHICLES.find(x=>x.id===parseInt(document.getElementById('bm-vehicle')?.value));
     if(veh){
       if(!veh.service) veh.service={};
-      if(endKm>(veh.service.lastKm||0)){
-        veh.service.lastKm=endKm;
-        veh.service.lastDate=document.getElementById('bm-return-date')?.value||new Date().toISOString().split('T')[0];
+      if(endKm>(veh.currentKm||0)){
+        veh.currentKm=endKm;
         const left=(veh.service.nextKm||0)-endKm;
         veh.service.status=left<=0?'danger':left<=2000?'warn':'ok';
         persistVehicle(veh);
