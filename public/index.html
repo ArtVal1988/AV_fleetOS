@@ -2570,6 +2570,7 @@ let bookings=[], nextBid=1, selectedBid=null, editBid=null, extendFromBid=null, 
 let _skipCloseOnSave=false;
 document.addEventListener('click', e => {
   if(e.target.closest('#bm-ext-save-btn')){
+    console.log('[CLICK DEBUG] save-ext button click detected');
     saveExtensionEntry();
   }
 });
