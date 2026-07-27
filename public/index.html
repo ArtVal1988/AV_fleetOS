@@ -3087,6 +3087,10 @@ function showTooltip(e,bid){
         const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
         const isPaidFull = remaining <= 0.009;
         return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓ Оплачено':'⚠ Борг '+fmt1(remaining)+' '+cur}</span>`;
+      })():(b.extension && b.extension.active && getExtStatus(b.extension)!=='paid')?(()=>{
+        const ext = b.extension;
+        const extRemaining = Math.max(0, (ext.cost||0) - (ext.amountPaid||0));
+        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2;color:#dc2626">⚠ Борг ${fmt1(extRemaining)} ${ext.currency||b.currency||'$'}</span>`;
       })():''}
     </div>
     ${nameRow}
