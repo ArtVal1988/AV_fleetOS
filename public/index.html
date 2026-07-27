@@ -4822,9 +4822,11 @@ function saveCurrentKm(vid){
     if(!confirm('Новий пробіг менший за попередній ('+v.service.lastKm.toLocaleString('uk-UA')+' км). Продовжити?')) return;
   }
   if(!v.service) v.service={};
-  v.service.lastKm = val;
-  v.service.lastDate = new Date().toISOString().split('T')[0];
-  // Update status
+  v.currentKm = val;
+  // Update status based on the new current mileage vs. next service due —
+  // this does NOT mean a service was just completed, so v.service.lastKm
+  // (mileage recorded AT the last actual ТО) and v.service.lastDate stay
+  // untouched here; they're only updated when a real work entry is saved.
   const left = (v.service.nextKm||0) - val;
   v.service.status = left<=0?'danger':left<=2000?'warn':'ok';
   hideKmEditForm(vid);
