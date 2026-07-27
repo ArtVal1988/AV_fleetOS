@@ -1495,6 +1495,183 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<!-- CLIENTS PANEL (list) -->
+<div id="clients-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">👤 Клієнти</div>
+      <input id="cl-search" type="text" placeholder="Пошук за ПІБ, телефоном…" oninput="renderClientsPanelList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
+      <button onclick="openClientForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати клієнта</button>
+      <button onclick="closeClientsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="clients-panel-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT CLIENT MODAL -->
+<div id="client-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:610;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
+    <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26" id="cf-title">+ Новий клієнт</div>
+      <button onclick="closeClientForm()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:22px 28px">
+      <input type="hidden" id="cf-id">
+      <div style="margin-bottom:14px">
+        <label class="vf-lbl">ПІБ</label>
+        <input id="cf-name" type="text" class="vf-inp" placeholder="Іваненко Олена Петрівна" style="width:100%">
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1">
+          <label class="vf-lbl">Телефон</label>
+          <input id="cf-phone" type="text" class="vf-inp" placeholder="+38 067 000 00 00" style="width:100%" oninput="onPhoneInput(this)">
+        </div>
+        <div style="flex:1">
+          <label class="vf-lbl">Дата народження</label>
+          <input id="cf-birthdate" type="date" class="vf-inp" style="width:100%">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="vf-lbl">Адреса реєстрації</label>
+        <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
+      </div>
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Документ, що посвідчує особу</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1">
+          <label class="vf-lbl">Серія і номер паспорта / номер ID-картки</label>
+          <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456 або 123456789" style="width:100%">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:2">
+          <label class="vf-lbl">Ким виданий</label>
+          <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
+        </div>
+        <div style="flex:1">
+          <label class="vf-lbl">Дата видачі</label>
+          <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="vf-lbl">Ідентифікаційний номер (ІПН)</label>
+        <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
+      </div>
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Посвідчення водія</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <div style="flex:1">
+          <label class="vf-lbl">Номер посвідчення</label>
+          <input id="cf-license-num" type="text" class="vf-inp" placeholder="СХА123456" style="width:100%">
+        </div>
+        <div style="flex:1">
+          <label class="vf-lbl">Категорія</label>
+          <input id="cf-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
+        </div>
+        <div style="flex:1">
+          <label class="vf-lbl">Дата видачі</label>
+          <input id="cf-license-date" type="date" class="vf-inp" style="width:100%">
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label class="vf-lbl">Нотатки</label>
+        <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px" placeholder="Додаткова інформація про клієнта..."></textarea>
+      </div>
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
+      <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
+      <div id="cf-docs-active" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Паспорт
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('passport', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Посвідчення водія
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('license', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Інше
+            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('other', this)">
+          </label>
+        </div>
+        <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div id="cf-history-section" style="display:none">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Історія замовлень</div>
+        <div id="cf-history-list"></div>
+      </div>
+    </div>
+    <div style="padding:0 28px 22px;display:flex;gap:8px;justify-content:space-between">
+      <button id="cf-delete-btn" onclick="deleteClientFromForm()" style="background:none;border:1px solid rgba(240,96,96,.3);color:#f06060;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer;display:none">✕ Видалити</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button onclick="closeClientForm()" style="background:none;border:1px solid #e5e7eb;color:#6b7280;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer">Скасувати</button>
+        <button onclick="saveClientForm()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENT TEMPLATES ADMIN PANEL -->
+<div id="doctemplates-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">📄 Шаблони документів</div>
+      <button onclick="closeDocTemplatesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div style="font-size:11px;color:#6b7280;margin-bottom:18px;line-height:1.5">
+        Завантажте .docx-файл шаблону з полями у форматі <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px">#назва_поля</code>.
+        Для кожного знайденого поля оберіть, звідки брати значення при генерації документа — з готового списку, вписати завжди однаковий текст, або вказати довільний шлях до даних.
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;margin-top:8px;font-family:var(--font-mono)">
+          Приклади шляхів: <b>booking.rate</b> (тариф) · <b>booking.deposit</b> (застава) · <b>booking.currency</b> (валюта) · <b>vehicle.specs.color</b> (колір авто) · <b>vehicle.plate</b> (номерний знак) · <b>client.address</b> (адреса клієнта)
+        </div>
+      </div>
+
+      <div id="dt-section-contract" style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:#1a1d26">Договір оренди</div>
+          <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
+            ⬆ Завантажити новий шаблон
+            <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('contract', this)">
+          </label>
+        </div>
+        <div id="dt-fields-contract"></div>
+      </div>
+
+      <div id="dt-section-act">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:#1a1d26">Акт приймання-передачі</div>
+          <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
+            ⬆ Завантажити новий шаблон
+            <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('act', this)">
+          </label>
+        </div>
+        <div id="dt-fields-act"></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;position:sticky;bottom:0;background:#fff;padding-top:12px;border-top:1px solid #f0f2f5">
+        <button onclick="saveDocTemplateMapping()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти налаштування полів</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCUMENT ARCHIVE PANEL -->
+<div id="docarchive-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🗂 База договорів</div>
+      <input id="da-search" type="text" placeholder="Пошук за клієнтом, авто, номером знаку…" oninput="renderDocArchiveList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:320px">
+      <button onclick="closeDocArchivePanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="docarchive-list"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ADD / EDIT VEHICLE MODAL -->
 <div id="vehicle-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:600;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
@@ -1611,11 +1788,14 @@ input.dm-pf-val.tel{font-size:14px;}
   <nav>
     <div class="nav-item" data-label="Дашборд" onclick="openDashboard()"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
     <div class="nav-item" data-label="Транспортні засоби" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
+    <div class="nav-item" data-label="Клієнти" onclick="openClientsPanel()"><span class="nav-icon">👤</span><span class="nav-label">Клієнти</span></div>
     <div class="nav-item" data-label="Запчастини" onclick="openSparePartsPanel()"><span class="nav-icon">🔩</span><span class="nav-label">Запчастини</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
+    <div class="nav-item nav-admin-only" id="nav-doctemplates" data-label="Шаблони документів" onclick="openDocTemplatesPanel()" style="display:none"><span class="nav-icon">📄</span><span class="nav-label">Шаблони документів</span></div>
+    <div class="nav-item nav-admin-only" id="nav-docarchive" data-label="База договорів" onclick="openDocArchivePanel()" style="display:none"><span class="nav-icon">🗂</span><span class="nav-label">База договорів</span></div>
     <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
     <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
   </nav>
@@ -1771,11 +1951,15 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-edrpou" placeholder="12345678" maxlength="10">
         </div>
       </div>
-      <div class="fg-pair" style="grid-template-columns:0.8fr 1.2fr">
+      <div class="fg-pair" style="grid-template-columns:1.05fr 0.95fr">
         <div class="fg fin-label-style" style="position:relative">
           <label id="bm-name-label">ПІБ замовника</label>
-          <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off"
-            oninput="filterNameInput(this);onClientNameInput(this)" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
+              oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+            <button type="button" id="bm-goto-client-btn" onclick="gotoClientCard()" title="Відкрити картку клієнта" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;align-items:center;justify-content:center;font-size:13px;padding:0">👤</button>
+          </div>
+          <input type="hidden" id="bm-client-id" value="">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="fg fin-label-style">
@@ -2219,6 +2403,8 @@ input.dm-pf-val.tel{font-size:14px;}
       <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
       ✅ Авто повернено. Замовлення закрито.
     </label>
+    <button class="btn" id="bm-gen-contract-btn" onclick="generateDocument('contract')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Договір</button>
+    <button class="btn" id="bm-gen-act-btn" onclick="generateDocument('act')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Акт</button>
     <button class="btn btn-primary" onclick="saveBooking()" style="margin-left:auto">Зберегти замовлення</button>
   </div>
 </div>
@@ -3279,6 +3465,8 @@ function openBookingModal(vid=null,start=null,end=null){
   editBid=null;
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='none';
+  document.getElementById('bm-gen-contract-btn').style.display='none';
+  document.getElementById('bm-gen-act-btn').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>Статус</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
@@ -3290,9 +3478,10 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-end').value=defaultEnd;
   document.getElementById('bm-pickup-date').value=defaultStart;
   document.getElementById('bm-return-date').value=defaultEnd;
-  ['bm-name','bm-phone','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
+  ['bm-name','bm-phone','bm-client-id','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
   currentOrderCompany = null;
   renderOrderCompanyToggle();
+  updateClientLinkButton();
   document.getElementById('bm-pickup-time').value='09:00';
   document.getElementById('bm-return-time').value='09:00';
   document.getElementById('bm-pickup-loc').value='Офіс, вул. Антоновича, 112';
@@ -3360,6 +3549,8 @@ function editBooking(bid){
   editBid=bid;
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='';
+  document.getElementById('bm-gen-contract-btn').style.display='';
+  document.getElementById('bm-gen-act-btn').style.display='';
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===b.vehicleId?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}"${s.key===b.status?'selected':''} style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
@@ -3369,6 +3560,8 @@ function editBooking(bid){
   currentOrderCompany = b.orderCompany || null;
   renderOrderCompanyToggle();
   document.getElementById('bm-phone').value=b.customer?.phone||'';
+  if(document.getElementById('bm-client-id')) document.getElementById('bm-client-id').value = b.customer?.clientId || '';
+  updateClientLinkButton();
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
@@ -3593,6 +3786,7 @@ function saveBooking(){
       phone:document.getElementById('bm-phone').value.trim(),
       company:document.getElementById('bm-company').value.trim(),
       edrpou:document.getElementById('bm-edrpou').value.trim(),
+      clientId: document.getElementById('bm-client-id')?.value ? parseInt(document.getElementById('bm-client-id').value) : null,
     },
     vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?parseFloat(document.getElementById('bm-vat').value)||20:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
@@ -3668,6 +3862,31 @@ function deleteBooking(bid){
   if(!confirm('Видалити це замовлення?'))return;
   bookings=bookings.filter(b=>b.id!==bid);
   closePanel(); render();
+}
+async function generateDocument(type){
+  if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
+  const btn = document.getElementById(type==='contract' ? 'bm-gen-contract-btn' : 'bm-gen-act-btn');
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Формую...';
+  btn.disabled = true;
+  try{
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/' + type, { headers: apiHeaders() });
+    if(!res.ok){ throw new Error('Помилка сервера'); }
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const fileName = match ? decodeURIComponent(match[1]) : (type==='contract' ? 'Договір.docx' : 'Акт.docx');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Не вдалося сформувати документ. Спробуйте ще раз.');
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
 }
 function deleteBookingFromModal(){
   if(!editBid)return;
@@ -6965,15 +7184,22 @@ function formatPhoneUA(raw){
 }
 // ── CLIENT AUTOCOMPLETE (suggests returning clients by name, autofills phone) ──
 function getClientsIndex(){
-  // Build a de-duplicated list of past clients from all bookings, most recent entry wins.
+  // Prefer the proper Клієнти database (has passport/license data for
+  // documents) — fall back to a de-duplicated list from past bookings for
+  // clients who were never added there.
   const map = new Map();
   bookings
     .filter(b => b.name && b.name.trim())
     .sort((a,b) => (a.start||'').localeCompare(b.start||''))
     .forEach(b => {
       const key = b.name.trim().toLowerCase();
-      map.set(key, {name: b.name.trim(), phone: b.phone||''});
+      map.set(key, {name: b.name.trim(), phone: b.phone||'', clientId: null});
     });
+  (CLIENTS||[]).forEach(c => {
+    if(!c.name || !c.name.trim()) return;
+    const key = c.name.trim().toLowerCase();
+    map.set(key, {name: c.name.trim(), phone: c.phone||'', clientId: c.id});
+  });
   return [...map.values()];
 }
 function filterNameInput(el){
@@ -6994,7 +7220,7 @@ function onClientNameInput(el){
     .slice(0, 8);
   if(!matches.length){ dd.style.display='none'; dd.innerHTML=''; return; }
   dd.innerHTML = matches.map(c => `
-    <div onmousedown="selectClientSuggestion('${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}')"
+    <div onmousedown="selectClientSuggestion('${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}',${c.clientId||'null'})"
       style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:12px" 
       onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
       <div style="font-weight:600;color:#1a1d26">${c.name}</div>
@@ -7003,12 +7229,26 @@ function onClientNameInput(el){
   `).join('');
   dd.style.display='block';
 }
-function selectClientSuggestion(name, phone){
+function selectClientSuggestion(name, phone, clientId){
   document.getElementById('bm-name').value = name;
   if(phone){
     document.getElementById('bm-phone').value = phone;
   }
+  const idField = document.getElementById('bm-client-id');
+  if(idField) idField.value = clientId || '';
+  updateClientLinkButton();
   closeClientSuggest();
+}
+function updateClientLinkButton(){
+  const btn = document.getElementById('bm-goto-client-btn');
+  if(!btn) return;
+  const hasClient = !!document.getElementById('bm-client-id')?.value;
+  btn.style.display = hasClient ? 'flex' : 'none';
+}
+function gotoClientCard(){
+  const clientId = parseInt(document.getElementById('bm-client-id')?.value);
+  if(!clientId) return;
+  openClientForm(clientId);
 }
 function closeClientSuggest(){
   const dd = document.getElementById('client-suggest-dropdown');
@@ -7743,7 +7983,7 @@ async function doLogin(){
     localStorage.setItem('av_fleet_token',_token);
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; }
+    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; }
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -7867,6 +8107,363 @@ async function deleteSparePart(id){
   await apiFetch('DELETE', '/spare-parts/'+id);
   await loadSparePartsFromServer();
   renderSparePartsList();
+}
+
+// ── CLIENTS ──────────────────────────────────────────────
+let CLIENTS = [];
+async function loadClientsFromServer(){
+  if(!_token) return;
+  const r = await apiFetch('GET', '/clients');
+  if(Array.isArray(r)) CLIENTS = r;
+}
+function openClientsPanel(){
+  document.getElementById('clients-panel-overlay').style.display='flex';
+  document.getElementById('cl-search').value='';
+  loadClientsFromServer().then(renderClientsPanelList);
+  renderClientsPanelList();
+}
+function closeClientsPanel(){
+  document.getElementById('clients-panel-overlay').style.display='none';
+}
+function renderClientsPanelList(){
+  const list = document.getElementById('clients-panel-list');
+  const q = (document.getElementById('cl-search')?.value||'').trim().toLowerCase();
+  const digits = q.replace(/\D/g,'');
+  const matches = c => !q || (c.name||'').toLowerCase().includes(q) || (digits && (c.phone||'').replace(/\D/g,'').includes(digits));
+  const items = CLIENTS.filter(matches);
+  if(!items.length){
+    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Немає клієнтів. Натисніть "+ Додати клієнта".</div>';
+    return;
+  }
+  list.innerHTML = items.map(c => {
+    const hasDocs = c.passportNum || c.licenseNum;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      <div style="width:34px;height:34px;border-radius:50%;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">${c.phone||'телефон не вказано'}${hasDocs?' · документи внесені':''}</div>
+      </div>
+      <button onclick="openClientForm(${c.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">✎ Редагувати</button>
+    </div>`;
+  }).join('');
+}
+function openClientForm(id){
+  const c = id ? CLIENTS.find(x=>x.id===id) : null;
+  document.getElementById('cf-title').textContent = c ? 'Редагувати клієнта' : '+ Новий клієнт';
+  document.getElementById('cf-id').value = id || '';
+  document.getElementById('cf-name').value = c?.name || '';
+  document.getElementById('cf-phone').value = c?.phone || '';
+  document.getElementById('cf-birthdate').value = c?.birthdate || '';
+  document.getElementById('cf-address').value = c?.address || '';
+  document.getElementById('cf-passport-num').value = c?.passportNum || '';
+  document.getElementById('cf-passport-issuer').value = c?.passportIssuer || '';
+  document.getElementById('cf-passport-date').value = c?.passportDate || '';
+  document.getElementById('cf-inn').value = c?.inn || '';
+  document.getElementById('cf-license-num').value = c?.licenseNum || '';
+  document.getElementById('cf-license-cat').value = c?.licenseCat || '';
+  document.getElementById('cf-license-date').value = c?.licenseDate || '';
+  document.getElementById('cf-notes').value = c?.notes || '';
+  document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
+  document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
+  document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
+  if(id) loadClientDocs(id);
+  document.getElementById('cf-history-section').style.display = id ? 'block' : 'none';
+  if(id) renderClientBookingHistory(id);
+  document.getElementById('client-form-overlay').style.display='flex';
+}
+function renderClientBookingHistory(clientId){
+  const list = document.getElementById('cf-history-list');
+  if(!list) return;
+  const matches = bookings.filter(b => b.customer?.clientId === clientId).sort((a,b)=>(b.start||'').localeCompare(a.start||''));
+  if(!matches.length){
+    list.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Замовлень ще немає</div>';
+    return;
+  }
+  list.innerHTML = matches.map(b => {
+    const v = getVehicle(b.vehicleId);
+    const st = SM[b.status];
+    return `<div onclick="gotoBookingFromClient(${b.id})" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;cursor:pointer;background:#fff" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+      <span style="width:8px;height:8px;border-radius:50%;background:${st?.color||'#9ca3af'};flex-shrink:0"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:#1a1d26">${fmt(b.start)}–${fmt(b.end)} · ${v?.plate||''} ${stripYear(v?.name||'')}</div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:1px">${st?.label||b.status||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function gotoBookingFromClient(bid){
+  closeClientForm();
+  closeClientsPanel();
+  closeBookingModal();
+  editBooking(bid);
+}
+function closeClientForm(){
+  document.getElementById('client-form-overlay').style.display='none';
+}
+async function saveClientForm(){
+  const id = document.getElementById('cf-id').value;
+  const name = document.getElementById('cf-name').value.trim();
+  if(!name){ alert('Вкажіть ПІБ клієнта'); return; }
+  const data = {
+    name,
+    phone: document.getElementById('cf-phone').value.trim(),
+    birthdate: document.getElementById('cf-birthdate').value,
+    address: document.getElementById('cf-address').value.trim(),
+    passportNum: document.getElementById('cf-passport-num').value.trim(),
+    passportIssuer: document.getElementById('cf-passport-issuer').value.trim(),
+    passportDate: document.getElementById('cf-passport-date').value,
+    inn: document.getElementById('cf-inn').value.trim(),
+    licenseNum: document.getElementById('cf-license-num').value.trim(),
+    licenseCat: document.getElementById('cf-license-cat').value.trim(),
+    licenseDate: document.getElementById('cf-license-date').value,
+    notes: document.getElementById('cf-notes').value.trim(),
+  };
+  if(id) await apiFetch('PUT', '/clients/'+id, data);
+  else await apiFetch('POST', '/clients', data);
+  await loadClientsFromServer();
+  closeClientForm();
+  renderClientsPanelList();
+}
+async function deleteClientFromForm(){
+  const id = document.getElementById('cf-id').value;
+  if(!id) return;
+  if(!confirm('Видалити цього клієнта?')) return;
+  await apiFetch('DELETE', '/clients/'+id);
+  await loadClientsFromServer();
+  closeClientForm();
+  renderClientsPanelList();
+}
+
+// ── CLIENT DOCUMENT PHOTOS ──────────────────────────────────────
+let CLIENT_DOCS = [];
+async function loadClientDocs(clientId){
+  const rows = await apiFetch('GET', '/client-documents/'+clientId);
+  CLIENT_DOCS = Array.isArray(rows) ? rows : [];
+  renderClientDocsList();
+}
+function renderClientDocsList(){
+  const wrap = document.getElementById('cf-docs-list');
+  if(!wrap) return;
+  const labels = {passport:'Паспорт', license:'Посвідчення водія', other:'Інше'};
+  if(!CLIENT_DOCS.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає завантажених фото</div>';
+    return;
+  }
+  wrap.innerHTML = CLIENT_DOCS.map(d => {
+    const thumb = d.thumbUrl || (d.type && d.type.startsWith('image/') ? d.url : null);
+    const preview = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
+    return `<div style="position:relative;width:76px">
+      <a href="${d.url}" target="_blank" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb">${preview}</a>
+      <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labels[d.doc_type]||d.doc_type}</div>
+      <button type="button" onclick="deleteClientDoc(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`;
+  }).join('');
+}
+async function uploadClientDoc(key, input){
+  const file = input.files[0];
+  if(!file) return;
+  const clientId = document.getElementById('cf-id').value;
+  if(!clientId) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(API_BASE + '/client-documents/' + clientId + '/' + key, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _token },
+    body: formData,
+  });
+  input.value = '';
+  if(!res.ok){ alert('Не вдалося завантажити фото'); return; }
+  await loadClientDocs(clientId);
+}
+async function deleteClientDoc(id){
+  if(!confirm('Видалити це фото?')) return;
+  await apiFetch('DELETE', '/client-documents/'+id);
+  CLIENT_DOCS = CLIENT_DOCS.filter(d=>d.id!==id);
+  renderClientDocsList();
+}
+
+// ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
+let DOC_FIELDS = [];
+let DOC_MAPPING = { contract: {}, act: {} };
+let DOC_SCANNED = { contract: [], act: [] };
+let DOC_CUSTOM = { contract: [], act: [] };
+async function openDocTemplatesPanel(){
+  document.getElementById('doctemplates-panel-overlay').style.display='flex';
+  const [fields, mappingData] = await Promise.all([
+    apiFetch('GET', '/generate-document/fields'),
+    apiFetch('GET', '/generate-document/mapping'),
+  ]);
+  if(Array.isArray(fields)) DOC_FIELDS = fields;
+  if(mappingData){
+    DOC_MAPPING = mappingData.mapping || { contract: {}, act: {} };
+    DOC_SCANNED.contract = mappingData.contractPlaceholders || [];
+    DOC_SCANNED.act = mappingData.actPlaceholders || [];
+    // Any mapping key that isn't in the scanned list was added manually in
+    // a previous session — keep showing it so it doesn't silently vanish.
+    DOC_CUSTOM.contract = Object.keys(DOC_MAPPING.contract||{}).filter(k=>!DOC_SCANNED.contract.includes(k));
+    DOC_CUSTOM.act = Object.keys(DOC_MAPPING.act||{}).filter(k=>!DOC_SCANNED.act.includes(k));
+    renderDocTemplateFields('contract');
+    renderDocTemplateFields('act');
+  }
+}
+function addCustomDocField(type){
+  const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
+  if(!name) return;
+  const clean = name.trim().replace(/^#/,'').replace(/[^а-яА-ЯіІїЇєЄa-zA-Z0-9_]/g,'');
+  if(!clean) return;
+  if(DOC_SCANNED[type].includes(clean) || DOC_CUSTOM[type].includes(clean)){
+    alert('Змінна з такою назвою вже є в списку');
+    return;
+  }
+  DOC_CUSTOM[type].push(clean);
+  renderDocTemplateFields(type);
+}
+function closeDocTemplatesPanel(){
+  document.getElementById('doctemplates-panel-overlay').style.display='none';
+}
+function renderDocTemplateFields(type){
+  const wrap = document.getElementById('dt-fields-'+type);
+  const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
+  const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
+  const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
+    placeholders.map(ph => {
+    const current = DOC_MAPPING[type]?.[ph] || '';
+    const isStatic = current.startsWith('static:');
+    const isPath = current.startsWith('path:');
+    const isCustom = DOC_CUSTOM[type].includes(ph);
+    return `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
+        <span style="color:#9ca3af;font-size:11px">→</span>
+        <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+          <option value="">— не заповнювати —</option>
+          <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
+          <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
+          <option disabled>──────────</option>
+          ${options}
+        </select>
+        ${isCustom?`<button type="button" onclick="removeCustomDocField('${type}','${ph}')" title="Видалити цю змінну" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>`:''}
+      </div>
+      <input type="text" class="dt-field-extra" data-type="${type}" data-placeholder="${ph}"
+        style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
+        placeholder="${isPath?'наприклад: booking.rate або vehicle.specs.color':'текст, який завжди буде тут'}"
+        value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rowsHtml + `<button type="button" onclick="addCustomDocField('${type}')" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  wrap.querySelectorAll('.dt-field-select').forEach(sel => {
+    const ph = sel.dataset.placeholder;
+    const val = DOC_MAPPING[type]?.[ph] || '';
+    if(val.startsWith('static:')) sel.value = '__static__';
+    else if(val.startsWith('path:')) sel.value = '__path__';
+    else sel.value = val;
+  });
+}
+function removeCustomDocField(type, ph){
+  DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
+  delete DOC_MAPPING[type][ph];
+  renderDocTemplateFields(type);
+}
+function onDocFieldSelectChange(sel){
+  const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
+  const showExtra = sel.value === '__static__' || sel.value === '__path__';
+  extra.style.display = showExtra ? 'block' : 'none';
+  extra.placeholder = sel.value === '__path__' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
+}
+async function uploadDocTemplate(type, input){
+  const file = input.files[0];
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(API_BASE + '/generate-document/template/' + type, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _token },
+    body: formData,
+  });
+  input.value = '';
+  if(!res.ok){ alert('Не вдалося завантажити шаблон'); return; }
+  alert('Шаблон оновлено! Оновіть поля нижче за потреби.');
+  openDocTemplatesPanel();
+}
+async function saveDocTemplateMapping(){
+  const newMapping = { contract: {}, act: {} };
+  document.querySelectorAll('.dt-field-select').forEach(sel => {
+    const type = sel.dataset.type, ph = sel.dataset.placeholder;
+    if(!sel.value) return;
+    if(sel.value === '__static__' || sel.value === '__path__'){
+      const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
+      const extraVal = (extra?.value || '').trim();
+      if(!extraVal) return;
+      newMapping[type][ph] = (sel.value === '__static__' ? 'static:' : 'path:') + extraVal;
+    } else {
+      newMapping[type][ph] = sel.value;
+    }
+  });
+  await apiFetch('PUT', '/generate-document/mapping', newMapping);
+  DOC_MAPPING = newMapping;
+  alert('✅ Налаштування збережено');
+}
+
+// ── DOCUMENT ARCHIVE ─────────────────────────────────────────────
+let DOC_ARCHIVE = [];
+async function openDocArchivePanel(){
+  document.getElementById('docarchive-panel-overlay').style.display='flex';
+  document.getElementById('da-search').value='';
+  const rows = await apiFetch('GET', '/generate-document/archive/list');
+  if(Array.isArray(rows)) DOC_ARCHIVE = rows;
+  renderDocArchiveList();
+}
+function closeDocArchivePanel(){
+  document.getElementById('docarchive-panel-overlay').style.display='none';
+}
+function renderDocArchiveList(){
+  const list = document.getElementById('docarchive-list');
+  const q = (document.getElementById('da-search')?.value||'').trim().toLowerCase();
+  const matches = d => !q || (d.client_name||'').toLowerCase().includes(q) || (d.vehicle_name||'').toLowerCase().includes(q) || (d.vehicle_plate||'').toLowerCase().includes(q);
+  const items = DOC_ARCHIVE.filter(matches);
+  if(!items.length){
+    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Ще немає згенерованих документів.</div>';
+    return;
+  }
+  list.innerHTML = items.map(d => {
+    const dt = new Date(d.created_at);
+    const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    const typeLabel = d.doc_type === 'contract' ? '📄 Договір' : '📄 Акт';
+    const typeColor = d.doc_type === 'contract' ? '#1d4ed8' : '#7c3aed';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${typeColor}15;color:${typeColor};flex-shrink:0">${typeLabel}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${d.client_name||'—'} · ${d.vehicle_plate||''} ${d.vehicle_name||''}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">Замовлення №${d.booking_id} · ${dateStr}${d.generated_by?' · '+d.generated_by:''}</div>
+      </div>
+      <button onclick="downloadArchivedDoc(${d.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">⬇ Завантажити</button>
+      <button onclick="openBookingModalFromArchive(${d.booking_id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-family:inherit;font-weight:600;flex-shrink:0">Замовлення →</button>
+      <button onclick="deleteArchivedDoc(${d.id})" title="Видалити" style="font-size:10px;padding:6px 8px;border-radius:5px;cursor:pointer;border:1px solid #fecaca;background:#fff;color:#dc2626;font-family:inherit;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+async function downloadArchivedDoc(id){
+  const res = await fetch(API_BASE + '/generate-document/archive/' + id, { headers: apiHeaders() });
+  if(!res.ok){ alert('Не вдалося завантажити документ'); return; }
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const fileName = match ? decodeURIComponent(match[1]) : 'document.docx';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+async function deleteArchivedDoc(id){
+  if(!confirm('Видалити цей документ з бази? Дію не можна скасувати.')) return;
+  await apiFetch('DELETE', '/generate-document/archive/'+id);
+  DOC_ARCHIVE = DOC_ARCHIVE.filter(d=>d.id!==id);
+  renderDocArchiveList();
+}
+function openBookingModalFromArchive(bookingId){
+  closeDocArchivePanel();
+  editBooking(bookingId);
 }
 
 function openVehiclesPanel(){
@@ -8362,14 +8959,16 @@ async function doChangePassword(){
 }
 
 async function syncFromServer(){
-  const [sBookings, sVehicles, sStickers, sSettings, sParts] = await Promise.all([
+  const [sBookings, sVehicles, sStickers, sSettings, sParts, sClients] = await Promise.all([
     apiFetch('GET','/bookings'),
     apiFetch('GET','/vehicles'),
     apiFetch('GET','/stickers'),
     apiFetch('GET','/settings'),
     apiFetch('GET','/spare-parts'),
+    apiFetch('GET','/clients'),
   ]);
   if(Array.isArray(sParts)) SPARE_PARTS = sParts;
+  if(Array.isArray(sClients)) CLIENTS = sClients;
   if(sBookings){ bookings.length=0; sBookings.forEach(b=>bookings.push(b)); nextBid=bookings.length?Math.max(...bookings.map(b=>b.id))+1:1; }
   if(sVehicles){
     ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); });
@@ -8769,7 +9368,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     _currentUser = await res.json();
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; }
+    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; }
     await syncFromServer();
     startAutoRefresh();
   } catch(e){ showLoginOverlay(); }

@@ -44,6 +44,25 @@ db.exec(`
     created_at TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS clients (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    data       TEXT    NOT NULL DEFAULT '{}',
+    created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS generated_documents (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id   INTEGER NOT NULL,
+    doc_type     TEXT    NOT NULL,
+    file_name    TEXT    NOT NULL,
+    file_path    TEXT    NOT NULL,
+    client_name  TEXT,
+    vehicle_name TEXT,
+    vehicle_plate TEXT,
+    generated_by TEXT,
+    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (
     key        TEXT    PRIMARY KEY,
     value      TEXT    NOT NULL,
@@ -53,6 +72,19 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS documents (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     vehicle_id    INTEGER NOT NULL,
+    doc_type      TEXT    NOT NULL,
+    filename      TEXT    NOT NULL,
+    thumb_filename TEXT,
+    original_name TEXT    NOT NULL,
+    mime_type     TEXT    NOT NULL,
+    size          INTEGER NOT NULL,
+    uploaded_by   INTEGER,
+    created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS client_documents (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id     INTEGER NOT NULL,
     doc_type      TEXT    NOT NULL,
     filename      TEXT    NOT NULL,
     thumb_filename TEXT,
