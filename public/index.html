@@ -2888,8 +2888,7 @@ function renderCalendar(){
         // index rather than requiring the whole visible span to exactly
         // equal Math.ceil(daysOverride) — a booking can span more calendar
         // days than its billed day count.
-        const dayIdxFromStart = countDays(booking.start, ds);
-        const isHalfLastDay = booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && dayIdxFromStart === Math.ceil(booking.daysOverride);
+        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride);
         const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div>` : '';
         const cellBg = isHalfLastDay ? 'transparent' : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
