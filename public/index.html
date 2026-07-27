@@ -2909,14 +2909,14 @@ function renderCalendar(){
           const extDays = countDays(dayExt.fromDate, dayExt.toDate);
           const dayIdx = countDays(dayExt.fromDate, ds) - 1;
           const pct = dayExt.cost > 0 ? (dayExt.amountPaid||0) / dayExt.cost : 0;
-          const darkCount = Math.round(extDays * pct);
+          const darkCount = Math.min(extDays - 1, Math.floor(extDays * pct));
           isPaidPortion = dayIdx < darkCount;
           progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         } else if(!dayExt && mainTotal && mainPaid > 0 && mainPaid < mainTotal){
           const mainDays = countDays(booking.start, booking.end);
           const dayIdx = countDays(booking.start, ds) - 1;
           const pct = mainPaid / mainTotal;
-          const darkCount = Math.round(mainDays * pct);
+          const darkCount = Math.min(mainDays - 1, Math.floor(mainDays * pct));
           isPaidPortion = dayIdx < darkCount;
           progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         }
