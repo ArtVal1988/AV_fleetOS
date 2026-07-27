@@ -2882,15 +2882,14 @@ function renderCalendar(){
           progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         }
         const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af'));
-        // Half-day booking (e.g. 2.5 діб): the last calendar cell in the
-        // date range shows diagonally half-colored to reflect the
-        // fractional day, matching the same diagonal-split visual used
-        // for a day shared between two different bookings.
-        const totalSpanDays = countDays(booking.start, be);
-        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && Math.ceil(booking.daysOverride) === totalSpanDays;
-        if(booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride)){
-          console.log('[HALFDAY DEBUG]', {bid: booking.id, status: booking.status, daysOverride: booking.daysOverride, start: booking.start, end: booking.end, be, totalSpanDays, isEnd, ds, ceilCheck: Math.ceil(booking.daysOverride), isHalfLastDay});
-        }
+        // Half-day booking (e.g. 2.5 діб): the calendar cell at position
+        // Math.ceil(daysOverride) from the start shows diagonally
+        // half-colored to reflect the fractional day. Identified by day
+        // index rather than requiring the whole visible span to exactly
+        // equal Math.ceil(daysOverride) — a booking can span more calendar
+        // days than its billed day count.
+        const dayIdxFromStart = countDays(booking.start, ds);
+        const isHalfLastDay = booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && dayIdxFromStart === Math.ceil(booking.daysOverride);
         const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div>` : '';
         const cellBg = isHalfLastDay ? 'transparent' : cellColor;
         return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
