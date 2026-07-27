@@ -3086,7 +3086,7 @@ function showTooltip(e,bid){
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
         const remaining = Math.max(0, totalForPartial - (b.amountPaid||0));
         const isPaidFull = remaining <= 0.009;
-        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓':'⚠'}</span>`;
+        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:${isPaidFull?'#dcfce7':'#fee2e2'};color:${isPaidFull?'#166534':'#dc2626'}">${isPaidFull?'✓ Оплачено':'⚠ Борг '+fmt1(remaining)+' '+cur}</span>`;
       })():''}
     </div>
     ${nameRow}
