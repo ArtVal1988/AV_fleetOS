@@ -3759,6 +3759,7 @@ function editBooking(bid){
   currentExtHistory = (b.extensionHistory||[]).slice();
   editingExtHistoryIndex = null;
   renderExtTimeline();
+  updateKmDiff();
   document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
   document.getElementById('bm-currency').value=b.currency||'$';
   rateCurrencyAnchor = b.currency||'$';
