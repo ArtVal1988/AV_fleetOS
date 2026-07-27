@@ -3028,7 +3028,7 @@ function showTooltip(e,bid){
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmt1(hDays*(h.rate||0));
       const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
-      return `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
+      return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
@@ -3042,7 +3042,7 @@ function showTooltip(e,bid){
       const st = getExtStatus(ext);
       const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
       const label = st==='paid'?'✓':st==='partial'?'◐':'⚠';
-      activeRow = `<div class="tt-row" style="display:flex;justify-content:space-between;gap:8px">
+      activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
           ${ext.cost?`<span class="tt-val" style="color:var(--text);font-weight:500">${fmt1(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
