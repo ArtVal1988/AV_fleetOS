@@ -6025,7 +6025,7 @@ function renderToTabs(v){
     const matCost = (w.materials||[]).reduce((s,m)=>s+(m.price||0)*(m.qty||1),0);
     const total = (w.labor||0)+matCost;
     const mats = (w.materials||[]).map(m=>'<span class="to-mat-chip">'+m.name+(m.partNumber?' · '+m.partNumber:'')+(m.qty>1?' ×'+m.qty:'')+'</span>').join('');
-    return '<div class="to-work-row '+w.type+'">' +
+    return '<div class="to-work-row '+w.type+'" onclick="openWorkDetail('+w.id+')" style="cursor:pointer">' +
       '<div class="to-wr-top"><span class="to-wr-name">'+w.name+'</span><span class="to-wr-status '+stCls[w.status]+'">'+stLabel[w.status]+'</span></div>' +
       '<div class="to-wr-meta">' +
         '<span>📅 '+fmtD(w.date)+'</span>' +
@@ -6045,8 +6045,10 @@ function renderToTabs(v){
     '<button class="to-add-btn" onclick="openAddWorkModal(\'planned\')">+ Додати роботу</button>';
 }
 
+let editingWorkId = null;
 function openAddWorkModal(type){
   const v = ALL_VEHICLES.find(x=>x.id===toVehicleId); if(!v)return;
+  editingWorkId = null;
   document.getElementById('awm-title').textContent='Нова робота · '+v.plate;
   document.getElementById('aw-type').value=type||'planned';
   document.getElementById('aw-name').value='';
@@ -6056,6 +6058,22 @@ function openAddWorkModal(type){
   document.getElementById('aw-labor').value='';
   document.getElementById('aw-garage').value='';
   document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
+  document.getElementById('add-work-modal').classList.add('open');
+}
+function openWorkDetail(workId){
+  const v = ALL_VEHICLES.find(x=>x.id===toVehicleId); if(!v)return;
+  const w = (v.works||[]).find(x=>x.id===workId); if(!w)return;
+  editingWorkId = workId;
+  document.getElementById('awm-title').textContent='Робота · '+v.plate;
+  document.getElementById('aw-type').value = w.type||'planned';
+  document.getElementById('aw-name').value = w.name||'';
+  document.getElementById('aw-desc').value = w.desc||'';
+  document.getElementById('aw-date').value = w.date||'';
+  document.getElementById('aw-mileage').value = w.mileage||'';
+  document.getElementById('aw-labor').value = w.labor||'';
+  document.getElementById('aw-garage').value = w.garage||'';
+  const matRows = (w.materials||[]).map(m => `<div class="to-mat-add-row"><input type="text" value="${m.name||''}" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" value="${m.partNumber||''}" placeholder="Номер" style="font-size:11px"><input type="number" value="${m.qty||1}" placeholder="К-сть" style="font-size:11px"><input type="number" value="${m.price||0}" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest('.to-mat-add-row').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>`).join('');
+  document.getElementById('aw-mat-list').innerHTML = matRows || '<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
   document.getElementById('add-work-modal').classList.add('open');
 }
 function openAddWorkForm(){ openAddWorkModal('planned'); }
@@ -6092,8 +6110,7 @@ function saveWork(){
     if(!confirm(`Недостатньо на складі:\n${msg}\n\nВсе одно зберегти роботу (склад піде в мінус)?`)) return;
   }
 
-  v.works.push({
-    id:nextWorkId++,
+  const newWorkData = {
     type:workType,
     status: workStatus,
     name,
@@ -6103,10 +6120,21 @@ function saveWork(){
     labor:parseFloat(document.getElementById('aw-labor').value)||0,
     garage:document.getElementById('aw-garage').value.trim(),
     materials:mats,
-  });
+  };
+  const wasEditing = !!editingWorkId;
+  if(editingWorkId){
+    const idx = v.works.findIndex(x=>x.id===editingWorkId);
+    if(idx !== -1) v.works[idx] = { ...v.works[idx], ...newWorkData };
+    editingWorkId = null;
+  } else {
+    v.works.push({ id:nextWorkId++, ...newWorkData });
+  }
 
-  // Deduct matched materials from the spare-parts stock.
-  matchedMats.forEach(x => {
+  // Deduct matched materials from the spare-parts stock — only for genuinely
+  // new work entries. Skipped when editing an existing one, since the stock
+  // was already deducted the first time it was saved; deducting again here
+  // would double-count it.
+  if(!wasEditing) matchedMats.forEach(x => {
     apiFetch('POST', '/spare-parts/'+x.part.id+'/deduct', {amount:x.m.qty});
     x.part.quantity -= x.m.qty; // reflect locally without waiting for the round-trip
   });
