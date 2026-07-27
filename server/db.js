@@ -132,6 +132,7 @@ ensureColumn('documents', 'uploaded_by', 'INTEGER');
 ensureColumn('documents', 'created_at', 'TEXT');
 ensureColumn('documents', 'thumb_filename', 'TEXT');
 ensureColumn('spare_parts', 'part_number', 'TEXT');
+ensureColumn('spare_parts', 'manufacturer', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
 const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(
