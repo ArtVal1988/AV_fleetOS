@@ -6057,7 +6057,7 @@ function renderToTabs(v){
 
   function workRow(w){
     const matCost = (w.materials||[]).reduce((s,m)=>s+(m.price||0)*(m.qty||1),0);
-    const total = (w.labor||0)+matCost;
+    const total = (w.labor||0)+matCost+(w.partsCost||0);
     const mats = (w.materials||[]).map(m=>'<span class="to-mat-chip">'+m.name+(m.partNumber?' · '+m.partNumber:'')+(m.qty>1?' ×'+m.qty:'')+'</span>').join('');
     return '<div class="to-work-row '+w.type+'" onclick="openWorkDetail('+w.id+')" style="cursor:pointer">' +
       '<div class="to-wr-top"><span class="to-wr-name">'+w.name+'</span><span class="to-wr-status '+stCls[w.status]+'">'+stLabel[w.status]+'</span></div>' +
@@ -6090,6 +6090,7 @@ function openAddWorkModal(type){
   document.getElementById('aw-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('aw-mileage').value=v.currentKm||'';
   document.getElementById('aw-labor').value='';
+  document.getElementById('aw-parts-cost').value='';
   document.getElementById('aw-garage').value='';
   document.getElementById('aw-mat-list').innerHTML='<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
   document.getElementById('add-work-modal').classList.add('open');
@@ -6105,6 +6106,7 @@ function openWorkDetail(workId){
   document.getElementById('aw-date').value = w.date||'';
   document.getElementById('aw-mileage').value = w.mileage||'';
   document.getElementById('aw-labor').value = w.labor||'';
+  document.getElementById('aw-parts-cost').value = w.partsCost||'';
   document.getElementById('aw-garage').value = w.garage||'';
   const matRows = (w.materials||[]).map(m => `<div class="to-mat-add-row"><input type="text" value="${m.name||''}" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" value="${m.partNumber||''}" placeholder="Номер" style="font-size:11px"><input type="number" value="${m.qty||1}" placeholder="К-сть" style="font-size:11px"><input type="number" value="${m.price||0}" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest('.to-mat-add-row').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>`).join('');
   document.getElementById('aw-mat-list').innerHTML = matRows || '<div class="to-mat-add-row"><input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px"><input type="text" placeholder="Номер" style="font-size:11px"><input type="number" placeholder="К-сть" style="font-size:11px"><input type="number" placeholder="Ціна ₴" style="font-size:11px"><button type="button" onclick="this.closest(\'.to-mat-add-row\').remove()" style="background:none;border:1px solid #e5e7eb;border-radius:3px;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 5px">✕</button></div>';
@@ -6152,6 +6154,7 @@ function saveWork(){
     date:workDate,
     mileage:workMileage,
     labor:parseFloat(document.getElementById('aw-labor').value)||0,
+    partsCost:parseFloat(document.getElementById('aw-parts-cost').value)||0,
     garage:document.getElementById('aw-garage').value.trim(),
     materials:mats,
   };
@@ -9756,8 +9759,11 @@ function startAutoRefresh(){
         <div class="to-af-field"><label>Коротка назва роботи</label><input type="text" id="aw-name" placeholder="Наприклад: Заміна масла та фільтрів"></div>
         <div class="to-af-field"><label>Пробіг (км)</label><input type="number" id="aw-mileage" placeholder="85000"></div>
         <div class="to-af-field full"><label>Опис / причина / коментар</label><textarea id="aw-desc" style="min-height:56px;width:100%" placeholder="Деталі..."></textarea></div>
-        <div class="to-af-field"><label>Вартість робіт (₴)</label><input type="number" id="aw-labor" placeholder="0"></div>
-        <div class="to-af-field"><label>СТО / Майстер</label><input type="text" id="aw-garage" placeholder="Назва СТО"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="to-af-field" style="flex:1"><label>Вартість робіт (₴)</label><input type="number" id="aw-labor" placeholder="0"></div>
+        <div class="to-af-field" style="flex:1"><label>Вартість запчастин (₴)</label><input type="number" id="aw-parts-cost" placeholder="0"></div>
+        <div class="to-af-field" style="flex:1"><label>СТО / Майстер</label><input type="text" id="aw-garage" placeholder="Назва СТО"></div>
       </div>
       <div style="margin-top:12px">
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">Матеріали та запчастини</div>
