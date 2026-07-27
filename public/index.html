@@ -1982,7 +1982,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">RentPlus</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor()"></select>
+      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor();updateCompanyToggleVisibility()"></select>
       <button class="modal-x" onclick="closeBookingModal()">✕</button>
     </div>
   </div>
@@ -3541,6 +3541,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>Статус</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
+  updateCompanyToggleVisibility();
   const isGenericCreate = !start && !end;
   const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
   const defaultStart = start || (isGenericCreate ? todayStr : colDateStr(1));
@@ -3625,6 +3626,8 @@ function editBooking(bid){
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===b.vehicleId?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}"${s.key===b.status?'selected':''} style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
+  updateCompanyToggleVisibility();
+  updateBookingModalTitle(b.status);
   document.getElementById('bm-start').value=b.start;
   document.getElementById('bm-end').value=b.end;
   document.getElementById('bm-name').value=b.customer?.name||'';
@@ -3799,7 +3802,7 @@ function saveBooking(){
   const vid=parseInt(document.getElementById('bm-vehicle').value);
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
-  if(!currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
+  if(COMPANY_REQUIRED_STATUSES.includes(document.getElementById('bm-status').value) && !currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
 
   const clientType = document.getElementById('bm-client-type').value;
   if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
@@ -6922,9 +6925,20 @@ function openVehiclePanel(vid, tab){
 
 /* ── CLIENT TYPE & VAT ── */
 let currentOrderCompany = null;
+const COMPANY_REQUIRED_STATUSES = ['rented', 'extension', 'res-docs', 'reserved'];
 function setOrderCompany(company){
   currentOrderCompany = currentOrderCompany === company ? null : company; // clicking the active one deselects it
   renderOrderCompanyToggle();
+}
+function updateCompanyToggleVisibility(){
+  const status = document.getElementById('bm-status')?.value;
+  const trBtn = document.getElementById('bm-company-toprent');
+  const rpBtn = document.getElementById('bm-company-rentplus');
+  if(!trBtn || !rpBtn) return;
+  const needsCompany = COMPANY_REQUIRED_STATUSES.includes(status);
+  trBtn.style.display = needsCompany ? '' : 'none';
+  rpBtn.style.display = needsCompany ? '' : 'none';
+  if(!needsCompany){ currentOrderCompany = null; }
 }
 function renderOrderCompanyToggle(){
   const trBtn = document.getElementById('bm-company-toprent');
@@ -9149,8 +9163,19 @@ window.saveBooking = async function(){
   if(wasEditBid && JSON.stringify(b) === beforeSnapshot) return; // validation blocked the save — nothing actually changed, don't touch the server or show a success message
   if(wasEditBid){ apiFetch('PUT','/bookings/'+b.id, b); }
   else { const r=await apiFetch('POST','/bookings',b); if(r?.id) b.id=r.id; }
+  updateBookingModalTitle(b.status);
   showSuccessToast(wasEditBid ? 'Коригування успішно збережено' : 'Нове замовлення успішно додано');
 };
+function updateBookingModalTitle(status){
+  const titleEl = document.getElementById('bm-title');
+  if(!titleEl) return;
+  if(COMPANY_REQUIRED_STATUSES.includes(status)){
+    titleEl.textContent = 'Замовлення';
+  } else {
+    const st = SM[status];
+    titleEl.textContent = st ? st.label : 'Замовлення';
+  }
+}
 function showSuccessToast(text){
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,24,35,.55);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s;pointer-events:none';
