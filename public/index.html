@@ -4818,7 +4818,7 @@ function hideKmEditForm(vid){
 }
 function saveCurrentKm(vid){
   const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
-  const val = parseInt(document.getElementById('to-km-input-'+vid).value)||0;
+  const val = parseThousands(document.getElementById('to-km-input-'+vid).value)||0;
   if(val<=0){alert('Введіть коректний пробіг');return;}
   if(val < (v.service?.lastKm||0)){
     if(!confirm('Новий пробіг менший за попередній ('+v.service.lastKm.toLocaleString('uk-UA')+' км). Продовжити?')) return;
@@ -6067,15 +6067,15 @@ function renderToKmBar(v){
     '<div class="to-km-track"><div class="to-km-fill" style="width:'+pct+'%;background:'+col+'"></div></div>' +
     '<div class="to-km-meta-row">' +
       '<div><div class="to-km-meta-lbl">Останнє ТО</div><div class="to-km-meta-val" style="display:flex;align-items:baseline;gap:5px">'+fmtD(lastDate)+
-        ' · <input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-lastkm-'+v.id+'" value="'+(svc.lastKm?svc.lastKm.toLocaleString('uk-UA'):'')+'" readonly oninput="formatThousandsInput(this)" onkeydown="if(event.key===\'Enter\')toggleLastKmEdit('+v.id+',this.nextElementSibling.nextElementSibling)"><span style="font-size:11px;color:#6b7280;font-weight:400">км</span><button type="button" id="to-km-lastkm-btn-'+v.id+'" onclick="toggleLastKmEdit('+v.id+',this)" style="background:#2563eb;border:none;border-radius:5px;padding:4px 9px;font-size:13px;cursor:pointer;color:#fff;font-family:inherit;box-shadow:0 1px 3px rgba(37,99,235,.4)">✏</button></div></div>' +
+        ' · <input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-lastkm-'+v.id+'" value="'+(svc.lastKm?svc.lastKm.toLocaleString('uk-UA'):'')+'" readonly oninput="formatKmInput(this)" onkeydown="if(event.key===\'Enter\')toggleLastKmEdit('+v.id+',this.nextElementSibling.nextElementSibling)"><span style="font-size:11px;color:#6b7280;font-weight:400">км</span><button type="button" id="to-km-lastkm-btn-'+v.id+'" onclick="toggleLastKmEdit('+v.id+',this)" style="background:#2563eb;border:none;border-radius:5px;padding:4px 9px;font-size:13px;cursor:pointer;color:#fff;font-family:inherit;box-shadow:0 1px 3px rgba(37,99,235,.4)">✏</button></div></div>' +
       '<div><div class="to-km-meta-lbl">Інтервал ТО</div>' +
-        '<div class="to-km-interval-wrap"><input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-interval-'+v.id+'" value="'+si.toLocaleString('uk-UA')+'" oninput="formatThousandsInput(this)" onchange="setServiceInterval('+v.id+',this.value)"><span style="font-size:11px;color:#6b7280">км</span></div>' +
+        '<div class="to-km-interval-wrap"><input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-interval-'+v.id+'" value="'+si.toLocaleString('uk-UA')+'" oninput="formatKmInput(this)" onchange="setServiceInterval('+v.id+',this.value)"><span style="font-size:11px;color:#6b7280">км</span></div>' +
       '</div>' +
       '<div style="text-align:right"><div class="to-km-meta-lbl">Наступне ТО</div><div class="to-km-meta-val" style="color:'+purple+'">'+next.toLocaleString('uk-UA')+' км</div></div>' +
     '</div>' +
     '<div class="to-km-update" id="to-km-update-'+v.id+'">' +
       '<div class="to-km-form" id="to-km-form-'+v.id+'" style="display:none">'+
-        '<input type="number" id="to-km-input-'+v.id+'" placeholder="Введіть актуальний пробіг" value="'+cur+'" class="to-km-input">'+
+        '<input type="text" inputmode="numeric" id="to-km-input-'+v.id+'" placeholder="Введіть актуальний пробіг" value="'+cur.toLocaleString('uk-UA')+'" class="to-km-input" oninput="formatKmInput(this)">'+
         '<span style="font-size:11px;color:#6b7280;white-space:nowrap">км</span>'+
         '<button class="to-km-save-btn" onclick="saveCurrentKm('+v.id+')">Зберегти</button>'+
         '<button class="to-km-cancel-btn" onclick="hideKmEditForm('+v.id+')">✕</button>'+
