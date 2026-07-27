@@ -515,11 +515,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .to-wr-status.progress{background:#fff8e6;color:#92400e;}
 .to-wr-meta{display:flex;gap:12px;font-size:11px;color:#6b7280;flex-wrap:wrap;}
 .to-wr-cost{font-size:12px;font-weight:600;color:#2563eb;margin-top:4px;}
-.to-wr-cost-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;}
+.to-wr-cost-row{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:10px;margin-top:6px;}
 .to-wr-cost-part{font-size:11px;font-weight:700;white-space:nowrap;}
-.to-wr-cost-part.labor{color:#166534;}
-.to-wr-cost-part.parts{color:#9a3412;}
-.to-wr-cost-part.total{color:#1e3a8a;margin-left:auto;}
+.to-wr-cost-part.labor{color:#166534;text-align:left;}
+.to-wr-cost-part.parts{color:#9a3412;text-align:center;}
+.to-wr-cost-part.total{color:#1e3a8a;text-align:right;}
 .to-mat-list{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;}
 .to-mat-chip{font-size:10px;background:#f0f2f5;border-radius:3px;padding:2px 7px;color:#374151;}
 .to-empty{text-align:center;padding:30px;color:#9ca3af;font-size:12px;}
@@ -6054,9 +6054,9 @@ function renderToKmBar(v){
   } else if(pctRemaining <= 75){
     col = '#3b82f6'; bg = '#dbeafe'; bdr = '#93c5fd'; // синій — залишок ≤75%
   } else {
-    col = '#22c55e'; bg = '#f0fdf4'; bdr = '#86efac'; // зелений — більше 75% залишку
+    col = '#164226'; bg = '#f0fdf4'; bdr = '#86efac'; // зелений — більше 75% залишку
   }
-  const purple = '#7c3aed';
+  const purple = '#4c00ce';
   const pct = next>0 ? Math.min(100,Math.max(0,Math.round(cur/next*100))) : 0;
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   document.getElementById('tom-km-bar').innerHTML =
@@ -8280,21 +8280,57 @@ function applyMatchedPart(part, row){
   }
 }
 function onMatNameInput(input){
-  renderSparePartsDatalistOptions();
-  const part = SPARE_PARTS.find(p=>p.name.toLowerCase()===input.value.trim().toLowerCase());
+  const q = input.value.trim().toLowerCase();
+  const exact = SPARE_PARTS.find(p=>p.name.toLowerCase()===q);
   const row = input.closest('.to-mat-add-row');
   const hint = document.getElementById('aw-mat-stock-hint');
-  if(!part){ if(hint) hint.textContent=''; return; }
-  applyMatchedPart(part, row);
+  if(exact){ applyMatchedPart(exact, row); closeMatSuggest(); return; }
+  if(hint) hint.textContent='';
+  if(!q){ closeMatSuggest(); return; }
+  const matches = SPARE_PARTS.filter(p=>p.name.toLowerCase().includes(q)).slice(0,8);
+  showMatSuggest(input, matches);
 }
 function onMatPartNumInput(input){
-  renderSparePartsDatalistOptions();
-  const part = SPARE_PARTS.find(p=>p.part_number && p.part_number.toLowerCase()===input.value.trim().toLowerCase());
+  const q = input.value.trim().toLowerCase();
+  const exact = SPARE_PARTS.find(p=>p.part_number && p.part_number.toLowerCase()===q);
   const row = input.closest('.to-mat-add-row');
   const hint = document.getElementById('aw-mat-stock-hint');
-  if(!part){ if(hint) hint.textContent=''; return; }
-  applyMatchedPart(part, row);
+  if(exact){ applyMatchedPart(exact, row); closeMatSuggest(); return; }
+  if(hint) hint.textContent='';
+  if(!q){ closeMatSuggest(); return; }
+  const matches = SPARE_PARTS.filter(p=>p.part_number && p.part_number.toLowerCase().includes(q)).slice(0,8);
+  showMatSuggest(input, matches);
 }
+let matSuggestTargetRow = null;
+function showMatSuggest(input, matches){
+  const dd = document.getElementById('mat-suggest-dropdown');
+  if(!dd) return;
+  if(!matches.length){ closeMatSuggest(); return; }
+  matSuggestTargetRow = input.closest('.to-mat-add-row');
+  const rect = input.getBoundingClientRect();
+  dd.style.left = rect.left + 'px';
+  dd.style.top = (rect.bottom + 3) + 'px';
+  dd.style.width = Math.max(rect.width, 220) + 'px';
+  dd.innerHTML = matches.map((p,i) => `<div onmousedown="event.preventDefault();selectMatSuggest(${i})" style="padding:7px 10px;font-size:11px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+    <div style="font-weight:600;color:#1a1d26">${p.name}</div>
+    <div style="color:#6b7280;font-size:10px">${p.part_number?('№ '+p.part_number+' · '):''}${p.quantity>0?p.quantity+' шт. в наявності':'немає в наявності'}${p.price?' · '+p.price.toLocaleString('uk-UA')+' ₴':''}</div>
+  </div>`).join('');
+  dd._matches = matches;
+  dd.style.display = 'block';
+}
+function selectMatSuggest(i){
+  const dd = document.getElementById('mat-suggest-dropdown');
+  const part = dd?._matches?.[i];
+  if(part && matSuggestTargetRow) applyMatchedPart(part, matSuggestTargetRow);
+  closeMatSuggest();
+}
+function closeMatSuggest(){
+  const dd = document.getElementById('mat-suggest-dropdown');
+  if(dd) dd.style.display = 'none';
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('#mat-suggest-dropdown') && !e.target.closest('.to-mat-add-row input')) closeMatSuggest();
+});
 async function loadSparePartsFromServer(){
   if(!_token) return;
   const r = await apiFetch('GET', '/spare-parts');
@@ -9843,6 +9879,7 @@ function startAutoRefresh(){
         <datalist id="spare-parts-datalist"></datalist>
         <datalist id="spare-parts-partnum-datalist"></datalist>
         <div id="aw-mat-stock-hint" style="font-size:10px;color:#9ca3af;margin-bottom:4px;min-height:13px"></div>
+        <div id="mat-suggest-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:2000;max-height:220px;overflow-y:auto"></div>
         <div id="aw-mat-list">
           <div class="to-mat-add-row">
             <input type="text" placeholder="Назва запчастини" list="spare-parts-datalist" oninput="onMatNameInput(this)" style="font-size:11px">
