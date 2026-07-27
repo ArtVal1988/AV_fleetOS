@@ -527,7 +527,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .to-af-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .to-af-field{display:flex;flex-direction:column;gap:4px;}
 .to-af-field.full{grid-column:1/-1;}
-.to-af-field input,.to-af-field select,.to-af-field textarea,.to-mat-add-row input{background:#eceef1;color:#000;}
+.to-af-field input,.to-af-field select,.to-af-field textarea,.to-mat-add-row input{background:#eceef1;color:#000!important;}
+.to-af-field input::placeholder,.to-af-field textarea::placeholder,.to-mat-add-row input::placeholder{color:#6b7280;opacity:1;}
 .to-mat-add-row{display:grid;grid-template-columns:1.4fr 1fr 60px 80px 26px;gap:6px;align-items:center;margin-bottom:4px;}
 
 /* INSURANCE MODAL */
@@ -9761,8 +9762,8 @@ function startAutoRefresh(){
         <div class="to-af-field full"><label>Опис / причина / коментар</label><textarea id="aw-desc" style="min-height:56px;width:100%" placeholder="Деталі..."></textarea></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <div class="to-af-field" style="flex:1"><label>Вартість робіт (₴)</label><input type="number" id="aw-labor" placeholder="0"></div>
-        <div class="to-af-field" style="flex:1"><label>Вартість запчастин (₴)</label><input type="number" id="aw-parts-cost" placeholder="0"></div>
+        <div class="to-af-field" style="flex:1"><label>Вартість робіт</label><input type="number" id="aw-labor" placeholder="0"></div>
+        <div class="to-af-field" style="flex:1"><label>Вартість запчастин</label><input type="number" id="aw-parts-cost" placeholder="0"></div>
         <div class="to-af-field" style="flex:1"><label>СТО / Майстер</label><input type="text" id="aw-garage" placeholder="Назва СТО"></div>
       </div>
       <div style="margin-top:12px">
