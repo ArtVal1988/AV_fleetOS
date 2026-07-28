@@ -1529,13 +1529,11 @@ input.dm-pf-val.tel{font-size:14px;}
 <!-- ADD / EDIT CLIENT MODAL -->
 <div id="client-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:610;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
-    <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0" id="cf-title">+ Новий клієнт</div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
-        <button type="button" id="cf-res-resident" onclick="setClientResidency('resident')" style="padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">🇺🇦 Резидент</button>
-        <button type="button" id="cf-res-nonresident" onclick="setClientResidency('nonresident')" style="padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">🌍 Нерезидент</button>
-      </div>
-      <button onclick="closeClientForm()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af;margin-left:auto">✕</button>
+    <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <button type="button" id="cf-res-resident" onclick="setClientResidency('resident')" style="padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">🇺🇦 Резидент</button>
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex:1;text-align:center" id="cf-title">+ Новий клієнт</div>
+      <button type="button" id="cf-res-nonresident" onclick="setClientResidency('nonresident')" style="padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">🌍 Нерезидент</button>
+      <button onclick="closeClientForm()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af;flex-shrink:0">✕</button>
     </div>
     <div style="padding:22px 28px">
       <input type="hidden" id="cf-id">
@@ -1550,11 +1548,11 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:14px">
-        <div style="flex:1">
-          <label class="vf-lbl">Ідентифікаційний номер (ІПН)</label>
+        <div style="flex:0.6">
+          <label class="vf-lbl">ІПН</label>
           <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
         </div>
-        <div style="flex:1">
+        <div style="flex:1.4">
           <label class="vf-lbl">Телефон</label>
           <div style="display:flex;align-items:center;gap:4px">
             <input id="cf-phone" type="text" class="vf-inp" placeholder="+38 067 000 00 00" style="flex:1;min-width:0" oninput="onPhoneInput(this)">
@@ -1573,45 +1571,55 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="cf-resident-fields">
         <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Документ, що посвідчує особу</div>
-        <div style="display:flex;gap:6px;margin-bottom:12px">
-          <button type="button" id="cf-doctype-passport" onclick="setClientDocType('passport')" style="flex:1;padding:7px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">Паспорт</button>
-          <button type="button" id="cf-doctype-idcard" onclick="setClientDocType('idcard')" style="flex:1;padding:7px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">ID-картка</button>
-        </div>
-        <div id="cf-doc-passport-fields">
-          <div style="display:flex;gap:10px;margin-bottom:14px">
-            <div style="flex:1">
-              <label class="vf-lbl">Серія та номер</label>
-              <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456" style="width:100%">
-            </div>
-            <div style="flex:1">
-              <label class="vf-lbl">Дата видачі</label>
-              <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
-            </div>
-            <div style="flex:2">
-              <label class="vf-lbl">Ким виданий</label>
-              <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
-            </div>
-          </div>
-        </div>
-        <div id="cf-doc-idcard-fields" style="display:none">
-          <div style="display:flex;gap:10px;margin-bottom:14px">
-            <div style="flex:1">
-              <label class="vf-lbl">Документ №</label>
-              <input id="cf-idcard-num" type="text" class="vf-inp" placeholder="123456789" style="width:100%">
-            </div>
-            <div style="flex:1">
-              <label class="vf-lbl">Запис №</label>
-              <input id="cf-idcard-record" type="text" class="vf-inp" placeholder="12345678-12345" style="width:100%">
+
+        <div class="msec-inner-sep">
+          <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')">
+            <span id="cf-passport-toggle-icon">⊕</span>
+            <span>Паспорт</span>
+            <span class="extras-toggle-chevron" id="cf-passport-chevron">▾</span>
+          </button>
+          <div class="extras-panel" id="cf-doc-passport-fields" style="display:none">
+            <div style="display:flex;gap:10px;margin:12px 0">
+              <div style="flex:1">
+                <label class="vf-lbl">Серія та номер</label>
+                <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456" style="width:100%">
+              </div>
+              <div style="flex:1">
+                <label class="vf-lbl">Дата видачі</label>
+                <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
+              </div>
+              <div style="flex:2">
+                <label class="vf-lbl">Ким виданий</label>
+                <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
+              </div>
             </div>
           </div>
-          <div style="display:flex;gap:10px;margin-bottom:14px">
-            <div style="flex:1">
-              <label class="vf-lbl">Дата видачі</label>
-              <input id="cf-idcard-date" type="date" class="vf-inp" style="width:100%">
-            </div>
-            <div style="flex:2">
-              <label class="vf-lbl">Орган, що видав</label>
-              <input id="cf-idcard-issuer" type="text" class="vf-inp" placeholder="4331" style="width:100%">
+        </div>
+
+        <div class="msec-inner-sep">
+          <button type="button" class="extras-toggle" id="cf-idcard-toggle-btn" onclick="toggleCfDocPanel('idcard')">
+            <span id="cf-idcard-toggle-icon">⊕</span>
+            <span>ID-картка</span>
+            <span class="extras-toggle-chevron" id="cf-idcard-chevron">▾</span>
+          </button>
+          <div class="extras-panel" id="cf-doc-idcard-fields" style="display:none">
+            <div style="display:flex;gap:10px;margin:12px 0">
+              <div style="flex:1">
+                <label class="vf-lbl">Документ №</label>
+                <input id="cf-idcard-num" type="text" class="vf-inp" placeholder="123456789" style="width:100%">
+              </div>
+              <div style="flex:1">
+                <label class="vf-lbl">Запис №</label>
+                <input id="cf-idcard-record" type="text" class="vf-inp" placeholder="12345678-12345" style="width:100%">
+              </div>
+              <div style="flex:1">
+                <label class="vf-lbl">Дата видачі</label>
+                <input id="cf-idcard-date" type="date" class="vf-inp" style="width:100%">
+              </div>
+              <div style="flex:1">
+                <label class="vf-lbl">Орган, що видав</label>
+                <input id="cf-idcard-issuer" type="text" class="vf-inp" placeholder="4331" style="width:100%">
+              </div>
             </div>
           </div>
         </div>
@@ -1690,9 +1698,15 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div style="margin-bottom:14px">
-        <label class="vf-lbl">Нотатки</label>
-        <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px" placeholder="Додаткова інформація про клієнта..."></textarea>
+      <div class="msec-inner-sep">
+        <button type="button" class="extras-toggle" id="cf-notes-toggle-btn" onclick="toggleCfNotesPanel()">
+          <span id="cf-notes-toggle-icon">⊕</span>
+          <span>Нотатки</span>
+          <span class="extras-toggle-chevron" id="cf-notes-chevron">▾</span>
+        </button>
+        <div class="extras-panel" id="cf-notes-panel" style="display:none">
+          <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px;margin:12px 0" placeholder="Додаткова інформація про клієнта..."></textarea>
+        </div>
       </div>
       <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:18px 0 10px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
       <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
@@ -8541,17 +8555,23 @@ function openClientForm(id){
   applyResidencyLock(false); // clear any lock from a previously open client before setting the new one
   setClientResidency(c?.residency || 'resident');
   applyResidencyLock(!!(c && c.residency === 'resident'));
-  setClientDocType(c?.docType || 'passport');
   cfMessengers = { ...(c?.messengers||{}) };
   ['viber','telegram','whatsapp'].forEach(k=>{
     const btn = document.getElementById('cf-msg-'+k);
     if(btn) btn.classList.toggle('active', !!cfMessengers[k]);
   });
+  const hasPassport = !!(c?.passportNum || c?.passportDate || c?.passportIssuer);
+  const hasIdcard = !!(c?.idcardNum || c?.idcardRecord || c?.idcardDate || c?.idcardIssuer);
   const hasLicense = !!(c?.licenseNum || c?.licenseCat || c?.licenseDate);
-  const licensePanel = document.getElementById('cf-license-panel');
-  const licenseIcon = document.getElementById('cf-license-toggle-icon');
-  if(licensePanel){ licensePanel.style.display = hasLicense ? 'block' : 'none'; }
-  if(licenseIcon){ licenseIcon.textContent = hasLicense ? '⊖' : '⊕'; }
+  const hasNotes = !!(c?.notes);
+  [['passport',hasPassport],['idcard',hasIdcard],['license',hasLicense],['notes',hasNotes]].forEach(([key,hasData])=>{
+    const panel = document.getElementById('cf-'+key+'-panel') || document.getElementById('cf-doc-'+key+'-fields');
+    const icon = document.getElementById('cf-'+key+'-toggle-icon');
+    const chevron = document.getElementById('cf-'+key+'-chevron');
+    if(panel) panel.style.display = hasData ? 'block' : 'none';
+    if(icon) icon.textContent = hasData ? '⊖' : '⊕';
+    if(chevron) chevron.style.transform = hasData ? 'rotate(180deg)' : '';
+  });
   document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
   document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
   document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
@@ -8585,20 +8605,28 @@ function applyResidencyLock(locked){
     btn.title = locked ? 'Тип клієнта зафіксовано після збереження' : '';
   });
 }
-function setClientDocType(type){
-  document.getElementById('cf-doc-passport-fields').style.display = type==='idcard' ? 'none' : 'block';
-  document.getElementById('cf-doc-idcard-fields').style.display = type==='idcard' ? 'block' : 'none';
-  const pBtn = document.getElementById('cf-doctype-passport');
-  const iBtn = document.getElementById('cf-doctype-idcard');
-  const baseStyle = 'flex:1;padding:7px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;';
-  pBtn.style.cssText = baseStyle + (type!=='idcard' ? 'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8' : 'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af');
-  iBtn.style.cssText = baseStyle + (type==='idcard' ? 'border:1px solid #2563eb;background:#eff6ff;color:#1d4ed8' : 'border:1px solid #e5e7eb;background:#f7f8fb;color:#9ca3af');
-  pBtn.dataset.selected = type!=='idcard';
+function toggleCfDocPanel(type){
+  const panel = document.getElementById('cf-doc-'+type+'-fields');
+  const icon = document.getElementById('cf-'+type+'-toggle-icon');
+  const chevron = document.getElementById('cf-'+type+'-chevron');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 function toggleCfLicensePanel(){
   const panel = document.getElementById('cf-license-panel');
   const icon = document.getElementById('cf-license-toggle-icon');
   const chevron = document.getElementById('cf-license-chevron');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+function toggleCfNotesPanel(){
+  const panel = document.getElementById('cf-notes-panel');
+  const icon = document.getElementById('cf-notes-toggle-icon');
+  const chevron = document.getElementById('cf-notes-chevron');
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
   if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
@@ -8644,11 +8672,9 @@ async function saveClientForm(){
   const name = document.getElementById('cf-name').value.trim();
   if(!name){ alert('Вкажіть ПІБ клієнта'); return; }
   const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
-  const docType = document.getElementById('cf-doctype-passport').dataset.selected === 'true' ? 'passport' : 'idcard';
   const data = {
     name,
     residency,
-    docType,
     phone: document.getElementById('cf-phone').value.trim(),
     birthdate: document.getElementById('cf-birthdate').value,
     address: document.getElementById('cf-address').value.trim(),
