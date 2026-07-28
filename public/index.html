@@ -1573,7 +1573,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="cf-resident-fields">
-        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Документ, що посвідчує особу</div>
+        <div style="border-top:1px solid #f0f2f5;padding-top:14px"></div>
 
         <div class="msec-inner-sep">
           <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')">
@@ -1735,7 +1735,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="cf-history-list"></div>
       </div>
     </div>
-    <div style="padding:0 28px 22px;display:flex;gap:8px;justify-content:space-between">
+    <div style="padding:14px 28px 22px;display:flex;gap:8px;justify-content:space-between;position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -4px 12px rgba(0,0,0,.06);z-index:5">
       <button id="cf-delete-btn" onclick="deleteClientFromForm()" style="background:none;border:1px solid rgba(240,96,96,.3);color:#f06060;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer;display:none">✕ Видалити</button>
       <div style="display:flex;gap:8px;margin-left:auto">
         <button onclick="closeClientForm()" style="background:none;border:1px solid #e5e7eb;color:#6b7280;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;cursor:pointer">Скасувати</button>
