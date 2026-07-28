@@ -3120,7 +3120,7 @@ function showTooltip(e,bid){
   const isCompanyClient = ['tov','fop','fop_no_vat'].includes(b.clientType);
   const ttPmIcons = (method, servicesOnly) => {
     if(servicesOnly && isCompanyClient){
-      return `<span class="tt-pm-icons"><span class="tt-pm-icon" title="Банк">${ttBankSvg}</span></span>`;
+      return `<span class="tt-pm-icons"><span class="tt-pm-icon" title="Банк" style="border:1px solid #dbeafe;background:#eff6ff;border-radius:5px">${ttBankSvg}</span></span>`;
     }
     const secondSvg = isCompanyClient ? ttBankSvg : ttCardSvg;
     const secondActive = method==='card';
