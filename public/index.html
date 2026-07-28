@@ -8572,6 +8572,7 @@ function openClientForm(id){
     if(icon) icon.textContent = hasData ? '⊖' : '⊕';
     if(chevron) chevron.style.transform = hasData ? 'rotate(180deg)' : '';
   });
+  updateCfDocLock();
   document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
   document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
   document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
@@ -8606,6 +8607,7 @@ function applyResidencyLock(locked){
   });
 }
 function toggleCfDocPanel(type){
+  if(document.getElementById('cf-'+type+'-toggle-btn')?.disabled) return;
   const panel = document.getElementById('cf-doc-'+type+'-fields');
   const icon = document.getElementById('cf-'+type+'-toggle-icon');
   const chevron = document.getElementById('cf-'+type+'-chevron');
@@ -8614,6 +8616,27 @@ function toggleCfDocPanel(type){
   if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
   if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
+function updateCfDocLock(){
+  const passportHasData = ['cf-passport-num','cf-passport-date','cf-passport-issuer'].some(id=>document.getElementById(id)?.value.trim());
+  const idcardHasData = ['cf-idcard-num','cf-idcard-record','cf-idcard-date','cf-idcard-issuer'].some(id=>document.getElementById(id)?.value.trim());
+  const passportBtn = document.getElementById('cf-passport-toggle-btn');
+  const idcardBtn = document.getElementById('cf-idcard-toggle-btn');
+  if(passportBtn){
+    passportBtn.disabled = idcardHasData;
+    passportBtn.style.opacity = idcardHasData ? '.5' : '1';
+    passportBtn.style.cursor = idcardHasData ? 'not-allowed' : 'pointer';
+    passportBtn.title = idcardHasData ? 'Спочатку очистіть поля ID-картки' : '';
+  }
+  if(idcardBtn){
+    idcardBtn.disabled = passportHasData;
+    idcardBtn.style.opacity = passportHasData ? '.5' : '1';
+    idcardBtn.style.cursor = passportHasData ? 'not-allowed' : 'pointer';
+    idcardBtn.title = passportHasData ? 'Спочатку очистіть поля паспорта' : '';
+  }
+}
+document.addEventListener('input', e => {
+  if(e.target.closest('#cf-doc-passport-fields') || e.target.closest('#cf-doc-idcard-fields')) updateCfDocLock();
+});
 function toggleCfLicensePanel(){
   const panel = document.getElementById('cf-license-panel');
   const icon = document.getElementById('cf-license-toggle-icon');
