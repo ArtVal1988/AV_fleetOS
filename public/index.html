@@ -3139,6 +3139,13 @@ function showTooltip(e,bid){
         return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2;color:#dc2626">⚠ Борг ${fmt1(extRemaining)} ${ext.currency||b.currency||'$'}</span>`;
       })():''}
     </div>
+    ${(() => {
+      if(!v) return '';
+      if(!v.currentKmDate) return `<div style="font-size:10px;font-weight:600;color:#dc2626;background:#fef2f2;border-radius:4px;padding:4px 8px;margin-bottom:8px">⚠ Пробіг ніколи не оновлювався — уточніть актуальний пробіг</div>`;
+      const daysSince = Math.floor((Date.now() - new Date(v.currentKmDate+'T00:00:00').getTime()) / 86400000);
+      if(daysSince > 7) return `<div style="font-size:10px;font-weight:600;color:#dc2626;background:#fef2f2;border-radius:4px;padding:4px 8px;margin-bottom:8px">⚠ Пробіг оновлювався ${daysSince} дн. тому — уточніть актуальний пробіг</div>`;
+      return '';
+    })()}
     ${nameRow}
     ${msgBlock}
     ${pickupRow}
@@ -4028,6 +4035,7 @@ function saveBooking(){
       if(!veh.service) veh.service={};
       if(endKm>(veh.currentKm||0)){
         veh.currentKm=endKm;
+        veh.currentKmDate=document.getElementById('bm-return-date')?.value||new Date().toISOString().split('T')[0];
         const left=(veh.service.nextKm||0)-endKm;
         veh.service.status=left<=0?'danger':left<=2000?'warn':'ok';
         persistVehicle(veh);
@@ -4833,6 +4841,7 @@ function saveCurrentKm(vid){
   }
   if(!v.service) v.service={};
   v.currentKm = val;
+  v.currentKmDate = new Date().toISOString().split('T')[0];
   // Update status based on the new current mileage vs. next service due —
   // this does NOT mean a service was just completed, so v.service.lastKm
   // (mileage recorded AT the last actual ТО) and v.service.lastDate stay
@@ -6063,8 +6072,9 @@ function renderToKmBar(v){
     '<div class="to-km-row">' +
       '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
         '<span class="to-km-due-icon">🚗</span>' +
-        '<span class="to-km-due-lbl" style="color:'+purple+'">Поточний пробіг:</span>' +
+        '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
         '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
+        (v.currentKmDate?'<span style="font-size:10px;color:#9ca3af;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
       '</div>' +
       '<div class="to-km-due-badge" style="background:'+bg+';border-color:'+bdr+';color:'+col+'">' +
         '<span class="to-km-due-icon">'+(kmLeft<=0?'⚠':'⏱')+'</span>' +
@@ -7039,7 +7049,7 @@ function openVehiclePanel(vid, tab){
   document.getElementById('tab-data').innerHTML = svc ? `
     <div class="sec-wrap"><div class="sec-title">Тех. обслуговування</div>
     <div class="fgrid">
-      <div class="fblock"><div class="fb-lbl">Поточний пробіг</div><div class="fb-val bold" style="color:#7c3aed">${svc.lastKm.toLocaleString('uk-UA')} км</div></div>
+      <div class="fblock"><div class="fb-lbl">Пробіг</div><div class="fb-val bold" style="color:#4c00ce">${(v.currentKm ?? svc.lastKm).toLocaleString('uk-UA')} км</div></div>
       <div class="fblock"><div class="fb-lbl">Наступне ТО</div><div class="fb-val bold" style="color:${svcC}">${svc.nextKm.toLocaleString('uk-UA')} км</div></div>
       <div class="fblock full">
         <div class="fb-lbl">До наступного ТО</div>
