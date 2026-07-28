@@ -3112,7 +3112,11 @@ function showTooltip(e,bid){
     `;
   } else if((b.extensionHistory && b.extensionHistory.length) || (b.extension && b.extension.active)){
     const fmtShortYear = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
-    const historyRows = (b.extensionHistory||[]).map((h,i) => {
+    const fullHistory = b.extensionHistory||[];
+    const hiddenCount = Math.max(0, fullHistory.length - 5);
+    const visibleHistory = fullHistory.slice(-5);
+    const moreIndicator = hiddenCount > 0 ? `<div class="tt-row" style="padding:2px 4px"><span class="tt-val" style="text-align:left;color:var(--muted);font-style:italic;font-size:10px">… ще ${hiddenCount} попередніх — повна історія в замовленні</span></div>` : '';
+    const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmt1(hDays*(h.rate||0));
       const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
@@ -3141,7 +3145,7 @@ function showTooltip(e,bid){
     extBlock = `
       <div class="tt-divider"></div>
       <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
-      ${historyRows}${activeRow}
+      ${moreIndicator}${historyRows}${activeRow}
     `;
   }
 
