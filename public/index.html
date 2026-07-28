@@ -8599,10 +8599,11 @@ function applyResidencyLock(locked){
   cfResidencyLocked = locked;
   const resBtn = document.getElementById('cf-res-resident');
   const nrBtn = document.getElementById('cf-res-nonresident');
-  [resBtn,nrBtn].forEach(btn=>{
+  const isResidentActive = resBtn?.dataset.selected === 'true';
+  [[resBtn,isResidentActive],[nrBtn,!isResidentActive]].forEach(([btn,isActive])=>{
     if(!btn) return;
     btn.style.cursor = locked ? 'not-allowed' : 'pointer';
-    btn.style.opacity = locked ? '.6' : '1';
+    btn.style.opacity = (locked && !isActive) ? '.6' : '1';
     btn.title = locked ? 'Тип клієнта зафіксовано після збереження' : '';
   });
 }
