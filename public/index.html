@@ -3139,13 +3139,6 @@ function showTooltip(e,bid){
         return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2;color:#dc2626">⚠ Борг ${fmt1(extRemaining)} ${ext.currency||b.currency||'$'}</span>`;
       })():''}
     </div>
-    ${(() => {
-      if(!v) return '';
-      if(!v.currentKmDate) return `<div style="font-size:10px;font-weight:600;color:#dc2626;background:#fef2f2;border-radius:4px;padding:4px 8px;margin-bottom:8px">⚠ Пробіг ніколи не оновлювався — уточніть актуальний пробіг</div>`;
-      const daysSince = Math.floor((Date.now() - new Date(v.currentKmDate+'T00:00:00').getTime()) / 86400000);
-      if(daysSince > 7) return `<div style="font-size:10px;font-weight:600;color:#dc2626;background:#fef2f2;border-radius:4px;padding:4px 8px;margin-bottom:8px">⚠ Пробіг оновлювався ${daysSince} дн. тому — уточніть актуальний пробіг</div>`;
-      return '';
-    })()}
     ${nameRow}
     ${msgBlock}
     ${pickupRow}
