@@ -2960,7 +2960,7 @@ function renderCalendar(){
           // today), b2 the one RECEIVING (starts today) — the array order
           // from the cell map doesn't guarantee this, so verify and swap
           // if needed rather than assuming visibleArr[0] is the return.
-          if(getEffectiveEnd(b1) !== ds && b2.start === ds){ [b1,b2] = [b2,b1]; }
+          if(getEffectiveEnd(b1) !== ds){ [b1,b2] = [b2,b1]; }
           const c1=SM[b1.status]?.color||'#888', c2=SM[b2.status]?.color||'#888';
           const isSel=b1.id===selectedBid||b2.id===selectedBid;
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
