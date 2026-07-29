@@ -2447,7 +2447,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <span id="bm-ext-course-display" style="display:none;font-size:9px;color:#0891b2;font-weight:700;margin-right:6px;white-space:nowrap">Курс: <span id="bm-ext-course-value">—</span></span>
               <label>Оплачено</label>
               <div class="ext-calc-input-cur">
-                <input type="number" id="bm-ext-paid" class="no-spinner" style="width:76px" oninput="updateExtensionPaidUI()">
+                <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="width:76px" oninput="updateExtensionPaidUI()">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
@@ -3073,7 +3073,7 @@ function renderCalendar(){
           isPaidPortion = dayIdx < darkCount;
           progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         }
-        const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#9ca3af'));
+        const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#c7c7c7'));
         // Half-day booking (e.g. 2.5 діб): the calendar cell at position
         // Math.ceil(daysOverride) from the start shows diagonally
         // half-colored to reflect the fractional day. Identified by day
@@ -4106,7 +4106,7 @@ function saveBooking(){
       cost: parseThousands(document.getElementById('bm-ext-total').value),
       currency: document.getElementById('bm-ext-currency').value,
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
-      amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+      amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       totalCurrency: document.getElementById('bm-ext-currency').value,
       totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
       paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -5746,7 +5746,7 @@ function clearActiveExtension(){
       rate: parseThousands(document.getElementById('bm-ext-rate').value),
       cost: parseThousands(document.getElementById('bm-ext-total').value),
       currency: cur,
-      amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+      amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       totalCurrency: cur,
       totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
       paidCurrency: cur,
@@ -5848,6 +5848,11 @@ function onExtDatesChanged(){
     const days = Math.max(1, Math.round((new Date(to) - new Date(from)) / 86400000));
     document.getElementById('bm-ext-days').value = days;
   }
+  // Changing the period dates means the previously saved total (used only
+  // to preserve the exact saved figure when first opening an existing
+  // extension) is no longer valid — recalc from days×rate, same as
+  // editing the days or rate fields directly.
+  extTotalOverridden = false;
   recalcExtensionCost();
 }
 
@@ -5961,10 +5966,9 @@ function updateExtensionPaidUI(){
   const paidEl = document.getElementById('bm-ext-paid');
   if(!totalEl || !paidEl) return;
   const total = parseThousands(totalEl.value);
-  let paid = parseFloat(paidEl.value)||0;
-  if(paid < 0) paid = 0;
-  if(paid > total) paid = total;
-  paidEl.value = paid;
+  let paid = parseFloat((paidEl.value||'').replace(',','.'))||0;
+  if(paid < 0){ paid = 0; paidEl.value = paid; }
+  else if(paid > total){ paid = total; paidEl.value = paid; }
   const remaining = Math.max(0, Math.round((total - paid)*100)/100);
   const cur = document.getElementById('bm-ext-currency').value;
   const remainingEl = document.getElementById('bm-ext-remaining');
@@ -5991,7 +5995,7 @@ function saveExtensionEntry(){
     rate: parseThousands(document.getElementById('bm-ext-rate').value),
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
-    amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+    amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
     totalCurrency: document.getElementById('bm-ext-currency').value,
     totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -6038,7 +6042,7 @@ function closeAndStartNewExtension(){
     rate: parseThousands(document.getElementById('bm-ext-rate').value),
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
-    amountPaid: parseFloat(document.getElementById('bm-ext-paid').value)||0,
+    amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
     totalCurrency: document.getElementById('bm-ext-currency').value,
     totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -9630,7 +9634,9 @@ function renderStatusesPanelList(){
       <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
         style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${s.color};outline:none">
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
-      <button onclick="deleteStatus('${s.key}')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>
+      ${s.key==='extension'
+        ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
+        : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
   `).join('');
 }
@@ -9649,6 +9655,10 @@ function addNewStatus(){
 function deleteStatus(key){
   const s = SM[key];
   if(!s) return;
+  if(key==='extension'){
+    alert('Статус "Пролонгація без $" використовується системою для позначення продовжень оренди в графіку і не може бути видалений.');
+    return;
+  }
   const inUse = bookings.filter(b=>b.status===key).length;
   const msg = inUse>0
     ? `Статус "${s.label}" використовується у ${inUse} замовленн${inUse===1?'і':inUse<5?'ях':'ях'}. Видалити його все одно? Ці замовлення залишаться зі старим статусом у даних, але він більше не відображатиметься у списку.`
@@ -9896,6 +9906,16 @@ async function syncFromServer(){
     sSettings.statuses.forEach(s=>STATUSES.push(s));
     Object.keys(SM).forEach(k=>delete SM[k]);
     STATUSES.forEach(s=>SM[s.key]=s);
+    // The 'extension' status is used internally to color extension-period
+    // calendar cells, not a user-facing status — if it was ever deleted
+    // (e.g. before this protection existed), restore it so extension cells
+    // don't render with a broken/missing color.
+    if(!SM['extension']){
+      const extStatus = {key:'extension', label:'Пролонгація без $', color:'#c7c7c7'};
+      STATUSES.push(extStatus);
+      SM['extension'] = extStatus;
+      saveStatusesToStorage();
+    }
     // Keep the local cache in sync too, so the app still has something
     // sensible to show offline / before the next server round-trip.
     try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
