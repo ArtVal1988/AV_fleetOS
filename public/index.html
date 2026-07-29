@@ -1099,7 +1099,7 @@ input.dm-person-name{border:none;outline:none;width:100%;padding:2px 0;backgroun
 .dm-person-fields{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:start;}
 .dm-pf{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:9px 12px;}
 .dm-pf-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
-.dm-pf-val{font-size:12px;color:#374151;}
+.dm-pf-val{font-size:12px;color:#2563eb;}
 .dm-pf-val.tel{color:#0891b2;font-size:16px;font-weight:600;font-family:var(--font-mono);}
 input.dm-pf-val{border:none;outline:none;width:100%;padding:2px 0;background:transparent;font-family:var(--font-mono);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 input.dm-pf-val.tel{font-size:14px;}
@@ -6972,24 +6972,20 @@ function renderDocsModalBody(v){
   const pBdr = d===null?'#e5e7eb':d<0||d<=7?'#fca5a5':d<=30?'#f0d060':'#86efac';
   const pLabel = d===null?'—':d<0?'прострочено '+Math.abs(d)+' дн.':d===0?'сьогодні':d+' дн.';
 
-  const topGrid = `<div class="dm-top-grid">
-    <div class="dm-top-col">
-      <div class="dm-sec-head"><span class="dm-sec-icon">📋</span><span class="dm-sec-title">Технічний паспорт</span></div>
-      <div class="dm-card">
-        <div class="dm-sts-grid">
-          <div><div class="dm-field-lbl">Номер</div><input type="text" id="dm-sts-number" class="dm-field-val mono" value="${v.sts?.number||''}" placeholder="—"></div>
-          <div style="text-align:right"><div class="dm-field-lbl">Дата видачі</div><input type="date" id="dm-sts-date" class="dm-field-val" style="text-align:right" value="${v.sts?.date||''}"></div>
+  const topGrid = `<div class="dm-sec">
+    <div class="dm-card">
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+        <div style="width:120px;flex-shrink:0">
+          <div class="dm-field-lbl">Номер техпаспорту</div>
+          <input type="text" id="dm-sts-number" class="dm-field-val mono" style="width:100%;color:#2563eb" value="${v.sts?.number||''}" placeholder="—">
         </div>
-      </div>
-    </div>
-    <div class="dm-top-col">
-      <div class="dm-sec-head"><span class="dm-sec-icon">🔢</span><span class="dm-sec-title">VIN код</span></div>
-      <div class="dm-card">
-        <div class="dm-sts-grid">
-          <div style="grid-column:1/-1">
-            <div class="dm-field-lbl">VIN</div>
-            <input type="text" id="dm-vin" class="dm-field-val mono" style="font-size:13px;letter-spacing:1px" value="${v.vin||''}" placeholder="—">
-          </div>
+        <div style="width:100px;flex-shrink:0">
+          <div class="dm-field-lbl">Дата видачі</div>
+          <input type="date" id="dm-sts-date" class="dm-field-val" style="width:100%" value="${v.sts?.date||''}">
+        </div>
+        <div style="width:230px;flex-shrink:0">
+          <div class="dm-field-lbl">VIN</div>
+          <input type="text" id="dm-vin" class="dm-field-val mono" style="width:100%;font-size:13px;letter-spacing:1px;color:#2563eb" value="${v.vin||''}" placeholder="—">
         </div>
       </div>
     </div>
