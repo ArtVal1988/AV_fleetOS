@@ -572,6 +572,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-field.full{grid-column:1/-1;}
 .imf-lbl{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}
 .imf-val{font-size:12px;font-weight:500;}
+.im-pct-pill{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;vertical-align:middle;}
+.im-pct-pill.green{background:#dcfce7;color:#166534;}
+.im-pct-pill.blue{background:#dbeafe;color:#1d4ed8;}
 .imf-val.blue{color:#0891b2;}
 .imf-val.green{color:#22c55e;font-size:14px;font-weight:700;}
 
@@ -6389,7 +6392,7 @@ function renderInsuranceModal(v){
       const isNext = !p.paid && payments.filter(x=>!x.paid).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.quarter===p.quarter;
       return '<div class="im-pay-row'+(isNext?' next-pay':'')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+p.quarter+'</span>'+
-        '<span class="im-pay-date">'+fmtD(p.date)+(isNext?'<span class="im-next-badge">← наст.</span>':'')+'</span>'+
+        '<span class="im-pay-date" style="'+(isNext?'color:#9a3412;font-weight:700':'')+'">'+fmtD(p.date)+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
         '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
       '</div>';
@@ -6419,9 +6422,9 @@ function renderInsuranceModal(v){
         '<div class="im-field"><div class="imf-lbl">Дія договору</div><div class="imf-val" style="white-space:nowrap">'+fmtDShort(v.kasko.start)+' – '+fmtDShort(end)+'</div></div>' +
       '</div>' +
       '<div class="im-fields-3">' +
-        '<div class="im-field"><div class="imf-lbl">Тип оплати</div><div class="imf-val">'+typeLbl+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Загальна сума</div><div class="imf-val green">'+fmtMn(totalPremium)+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue">'+(v.kasko.deductiblePct?v.kasko.deductiblePct+'% · ':'')+fmtMn(v.kasko.deductible)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Страхова сума</div><div class="imf-val">'+fmtMn(v.kasko.insuredSum)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Страховий платіж</div><div class="imf-val green">'+(v.kasko.tariff?'<span class="im-pct-pill green">'+String(v.kasko.tariff).replace('.',',')+'%</span> ':'')+fmtMn(totalPremium)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span> ':'')+fmtMn(v.kasko.deductible)+'</div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
