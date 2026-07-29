@@ -633,6 +633,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .veh-act-btn:hover{background:#fff;border-color:#d1d5db;box-shadow:0 1px 4px rgba(0,0,0,.1);transform:translateY(-1px);}
 .veh-act-btn svg{display:block;pointer-events:none;}
 .vact-dot{position:absolute;top:-3px;right:-3px;width:6px;height:6px;border-radius:50%;border:1.5px solid #fff;}
+.vact-dot-corner{position:absolute;top:-2px;width:6px;height:6px;border-radius:50%;}
 
 /* VEHICLE-DATES BAR */
 .vehicle-dates-bar{display:grid;grid-template-columns:1fr 148px 148px;gap:10px;align-items:end;}
@@ -2849,13 +2850,45 @@ function getInsuranceDueStatus(v){
   if(statuses.includes('warn')) return 'warn';
   return null;
 }
+// Three-tier status for the corner dots: 'danger' (red, ≤5 days or overdue),
+// 'warn' (orange, ≤30 days), 'ok' (subtle green halo, >30 days), or null
+// (no dot at all — no contract on file).
+function daysLeftStatus(endStr){
+  if(!endStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = new Date(endStr); end.setHours(0,0,0,0);
+  const daysLeft = Math.round((end-today)/86400000);
+  if(daysLeft<=5) return 'danger';
+  if(daysLeft<=30) return 'warn';
+  return 'ok';
+}
+function getOsagoDotStatus(v){
+  return daysLeftStatus(v.osago?.end);
+}
+function getKaskoDotStatus(v){
+  if(!v.kasko) return null;
+  const payments = v.kasko.payments||[];
+  const unpaid = payments.filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const nextDue = unpaid[0]?.date;
+  if(!nextDue) return null; // fully paid, or no payment schedule on file
+  return daysLeftStatus(nextDue);
+}
+function insDot(status, side){
+  if(!status) return '';
+  const pos = side==='left' ? 'left:-3px' : 'right:-3px';
+  if(status==='ok'){
+    return '<span class="vact-dot-corner" style="'+pos+';background:transparent;border:1px solid #22c55e"></span>';
+  }
+  const color = status==='danger' ? '#ef4444' : '#f59e0b';
+  return '<span class="vact-dot-corner" style="'+pos+';background:'+color+';border:1.5px solid #fff"></span>';
+}
 function buildVehCell(v){
   var sc = v.service?.status==='danger'?'#ef4444':v.service?.status==='warn'?'#f59e0b':'#9ca3af';
-  var insDue = getInsuranceDueStatus(v);
-  var ic = insDue==='danger'?'#ef4444':insDue==='warn'?'#f59e0b':'#9ca3af';
+  var osagoDots = insDot(getOsagoDotStatus(v), 'left');
+  var kaskoDots = insDot(getKaskoDotStatus(v), 'right');
+  var idot = osagoDots + kaskoDots;
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
   var sdot = (v.service?.status==='warn'||v.service?.status==='danger') ? dot(sc) : '';
-  var idot = insDue ? dot(ic) : '';
   var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
   return '<div class="veh-row-flex">'+
       '<div class="veh-name-click" onclick="mobileVehNameTap(event,'+v.id+')" title="Виділити рядок">'+
@@ -2865,7 +2898,7 @@ function buildVehCell(v){
       '<div class="veh-actions">'+
         '<button class="veh-act-btn" title="Характеристики" onclick="event.stopPropagation();showVehicleSpecs(event,'+v.id+')" style="color:#9ca3af">ℹ️</button>'+
         '<button class="veh-act-btn" title="Тех. обслуговування" onclick="event.stopPropagation();openToModal('+v.id+')" style="color:'+sc+'">'+ICON_SERVICE+sdot+'</button>'+
-        '<button class="veh-act-btn" title="Страхування" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:'+ic+'">'+ICON_INSURANCE+idot+'</button>'+
+        '<button class="veh-act-btn" title="Страхування" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:#9ca3af">'+ICON_INSURANCE+idot+'</button>'+
         '<button class="veh-act-btn" title="Документи" onclick="event.stopPropagation();openDocsModal('+v.id+')" style="color:'+dc+'">'+ICON_DOCS+ddot+'</button>'+
       '</div>'+
     '</div>';
