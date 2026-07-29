@@ -1042,6 +1042,8 @@ textarea{resize:vertical;min-height:56px;}
 .docs-modal-body input, .docs-modal-body select, .docs-modal-body textarea{opacity:.7;background:#f9fafb;}
 #cal-kasko-modal .docs-modal-body input, #cal-kasko-modal .docs-modal-body select, #cal-kasko-modal .docs-modal-body textarea{opacity:1;background:#fff;}
 .docs-modal-body.dm-edit-active input, .docs-modal-body.dm-edit-active select, .docs-modal-body.dm-edit-active textarea{pointer-events:auto;opacity:1;background:#fff;}
+.dm-edit-only{display:none;}
+.docs-modal-body.dm-edit-active .dm-edit-only{display:block;}
 .docs-modal-body input[type=file], .docs-modal-body.dm-edit-active input[type=file]{pointer-events:none;opacity:0;}
 .docs-modal-head{padding:18px 24px 14px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:5;gap:14px;overflow-x:hidden;}
 .docs-modal-title{font-family:var(--font-head);font-size:18px;font-weight:800;white-space:nowrap;}
@@ -6917,6 +6919,25 @@ function closeDocsModal(){
 function renderDocsModalBody(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   const ini = name => { if(!name)return'?'; const p=name.trim().split(' '); return (p[0]?.[0]||'')+(p[1]?.[0]||''); };
+  const en = v.docsEnabled || {};
+
+  // ── OPTIONAL FIELD ACTIVATION (edit-mode only) ──────────────────
+  const OPTIONAL_FIELDS = [
+    {key:'trusted',          label:'Довірена особа'},
+    {key:'trusted_passport', label:'Паспорт довіреної особи'},
+    {key:'agency_contract',  label:'Агентський договір'},
+    {key:'handoverPhotos',   label:'Фото авто на момент передачі'},
+    {key:'poa_owner',        label:'Довіреність'},
+  ];
+  const activationHtml = `<div class="dm-sec dm-edit-only">
+    <div class="dm-sec-head"><span class="dm-sec-icon">⚙️</span><span class="dm-sec-title">Додаткові поля для цього авто</span></div>
+    <div style="display:flex;flex-direction:column;gap:6px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px">
+      ${OPTIONAL_FIELDS.map(f => `<label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#374151;cursor:pointer">
+        <input type="checkbox" ${en[f.key]?'checked':''} onchange="toggleDocEnabled(${v.id},'${f.key}',this.checked)" style="width:15px;height:15px;cursor:pointer">
+        ${f.label}
+      </label>`).join('')}
+    </div>
+  </div>`;
 
   // ── TOP GRID: STS + POA side by side ──────────────────────────
   const d = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
@@ -6972,7 +6993,7 @@ function renderDocsModalBody(v){
   const ownerHtml = personCard(v.owner || {}, 'Власник', 'owner', '🧑', 'dm-owner');
 
   // Trusted person — show card with remove btn, or "add" button
-  const trustedHtml = v.trusted
+  const trustedHtml = !(en.trusted || v.trusted) ? '' : v.trusted
     ? `<div class="dm-sec">
         <div class="dm-sec-head" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:7px">
@@ -7029,7 +7050,10 @@ function renderDocsModalBody(v){
   // ── CHECKLIST ──────────────────────────────────────────────────
   const checkHtml = `<div class="dm-sec">
     <div class="dm-sec-head"><span class="dm-sec-icon">📁</span><span class="dm-sec-title">Пакет документів</span></div>
-    <div class="dm-checklist">${DOC_TYPES.map(d => {
+    <div class="dm-checklist">${DOC_TYPES.filter(d => {
+      if(!d.required && !en[d.key] && !((v.docs?.files?.[d.key]||[]).length>0)) return false;
+      return true;
+    }).map(d => {
       const has = (v.docs?.files?.[d.key]||[]).length > 0;
       if(d.key==='poa_owner'){
         const dd = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
@@ -7063,7 +7087,8 @@ function renderDocsModalBody(v){
     }).join('')}</div>
   </div>`;
 
-  document.getElementById('dm-body').innerHTML = topGrid + ownerHtml + trustedHtml + checkHtml + buildHandoverPhotoSection(v);
+  const handoverHtml = (en.handoverPhotos || (v.handoverPhotos||[]).length>0) ? buildHandoverPhotoSection(v) : '';
+  document.getElementById('dm-body').innerHTML = activationHtml + topGrid + ownerHtml + trustedHtml + checkHtml + handoverHtml;
   applyDocsFieldEditability();
 }
 
@@ -7145,6 +7170,16 @@ function removeTrustedPerson(vid){
   render();
 }
 
+function toggleDocEnabled(vid, key, checked){
+  const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
+  if(!v.docsEnabled) v.docsEnabled = {};
+  v.docsEnabled[key] = checked;
+  syncDocsFieldsToVehicle(v);
+  persistVehicle(v);
+  renderDocsModalBody(v);
+  if(docsEditMode) document.getElementById('dm-body').classList.add('dm-edit-active');
+  applyDocsFieldEditability();
+}
 function recalcMissingDocs(v){
   if(!v.docs) return;
   v.docs.missingCount = DOC_TYPES.filter(d => d.required && !((v.docs.files?.[d.key]||[]).length>0)).length;
@@ -7188,6 +7223,7 @@ function saveDocChanges(){
   if(!v){ closeDocsModal(); return; }
 
   syncDocsFieldsToVehicle(v);
+  persistVehicle(v);
 
   docsEditMode = false;
   const btn = document.getElementById('dm-edit-btn');
