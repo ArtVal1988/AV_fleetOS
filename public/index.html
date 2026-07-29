@@ -4345,6 +4345,7 @@ function handleDocAttach(e, vid, key){
       const saved = await res.json();
       v.docs.files[key].push(saved);
       recalcMissingDocs(v);
+      if(docsVehicleId === vid) syncDocsFieldsToVehicle(v);
       renderDocsModalBody(v);
       if(insVehicleId === vid && document.getElementById('co-attach-area') && key === 'osago-policy'){
         document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
@@ -4370,6 +4371,7 @@ function removeDocFile(vid, key, fileId){
   const file = arr[idx];
   arr.splice(idx,1);
   recalcMissingDocs(v);
+  if(docsVehicleId === vid) syncDocsFieldsToVehicle(v);
   renderDocsModalBody(v);
   if(insVehicleId === vid && document.getElementById('co-attach-area') && key === 'osago-policy'){
     document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
@@ -7148,10 +7150,7 @@ function recalcMissingDocs(v){
   v.docs.missingCount = DOC_TYPES.filter(d => d.required && !((v.docs.files?.[d.key]||[]).length>0)).length;
 }
 
-function saveDocChanges(){
-  const v = ALL_VEHICLES.find(x=>x.id===docsVehicleId);
-  if(!v){ closeDocsModal(); return; }
-
+function syncDocsFieldsToVehicle(v){
   const val = id => { const el = document.getElementById(id); return el ? el.value.trim() : undefined; };
 
   // Технічний паспорт (СТС)
@@ -7183,6 +7182,12 @@ function saveDocChanges(){
     v.trusted.passport = val('dm-trusted-passport') || '';
     v.trusted.inn = val('dm-trusted-inn') || '';
   }
+}
+function saveDocChanges(){
+  const v = ALL_VEHICLES.find(x=>x.id===docsVehicleId);
+  if(!v){ closeDocsModal(); return; }
+
+  syncDocsFieldsToVehicle(v);
 
   docsEditMode = false;
   const btn = document.getElementById('dm-edit-btn');
