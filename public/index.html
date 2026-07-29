@@ -2743,6 +2743,25 @@ function calcTotal(b){
   const gross=days*b.rate; // already VAT-inclusive for VAT payers (rate is entered with VAT included)
   return Math.round(gross*100)/100+(calcExtrasTotal(b)||0);
 }
+// Sums every source of unpaid balance on a booking: the main period (if
+// partial payment is being tracked), each closed extension-history entry,
+// and the currently active extension — all assumed to share the booking's
+// primary currency (b.currency), since mixed-currency debt on one booking
+// is rare and would need its own UI to present meaningfully.
+function calcBookingDebt(b){
+  let debt = 0;
+  if(b.partialPaymentActive){
+    debt += Math.max(0, calcTotal(b) - (b.amountPaid||0));
+  }
+  (b.extensionHistory||[]).forEach(h => {
+    const hTotal = (h.days||0)*(h.rate||0);
+    debt += Math.max(0, hTotal - (h.amountPaid||0));
+  });
+  if(b.extension && b.extension.active){
+    debt += Math.max(0, (b.extension.cost||0) - (b.extension.amountPaid||0));
+  }
+  return Math.round(debt*100)/100;
+}
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
@@ -5374,7 +5393,9 @@ function renderDashboard(){
   // ── 1. Today's activity ──────────────────────────────────────────
   const pickupsToday = bookings.filter(b => b.status==='rented' && b.start===todayStr);
   const returnsToday = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b)===todayStr);
-  const overdue = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b) < todayStr);
+  const overdue = bookings
+    .filter(b => getEffectiveEnd(b) < todayStr && calcBookingDebt(b) > 0)
+    .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
 
   const activityHtml = `
     <div class="msec-b2" style="margin-bottom:18px">
@@ -5382,7 +5403,7 @@ function renderDashboard(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
         ${dashActivityCol('↑ Отримання', pickupsToday, '#2563eb')}
         ${dashActivityCol('↓ Повернення', returnsToday, '#166534')}
-        ${dashActivityCol('⚠ Прострочено', overdue, '#dc2626')}
+        ${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626')}
       </div>
     </div>`;
 
@@ -5434,6 +5455,21 @@ function renderDashboard(){
     </div>`;
 
   document.getElementById('dashboard-body').innerHTML = activityHtml + fleetHtml + attentionHtml;
+}
+function dashDebtList(title, list, color){
+  return `<div>
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
+    ${list.length ? list.slice(0,6).map(b => {
+      const v = getVehicle(b.vehicleId);
+      const debt = calcBookingDebt(b);
+      const cur = b.currency||'$';
+      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="expandBooking(${b.id})">
+        <span><span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
+        <span style="color:#6b7280"> — ${b.customer?.name||''}</span></span>
+        <span style="color:${color};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
+      </div>`;
+    }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
+  </div>`;
 }
 function dashActivityCol(title, list, color){
   return `<div>
