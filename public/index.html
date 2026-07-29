@@ -1395,6 +1395,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Statuses list -->
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список статусів</div>
       <div id="statuses-list"></div>
+      <button onclick="addNewStatus()" style="width:100%;margin-top:8px;padding:10px;border:1px dashed #d1d5db;border-radius:8px;background:none;font-family:inherit;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer">+ Додати статус</button>
     </div>
   </div>
 </div>
@@ -9519,8 +9520,37 @@ function renderStatusesPanelList(){
       <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
         style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${s.color};outline:none">
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
+      <button onclick="deleteStatus('${s.key}')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>
     </div>
   `).join('');
+}
+function addNewStatus(){
+  let n = 1;
+  while(SM['custom'+n]) n++;
+  const key = 'custom'+n;
+  const newStatus = {key, label:'Новий статус', color:'#9ca3af'};
+  STATUSES.push(newStatus);
+  SM[key] = newStatus;
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+  renderLegend();
+  render();
+}
+function deleteStatus(key){
+  const s = SM[key];
+  if(!s) return;
+  const inUse = bookings.filter(b=>b.status===key).length;
+  const msg = inUse>0
+    ? `Статус "${s.label}" використовується у ${inUse} замовленн${inUse===1?'і':inUse<5?'ях':'ях'}. Видалити його все одно? Ці замовлення залишаться зі старим статусом у даних, але він більше не відображатиметься у списку.`
+    : `Видалити статус "${s.label}"?`;
+  if(!confirm(msg)) return;
+  const idx = STATUSES.findIndex(x=>x.key===key);
+  if(idx!==-1) STATUSES.splice(idx,1);
+  delete SM[key];
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+  renderLegend();
+  render();
 }
 function updateStatusLabel(key, value){
   const s = SM[key];
