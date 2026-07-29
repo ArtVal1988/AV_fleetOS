@@ -2466,7 +2466,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#c2610d;font-weight:700;margin-bottom:8px">🧮 Борг станом на дату (тест)</div>
           <div style="display:flex;flex-direction:column;gap:5px">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-size:11px;color:#9a4d0a">Оплачено частково по</span>
+              <span style="font-size:11px;color:#9a4d0a">На</span>
               <span id="ext-debt-date-1-lbl" style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:#374151"></span>
               <span id="ext-debt-result-1" style="font-size:12px;font-weight:700;color:#c2610d"></span>
             </div>
@@ -6135,9 +6135,10 @@ function renderExtDebtAtDate(){
     const fromD = new Date(from+'T00:00:00');
     fromD.setDate(fromD.getDate()+paidThroughDays);
     const paidThroughDate = dStr(fromD.getFullYear(), fromD.getMonth(), fromD.getDate());
-    dateLbl.textContent = paidThroughDate.split('-').reverse().join('.');
+    const [py,pm,pd] = paidThroughDate.split('-');
+    dateLbl.textContent = pd+'.'+pm;
     const debt1 = calcDebtAtDate(paidThroughDate, from, totalDays, total, paid);
-    check1El.textContent = debt1>0 ? `Залишок боргу ${debt1.toLocaleString('uk-UA')} ${cur}` : 'Оплачено повністю';
+    check1El.textContent = debt1>0 ? `залишок боргу ${debt1.toLocaleString('uk-UA')} ${cur}` : 'оплачено повністю';
     check1El.style.color = debt1>0 ? '#c2610d' : '#16a34a';
   }
 
