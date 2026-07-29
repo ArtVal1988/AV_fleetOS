@@ -1065,7 +1065,7 @@ textarea{resize:vertical;min-height:56px;}
 .dm-card{background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;}
 
 /* STS grid inside card */
-.dm-sts-grid{display:grid;grid-template-columns:1fr 118px;gap:8px;}
+.dm-sts-grid{display:grid;grid-template-columns:2.2fr 1fr;gap:8px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .vf-lbl{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600;margin-bottom:4px;}
 .vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
@@ -6985,7 +6985,7 @@ function renderDocsModalBody(v){
         </div>
         <div style="width:230px;flex-shrink:0">
           <div class="dm-field-lbl">VIN</div>
-          <input type="text" id="dm-vin" class="dm-field-val mono" style="width:100%;font-size:13px;letter-spacing:1px;color:#2563eb" value="${v.vin||''}" placeholder="—">
+          <input type="text" id="dm-vin" class="dm-field-val mono" style="font-size:14px;letter-spacing:2px" value="${v.vin||''}" placeholder="—">
         </div>
       </div>
     </div>
