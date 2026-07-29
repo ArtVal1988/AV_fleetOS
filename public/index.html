@@ -5428,7 +5428,7 @@ function renderDashboard(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
         ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(v.kasko.end))}
-        ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => (v.service.nextKm-v.service.lastKm>0? (v.service.nextKm-v.service.lastKm)+' км залишилось':'Пора на ТО'))}
+        ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; })}
         ${dashAlertList('📄 Неповний комплект документів', missingDocs, v => v.docs.missingCount+' відсутньо')}
       </div>
     </div>`;
@@ -7344,13 +7344,13 @@ function openVehiclePanel(vid, tab){
 
   // Status bar
   const svc=v.service, ins=v.insurance, docs=v.docs;
-  const svcC=stMap[svc?.status]||'#9ca3af';
+  const svcC=svc?stMap[computeServiceStatus(v)]:'#9ca3af';
   const insC=stMap[ins?.status]||'#9ca3af';
   const docC=(docs?.missingCount||0)>1?'#ef4444':(docs?.missingCount||0)>0?'#f59e0b':'#22c55e';
   document.getElementById('dp-status-bar').innerHTML=`
     <div class="dp-sb"><div class="dp-sb-lbl">Тех. обслуговування</div>
       <div class="dp-sb-val" style="color:${svcC}">${svc?`до ${svc.nextKm.toLocaleString('uk-UA')} км`:'—'}</div>
-      <div class="dp-sb-sub" style="color:${svcC}">${svc?(svc.nextKm-svc.lastKm).toLocaleString('uk-UA')+' км залишилось':'—'}</div></div>
+      <div class="dp-sb-sub" style="color:${svcC}">${svc?Math.max(0,svc.nextKm-(v.currentKm??svc.lastKm??0)).toLocaleString('uk-UA')+' км залишилось':'—'}</div></div>
     <div class="dp-sb"><div class="dp-sb-lbl">Страхування</div>
       <div class="dp-sb-val" style="color:${insC}">${ins?fmt2(ins.end):'—'}</div>
       <div class="dp-sb-sub" style="color:${insC}">${ins?ins.insurer:'—'}</div></div>`;
@@ -7363,8 +7363,8 @@ function openVehiclePanel(vid, tab){
       <div class="fblock"><div class="fb-lbl">Наступне ТО</div><div class="fb-val bold" style="color:${svcC}">${svc.nextKm.toLocaleString('uk-UA')} км</div></div>
       <div class="fblock full">
         <div class="fb-lbl">До наступного ТО</div>
-        <div class="fb-val" style="color:${svcC};font-size:13px;margin-bottom:5px">${(svc.nextKm-svc.lastKm).toLocaleString('uk-UA')} км</div>
-        <div style="height:5px;background:#e5e7eb;border-radius:3px"><div style="height:100%;border-radius:3px;background:${svcC};width:${Math.min(100,Math.round(svc.lastKm/(svc.nextKm)*100))}%"></div></div>
+        <div class="fb-val" style="color:${svcC};font-size:13px;margin-bottom:5px">${Math.max(0,svc.nextKm-(v.currentKm??svc.lastKm??0)).toLocaleString('uk-UA')} км</div>
+        <div style="height:5px;background:#e5e7eb;border-radius:3px"><div style="height:100%;border-radius:3px;background:${svcC};width:${Math.min(100,Math.round((v.currentKm??svc.lastKm??0)/(svc.nextKm)*100))}%"></div></div>
       </div>
       <div class="fblock"><div class="fb-lbl">Останнє ТО</div><div class="fb-val">${fmt2(svc.lastDate)}</div></div>
     </div></div>
