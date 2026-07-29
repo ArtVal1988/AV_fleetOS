@@ -6124,12 +6124,16 @@ function renderExtDebtAtDate(){
   const today = new Date(); today.setHours(0,0,0,0);
   const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
 
+  // Matches the booking tooltip's own currency-color convention (see
+  // dual-days-label): UAH amounts in green, other currencies in blue.
+  const curColor = c => c==='₴' ? '#166534' : '#1d4ed8';
+  const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${amount.toLocaleString('uk-UA')} ${c}</span>`;
+
   const renderRow = (dateStr, resultId) => {
     const el = document.getElementById(resultId);
     if(!el || !dateStr) return;
     const debt = calcDebtAtDate(dateStr, from, totalDays, total, paid);
-    el.textContent = debt>0 ? `${debt.toLocaleString('uk-UA')} ${cur}` : 'немає боргу';
-    el.style.color = debt>0 ? '#c2610d' : '#16a34a';
+    el.innerHTML = debt>0 ? amtSpan(debt, cur) : '<span style="color:#16a34a">немає боргу</span>';
   };
 
   const check1El = document.getElementById('ext-debt-result-1');
@@ -6141,8 +6145,7 @@ function renderExtDebtAtDate(){
       const toD = new Date(from+'T00:00:00'); toD.setDate(toD.getDate()+totalDays);
       const endStr = dStr(toD.getFullYear(), toD.getMonth(), toD.getDate());
       const [ey,em,ed] = endStr.split('-');
-      check1El.textContent = `На ${ed}.${em} оплачено повністю`;
-      check1El.style.color = '#16a34a';
+      check1El.innerHTML = `<span style="color:#374151">На ${ed}.${em}</span> <span style="color:#16a34a">оплачено повністю</span>`;
     } else {
       // The boundary day: fullDaysCovered days are fully settled, this
       // next one is where the payment runs out partway through.
@@ -6151,10 +6154,9 @@ function renderExtDebtAtDate(){
       const [by,bm,bd] = boundaryStr.split('-');
       const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
       const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
-      check1El.textContent = paidTowardDay>0.005
-        ? `На ${bd}.${bm} оплачено = ${paidTowardDay.toLocaleString('uk-UA')} ${cur} з ${Math.round(dailyRate*100)/100} ${cur}. Залишок боргу = ${dayRemaining.toLocaleString('uk-UA')} ${cur}`
-        : `На ${bd}.${bm} залишок боргу = ${Math.round(dailyRate*100)/100} ${cur}`;
-      check1El.style.color = '#c2610d';
+      check1El.innerHTML = paidTowardDay>0.005
+        ? `<span style="color:#374151">На ${bd}.${bm} оплачено = ${amtSpan(paidTowardDay,cur)} з ${amtSpan(Math.round(dailyRate*100)/100,cur)}. Залишок боргу = ${amtSpan(dayRemaining,cur)}</span>`
+        : `<span style="color:#374151">На ${bd}.${bm} залишок боргу = ${amtSpan(Math.round(dailyRate*100)/100,cur)}</span>`;
     }
   }
 
