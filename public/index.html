@@ -3337,12 +3337,12 @@ function showTooltipSplit(e,bid1,bid2){
     <div style="display:flex;flex-direction:column;gap:8px">
       <div style="padding:8px;background:#f5f6f8;border-radius:5px;border-left:3px solid ${st1.color}">
         <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:${st1.color};margin-bottom:3px">↓ Повернення · ${b1.ret?.time||'—'}</div>
-        <div style="font-weight:600;font-size:12px">${b1.customer?.name||'—'}</div>
+        <div style="font-weight:600;font-size:12px">${b1.customer?.company||b1.customer?.name||'—'}</div>
         <div style="font-size:11px;color:#6b7280">${b1.customer?.phone||''}</div>
       </div>
       <div style="padding:8px;background:#f5f6f8;border-radius:5px;border-left:3px solid ${st2.color}">
         <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:${st2.color};margin-bottom:3px">↑ Отримання · ${b2.pickup?.time||'—'}</div>
-        <div style="font-weight:600;font-size:12px">${b2.customer?.name||'—'}</div>
+        <div style="font-weight:600;font-size:12px">${b2.customer?.company||b2.customer?.name||'—'}</div>
         <div style="font-size:11px;color:#6b7280">${b2.customer?.phone||''}</div>
       </div>
     </div>`;
@@ -5467,9 +5467,10 @@ function dashDebtList(title, list, color){
       const debt = calcBookingDebt(b);
       const cur = b.currency||'$';
       const debtColor = cur==='₴' ? '#166534' : color;
+      const displayName = b.customer?.company || b.customer?.name || '';
       return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="closeDashboard();expandBooking(${b.id})">
         <span><span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
-        <span style="color:#6b7280"> — ${b.customer?.name||''}</span></span>
+        <span style="color:#6b7280"> — ${displayName}</span></span>
         <span style="color:${debtColor};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
@@ -5480,9 +5481,10 @@ function dashActivityCol(title, list, color){
     <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(b => {
       const v = getVehicle(b.vehicleId);
+      const displayName = b.customer?.company || b.customer?.name || '';
       return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
         <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
-        <span style="color:#6b7280"> — ${b.customer?.name||''}</span>
+        <span style="color:#6b7280"> — ${displayName}</span>
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
   </div>`;
@@ -9331,7 +9333,8 @@ function formatBookingSnapshot(b){
   const v = getVehicle(b.vehicleId);
   const st = SM[b.status];
   const lines = [];
-  lines.push('Клієнт: ' + (b.customer?.name || '—'));
+  lines.push('Клієнт: ' + (b.customer?.company || b.customer?.name || '—'));
+  if(b.customer?.company && b.customer?.name) lines.push('Контактна особа: ' + b.customer.name);
   if(b.customer?.phone) lines.push('Телефон: ' + b.customer.phone);
   lines.push('Авто: ' + (v ? `${v.plate} · ${stripYear(v.name)}` : (b.vehicleId ? '№'+b.vehicleId : '—')));
   lines.push('Дати: ' + fmt(b.start) + ' – ' + fmt(b.end));
