@@ -2749,15 +2749,16 @@ function calcTotal(b){
 // primary currency (b.currency), since mixed-currency debt on one booking
 // is rare and would need its own UI to present meaningfully.
 function calcBookingDebt(b){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
   let debt = 0;
   if(b.partialPaymentActive){
     debt += Math.max(0, calcTotal(b) - (b.amountPaid||0));
   }
   (b.extensionHistory||[]).forEach(h => {
-    const hTotal = (h.days||0)*(h.rate||0);
-    debt += Math.max(0, hTotal - (h.amountPaid||0));
+    debt += Math.max(0, (h.cost||0) - (h.amountPaid||0));
   });
-  if(b.extension && b.extension.active){
+  if(b.extension && b.extension.active && b.extension.fromDate && b.extension.fromDate <= todayStr){
     debt += Math.max(0, (b.extension.cost||0) - (b.extension.amountPaid||0));
   }
   return Math.round(debt*100)/100;
