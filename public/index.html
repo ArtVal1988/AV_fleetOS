@@ -2750,7 +2750,6 @@ function calcTotal(b){
 // is rare and would need its own UI to present meaningfully.
 function calcBookingDebt(b){
   const today = new Date(); today.setHours(0,0,0,0);
-  const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
   let debt = 0;
   if(b.partialPaymentActive){
     debt += Math.max(0, calcTotal(b) - (b.amountPaid||0));
@@ -2758,8 +2757,19 @@ function calcBookingDebt(b){
   (b.extensionHistory||[]).forEach(h => {
     debt += Math.max(0, (h.cost||0) - (h.amountPaid||0));
   });
-  if(b.extension && b.extension.active && b.extension.fromDate && b.extension.fromDate <= todayStr){
-    debt += Math.max(0, (b.extension.cost||0) - (b.extension.amountPaid||0));
+  const ext = b.extension;
+  if(ext && ext.active && ext.fromDate){
+    const totalDays = ext.days>0 ? ext.days : Math.max(1, Math.round((new Date(ext.toDate)-new Date(ext.fromDate))/86400000));
+    const elapsedDaysRaw = Math.round((today - new Date(ext.fromDate+'T00:00:00'))/86400000);
+    const elapsedDays = Math.min(totalDays, Math.max(0, elapsedDaysRaw));
+    // Only the portion of the cost attributable to days that have actually
+    // happened so far counts as debt 'as of today' — an extension that
+    // straddles today (started in the past, still running into the
+    // future) shouldn't have its full future cost treated as already
+    // owed, and one that hasn't started yet (elapsedDays=0) owes nothing
+    // yet regardless of payment status.
+    const proratedCost = totalDays>0 ? (ext.cost||0) * (elapsedDays/totalDays) : 0;
+    debt += Math.max(0, proratedCost - (ext.amountPaid||0));
   }
   return Math.round(debt*100)/100;
 }
