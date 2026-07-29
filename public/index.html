@@ -5394,7 +5394,7 @@ function renderDashboard(){
   const pickupsToday = bookings.filter(b => b.status==='rented' && b.start===todayStr);
   const returnsToday = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b)===todayStr);
   const overdue = bookings
-    .filter(b => getEffectiveEnd(b) < todayStr && calcBookingDebt(b) > 0)
+    .filter(b => getEffectiveEnd(b) <= todayStr && calcBookingDebt(b) > 0)
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
 
   const activityHtml = `
