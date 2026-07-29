@@ -2471,10 +2471,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
               <span style="font-size:14px;flex-shrink:0">📍</span>
-              <div style="min-width:0;flex:1">
-                <div style="font-size:9px;color:#c99a6c;letter-spacing:.3px;text-transform:uppercase">Межа оплати · <span id="ext-debt-date-1-lbl" style="font-family:var(--font-mono);font-weight:700;color:#374151"></span></div>
-                <div id="ext-debt-result-1" style="font-size:12px;font-weight:700;color:#c2610d;margin-top:1px"></div>
-              </div>
+              <span id="ext-debt-result-1" style="font-size:12px;font-weight:700;color:#c2610d"></span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
               <span style="font-size:14px;flex-shrink:0">📅</span>
@@ -6135,9 +6132,8 @@ function renderExtDebtAtDate(){
     el.style.color = debt>0 ? '#c2610d' : '#16a34a';
   };
 
-  const dateLbl = document.getElementById('ext-debt-date-1-lbl');
   const check1El = document.getElementById('ext-debt-result-1');
-  if(dateLbl && check1El && totalDays>0 && total>0){
+  if(check1El && totalDays>0 && total>0){
     const dailyRate = total/totalDays;
     const fullDaysCovered = Math.min(totalDays, Math.max(0, Math.floor((paid+1e-9)/dailyRate)));
     if(fullDaysCovered >= totalDays){
@@ -6145,8 +6141,7 @@ function renderExtDebtAtDate(){
       const toD = new Date(from+'T00:00:00'); toD.setDate(toD.getDate()+totalDays);
       const endStr = dStr(toD.getFullYear(), toD.getMonth(), toD.getDate());
       const [ey,em,ed] = endStr.split('-');
-      dateLbl.textContent = ed+'.'+em;
-      check1El.textContent = 'оплачено повністю';
+      check1El.textContent = `На ${ed}.${em} оплачено повністю`;
       check1El.style.color = '#16a34a';
     } else {
       // The boundary day: fullDaysCovered days are fully settled, this
@@ -6154,12 +6149,11 @@ function renderExtDebtAtDate(){
       const boundaryD = new Date(from+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered+1);
       const boundaryStr = dStr(boundaryD.getFullYear(), boundaryD.getMonth(), boundaryD.getDate());
       const [by,bm,bd] = boundaryStr.split('-');
-      dateLbl.textContent = bd+'.'+bm;
       const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
       const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
       check1El.textContent = paidTowardDay>0.005
-        ? `оплачено ${paidTowardDay.toLocaleString('uk-UA')} ${cur} з ${Math.round(dailyRate*100)/100} ${cur}. Залишок боргу = ${dayRemaining.toLocaleString('uk-UA')} ${cur}`
-        : `залишок боргу ${Math.round(dailyRate*100)/100} ${cur}`;
+        ? `На ${bd}.${bm} оплачено = ${paidTowardDay.toLocaleString('uk-UA')} ${cur} з ${Math.round(dailyRate*100)/100} ${cur}. Залишок боргу = ${dayRemaining.toLocaleString('uk-UA')} ${cur}`
+        : `На ${bd}.${bm} залишок боргу = ${Math.round(dailyRate*100)/100} ${cur}`;
       check1El.style.color = '#c2610d';
     }
   }
