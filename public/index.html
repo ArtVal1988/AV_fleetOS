@@ -2877,7 +2877,7 @@ function insDot(status, side){
   if(!status) return '';
   const pos = side==='left' ? 'left:-3px' : 'right:-3px';
   if(status==='ok'){
-    const okOpacity = side==='left' ? '.2' : '1';
+    const okOpacity = side==='left' ? '.4' : '1';
     return '<span class="vact-dot-corner" style="'+pos+';background:#22c55e;opacity:'+okOpacity+'"></span>';
   }
   const color = status==='danger' ? '#ef4444' : '#f59e0b';
