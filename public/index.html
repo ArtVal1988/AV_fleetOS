@@ -5446,7 +5446,6 @@ function renderDashboard(){
   const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
   const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
   const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)));
-  const missingDocs = ALL_VEHICLES.filter(v => v.docs && v.docs.missingCount > 0);
 
   const attentionHtml = `
     <div class="msec-b5">
@@ -5455,7 +5454,6 @@ function renderDashboard(){
         ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
         ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(v.kasko.end))}
         ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; })}
-        ${dashAlertList('📄 Неповний комплект документів', missingDocs, v => v.docs.missingCount+' відсутньо')}
       </div>
     </div>`;
 
