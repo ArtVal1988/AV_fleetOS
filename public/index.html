@@ -4532,20 +4532,27 @@ function removeKaskoPhoto(vid,idx){
 
 function buildKaskoPhotoSection(v){
   const photos=v.kasko?.photos||[];
-  let html='<div style="margin-top:12px"><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px;font-weight:600">📷 Фото авто на момент страхування</div>';
-  html+='<div class="im-photo-grid">';
+  const hasPhotos = photos.length>0;
+  let grid='<div class="im-photo-grid">';
   photos.forEach((p,i)=>{
-    html+='<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\',\''+(p.type||'')+'\')">'+
+    grid+='<div class="im-photo-thumb" onclick="viewAttachment(\''+p.data+'\',\''+p.name+'\',\''+(p.type||'')+'\')">'+
       '<img src="'+p.data+'" alt="'+p.name+'">'+
       '<button class="im-photo-del" onclick="event.stopPropagation();removeKaskoPhoto('+v.id+','+i+')">✕</button>'+
     '</div>';
   });
-  html+='<div class="im-photo-add" onclick="openKaskoPhotoInput('+v.id+')">'+
+  grid+='<div class="im-photo-add" onclick="openKaskoPhotoInput('+v.id+')">'+
     '<div class="im-photo-add-icon">📷</div>'+
     '<div class="im-photo-add-lbl">Додати фото</div>'+
   '</div>';
-  html+='</div></div>';
-  return html;
+  grid+='</div>';
+  return '<div class="msec-inner-sep" style="margin-top:12px">' +
+    '<button type="button" class="extras-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'.kp-toggle-icon\').textContent=this.nextElementSibling.style.display===\'none\'?\'⊕\':\'⊖\';this.querySelector(\'.extras-toggle-chevron\').style.transform=this.nextElementSibling.style.display===\'none\'?\'\':\'rotate(180deg)\'">' +
+      '<span class="kp-toggle-icon">'+(hasPhotos?'⊖':'⊕')+'</span>' +
+      '<span>Фото авто на момент страхування'+(hasPhotos?' ('+photos.length+')':'')+'</span>' +
+      '<span class="extras-toggle-chevron" style="'+(hasPhotos?'transform:rotate(180deg)':'')+'">▾</span>' +
+    '</button>' +
+    '<div class="extras-panel" style="display:'+(hasPhotos?'block':'none')+';margin-top:12px">'+grid+'</div>' +
+  '</div>';
 }
 
 /* ── SIDEBAR TOGGLE ── */
