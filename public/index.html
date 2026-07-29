@@ -2462,6 +2462,15 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:25;pointer-events:auto">💾 Зберегти продовження</button>
         </div>
+        <div id="ext-debt-at-date-widget" style="margin-top:10px;padding:10px 12px;background:#fef9f3;border:1px solid #fde8d0;border-radius:8px;display:none">
+          <div style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#c2610d;font-weight:700;margin-bottom:8px">🧮 Борг станом на дату (тест)</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <button type="button" onclick="setExtDebtAtDate('today')" style="font-size:10px;padding:4px 8px;border:1px solid #fde8d0;background:#fff;border-radius:5px;cursor:pointer;color:#9a4d0a">Сьогодні</button>
+            <button type="button" onclick="setExtDebtAtDate('end')" style="font-size:10px;padding:4px 8px;border:1px solid #fde8d0;background:#fff;border-radius:5px;cursor:pointer;color:#9a4d0a">Кінець періоду</button>
+            <input type="date" id="ext-debt-at-date-input" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:4px 6px;border:1px solid #fde8d0;border-radius:5px;font-family:var(--font-mono)">
+          </div>
+          <div id="ext-debt-at-date-result" style="font-size:13px;font-weight:700;color:#c2610d"></div>
+        </div>
       </div>
 
     </div>
@@ -3931,6 +3940,8 @@ function editBooking(bid){
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     onExtRateInput();
     onExtCurrencyChange();
+    const debtDateInput = document.getElementById('ext-debt-at-date-input');
+    if(debtDateInput) debtDateInput.value = '';
     updateExtensionPaidUI();
   } else {
     document.getElementById('bm-ext-active').checked=false;
@@ -5868,6 +5879,8 @@ function toggleExtensionSection(){
     const origEnd = document.getElementById('bm-end').value;
     if(origEnd) document.getElementById('bm-return-date').value = origEnd;
     updateExtensionPaidUI();
+    const widget = document.getElementById('ext-debt-at-date-widget');
+    if(widget) widget.style.display = 'none';
   }
   updatePartialPaymentAvailability();
 }
@@ -6049,6 +6062,60 @@ function updateExtensionPaidUI(){
   if(closeRow) closeRow.style.display = (total > 0 && paid >= total) ? '' : 'none';
   closeCustomDatePicker();
   closeCustomTimePicker();
+  showExtDebtAtDateWidget();
+}
+
+// Testing tool: shows what the prorated 'debt as of a date' would be for
+// the extension currently being edited, at any date the user picks —
+// mirrors the same elapsed-days proration used by calcBookingDebt() so
+// the dashboard and this widget always agree.
+function showExtDebtAtDateWidget(){
+  const widget = document.getElementById('ext-debt-at-date-widget');
+  const from = getExtDateField('bm-ext-from');
+  const to = getExtDateField('bm-ext-to');
+  if(!widget || !from || !to){ if(widget) widget.style.display='none'; return; }
+  widget.style.display = 'block';
+  const dateInput = document.getElementById('ext-debt-at-date-input');
+  if(dateInput && !dateInput.value){
+    dateInput.min = from;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
+    dateInput.value = todayStr < from ? from : (todayStr > to ? to : todayStr);
+  }
+  renderExtDebtAtDate();
+}
+function setExtDebtAtDate(which){
+  const from = getExtDateField('bm-ext-from');
+  const to = getExtDateField('bm-ext-to');
+  const dateInput = document.getElementById('ext-debt-at-date-input');
+  if(!dateInput) return;
+  if(which==='today'){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
+    dateInput.value = todayStr < from ? from : (todayStr > to ? to : todayStr);
+  } else if(which==='end'){
+    dateInput.value = to;
+  }
+  renderExtDebtAtDate();
+}
+function renderExtDebtAtDate(){
+  const resultEl = document.getElementById('ext-debt-at-date-result');
+  const dateInput = document.getElementById('ext-debt-at-date-input');
+  if(!resultEl || !dateInput || !dateInput.value) return;
+  const from = getExtDateField('bm-ext-from');
+  const total = parseThousands(document.getElementById('bm-ext-total').value);
+  const paid = parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0;
+  const cur = document.getElementById('bm-ext-currency').value;
+  const totalDays = parseInt(document.getElementById('bm-ext-days').value)||0;
+  const atDate = new Date(dateInput.value+'T00:00:00');
+  const fromD = new Date(from+'T00:00:00');
+  const elapsedDaysRaw = Math.round((atDate - fromD)/86400000);
+  const elapsedDays = Math.min(totalDays, Math.max(0, elapsedDaysRaw));
+  const proratedCost = totalDays>0 ? total*(elapsedDays/totalDays) : 0;
+  const debt = Math.max(0, Math.round((proratedCost - paid)*100)/100);
+  const fmtDate = dateInput.value.split('-').reverse().join('.');
+  resultEl.textContent = (debt>0 ? `На ${fmtDate}: борг ${debt.toLocaleString('uk-UA')} ${cur}` : `На ${fmtDate}: боргу немає`);
+  resultEl.style.color = debt>0 ? '#c2610d' : '#16a34a';
 }
 
 function saveExtensionEntry(){
