@@ -5463,10 +5463,11 @@ function dashDebtList(title, list, color){
       const v = getVehicle(b.vehicleId);
       const debt = calcBookingDebt(b);
       const cur = b.currency||'$';
-      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="expandBooking(${b.id})">
+      const debtColor = cur==='₴' ? '#166534' : color;
+      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="closeDashboard();expandBooking(${b.id})">
         <span><span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
         <span style="color:#6b7280"> — ${b.customer?.name||''}</span></span>
-        <span style="color:${color};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
+        <span style="color:${debtColor};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
   </div>`;
