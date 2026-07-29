@@ -2867,21 +2867,16 @@ function daysLeftStatus(endStr){
   if(daysLeft<=30) return 'warn';
   return 'ok';
 }
-// Matches renderToKmBar()'s percentage-of-interval thresholds exactly, so
-// the wrench icon/dot never disagrees with what the Ремонти card itself
-// shows (previously the icon used a fixed 2000km cutoff while the card
-// used percentage-of-interval, which could disagree wildly for short
-// service intervals — e.g. 100km left reading as orange on the icon but
-// red on the card for a 400km interval).
+// Fixed absolute-km thresholds (not percentage-of-interval), matching
+// exactly between the wrench icon and the Ремонти card so they never
+// disagree: red at <=1000km remaining, orange at <=3000km.
 function computeServiceStatus(v){
   const svc = v.service || {};
   const cur  = v.currentKm  ?? svc.lastKm  ?? 0;
   const next = v.nextServiceKm ?? svc.nextKm  ?? 0;
-  const si   = v.serviceInterval ?? svc.interval ?? 15000;
   const kmLeft = next - cur;
-  const pctRemaining = si > 0 ? (kmLeft / si * 100) : 100;
-  if(kmLeft <= 0 || pctRemaining <= 25) return 'danger';
-  if(pctRemaining <= 75) return 'warn';
+  if(kmLeft <= 1000) return 'danger';
+  if(kmLeft <= 3000) return 'warn';
   return 'ok';
 }
 function getOsagoDotStatus(v){
@@ -6265,18 +6260,13 @@ function renderToKmBar(v){
   const si   = v.serviceInterval ?? svc.interval ?? 15000;
   const lastDate = svc.lastDate || '';
   const kmLeft = next - cur;
-  const pctRemaining = si > 0 ? (kmLeft / si * 100) : 100;
   let col, bg, bdr;
-  if(kmLeft <= 0){
-    col = '#ef4444'; bg = '#fee2e2'; bdr = '#fca5a5'; // прострочено
-  } else if(pctRemaining <= 25){
-    col = '#ef4444'; bg = '#fee2e2'; bdr = '#fca5a5'; // червоний — залишок ≤25%
-  } else if(pctRemaining <= 50){
-    col = '#f97316'; bg = '#ffedd5'; bdr = '#fdba74'; // помаранчевий — залишок ≤50%
-  } else if(pctRemaining <= 75){
-    col = '#3b82f6'; bg = '#dbeafe'; bdr = '#93c5fd'; // синій — залишок ≤75%
+  if(kmLeft <= 1000){
+    col = '#ef4444'; bg = '#fee2e2'; bdr = '#fca5a5'; // червоний — ≤1000 км до ТО (або прострочено)
+  } else if(kmLeft <= 3000){
+    col = '#f97316'; bg = '#ffedd5'; bdr = '#fdba74'; // помаранчевий — ≤3000 км до ТО
   } else {
-    col = '#164226'; bg = '#f0fdf4'; bdr = '#86efac'; // зелений — більше 75% залишку
+    col = '#164226'; bg = '#f0fdf4'; bdr = '#86efac'; // зелений — більше 3000 км
   }
   const purple = '#4c00ce';
   const pct = next>0 ? Math.min(100,Math.max(0,Math.round(cur/next*100))) : 0;
