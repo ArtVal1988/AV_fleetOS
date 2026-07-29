@@ -5835,9 +5835,7 @@ function toggleExtensionSection(){
     const curEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
     if(curEnd){
       setExtDateField('bm-ext-from', curEnd);
-      const defaultDays = lastHistory?.days > 0 ? lastHistory.days : 1;
-      const toDate = new Date(curEnd); toDate.setDate(toDate.getDate()+defaultDays);
-      setExtDateField('bm-ext-to', toDate.toISOString().split('T')[0]);
+      setExtDateField('bm-ext-to', addOneDayStr(curEnd));
     }
     document.getElementById('bm-ext-rate').value = lastHistory ? lastHistory.rate : (document.getElementById('bm-rate').value || '');
     document.getElementById('bm-ext-paid').value = 0;
