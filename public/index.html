@@ -6888,7 +6888,10 @@ function applyDocsFieldEditability(){
 }
 function applyDocsFieldOpacity(){
   document.querySelectorAll('#dm-body input:not([type=file]), #dm-body textarea').forEach(el=>{
-    el.style.opacity = el.value.trim() ? '1' : '';
+    const hasData = !!el.value.trim();
+    el.style.opacity = hasData ? '1' : '';
+    el.style.fontWeight = hasData ? '700' : '';
+    el.style.color = hasData ? '#000' : '';
   });
 }
 document.addEventListener('input', e => {
