@@ -6346,6 +6346,7 @@ function closeInsuranceModal(){ document.getElementById('ins-modal').classList.r
 
 function renderInsuranceModal(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+  const fmtDShort = s => { if(!s) return '—'; const [y,m,d] = s.split('-'); return d+'.'+m+'.'+(y||'').slice(2); };
   const fmtMn = n => n ? Number(n).toLocaleString('uk-UA')+' ₴' : '—';
 
   // ── ОСЦПВ ────────────────────────────────
@@ -6390,7 +6391,7 @@ function renderInsuranceModal(v){
         '<span class="im-pay-q">Q'+p.quarter+'</span>'+
         '<span class="im-pay-date">'+fmtD(p.date)+(isNext?'<span class="im-next-badge">← наст.</span>':'')+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
+        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
       '</div>';
     };
     const payRows = paymentType==='quarterly' ?
@@ -6402,7 +6403,7 @@ function renderInsuranceModal(v){
       '<div class="im-pay-row'+(p.paid?'':' next-pay')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-date">'+fmtD(p.date)+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
+        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
       '</div>'
     ).join('');
     const policyFile = (v.docs?.files?.['kasko-policy']||[])[0];
@@ -6415,12 +6416,12 @@ function renderInsuranceModal(v){
       '<div class="im-fields-3">' +
         '<div class="im-field"><div class="imf-lbl">Страховик</div><div class="imf-val">'+insurer+'</div></div>' +
         '<div class="im-field"><div class="imf-lbl">Номер полісу</div><div class="imf-val blue">'+policyNum+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Загальна сума</div><div class="imf-val green">'+fmtMn(totalPremium)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Дія договору</div><div class="imf-val" style="white-space:nowrap">'+fmtDShort(v.kasko.start)+' – '+fmtDShort(end)+'</div></div>' +
       '</div>' +
-      '<div class="im-fields-3" style="grid-template-columns:1.7fr 1fr 1fr">' +
-        '<div class="im-field"><div class="imf-lbl">Дія договору</div><div class="imf-val" style="white-space:nowrap">'+fmtD(v.kasko.start)+' – '+fmtD(end)+'</div></div>' +
+      '<div class="im-fields-3">' +
         '<div class="im-field"><div class="imf-lbl">Тип оплати</div><div class="imf-val">'+typeLbl+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue">'+fmtMn(v.kasko.deductible)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Загальна сума</div><div class="imf-val green">'+fmtMn(totalPremium)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue">'+(v.kasko.deductiblePct?v.kasko.deductiblePct+'% · ':'')+fmtMn(v.kasko.deductible)+'</div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
