@@ -2466,8 +2466,8 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#c2610d;font-weight:700;margin-bottom:8px">🧮 Борг станом на дату (тест)</div>
           <div style="display:flex;flex-direction:column;gap:5px">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="font-size:11px;color:#9a4d0a">Оплачено частково</span>
-              <input type="date" id="ext-debt-date-1" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #fde8d0;border-radius:5px;font-family:var(--font-mono)">
+              <span style="font-size:11px;color:#9a4d0a">Оплачено частково по</span>
+              <span id="ext-debt-date-1-lbl" style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:#374151"></span>
               <span id="ext-debt-result-1" style="font-size:12px;font-weight:700;color:#c2610d"></span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -3957,9 +3957,7 @@ function editBooking(bid){
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     onExtRateInput();
     onExtCurrencyChange();
-    const debtDate1 = document.getElementById('ext-debt-date-1');
     const debtDatePicked = document.getElementById('ext-debt-date-picked');
-    if(debtDate1) debtDate1.value = '';
     if(debtDatePicked) debtDatePicked.value = '';
     updateExtensionPaidUI();
   } else {
@@ -6102,15 +6100,7 @@ function showExtDebtAtDateWidget(){
   const to = getExtDateField('bm-ext-to');
   if(!widget || !from || !to){ if(widget) widget.style.display='none'; return; }
   widget.style.display = 'block';
-  const check1Input = document.getElementById('ext-debt-date-1');
   const pickedInput = document.getElementById('ext-debt-date-picked');
-  if(check1Input && !check1Input.value){
-    check1Input.min = from; check1Input.max = to;
-    const fromD = new Date(from+'T00:00:00');
-    fromD.setDate(fromD.getDate()+3); // an illustrative early checkpoint, a few days into the period
-    const capped = dStr(fromD.getFullYear(), fromD.getMonth(), fromD.getDate());
-    check1Input.value = capped > to ? to : capped;
-  }
   if(pickedInput && !pickedInput.value){
     pickedInput.min = from; // can't check a date before the extension itself starts
     const today = new Date(); today.setHours(0,0,0,0);
@@ -6138,10 +6128,15 @@ function renderExtDebtAtDate(){
     el.style.color = debt>0 ? '#c2610d' : '#16a34a';
   };
 
-  const check1 = document.getElementById('ext-debt-date-1')?.value;
+  const dateLbl = document.getElementById('ext-debt-date-1-lbl');
   const check1El = document.getElementById('ext-debt-result-1');
-  if(check1El && check1){
-    const debt1 = calcDebtAtDate(check1, from, totalDays, total, paid);
+  if(dateLbl && check1El && totalDays>0 && total>0){
+    const paidThroughDays = Math.min(totalDays, Math.max(0, Math.round(totalDays * paid / total)));
+    const fromD = new Date(from+'T00:00:00');
+    fromD.setDate(fromD.getDate()+paidThroughDays);
+    const paidThroughDate = dStr(fromD.getFullYear(), fromD.getMonth(), fromD.getDate());
+    dateLbl.textContent = paidThroughDate.split('-').reverse().join('.');
+    const debt1 = calcDebtAtDate(paidThroughDate, from, totalDays, total, paid);
     check1El.textContent = debt1>0 ? `Залишок боргу ${debt1.toLocaleString('uk-UA')} ${cur}` : 'Оплачено повністю';
     check1El.style.color = debt1>0 ? '#c2610d' : '#16a34a';
   }
