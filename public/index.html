@@ -2877,7 +2877,8 @@ function insDot(status, side){
   if(!status) return '';
   const pos = side==='left' ? 'left:-3px' : 'right:-3px';
   if(status==='ok'){
-    return '<span class="vact-dot-corner" style="'+pos+';background:#86efac"></span>';
+    const okOpacity = side==='left' ? '.2' : '1';
+    return '<span class="vact-dot-corner" style="'+pos+';background:#22c55e;opacity:'+okOpacity+'"></span>';
   }
   const color = status==='danger' ? '#ef4444' : '#f59e0b';
   return '<span class="vact-dot-corner" style="'+pos+';background:'+color+'"></span>';
@@ -2888,7 +2889,7 @@ function buildVehCell(v){
   var kaskoDots = insDot(getKaskoDotStatus(v), 'right');
   var idot = osagoDots + kaskoDots;
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
-  var sdot = insDot(v.service?.status||null, 'left');
+  var sdot = insDot((v.service?.status==='warn'||v.service?.status==='danger')?v.service.status:null, 'left');
   var ddot = insDot((v.docs?.missingCount||0)>1?'danger':(v.docs?.missingCount||0)>0?'warn':null, 'right');
   return '<div class="veh-row-flex">'+
       '<div class="veh-name-click" onclick="mobileVehNameTap(event,'+v.id+')" title="Виділити рядок">'+
