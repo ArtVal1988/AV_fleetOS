@@ -1060,12 +1060,12 @@ textarea{resize:vertical;min-height:56px;}
 .dm-sec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;font-weight:600;}
 
 /* top 2-col grid */
-.dm-top-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.dm-top-grid{display:grid;grid-template-columns:0.85fr 1.15fr;gap:12px;margin-bottom:22px;}
 .dm-top-col{}
 .dm-card{background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;}
 
 /* STS grid inside card */
-.dm-sts-grid{display:grid;grid-template-columns:2.2fr 1fr;gap:8px;}
+.dm-sts-grid{display:grid;grid-template-columns:1fr 118px;gap:8px;}
 .dm-field-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin-bottom:4px;}
 .vf-lbl{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600;margin-bottom:4px;}
 .vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
@@ -1175,11 +1175,11 @@ input.dm-pf-val.tel{font-size:14px;}
 
 /* FILE ATTACHMENTS */
 .dm-attach-area{margin-top:8px;padding-top:8px;border-top:1px solid #f0f2f5;}
-.dm-attach-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
-.dm-attach-thumb{position:relative;width:52px;height:52px;border-radius:5px;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0;cursor:pointer;}
+.dm-attach-grid{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.dm-attach-thumb{position:relative;width:36px;height:36px;border-radius:4px;overflow:hidden;border:1px solid #e5e7eb;flex-shrink:0;cursor:pointer;}
 .dm-attach-pdf-badge{position:absolute;bottom:1px;left:1px;background:#dc2626;color:#fff;font-size:7px;font-weight:700;padding:1px 3px;border-radius:2px;letter-spacing:.3px;}
 .dm-attach-thumb img{width:100%;height:100%;object-fit:cover;}
-.dm-attach-thumb .dm-del{position:absolute;top:-1px;right:-1px;width:16px;height:16px;background:#ef4444;color:#fff;border:none;border-radius:0 0 0 4px;font-size:9px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
+.dm-attach-thumb .dm-del{position:absolute;top:-1px;right:-1px;width:13px;height:13px;background:#ef4444;color:#fff;border:none;border-radius:0 0 0 4px;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
 .dm-edit-active .dm-attach-thumb .dm-del{display:flex;}
 .dm-attach-file{display:flex;align-items:center;gap:4px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:4px;padding:3px 8px;font-size:10px;color:#374151;position:relative;max-width:100%;}
 .dm-attach-file .dm-del-f{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1;display:none;}
@@ -1201,7 +1201,8 @@ input.dm-pf-val.tel{font-size:14px;}
 .attach-viewer-overlay{position:fixed;inset:0;background:rgba(10,12,20,.88);z-index:900;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .attach-viewer-overlay.open{opacity:1;pointer-events:all;}
 .attach-viewer-inner{position:relative;max-width:90vw;max-height:88vh;display:flex;flex-direction:column;align-items:center;gap:14px;}
-.attach-viewer-inner img{max-width:90vw;max-height:78vh;object-fit:contain;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.4);}
+#attach-viewer-media{overflow:hidden;display:flex;align-items:center;justify-content:center;max-width:90vw;max-height:78vh;}
+.attach-viewer-inner img{max-width:90vw;max-height:78vh;object-fit:contain;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.4);transition:transform .08s ease-out;}
 .attach-viewer-inner embed{width:min(90vw,800px);height:78vh;border-radius:6px;background:#fff;}
 .attach-viewer-bar{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;backdrop-filter:blur(6px);}
 .attach-viewer-name{color:#e5e7eb;font-size:12px;font-family:var(--font-mono);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -4454,6 +4455,7 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape') closeAttachViewer();
 });
 function viewAttachment(data, name, mimeType){
+  _attachZoomScale = 1;
   const media = document.getElementById('attach-viewer-media');
   const isImg = (mimeType && mimeType.startsWith('image/')) || data.startsWith('data:image');
   media.innerHTML = isImg
@@ -4497,10 +4499,22 @@ async function shareCurrentAttachment(){
     prompt('Скопіюйте посилання вручну:', fullUrl);
   }
 }
+let _attachZoomScale = 1;
+document.addEventListener('wheel', e => {
+  const media = document.getElementById('attach-viewer-media');
+  if(!media || !e.ctrlKey) return;
+  if(!document.getElementById('attach-viewer')?.classList.contains('open')) return;
+  if(!e.target.closest('#attach-viewer-media')) return;
+  e.preventDefault();
+  _attachZoomScale = Math.min(6, Math.max(1, _attachZoomScale - e.deltaY*0.01));
+  const img = media.querySelector('img, embed');
+  if(img) img.style.transform = 'scale('+_attachZoomScale+')';
+}, {passive:false});
 function closeAttachViewer(){
   document.getElementById('attach-viewer').classList.remove('open');
   document.getElementById('attach-viewer-media').innerHTML='';
   _attachGalleryId = null;
+  _attachZoomScale = 1;
 }
 
 function buildAttachArea(v, key){
@@ -6134,6 +6148,7 @@ function openToModal(vid){
   document.querySelectorAll('.to-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
   document.querySelectorAll('.to-tab-pane').forEach((p,i)=>p.classList.toggle('active',i===0));
   document.getElementById('to-modal').classList.add('open');
+  document.getElementById('to-modal').querySelector('.docs-modal')?.scrollTo(0,0);
   renderSparePartsDatalistOptions();
 }
 function closeToModal(){ document.getElementById('to-modal').classList.remove('open'); toVehicleId=null; }
@@ -6403,6 +6418,7 @@ function openInsuranceModal(vid){
   document.getElementById('im-vehname').textContent = stripYear(v.name);
   renderInsuranceModal(v);
   document.getElementById('ins-modal').classList.add('open');
+  document.getElementById('ins-modal').querySelector('.docs-modal')?.scrollTo(0,0);
   loadVehicleDocuments(vid).then(()=>{ if(insVehicleId===vid) renderInsuranceModal(v); });
 }
 function closeInsuranceModal(){ document.getElementById('ins-modal').classList.remove('open'); insVehicleId=null; }
@@ -6868,7 +6884,16 @@ function applyDocsFieldEditability(){
   document.querySelectorAll('#dm-body input:not([type=file])').forEach(el=>{ el.readOnly = !docsEditMode; });
   document.querySelectorAll('#dm-body textarea').forEach(el=>{ el.readOnly = !docsEditMode; });
   document.querySelectorAll('#dm-body select').forEach(el=>{ el.disabled = !docsEditMode; });
+  applyDocsFieldOpacity();
 }
+function applyDocsFieldOpacity(){
+  document.querySelectorAll('#dm-body input:not([type=file]), #dm-body textarea').forEach(el=>{
+    el.style.opacity = el.value.trim() ? '1' : '';
+  });
+}
+document.addEventListener('input', e => {
+  if(e.target.closest('#dm-body')) applyDocsFieldOpacity();
+});
 
 function toggleDocsEditMode(){
   docsEditMode = !docsEditMode;
@@ -6908,6 +6933,7 @@ function openDocsModal(vid){
   document.getElementById('dm-vehname').textContent = stripYear(v.name);
   renderDocsModalBody(v);
   document.getElementById('docs-modal').classList.add('open');
+  document.getElementById('docs-modal').querySelector('.docs-modal')?.scrollTo(0,0);
   loadVehicleDocuments(vid);
 }
 
@@ -6962,7 +6988,7 @@ function renderDocsModalBody(v){
         <div class="dm-sts-grid">
           <div style="grid-column:1/-1">
             <div class="dm-field-lbl">VIN</div>
-            <input type="text" id="dm-vin" class="dm-field-val mono" style="font-size:14px;letter-spacing:2px" value="${v.vin||''}" placeholder="—">
+            <input type="text" id="dm-vin" class="dm-field-val mono" style="font-size:13px;letter-spacing:1px" value="${v.vin||''}" placeholder="—">
           </div>
         </div>
       </div>
@@ -6972,7 +6998,6 @@ function renderDocsModalBody(v){
   // ── PERSON CARD ────────────────────────────────────────────────
   function personCard(p, role, avatarCls, icon, idPrefix){
     return `<div class="dm-sec">
-      <div class="dm-sec-head"><span class="dm-sec-icon">${icon}</span><span class="dm-sec-title">${role}</span></div>
       <div class="dm-person-card">
         <div class="dm-person-top">
           <div class="dm-avatar ${avatarCls}">${ini(p.name)}</div>
@@ -7049,7 +7074,6 @@ function renderDocsModalBody(v){
 
   // ── CHECKLIST ──────────────────────────────────────────────────
   const checkHtml = `<div class="dm-sec">
-    <div class="dm-sec-head"><span class="dm-sec-icon">📁</span><span class="dm-sec-title">Пакет документів</span></div>
     <div class="dm-checklist">${DOC_TYPES.filter(d => {
       if(!d.required && !en[d.key] && !((v.docs?.files?.[d.key]||[]).length>0)) return false;
       return true;
@@ -10163,6 +10187,7 @@ document.addEventListener('mousedown', e => {
 }, true);
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
+  if(document.getElementById('attach-viewer')?.classList.contains('open')) return; // handled by the viewer's own Escape listener
   if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
   if(document.getElementById('to-modal')?.classList.contains('open')) closeToModal();
   if(document.getElementById('ins-modal')?.classList.contains('open')) closeInsuranceModal();
