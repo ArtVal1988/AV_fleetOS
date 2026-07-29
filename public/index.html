@@ -2889,7 +2889,7 @@ function buildVehCell(v){
   var idot = osagoDots + kaskoDots;
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
   var sdot = insDot(v.service?.status||null, 'left');
-  var ddot = (v.docs?.missingCount||0)>0 ? dot(dc) : '';
+  var ddot = insDot((v.docs?.missingCount||0)>1?'danger':(v.docs?.missingCount||0)>0?'warn':null, 'right');
   return '<div class="veh-row-flex">'+
       '<div class="veh-name-click" onclick="mobileVehNameTap(event,'+v.id+')" title="Виділити рядок">'+
         '<span class="veh-plate-badge">'+v.plate+'</span>'+
@@ -2897,9 +2897,9 @@ function buildVehCell(v){
       '</div>'+
       '<div class="veh-actions">'+
         '<button class="veh-act-btn" title="Характеристики" onclick="event.stopPropagation();showVehicleSpecs(event,'+v.id+')" style="color:#9ca3af">ℹ️</button>'+
-        '<button class="veh-act-btn" title="Тех. обслуговування" onclick="event.stopPropagation();openToModal('+v.id+')" style="color:'+sc+'">'+ICON_SERVICE+sdot+'</button>'+
+        '<button class="veh-act-btn" title="Тех. обслуговування" onclick="event.stopPropagation();openToModal('+v.id+')" style="color:#9ca3af">'+ICON_SERVICE+sdot+'</button>'+
         '<button class="veh-act-btn" title="Страхування" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:#9ca3af">'+ICON_INSURANCE+idot+'</button>'+
-        '<button class="veh-act-btn" title="Документи" onclick="event.stopPropagation();openDocsModal('+v.id+')" style="color:'+dc+'">'+ICON_DOCS+ddot+'</button>'+
+        '<button class="veh-act-btn" title="Документи" onclick="event.stopPropagation();openDocsModal('+v.id+')" style="color:#9ca3af">'+ICON_DOCS+ddot+'</button>'+
       '</div>'+
     '</div>';
 }
