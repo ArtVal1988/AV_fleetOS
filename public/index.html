@@ -5831,17 +5831,20 @@ function toggleExtensionSection(){
     extDaysOverridden = false;
     extTotalOverridden = false;
     extTotalCurTouched = false; extPaidCurTouched = false;
+    const lastHistory = currentExtHistory.length ? currentExtHistory[currentExtHistory.length-1] : null;
     const curEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
     if(curEnd){
       setExtDateField('bm-ext-from', curEnd);
-      setExtDateField('bm-ext-to', addOneDayStr(curEnd));
+      const defaultDays = lastHistory?.days > 0 ? lastHistory.days : 1;
+      const toDate = new Date(curEnd); toDate.setDate(toDate.getDate()+defaultDays);
+      setExtDateField('bm-ext-to', toDate.toISOString().split('T')[0]);
     }
-    document.getElementById('bm-ext-rate').value = document.getElementById('bm-rate').value || '';
+    document.getElementById('bm-ext-rate').value = lastHistory ? lastHistory.rate : (document.getElementById('bm-rate').value || '');
     document.getElementById('bm-ext-paid').value = 0;
-    const cur = document.getElementById('bm-currency').value || '$';
+    const cur = lastHistory ? lastHistory.currency : (document.getElementById('bm-currency').value || '$');
     document.getElementById('bm-ext-currency').value = cur;
     extRateCurrencyAnchor = cur;
-    document.getElementById('bm-ext-rate2').value = document.getElementById('bm-exchange-rate').value || '';
+    document.getElementById('bm-ext-rate2').value = lastHistory ? (lastHistory.totalExchangeRate||lastHistory.paidExchangeRate||'') : (document.getElementById('bm-exchange-rate').value || '');
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = document.getElementById('bm-ext-rate2').value;
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = document.getElementById('bm-ext-rate2').value;
     onExtCurrencyChange();
