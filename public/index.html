@@ -2462,12 +2462,14 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:25;pointer-events:auto">💾 Зберегти продовження</button>
         </div>
-        <div id="ext-debt-at-date-widget" style="margin-top:12px;padding:14px;background:linear-gradient(135deg,#fef9f3,#fdf4ec);border:1px solid #fbe0c0;border-radius:12px;display:none;box-shadow:0 1px 3px rgba(194,97,13,.08)">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-            <span style="font-size:14px">🧮</span>
-            <span style="font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:#c2610d;font-weight:700">Борг станом на дату</span>
-            <span style="font-size:9px;color:#c99a6c;font-style:italic;margin-left:auto">тест</span>
-          </div>
+        <div id="ext-debt-at-date-widget" class="msec-inner-sep" style="margin-top:12px;display:none">
+          <button type="button" class="extras-toggle" id="ext-debt-toggle-btn" onclick="toggleExtDebtWidget()">
+            <span id="ext-debt-toggle-icon">⊕</span>
+            <span>🧮 Борг станом на дату</span>
+            <span style="font-size:9px;color:#c99a6c;font-style:italic;margin-left:4px">тест</span>
+            <span class="extras-toggle-chevron" id="ext-debt-chevron">▾</span>
+          </button>
+          <div class="extras-panel" id="ext-debt-panel" style="display:none;margin-top:8px;padding:14px;background:linear-gradient(135deg,#fef9f3,#fdf4ec);border:1px solid #fbe0c0;border-radius:12px;box-shadow:0 1px 3px rgba(194,97,13,.08)">
           <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
               <span style="font-size:14px;flex-shrink:0">📍</span>
@@ -2489,6 +2491,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <input type="date" id="ext-debt-date-picked" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);background:#eff6ff">
               <span id="ext-debt-result-picked" style="font-size:13px;font-weight:700;color:#1d4ed8;margin-left:auto;flex-shrink:0"></span>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -6097,6 +6100,15 @@ function calcDebtAtDate(dateStr, from, totalDays, total, paid){
   const elapsedDays = Math.min(totalDays, Math.max(0, elapsedDaysRaw));
   const proratedCost = totalDays>0 ? total*(elapsedDays/totalDays) : 0;
   return Math.max(0, Math.round((proratedCost - paid)*100)/100);
+}
+function toggleExtDebtWidget(){
+  const panel = document.getElementById('ext-debt-panel');
+  const icon = document.getElementById('ext-debt-toggle-icon');
+  const chevron = document.getElementById('ext-debt-chevron');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
 function showExtDebtAtDateWidget(){
   const widget = document.getElementById('ext-debt-at-date-widget');
