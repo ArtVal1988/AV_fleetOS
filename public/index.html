@@ -4309,8 +4309,14 @@ function handleDocAttach(e, vid, key){
       v.docs.files[key].push(saved);
       recalcMissingDocs(v);
       renderDocsModalBody(v);
-      if(insVehicleId === vid && document.getElementById('co-attach-area')){
+      if(insVehicleId === vid && document.getElementById('co-attach-area') && key === 'osago-policy'){
         document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
+      }
+      if(insVehicleId === vid && key === 'kasko-policy' && document.getElementById('ck-attach-policy')){
+        document.getElementById('ck-attach-policy').innerHTML = buildAttachArea(v, 'kasko-policy');
+      }
+      if(insVehicleId === vid && key === 'kasko-invoice' && document.getElementById('ck-attach-invoice')){
+        document.getElementById('ck-attach-invoice').innerHTML = buildAttachArea(v, 'kasko-invoice');
       }
       render();
     }catch(err){
@@ -4328,8 +4334,14 @@ function removeDocFile(vid, key, fileId){
   arr.splice(idx,1);
   recalcMissingDocs(v);
   renderDocsModalBody(v);
-  if(insVehicleId === vid && document.getElementById('co-attach-area')){
+  if(insVehicleId === vid && document.getElementById('co-attach-area') && key === 'osago-policy'){
     document.getElementById('co-attach-area').innerHTML = buildAttachArea(v, 'osago-policy');
+  }
+  if(insVehicleId === vid && key === 'kasko-policy' && document.getElementById('ck-attach-policy')){
+    document.getElementById('ck-attach-policy').innerHTML = buildAttachArea(v, 'kasko-policy');
+  }
+  if(insVehicleId === vid && key === 'kasko-invoice' && document.getElementById('ck-attach-invoice')){
+    document.getElementById('ck-attach-invoice').innerHTML = buildAttachArea(v, 'kasko-invoice');
   }
   render();
   if(file?.id && _token) apiFetch('DELETE','/documents/'+file.id);
@@ -6668,9 +6680,9 @@ function buildCalKaskoPayments(){
   if(calKPayType==='single'){
     const paid = !!calKPaid[0];
     list.innerHTML='<div class="im-pay-row" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">' +
-      '<input type="date" id="ckp-date-0" value="'+(start||'')+'" style="flex:1;padding:5px 8px;font-size:11px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">' +
-      '<input type="number" id="ckp-amt-0" value="'+total+'" style="width:80px;padding:5px 8px;font-size:11px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">' +
-      '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-0" onclick="toggleCKP(0)" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓ сплач.':'● очік.')+'</span>' +
+      '<input type="date" id="ckp-date-0" value="'+(start||'')+'" style="flex:1;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">' +
+      '<input type="number" id="ckp-amt-0" value="'+total+'" style="width:64px;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">' +
+      '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-0" onclick="toggleCKP(0)" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>' +
     '</div>';
   } else {
     const perQ=Math.round(total/4);
@@ -6680,9 +6692,9 @@ function buildCalKaskoPayments(){
       const paid = !!calKPaid[q];
       return '<div class="im-pay-row'+(paid?'':' next-pay')+'" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+q+'</span>'+
-        '<input type="date" id="ckp-date-'+q+'" value="'+qd.toISOString().split('T')[0]+'" style="flex:1;padding:4px 7px;font-size:11px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">'+
-        '<input type="number" id="ckp-amt-'+q+'" value="'+perQ+'" style="width:76px;padding:4px 7px;font-size:11px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">'+
-        '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-'+q+'" onclick="toggleCKP('+q+')" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓ сплач.':'● очік.')+'</span>'+
+        '<input type="date" id="ckp-date-'+q+'" value="'+qd.toISOString().split('T')[0]+'" style="flex:1;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">'+
+        '<input type="number" id="ckp-amt-'+q+'" value="'+perQ+'" style="width:56px;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">'+
+        '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-'+q+'" onclick="toggleCKP('+q+')" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>'+
       '</div>';
     };
     list.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px">' +
@@ -10217,7 +10229,7 @@ function startAutoRefresh(){
 
 <!-- KASKO EDIT MODAL -->
 <div class="docs-modal-overlay" id="cal-kasko-modal">
-  <div class="docs-modal" style="width:500px">
+  <div class="docs-modal" style="width:560px">
     <div class="docs-modal-head">
       <div><div class="docs-modal-title" id="ckm-title">КАСКО</div></div>
       <button class="docs-modal-x" onclick="document.getElementById('cal-kasko-modal').classList.remove('open')">✕</button>
@@ -10239,7 +10251,7 @@ function startAutoRefresh(){
           <div class="fg" style="flex:1"><label>Платіж</label><input type="text" inputmode="numeric" id="ck-total" placeholder="24 000" oninput="formatThousandsInput(this);recalcKaskoBuildPaymentsFromTotal()"></div>
         </div>
         <div style="flex:1;display:flex;gap:6px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px">
-          <div class="fg" style="flex:0.8"><label>Франшиза (%)</label><input type="text" inputmode="decimal" id="ck-deductible-pct" placeholder="4" style="text-align:center" oninput="recalcKaskoDeductible()"></div>
+          <div class="fg" style="flex:1.1"><label style="white-space:nowrap">Франшиза (%)</label><input type="text" inputmode="decimal" id="ck-deductible-pct" placeholder="4" style="text-align:center" oninput="recalcKaskoDeductible()"></div>
           <div class="fg" style="flex:1"><label>Франшиза</label><input type="text" inputmode="numeric" id="ck-deductible" placeholder="18 000" oninput="formatThousandsInput(this)"></div>
         </div>
       </div>
