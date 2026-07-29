@@ -6384,21 +6384,33 @@ function renderInsuranceModal(v){
   } else {
     const {paymentType,payments,end,insurer,policyNum,totalPremium,notes} = v.kasko;
     const typeLbl = paymentType==='quarterly'?'Щоквартально':'Один платіж';
-    const payRows = paymentType==='quarterly' ? payments.map(p=>{
+    const qRowHtml = p => {
       const isNext = !p.paid && payments.filter(x=>!x.paid).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.quarter===p.quarter;
-      return '<div class="im-pay-row'+(isNext?' next-pay':'')+'">'+
+      return '<div class="im-pay-row'+(isNext?' next-pay':'')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+p.quarter+'</span>'+
         '<span class="im-pay-date">'+fmtD(p.date)+(isNext?'<span class="im-next-badge">← наст.</span>':'')+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
+        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
       '</div>';
-    }).join('') : payments.map(p=>
-      '<div class="im-pay-row'+(p.paid?'':' next-pay')+'">'+
+    };
+    const payRows = paymentType==='quarterly' ?
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px">' +
+        '<div>'+payments.filter(p=>p.quarter===1).map(qRowHtml).join('')+payments.filter(p=>p.quarter===2).map(qRowHtml).join('')+'</div>' +
+        '<div>'+payments.filter(p=>p.quarter===3).map(qRowHtml).join('')+payments.filter(p=>p.quarter===4).map(qRowHtml).join('')+'</div>' +
+      '</div>'
+      : payments.map(p=>
+      '<div class="im-pay-row'+(p.paid?'':' next-pay')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-date">'+fmtD(p.date)+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
+        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓ сплачено':'● очікується')+'</span>'+
       '</div>'
     ).join('');
+    const policyFile = (v.docs?.files?.['kasko-policy']||[])[0];
+    const invoiceFile = (v.docs?.files?.['kasko-invoice']||[])[0];
+    const filesRow = '<div class="im-action-row" style="margin-top:6px">' +
+      (policyFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(policyFile.url)+','+JSON.stringify(policyFile.name)+','+JSON.stringify(policyFile.type)+')\'>📄 Договір</div>' : '<div class="im-btn" style="opacity:.5">📄 Договір відсутній</div>') +
+      (invoiceFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(invoiceFile.url)+','+JSON.stringify(invoiceFile.name)+','+JSON.stringify(invoiceFile.type)+')\'>🧾 Рахунок для оплати</div>' : '<div class="im-btn" style="opacity:.5">🧾 Рахунок відсутній</div>') +
+    '</div>';
     kaskoHtml =
       '<div class="im-fields-3">' +
         '<div class="im-field"><div class="imf-lbl">Страховик</div><div class="imf-val">'+insurer+'</div></div>' +
@@ -6412,6 +6424,7 @@ function renderInsuranceModal(v){
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
+      filesRow +
       '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalKasko('+v.id+')">↻ Поновити</div></div>'+
       buildKaskoPhotoSection(v);
   }
@@ -6469,11 +6482,13 @@ function buildInsuranceCasesSection(v){
 function toggleCalKaskoQ(vid,quarter){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v?.kasko)return;
   const p=v.kasko.payments.find(x=>x.quarter===quarter); if(p)p.paid=!p.paid;
+  persistVehicle(v);
   renderInsuranceModal(v); render();
 }
 function toggleCalKaskoSingle(vid){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v?.kasko)return;
   if(v.kasko.payments[0])v.kasko.payments[0].paid=!v.kasko.payments[0].paid;
+  persistVehicle(v);
   renderInsuranceModal(v); render();
 }
 
