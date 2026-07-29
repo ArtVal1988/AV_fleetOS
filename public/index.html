@@ -2040,8 +2040,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <span id="sticker-popup-title">Новий стікер</span>
         <button class="docs-modal-x" onclick="closeStickerForm()">✕</button>
       </div>
-      <input type="text" id="sticker-title" class="sticker-author-input" placeholder="Короткий заголовок (видно всім)" maxlength="40" style="margin-bottom:8px;font-weight:700">
-      <textarea id="sticker-text" class="sticker-textarea" placeholder="Опис (відкривається по кліку)..." maxlength="280"></textarea>
+      <input type="text" id="sticker-title" class="sticker-author-input" placeholder="Короткий заголовок (видно всім)" maxlength="40" style="margin-bottom:8px;font-weight:700" oninput="this.style.opacity=this.value.trim()?'1':'';this.style.color=this.value.trim()?'#000':''">
+      <textarea id="sticker-text" class="sticker-textarea" placeholder="Опис (відкривається по кліку)..." maxlength="1000"></textarea>
       <div class="sticker-color-row">
         <button type="button" class="sticker-color-btn active" id="sc-btn-red" style="background:#fee2e2;border-color:#f87171" onclick="setStickerColor('red')" title="Червоний"></button>
         <button type="button" class="sticker-color-btn" id="sc-btn-blue" style="background:#dbeafe;border-color:#60a5fa" onclick="setStickerColor('blue')" title="Синій"></button>
@@ -2940,6 +2940,9 @@ function openStickerForm(editId){
   stickerEditId = editId || null;
   const s = editId ? stickers.find(x=>x.id===editId) : null;
   document.getElementById('sticker-title').value = s ? (s.title||'') : '';
+  const titleEl = document.getElementById('sticker-title');
+  titleEl.style.opacity = titleEl.value.trim() ? '1' : '';
+  titleEl.style.color = titleEl.value.trim() ? '#000' : '';
   document.getElementById('sticker-text').value = s ? s.text : '';
   document.getElementById('sticker-author').value = s ? (s.author||'') : '';
   setStickerColor(s ? s.color : 'red');
@@ -4929,10 +4932,13 @@ function showStickerFullText(e, id){
 function renderStickerFullTextContent(s){
   const popup = document.getElementById('sticker-fulltext-popup');
   const comments = s.comments || [];
-  const commentsHtml = comments.length ? comments.map(c => `
-    <div style="padding:6px 0;border-top:1px solid #f0f2f5">
-      <div style="font-size:10px;color:#1a1d26"><b>${(c.author||'').replace(/</g,'&lt;')}</b></div>
-      <div style="font-size:11px;color:#4b5563;white-space:pre-wrap;word-break:break-word">${(c.text||'').replace(/</g,'&lt;')}</div>
+  const commentsHtml = comments.length ? comments.map((c,i) => `
+    <div class="sc-comment-row" id="sc-comment-${i}" style="padding:6px 0;border-top:1px solid #f0f2f5">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:10px;color:#1a1d26"><b>${(c.author||'').replace(/</g,'&lt;')}</b>${c.edited?' <span style="color:#9ca3af;font-weight:400;font-style:italic">(редаговано)</span>':''}</div>
+        <button onclick="editStickerComment(${s.id},${i})" title="Редагувати" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 2px">✏️</button>
+      </div>
+      <div class="sc-comment-text" style="font-size:11px;color:#4b5563;white-space:pre-wrap;word-break:break-word">${(c.text||'').replace(/</g,'&lt;')}</div>
     </div>`).join('') : '<div style="font-size:10px;color:#9ca3af;padding:6px 0;border-top:1px solid #f0f2f5">Ще немає коментарів</div>';
 
   popup.innerHTML = `
@@ -4946,12 +4952,37 @@ function renderStickerFullTextContent(s){
     <div style="margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb">
       <input type="text" id="sc-new-author" placeholder="Ваше ім'я (обов'язково)" maxlength="40"
         style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #dde0e6;border-radius:5px;font-family:inherit;font-size:11px;margin-bottom:5px;outline:none">
-      <textarea id="sc-new-text" placeholder="Додати коментар..." maxlength="200" rows="2"
+      <textarea id="sc-new-text" placeholder="Додати коментар..." maxlength="1000" rows="2"
         style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #dde0e6;border-radius:5px;font-family:inherit;font-size:11px;resize:vertical;outline:none"></textarea>
       <div id="sc-error" style="display:none;color:#dc2626;font-size:10px;margin-top:4px"></div>
       <button onclick="addStickerComment(${s.id})" style="margin-top:6px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:5px;padding:7px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Додати коментар</button>
     </div>
   `;
+}
+function editStickerComment(id, idx){
+  const s = stickers.find(x=>x.id===id);
+  if(!s || !s.comments?.[idx]) return;
+  const row = document.getElementById('sc-comment-'+idx);
+  if(!row) return;
+  const c = s.comments[idx];
+  row.innerHTML = `
+    <textarea id="sc-edit-text-${idx}" maxlength="1000" rows="2"
+      style="width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #93c5fd;border-radius:5px;font-family:inherit;font-size:11px;resize:vertical;outline:none;margin-top:4px">${(c.text||'').replace(/</g,'&lt;')}</textarea>
+    <div style="display:flex;gap:6px;margin-top:5px">
+      <button onclick="renderStickerFullTextContent(stickers.find(x=>x.id===${id}))" style="flex:1;background:none;border:1px solid #e5e7eb;border-radius:4px;padding:5px;font-family:inherit;font-size:10px;color:#6b7280;cursor:pointer">Скасувати</button>
+      <button onclick="saveStickerCommentEdit(${id},${idx})" style="flex:1;background:#2563eb;color:#fff;border:none;border-radius:4px;padding:5px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">Зберегти</button>
+    </div>`;
+  document.getElementById('sc-edit-text-'+idx).focus();
+}
+function saveStickerCommentEdit(id, idx){
+  const s = stickers.find(x=>x.id===id);
+  if(!s || !s.comments?.[idx]) return;
+  const text = document.getElementById('sc-edit-text-'+idx).value.trim();
+  if(!text) return;
+  s.comments[idx].text = text;
+  s.comments[idx].edited = true;
+  if(_token) apiFetch('PUT','/stickers/'+id, {title: s.title||'', text: s.text, color: s.color, author: s.author, pinned: !!s.pinned, comments: s.comments});
+  renderStickerFullTextContent(s);
 }
 function addStickerComment(id){
   const s = stickers.find(x=>x.id===id);
