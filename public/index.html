@@ -2906,7 +2906,8 @@ function insDot(status, side){
   return '<span class="vact-dot-corner" style="'+pos+';background:'+color+'"></span>';
 }
 function buildVehCell(v){
-  var sc = v.service?.status==='danger'?'#ef4444':v.service?.status==='warn'?'#f59e0b':'#9ca3af';
+  var svcStatusLive = v.service ? computeServiceStatus(v) : null;
+  var sc = svcStatusLive==='danger'?'#ef4444':svcStatusLive==='warn'?'#f59e0b':'#9ca3af';
   var osagoDots = insDot(getOsagoDotStatus(v), 'left');
   var kaskoDots = insDot(getKaskoDotStatus(v), 'right');
   var idot = osagoDots + kaskoDots;
@@ -5423,7 +5424,7 @@ function renderDashboard(){
   const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
   const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
   const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
-  const serviceSoon = ALL_VEHICLES.filter(v => v.service && (v.service.status==='warn' || v.service.status==='danger'));
+  const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)));
   const missingDocs = ALL_VEHICLES.filter(v => v.docs && v.docs.missingCount > 0);
 
   const attentionHtml = `
@@ -9943,6 +9944,7 @@ async function syncFromServer(){
     // becomes the shared baseline for every other device going forward.
     apiFetch('PUT','/settings/statuses',{value:STATUSES});
   }
+  ALL_VEHICLES.forEach(v => { if(v.service) v.service.status = computeServiceStatus(v); });
   renderStickers(); render();
 }
 
