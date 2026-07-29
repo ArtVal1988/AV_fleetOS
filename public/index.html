@@ -6442,9 +6442,9 @@ function renderInsuranceModal(v){
         '<div class="im-field"><div class="imf-lbl">Дія договору</div><div class="imf-val" style="white-space:nowrap">'+fmtDShort(v.kasko.start)+' – '+fmtDShort(end)+'</div></div>' +
       '</div>' +
       '<div class="im-fields-3">' +
-        '<div class="im-field"><div class="imf-lbl">Страхова сума</div><div class="imf-val">'+fmtMn(v.kasko.insuredSum)+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Страховий платіж</div><div class="imf-val green">'+(v.kasko.tariff?'<span class="im-pct-pill green">'+String(v.kasko.tariff).replace('.',',')+'%</span> ':'')+fmtMn(totalPremium)+'</div></div>' +
-        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span> ':'')+fmtMn(v.kasko.deductible)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Страхова сума</div><div class="imf-val" style="font-weight:700;font-size:13px">'+fmtMn(v.kasko.insuredSum)+'</div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Страховий платіж</div><div class="imf-val green" style="display:flex;align-items:center">'+(v.kasko.tariff?'<span class="im-pct-pill green">'+String(v.kasko.tariff).replace('.',',')+'%</span>':'')+'<span style="flex:1;text-align:center;font-weight:700;font-size:13px;color:#166534">'+fmtMn(totalPremium)+'</span></div></div>' +
+        '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue" style="display:flex;align-items:center">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span>':'')+'<span style="flex:1;text-align:center;font-weight:700;font-size:13px">'+fmtMn(v.kasko.deductible)+'</span></div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
