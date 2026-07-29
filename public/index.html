@@ -6131,15 +6131,30 @@ function renderExtDebtAtDate(){
   const dateLbl = document.getElementById('ext-debt-date-1-lbl');
   const check1El = document.getElementById('ext-debt-result-1');
   if(dateLbl && check1El && totalDays>0 && total>0){
-    const paidThroughDays = Math.min(totalDays, Math.max(0, Math.round(totalDays * paid / total)));
-    const fromD = new Date(from+'T00:00:00');
-    fromD.setDate(fromD.getDate()+paidThroughDays);
-    const paidThroughDate = dStr(fromD.getFullYear(), fromD.getMonth(), fromD.getDate());
-    const [py,pm,pd] = paidThroughDate.split('-');
-    dateLbl.textContent = pd+'.'+pm;
-    const debt1 = calcDebtAtDate(paidThroughDate, from, totalDays, total, paid);
-    check1El.textContent = debt1>0 ? `залишок боргу ${debt1.toLocaleString('uk-UA')} ${cur}` : 'оплачено повністю';
-    check1El.style.color = debt1>0 ? '#c2610d' : '#16a34a';
+    const dailyRate = total/totalDays;
+    const fullDaysCovered = Math.min(totalDays, Math.max(0, Math.floor((paid+1e-9)/dailyRate)));
+    if(fullDaysCovered >= totalDays){
+      // Fully paid — no partial boundary day to show.
+      const toD = new Date(from+'T00:00:00'); toD.setDate(toD.getDate()+totalDays);
+      const endStr = dStr(toD.getFullYear(), toD.getMonth(), toD.getDate());
+      const [ey,em,ed] = endStr.split('-');
+      dateLbl.textContent = ed+'.'+em;
+      check1El.textContent = 'оплачено повністю';
+      check1El.style.color = '#16a34a';
+    } else {
+      // The boundary day: fullDaysCovered days are fully settled, this
+      // next one is where the payment runs out partway through.
+      const boundaryD = new Date(from+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered+1);
+      const boundaryStr = dStr(boundaryD.getFullYear(), boundaryD.getMonth(), boundaryD.getDate());
+      const [by,bm,bd] = boundaryStr.split('-');
+      dateLbl.textContent = bd+'.'+bm;
+      const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
+      const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
+      check1El.textContent = paidTowardDay>0.005
+        ? `оплачено ${paidTowardDay.toLocaleString('uk-UA')} ${cur} з ${Math.round(dailyRate*100)/100} ${cur}. Залишок боргу = ${dayRemaining.toLocaleString('uk-UA')} ${cur}`
+        : `залишок боргу ${Math.round(dailyRate*100)/100} ${cur}`;
+      check1El.style.color = '#c2610d';
+    }
   }
 
   document.getElementById('ext-debt-today-lbl').textContent = todayStr.split('-').reverse().join('.');
