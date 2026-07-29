@@ -2867,6 +2867,23 @@ function daysLeftStatus(endStr){
   if(daysLeft<=30) return 'warn';
   return 'ok';
 }
+// Matches renderToKmBar()'s percentage-of-interval thresholds exactly, so
+// the wrench icon/dot never disagrees with what the Ремонти card itself
+// shows (previously the icon used a fixed 2000km cutoff while the card
+// used percentage-of-interval, which could disagree wildly for short
+// service intervals — e.g. 100km left reading as orange on the icon but
+// red on the card for a 400km interval).
+function computeServiceStatus(v){
+  const svc = v.service || {};
+  const cur  = v.currentKm  ?? svc.lastKm  ?? 0;
+  const next = v.nextServiceKm ?? svc.nextKm  ?? 0;
+  const si   = v.serviceInterval ?? svc.interval ?? 15000;
+  const kmLeft = next - cur;
+  const pctRemaining = si > 0 ? (kmLeft / si * 100) : 100;
+  if(kmLeft <= 0 || pctRemaining <= 25) return 'danger';
+  if(pctRemaining <= 75) return 'warn';
+  return 'ok';
+}
 function getOsagoDotStatus(v){
   return daysLeftStatus(v.osago?.end);
 }
@@ -4154,8 +4171,7 @@ function saveBooking(){
       if(endKm>(veh.currentKm||0)){
         veh.currentKm=endKm;
         veh.currentKmDate=document.getElementById('bm-return-date')?.value||new Date().toISOString().split('T')[0];
-        const left=(veh.service.nextKm||0)-endKm;
-        veh.service.status=left<=0?'danger':left<=2000?'warn':'ok';
+        veh.service.status=computeServiceStatus(veh);
         persistVehicle(veh);
       }
     }
@@ -5037,8 +5053,7 @@ function saveCurrentKm(vid){
   // this does NOT mean a service was just completed, so v.service.lastKm
   // (mileage recorded AT the last actual ТО) and v.service.lastDate stay
   // untouched here; they're only updated when a real work entry is saved.
-  const left = (v.service.nextKm||0) - val;
-  v.service.status = left<=0?'danger':left<=2000?'warn':'ok';
+  v.service.status = computeServiceStatus(v);
   hideKmEditForm(vid);
   persistVehicle(v);
   renderToKmBar(v);
@@ -6205,6 +6220,7 @@ function recalcNextService(v){
   const si = v.serviceInterval ?? svc.interval ?? 15000;
   v.nextServiceKm = lastKm + si;
   svc.nextKm = v.nextServiceKm;
+  svc.status = computeServiceStatus(v);
 }
 function setServiceInterval(vid, value){
   const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
