@@ -1405,7 +1405,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- VEHICLES LIST PANEL -->
 <!-- DASHBOARD PANEL -->
-<div id="dashboard-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+<div id="dashboard-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:290;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:900px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
       <div style="font-size:16px;font-weight:700;color:#1a1d26">◈ Дашборд</div>
@@ -5469,7 +5469,7 @@ function dashDebtList(title, list, color){
       const cur = b.currency||'$';
       const debtColor = cur==='₴' ? '#166534' : color;
       const displayName = b.customer?.company || b.customer?.name || '';
-      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="closeDashboard();expandBooking(${b.id})">
+      return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="expandBooking(${b.id})">
         <span><span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
         <span style="color:#6b7280"> — ${displayName}</span></span>
         <span style="color:${debtColor};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
