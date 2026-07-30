@@ -3285,8 +3285,8 @@ function showTooltip(e,bid){
   } else if((b.extensionHistory && b.extensionHistory.length) || (b.extension && b.extension.active)){
     const fmtShortYear = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const fullHistory = b.extensionHistory||[];
-    const hiddenCount = Math.max(0, fullHistory.length - 5);
-    const visibleHistory = fullHistory.slice(-5);
+    const hiddenCount = Math.max(0, fullHistory.length - 2);
+    const visibleHistory = fullHistory.slice(-2);
     const moreIndicator = hiddenCount > 0 ? `<div class="tt-row" style="padding:2px 4px"><span class="tt-val" style="text-align:left;color:var(--muted);font-style:italic;font-size:10px">… ще ${hiddenCount} попередніх — повна історія в замовленні</span></div>` : '';
     const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
@@ -3301,6 +3301,7 @@ function showTooltip(e,bid){
       </div>`;
     }).join('');
     let activeRow = '';
+    let debtAtDateWidget = '';
     if(b.extension && b.extension.active){
       const ext = b.extension;
       const st = getExtStatus(ext);
@@ -3313,11 +3314,49 @@ function showTooltip(e,bid){
           <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
         </span>
       </div>`;
+
+      // "Тест" debt-at-date widget: only relevant while there's still an
+      // unpaid balance on the active extension — mirrors the same
+      // elapsed-days proration used by calcBookingDebt()/the booking form's
+      // own widget, so all three always agree.
+      if(st !== 'paid' && ext.fromDate && ext.toDate && ext.cost>0){
+        const extCur = ext.currency||b.currency||'$';
+        const extCurColor = extCur==='₴' ? '#166534' : '#1d4ed8';
+        const amtSpan = amt => `<span style="color:${extCurColor}">${fmt1(amt)} ${extCur}</span>`;
+        const totalDays = ext.days>0 ? ext.days : Math.max(1, Math.round((new Date(ext.toDate)-new Date(ext.fromDate))/86400000));
+        const paid = ext.amountPaid||0;
+        const dailyRate = ext.cost/totalDays;
+        const fullDaysCovered = Math.min(totalDays, Math.max(0, Math.floor((paid+1e-9)/dailyRate)));
+        let boundaryLine;
+        if(fullDaysCovered >= totalDays){
+          boundaryLine = `<span style="color:var(--text)">оплачено повністю</span>`;
+        } else {
+          const boundaryD = new Date(ext.fromDate+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered+1);
+          const boundaryStr = fmtShortYear(dStr(boundaryD.getFullYear(), boundaryD.getMonth(), boundaryD.getDate()));
+          const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
+          const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
+          boundaryLine = paidTowardDay>0.005
+            ? `<span style="color:var(--text)">На ${boundaryStr} оплачено = ${amtSpan(paidTowardDay)} з ${amtSpan(Math.round(dailyRate*100)/100)}. Залишок боргу = ${amtSpan(dayRemaining)}</span>`
+            : `<span style="color:var(--text)">На ${boundaryStr} залишок боргу = ${amtSpan(Math.round(dailyRate*100)/100)}</span>`;
+        }
+        const today = new Date(); today.setHours(0,0,0,0);
+        const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
+        const clampedToday = todayStr < ext.fromDate ? ext.fromDate : (todayStr > ext.toDate ? ext.toDate : todayStr);
+        const debtToday = calcDebtAtDate(clampedToday, ext.fromDate, totalDays, ext.cost, paid);
+        const debtEnd = calcDebtAtDate(ext.toDate, ext.fromDate, totalDays, ext.cost, paid);
+        debtAtDateWidget = `
+          <div class="tt-row" style="padding:3px 4px;font-size:10px">${boundaryLine}</div>
+          <div style="display:flex;gap:6px;padding:2px 4px">
+            <div style="flex:1;font-size:10px"><span style="color:var(--muted)">На сьогодні:</span> ${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</div>
+            <div style="flex:1;font-size:10px;text-align:right"><span style="color:var(--muted)">На кінець:</span> ${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</div>
+          </div>
+        `;
+      }
     }
     extBlock = `
       <div class="tt-divider"></div>
       <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
-      ${moreIndicator}${historyRows}${activeRow}
+      ${moreIndicator}${historyRows}${activeRow}${debtAtDateWidget}
     `;
   }
 
