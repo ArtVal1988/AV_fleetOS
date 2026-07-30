@@ -5510,8 +5510,8 @@ function renderDashboard(){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
   // ── 1. Today's activity ──────────────────────────────────────────
-  const pickupsToday = bookings.filter(b => b.status==='rented' && b.start===todayStr);
-  const returnsToday = bookings.filter(b => b.status==='rented' && getEffectiveEnd(b)===todayStr);
+  const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr);
+  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr);
   const overdue = bookings
     .filter(b => calcBookingDebt(b) > 0)
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
@@ -5655,7 +5655,7 @@ function generateProfitabilityReport(){
 
   const perVehicle = new Map(); // vid -> {v, bookings, days, revenue:{'$':0,'₴':0}}
 
-  bookings.filter(b => b.status === 'rented').forEach(b => {
+  bookings.filter(b => SM[b.status]?.isBooking !== false).forEach(b => {
     const bStart = new Date(b.start);
     const bEnd = new Date(getEffectiveEnd(b));
     const overlapStart = bStart > periodStart ? bStart : periodStart;
@@ -5688,7 +5688,7 @@ function renderReportResults(rows){
   const wrap = document.getElementById('rep-results');
   const csvBtn = document.getElementById('rep-csv-btn');
   if(!rows.length){
-    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">За цей період не знайдено бронювань зі статусом «В оренді»</div>';
+    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:#9ca3af;font-size:12px">За цей період не знайдено замовлень</div>';
     csvBtn.style.display = 'none';
     document.getElementById('rep-grid-csv-btn').style.display = 'none';
     document.getElementById('rep-xlsx-btn').style.display = 'none';
@@ -5761,7 +5761,7 @@ function exportProfitabilityGridCSV(){
   const csvRows = [];
   CATEGORIES.forEach(cat => {
     cat.vehicles.forEach(v => {
-      const relevantBookings = bookings.filter(b => b.vehicleId===v.id && b.status==='rented');
+      const relevantBookings = bookings.filter(b => b.vehicleId===v.id && SM[b.status]?.isBooking !== false);
       const dayCells = dayList.map(d => {
         const dStr = d.toISOString().slice(0,10);
         const b = relevantBookings.find(bk => dStr >= bk.start && dStr <= getEffectiveEnd(bk));
@@ -5792,7 +5792,7 @@ async function exportProfitabilityStyledXLSX(){
   const activeVehicles = [];
   CATEGORIES.forEach(cat => {
     cat.vehicles.forEach(v => {
-      const has = bookings.some(b => b.vehicleId===v.id && b.status==='rented' &&
+      const has = bookings.some(b => b.vehicleId===v.id && SM[b.status]?.isBooking !== false &&
         b.start <= toStr && getEffectiveEnd(b) >= fromStr);
       if(has) activeVehicles.push({v, cat});
     });
@@ -5851,7 +5851,7 @@ async function exportProfitabilityStyledXLSX(){
     row.getCell(2).font = {bold:true};
     activeVehicles.forEach(({v}, vi) => {
       const col = 3+vi;
-      const b = bookings.find(bk => bk.vehicleId===v.id && bk.status==='rented' && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
+      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
       const cell = row.getCell(col);
       if(b){
         cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
