@@ -4168,7 +4168,8 @@ function saveBooking(){
   const vid=parseInt(document.getElementById('bm-vehicle').value);
   if(!start||!end||!vid){alert('Вкажіть авто та дати');return;}
   if(!document.getElementById('bm-status').value){alert('Оберіть статус замовлення');return;}
-  if(COMPANY_REQUIRED_STATUSES.includes(document.getElementById('bm-status').value) && !currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
+  const currentStatusIsBooking = SM[document.getElementById('bm-status').value]?.isBooking !== false;
+  if(currentStatusIsBooking && COMPANY_REQUIRED_STATUSES.includes(document.getElementById('bm-status').value) && !currentOrderCompany){alert('Оберіть компанію: TopRent або RentPlus');return;}
 
   // If an extension is currently active (filled in but not yet committed via
   // "Зберегти продовження"), it still needs to be checked for overlap with
@@ -4195,11 +4196,13 @@ function saveBooking(){
     return;
   }
 
-  // Exchange rate is mandatory for every booking, regardless of currency or
-  // client type — the profitability report converts everything to USD, and
-  // needs a valid rate for both $ bookings (UAH-equivalent tracking) and ₴
-  // bookings (USD conversion) to extract accurately.
-  if(!(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
+  // Exchange rate is mandatory for every real booking, regardless of
+  // currency or client type — the profitability report converts everything
+  // to USD, and needs a valid rate for both $ bookings (UAH-equivalent
+  // tracking) and ₴ bookings (USD conversion) to extract accurately. Not
+  // required for plain 'Лише статус' entries (repair/storage/etc), since
+  // those aren't rental income at all.
+  if(currentStatusIsBooking && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
     alert('Курс обміну є обов\'язковим полем');
     return;
   }
@@ -7794,6 +7797,20 @@ function updateBookingDetailsVisibility(){
 
   if(closedLabel) closedLabel.style.display = 'none';
   if(hide){ const cb=document.getElementById('bm-closed'); if(cb) cb.checked=false; }
+
+  // Contract/act generation only makes sense for real rental bookings, not
+  // plain vehicle-unavailable statuses (repair/storage/etc).
+  if(hide){
+    const contractBtn = document.getElementById('bm-gen-contract-btn');
+    const actBtn = document.getElementById('bm-gen-act-btn');
+    if(contractBtn) contractBtn.style.display = 'none';
+    if(actBtn) actBtn.style.display = 'none';
+  } else if(editBid){
+    const contractBtn = document.getElementById('bm-gen-contract-btn');
+    const actBtn = document.getElementById('bm-gen-act-btn');
+    if(contractBtn) contractBtn.style.display = '';
+    if(actBtn) actBtn.style.display = '';
+  }
 }
 // Client type can always be changed now - this used to lock a saved
 // "Фіз. особа" order from switching to ФОП/ТОВ, but that restriction has
