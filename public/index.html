@@ -4191,6 +4191,14 @@ function saveBooking(){
     return;
   }
 
+  // For individual (not company) clients paying in USD, the exchange rate
+  // is mandatory — they typically settle in cash/UAH equivalent, so
+  // without a rate on file the booking's actual UAH value can't be tracked.
+  if(clientType==='individual' && document.getElementById('bm-currency').value==='$' && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
+    alert('Для фізособи з оплатою в $ курс обміну є обов\'язковим полем');
+    return;
+  }
+
   const orderStatuses = ['rented', 'res-docs', 'reserved'];
   if(orderStatuses.includes(document.getElementById('bm-status').value)){
     const clientName = document.getElementById('bm-name').value.trim();
