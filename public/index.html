@@ -3336,8 +3336,8 @@ function showTooltip(e,bid){
           const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
           const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
           boundaryLine = paidTowardDay>0.005
-            ? `<span style="color:var(--text)">На ${boundaryStr} оплачено = ${amtSpan(paidTowardDay)} з ${amtSpan(Math.round(dailyRate*100)/100)}. Залишок боргу = ${amtSpan(dayRemaining)}</span>`
-            : `<span style="color:var(--text)">На ${boundaryStr} залишок боргу = ${amtSpan(Math.round(dailyRate*100)/100)}</span>`;
+            ? `<span style="color:var(--text)">на ${boundaryStr} борг ${amtSpan(dayRemaining)} (оплачено ${amtSpan(paidTowardDay)} з ${amtSpan(Math.round(dailyRate*100)/100)}.)</span>`
+            : `<span style="color:var(--text)">на ${boundaryStr} борг ${amtSpan(Math.round(dailyRate*100)/100)}</span>`;
         }
         const today = new Date(); today.setHours(0,0,0,0);
         const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -3348,8 +3348,8 @@ function showTooltip(e,bid){
           <div style="margin-top:4px;padding:6px 8px;background:rgba(194,97,13,.08);border-radius:6px;display:flex;flex-direction:column;gap:4px">
             <div style="font-size:11.5px">${boundaryLine}</div>
             <div style="display:flex;gap:8px">
-              <div style="flex:1;font-size:11.5px;display:flex;align-items:center;gap:4px"><span>📅</span><span style="color:var(--muted)">Сьогодні:</span> <b>${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
-              <div style="flex:1;font-size:11.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px"><span>🏁</span><span style="color:var(--muted)">Кінець:</span> <b>${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:11.5px;display:flex;align-items:center;gap:4px"><span>📅</span><span style="color:var(--muted)">На сьогодні:</span> <b>${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:11.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px"><span>🏁</span><span style="color:var(--muted)">На кінець періоду:</span> <b>${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
             </div>
           </div>
         `;
