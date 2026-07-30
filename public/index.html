@@ -3306,7 +3306,7 @@ function showTooltip(e,bid){
       const ext = b.extension;
       const st = getExtStatus(ext);
       const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
-      const label = st==='paid'?'✓':st==='partial'?`частково (${fmt1(ext.amountPaid||0)}/${fmt1(ext.cost||0)})`:'Борг '+fmt1((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
+      const label = st==='paid'?'✓':'Борг '+fmt1((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
