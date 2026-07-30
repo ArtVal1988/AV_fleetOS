@@ -5715,11 +5715,12 @@ function generateProfitabilityReport(){
       return;
     }
 
-    const totalBookingDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, getEffectiveEnd(b));
     const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
     if(overlapDays <= 0) return;
-    const proportion = Math.min(1, overlapDays / totalBookingDays);
-    const revenueInPeriod = toUSD(calcTotal(b), b.currency, b.exchangeRate, fallbackRate) * proportion;
+    // Revenue is calculated directly from the daily rate × days actually
+    // within the selected period — not prorated from the booking's full
+    // total, which would incorrectly include one-time extras/services.
+    const revenueInPeriod = toUSD(overlapDays * (b.rate||0), b.currency, b.exchangeRate, fallbackRate);
 
     entry.bookingsCount++;
     entry.days += overlapDays;
