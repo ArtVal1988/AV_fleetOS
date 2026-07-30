@@ -5829,17 +5829,16 @@ async function exportProfitabilityStyledXLSX(){
   const dayCount = Math.round((periodEnd - periodStart)/86400000) + 1;
   const dayList = Array.from({length:dayCount}, (_,i) => { const d = new Date(periodStart); d.setDate(d.getDate()+i); return d; });
 
-  // Only include vehicles that actually had at least one 'rented' day in the
-  // period — an all-49-vehicle sheet would be unreadably wide.
+  // Include every vehicle in the fleet, matching the main report and CSV
+  // export — vehicles with zero activity in the period just show empty
+  // cells across every day.
   const activeVehicles = [];
   CATEGORIES.forEach(cat => {
     cat.vehicles.forEach(v => {
-      const has = bookings.some(b => b.vehicleId===v.id && SM[b.status]?.isBooking !== false &&
-        b.start <= toStr && getEffectiveEnd(b) >= fromStr);
-      if(has) activeVehicles.push({v, cat});
+      activeVehicles.push({v, cat});
     });
   });
-  if(!activeVehicles.length){ alert('Немає активних авто за цей період для стилізованого звіту.'); return; }
+  if(!activeVehicles.length){ alert('Немає авто для стилізованого звіту.'); return; }
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Дохідність');
