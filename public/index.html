@@ -3252,11 +3252,11 @@ function showTooltip(e,bid){
   // 2: date+time on one line, address on the line below
   const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
   const pickupRow = isSpecialStatus
-    ? `<div class="tt-row"><span class="tt-label">Від</span><span class="tt-val">${fmt(b.start)}</span></div>`
+    ? ''
     : `<div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
       (b.pickup?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.pickup.loc}</div>`:'');
   const retRow = isSpecialStatus
-    ? `<div class="tt-row"><span class="tt-label">До</span><span class="tt-val">${fmt(b.end)}</span></div>`
+    ? ''
     : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
       (b.ret?.loc?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.ret.loc}</div>`:'');
 
