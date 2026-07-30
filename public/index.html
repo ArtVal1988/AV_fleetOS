@@ -5624,11 +5624,12 @@ function dashAlertList(title, list, detailFn){
 // ── PROFITABILITY REPORT ──────────────────────────────────────────
 // Converts any booking amount to its $ equivalent using the booking's own
 // exchange rate (₴/€ amount ÷ курс). $ amounts pass through unchanged.
-function toUSD(amount, currency, exchangeRate){
+function toUSD(amount, currency, exchangeRate, fallbackRate){
   if(!amount) return 0;
   if(!currency || currency === '$') return amount;
-  const rate = parseFloat(exchangeRate) || 0;
-  if(rate <= 0) return amount; // no rate on file — can't convert, show as-is
+  let rate = parseFloat(exchangeRate) || 0;
+  if(rate <= 0) rate = fallbackRate || 0;
+  if(rate <= 0) return amount; // no rate anywhere — can't convert, show as-is
   return amount / rate;
 }
 let lastReportData = null;
@@ -5654,6 +5655,15 @@ function generateProfitabilityReport(){
   if(periodEnd < periodStart){ alert('Кінець періоду раніше за початок'); return; }
 
   const perVehicle = new Map(); // vid -> {v, bookings, days, revenue:{'$':0,'₴':0}}
+
+  // Fallback exchange rate for bookings that are missing their own (e.g.
+  // exchangeRate:0 on file) — using the rate from the single most
+  // recently-started booking that does have a valid one, so foreign
+  // currency isn't silently mistaken for USD 1:1.
+  const bookingsWithRate = bookings.filter(b => b.currency==='₴' && parseFloat(b.exchangeRate)>0);
+  const fallbackRate = bookingsWithRate.length
+    ? bookingsWithRate.reduce((latest,b) => b.start > latest.start ? b : latest).exchangeRate
+    : 0;
 
   // Include every vehicle in the fleet up front, even those with zero
   // rental activity in the period — the report should reflect the whole
@@ -5686,7 +5696,7 @@ function generateProfitabilityReport(){
     const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
     if(overlapDays <= 0) return;
     const proportion = Math.min(1, overlapDays / totalBookingDays);
-    const revenueInPeriod = toUSD(calcTotal(b), b.currency, b.exchangeRate) * proportion;
+    const revenueInPeriod = toUSD(calcTotal(b), b.currency, b.exchangeRate, fallbackRate) * proportion;
 
     entry.bookingsCount++;
     entry.days += overlapDays;
