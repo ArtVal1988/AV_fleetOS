@@ -5655,12 +5655,32 @@ function generateProfitabilityReport(){
 
   const perVehicle = new Map(); // vid -> {v, bookings, days, revenue:{'$':0,'₴':0}}
 
-  bookings.filter(b => SM[b.status]?.isBooking !== false).forEach(b => {
+  // Include every vehicle in the fleet up front, even those with zero
+  // rental activity in the period — the report should reflect the whole
+  // fleet, not just vehicles that happened to generate revenue.
+  ALL_VEHICLES.forEach(v => {
+    perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
+  });
+
+  bookings.forEach(b => {
     const bStart = new Date(b.start);
     const bEnd = new Date(getEffectiveEnd(b));
     const overlapStart = bStart > periodStart ? bStart : periodStart;
     const overlapEnd = bEnd < periodEnd ? bEnd : periodEnd;
     if(overlapEnd < overlapStart) return; // no overlap with the report period
+
+    const v = getVehicle(b.vehicleId);
+    if(!v) return;
+    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
+    const entry = perVehicle.get(v.id);
+
+    if(SM[b.status]?.isBooking === false){
+      // Non-revenue status (storage/investor/repair/personal etc) — note it
+      // for context but don't count toward bookings/days/revenue.
+      const label = SM[b.status]?.label || b.status;
+      if(!entry.statusNote.includes(label)) entry.statusNote = entry.statusNote ? entry.statusNote+', '+label : label;
+      return;
+    }
 
     const totalBookingDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, getEffectiveEnd(b));
     const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
@@ -5668,10 +5688,6 @@ function generateProfitabilityReport(){
     const proportion = Math.min(1, overlapDays / totalBookingDays);
     const revenueInPeriod = toUSD(calcTotal(b), b.currency, b.exchangeRate) * proportion;
 
-    const v = getVehicle(b.vehicleId);
-    if(!v) return;
-    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0});
-    const entry = perVehicle.get(v.id);
     entry.bookingsCount++;
     entry.days += overlapDays;
     entry.revenueUSD += revenueInPeriod;
@@ -5707,17 +5723,21 @@ function renderReportResults(rows){
         </tr>
       </thead>
       <tbody>
-        ${rows.map(r => `
-          <tr style="border-bottom:1px solid #f3f4f6">
+        ${rows.map(r => {
+          const isIdle = r.bookingsCount===0 && !r.statusNote;
+          const rowStyle = isIdle ? 'opacity:.55' : '';
+          return `
+          <tr style="border-bottom:1px solid #f3f4f6;${rowStyle}">
             <td style="padding:8px 6px">
               <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:2px 6px;margin-right:6px">${r.v.plate}</span>
               <span style="color:#6b7280">${r.v.name}</span>
+              ${r.statusNote?`<div style="font-size:10px;color:#9a4d0a;margin-top:1px">${r.statusNote}</div>`:''}
             </td>
             <td style="padding:8px 6px;text-align:center">${r.bookingsCount}</td>
             <td style="padding:8px 6px;text-align:center">${r.days}</td>
             <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenueUSD)}</td>
           </tr>
-        `).join('')}
+        `;}).join('')}
       </tbody>
       <tfoot>
         <tr style="border-top:2px solid #e5e7eb;font-weight:700">
