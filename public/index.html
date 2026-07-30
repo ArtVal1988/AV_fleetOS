@@ -4195,11 +4195,12 @@ function saveBooking(){
     return;
   }
 
-  // For individual (not company) clients paying in USD, the exchange rate
-  // is mandatory — they typically settle in cash/UAH equivalent, so
-  // without a rate on file the booking's actual UAH value can't be tracked.
-  if(clientType==='individual' && document.getElementById('bm-currency').value==='$' && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
-    alert('Для фізособи з оплатою в $ курс обміну є обов\'язковим полем');
+  // Exchange rate is mandatory for every booking, regardless of currency or
+  // client type — the profitability report converts everything to USD, and
+  // needs a valid rate for both $ bookings (UAH-equivalent tracking) and ₴
+  // bookings (USD conversion) to extract accurately.
+  if(!(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
+    alert('Курс обміну є обов\'язковим полем');
     return;
   }
 
@@ -8320,21 +8321,17 @@ function updateVatPreview(){
   const foreignSym = anchorNonUah ? cur : '$'; // left column is always the foreign-currency reference ($ when the anchored currency is ₴)
   const canShowForeign = anchorNonUah || exRate > 0;
 
-  // Exchange rate stays in place always (static layout, avoids reflow on
-  // weaker machines) — just disabled/dimmed when the order currency is ₴
-  // and no conversion is needed. EXCEPTION: business client types (ФОП/ТОВ)
-  // get it active always, purely so they can jot down a reference rate —
-  // it's never read for any calculation for these types since their
-  // currency is always forced to ₴.
+  // Exchange rate is now always active and required for every booking
+  // (every currency, every client type) — the profitability report needs
+  // it to convert accurately regardless of which currency was used.
   const rateRow = document.getElementById('bm-rate-row');
   if(rateRow){
     const rateInput = document.getElementById('bm-exchange-rate');
-    const isCompanyForRate = document.getElementById('bm-client-type')?.value !== 'individual';
     if(rateInput){
-      rateInput.disabled = isCompanyForRate ? false : !nonUah;
-      rateInput.required = isCompanyForRate ? false : nonUah;
+      rateInput.disabled = false;
+      rateInput.required = true;
     }
-    rateRow.style.opacity = (isCompanyForRate || nonUah) ? '1' : '.4';
+    rateRow.style.opacity = '1';
   }
 
   // VAT/per-day breakdown — only for company types (ФОП/ТОВ)
