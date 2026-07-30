@@ -4207,6 +4207,13 @@ function saveBooking(){
     return;
   }
 
+  // Deposit is mandatory too — must be explicitly filled in (0 is a valid
+  // choice meaning "no deposit required"), just not left blank.
+  if(currentStatusIsBooking && document.getElementById('bm-deposit').value.trim()===''){
+    alert('Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)');
+    return;
+  }
+
   const orderStatuses = ['rented', 'res-docs', 'reserved'];
   if(orderStatuses.includes(document.getElementById('bm-status').value)){
     const clientName = document.getElementById('bm-name').value.trim();
