@@ -6186,10 +6186,17 @@ function showExtDebtAtDateWidget(){
   widget.style.display = 'block';
   const pickedInput = document.getElementById('ext-debt-date-picked');
   if(pickedInput && !pickedInput.value){
-    pickedInput.min = from; // can't check a date before the extension itself starts
+    // Allow checking debt at any date from when this specific booking's
+    // rental actually began (not just from when the current extension
+    // itself started) — and no upper limit, so future dates beyond the
+    // extension's own end can still be checked (the debt simply stays at
+    // its full, final value past that point).
+    const bookingStart = document.getElementById('bm-start')?.value || from;
+    pickedInput.min = bookingStart;
+    pickedInput.removeAttribute('max');
     const today = new Date(); today.setHours(0,0,0,0);
     const todayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
-    pickedInput.value = todayStr < from ? from : todayStr;
+    pickedInput.value = todayStr < bookingStart ? bookingStart : todayStr;
   }
   renderExtDebtAtDate();
 }
