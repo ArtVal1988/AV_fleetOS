@@ -2946,11 +2946,11 @@ function getOsagoDotStatus(v){
   return daysLeftStatus(v.osago?.end);
 }
 function getKaskoDotStatus(v){
-  if(!v.kasko) return null;
+  if(!v.kasko) return null; // truly no policy on file — empty half
   const payments = v.kasko.payments||[];
   const unpaid = payments.filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const nextDue = unpaid[0]?.date;
-  if(!nextDue) return null; // fully paid, or no payment schedule on file
+  if(!nextDue) return 'ok'; // policy exists, fully paid (or no schedule recorded yet)
   return daysLeftStatus(nextDue);
 }
 function insDot(status, side){
@@ -2963,12 +2963,34 @@ function insDot(status, side){
   const color = status==='danger' ? '#ef4444' : '#f59e0b';
   return '<span class="vact-dot-corner" style="'+pos+';background:'+color+'"></span>';
 }
+const SHIELD_PATH = 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
+function insStatusColor(status){
+  if(status==='danger') return '#ef4444';
+  if(status==='warn') return '#f59e0b';
+  if(status==='ok') return '#22c55e';
+  return null; // no policy on file — leave that half empty
+}
+// Builds the insurance shield split into two vertical halves: left colored
+// for ОСЦПВ (mandatory) status, right for КАСКО (voluntary) status. A half
+// with no policy on file (status null) stays unfilled — just the outline.
+function buildInsuranceIcon(osagoStatus, kaskoStatus){
+  const uid = 'ins'+Math.random().toString(36).slice(2,8);
+  const osagoColor = insStatusColor(osagoStatus);
+  const kaskoColor = insStatusColor(kaskoStatus);
+  return '<svg viewBox="0 0 24 24" width="13" height="13">'+
+    '<defs>'+
+      '<clipPath id="'+uid+'l"><rect x="0" y="0" width="12" height="24"/></clipPath>'+
+      '<clipPath id="'+uid+'r"><rect x="12" y="0" width="12" height="24"/></clipPath>'+
+    '</defs>'+
+    (osagoColor ? '<path d="'+SHIELD_PATH+'" fill="'+osagoColor+'" clip-path="url(#'+uid+'l)"/>' : '')+
+    (kaskoColor ? '<path d="'+SHIELD_PATH+'" fill="'+kaskoColor+'" clip-path="url(#'+uid+'r)"/>' : '')+
+    '<path d="'+SHIELD_PATH+'" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+  '</svg>';
+}
 function buildVehCell(v){
   var svcStatusLive = v.service ? computeServiceStatus(v) : null;
   var sc = svcStatusLive==='danger'?'#ef4444':svcStatusLive==='warn'?'#f59e0b':'#9ca3af';
-  var osagoDots = insDot(getOsagoDotStatus(v), 'left');
-  var kaskoDots = insDot(getKaskoDotStatus(v), 'right');
-  var idot = osagoDots + kaskoDots;
+  var insuranceIcon = buildInsuranceIcon(getOsagoDotStatus(v), getKaskoDotStatus(v));
   var dc = (v.docs?.missingCount||0)>1?'#ef4444':(v.docs?.missingCount||0)>0?'#f59e0b':'#9ca3af';
   var sdot = '';
   var ddot = insDot((v.docs?.missingCount||0)>1?'danger':(v.docs?.missingCount||0)>0?'warn':null, 'right');
@@ -2980,7 +3002,7 @@ function buildVehCell(v){
       '<div class="veh-actions">'+
         '<button class="veh-act-btn" title="Характеристики" onclick="event.stopPropagation();showVehicleSpecs(event,'+v.id+')" style="color:#9ca3af;border-color:#9ca3af">'+ICON_INFO+'</button>'+
         '<button class="veh-act-btn" title="Тех. обслуговування" onclick="event.stopPropagation();openToModal('+v.id+')" style="color:'+sc+'">'+ICON_SERVICE+sdot+'</button>'+
-        '<button class="veh-act-btn" title="Страхування" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:#9ca3af">'+ICON_INSURANCE+idot+'</button>'+
+        '<button class="veh-act-btn" title="Страхування (зліва ОСЦПВ, справа КАСКО)" onclick="event.stopPropagation();openInsuranceModal('+v.id+')" style="color:#9ca3af">'+insuranceIcon+'</button>'+
         '<button class="veh-act-btn" title="Документи" onclick="event.stopPropagation();openDocsModal('+v.id+')" style="color:#9ca3af">'+ICON_DOCS+ddot+'</button>'+
       '</div>'+
     '</div>';
