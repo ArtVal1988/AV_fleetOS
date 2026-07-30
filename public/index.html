@@ -2623,14 +2623,14 @@ input.dm-pf-val.tel{font-size:14px;}
 <script>
 /* ── CONSTANTS ── */
 const STATUSES=[
-  {key:'rented',    label:'В оренді',             color:'#f06060'},
-  {key:'extension', label:'Пролонгація без $',    color:'#9090a8'},
-  {key:'res-docs',  label:'Резерв + документи',   color:'#8060f0'},
-  {key:'reserved',  label:'Резерв',               color:'#60f0a0'},
-  {key:'repair',    label:'В ремонті',             color:'#f09060'},
-  {key:'investor',  label:'У Інвестора',           color:'#60d0f0'},
-  {key:'storage',   label:'На зберіганні',         color:'#f0d060'},
-  {key:'personal',  label:'Особисте використання', color:'#f060c0'},
+  {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
+  {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
+  {key:'res-docs',  label:'Резерв + документи',   color:'#8060f0', isBooking:true},
+  {key:'reserved',  label:'Резерв',               color:'#60f0a0', isBooking:true},
+  {key:'repair',    label:'В ремонті',             color:'#f09060', isBooking:false},
+  {key:'investor',  label:'У Інвестора',           color:'#60d0f0', isBooking:false},
+  {key:'storage',   label:'На зберіганні',         color:'#f0d060', isBooking:false},
+  {key:'personal',  label:'Особисте використання', color:'#f060c0', isBooking:false},
 ];
 const SM=Object.fromEntries(STATUSES.map(s=>[s.key,s]));
 // Load any statuses an admin previously created/renamed/recolored via the Статуси panel.
@@ -2643,6 +2643,10 @@ try{
     STATUSES.forEach(s=>SM[s.key]=s);
   }
 }catch(e){}
+// One-time migration for statuses saved before the isBooking field existed.
+STATUSES.forEach(s=>{
+  if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
+});
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
   apiFetch('PUT','/settings/statuses',{value:STATUSES});
@@ -3246,7 +3250,7 @@ function showTooltip(e,bid){
     }).join('') + `</div>` : '';
 
   // 2: date+time on one line, address on the line below
-  const isSpecialStatus = STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
+  const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
   const pickupRow = isSpecialStatus
     ? `<div class="tt-row"><span class="tt-label">Від</span><span class="tt-val">${fmt(b.start)}</span></div>`
     : `<div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
@@ -7655,7 +7659,8 @@ function updateBookingDetailsVisibility(){
   const wrap=document.getElementById('bm-order-details');
   const closedLabel=document.getElementById('bm-closed-label');
   if(!sel || !wrap) return;
-  const hide = STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
+  const st = SM[sel.value];
+  const hide = st ? (st.isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
 
   wrap.style.display = 'flex'; // block 2 (dates) always stays visible
   ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-block-4','bm-block-5'].forEach(id=>{
@@ -9848,6 +9853,12 @@ function renderStatusesPanelList(){
         style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
       <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
         style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${s.color};outline:none">
+      <button onclick="toggleStatusLevel('${s.key}')" title="Клікніть, щоб перемкнути"
+        style="flex-shrink:0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;${
+          s.isBooking!==false
+            ? 'background:#eff6ff;border:1px solid #93c5fd;color:#1d4ed8'
+            : 'background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280'
+        }">${s.isBooking!==false ? '📋 Замовлення' : '🏷️ Лише статус'}</button>
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
       ${s.key==='extension'
         ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
@@ -9855,11 +9866,18 @@ function renderStatusesPanelList(){
     </div>
   `).join('');
 }
+function toggleStatusLevel(key){
+  const s = SM[key];
+  if(!s) return;
+  s.isBooking = s.isBooking===false ? true : false;
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+}
 function addNewStatus(){
   let n = 1;
   while(SM['custom'+n]) n++;
   const key = 'custom'+n;
-  const newStatus = {key, label:'Новий статус', color:'#9ca3af'};
+  const newStatus = {key, label:'Новий статус', color:'#9ca3af', isBooking:true};
   STATUSES.push(newStatus);
   SM[key] = newStatus;
   saveStatusesToStorage();
@@ -10121,6 +10139,10 @@ async function syncFromServer(){
     sSettings.statuses.forEach(s=>STATUSES.push(s));
     Object.keys(SM).forEach(k=>delete SM[k]);
     STATUSES.forEach(s=>SM[s.key]=s);
+    // One-time migration for statuses saved before the isBooking field existed.
+    STATUSES.forEach(s=>{
+      if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
+    });
     // The 'extension' status is used internally to color extension-period
     // calendar cells, not a user-facing status — if it was ever deleted
     // (e.g. before this protection existed), restore it so extension cells
