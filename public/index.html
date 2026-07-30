@@ -2503,6 +2503,36 @@ input.dm-pf-val.tel{font-size:14px;}
 
     </div>
 
+    <div class="msec-inner-sep" style="margin-top:10px" id="bm-substitute-section">
+      <button type="button" class="extras-toggle" id="bm-substitute-toggle-btn" onclick="toggleSubstituteSection()">
+        <span id="bm-substitute-toggle-icon">⊕</span>
+        <span>🔄 Підмінне авто</span>
+        <span class="extras-toggle-chevron" id="bm-substitute-chevron">▾</span>
+      </button>
+      <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:10px">
+        <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+          <div style="flex:1;min-width:140px">
+            <label class="vf-lbl">Підмінне авто</label>
+            <select id="bm-sub-vehicle" class="vf-inp" style="width:100%"></select>
+          </div>
+          <div>
+            <label class="vf-lbl">З</label>
+            <input type="date" id="bm-sub-from" class="vf-inp">
+          </div>
+          <div>
+            <label class="vf-lbl">По</label>
+            <input type="date" id="bm-sub-to" class="vf-inp">
+          </div>
+          <div style="flex:2;min-width:160px">
+            <label class="vf-lbl">Коментар</label>
+            <input type="text" id="bm-sub-comment" class="vf-inp" placeholder="напр. ремонт двигуна" style="width:100%">
+          </div>
+          <button type="button" onclick="addSubstitutePeriod()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати</button>
+        </div>
+      </div>
+    </div>
+
     <div id="bm-return-anchor-ext"></div>
 
     <div class="msec msec-b4" id="bm-block-4">
@@ -3896,6 +3926,16 @@ function openBookingModal(vid=null,start=null,end=null){
   currentExtHistory = [];
   editingExtHistoryIndex = null;
   renderExtTimeline();
+
+  currentSubstitutes = [];
+  renderSubstituteList();
+  const subPanel0 = document.getElementById('bm-substitute-panel');
+  const subIcon0 = document.getElementById('bm-substitute-toggle-icon');
+  const subChevron0 = document.getElementById('bm-substitute-chevron');
+  if(subPanel0) subPanel0.style.display = 'none';
+  if(subIcon0) subIcon0.textContent = '⊕';
+  if(subChevron0) subChevron0.style.transform = '';
+
   editBid=null;
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='none';
@@ -4048,6 +4088,18 @@ function editBooking(bid){
   editingExtHistoryIndex = null;
   renderExtTimeline();
   updateKmDiff();
+
+  currentSubstitutes = (b.substituteVehicles||[]).slice();
+  renderSubstituteList();
+  const subPanel = document.getElementById('bm-substitute-panel');
+  const subIcon = document.getElementById('bm-substitute-toggle-icon');
+  const subChevron = document.getElementById('bm-substitute-chevron');
+  const hasSubstitutes = currentSubstitutes.length > 0;
+  if(subPanel){ subPanel.style.display = hasSubstitutes ? 'block' : 'none'; }
+  if(subIcon){ subIcon.textContent = hasSubstitutes ? '⊖' : '⊕'; }
+  if(subChevron){ subChevron.style.transform = hasSubstitutes ? 'rotate(180deg)' : ''; }
+  if(hasSubstitutes) populateSubVehicleDropdown();
+
   document.getElementById('bm-rate').value=b.rate?Number(b.rate).toLocaleString('uk-UA'):'';
   document.getElementById('bm-currency').value=b.currency||'$';
   rateCurrencyAnchor = b.currency||'$';
@@ -4287,6 +4339,7 @@ function saveBooking(){
       paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
+    substituteVehicles: currentSubstitutes.slice(),
     rate:parseThousands(document.getElementById('bm-rate').value),
     currency:document.getElementById('bm-currency').value,
     deposit:parseThousands(document.getElementById('bm-deposit').value),
@@ -5992,6 +6045,63 @@ function openExtensionForNewEntry(){
   // it to history and open a fresh one; otherwise nothing to do (already open).
   const hasData = getExtDateField('bm-ext-from') && getExtDateField('bm-ext-to');
   if(hasData) closeAndStartNewExtension();
+}
+let currentSubstitutes = []; // working copy, mirrors currentExtHistory's pattern
+
+function toggleSubstituteSection(){
+  const panel = document.getElementById('bm-substitute-panel');
+  const icon = document.getElementById('bm-substitute-toggle-icon');
+  const chevron = document.getElementById('bm-substitute-chevron');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if(!isOpen) populateSubVehicleDropdown();
+}
+function populateSubVehicleDropdown(){
+  const sel = document.getElementById('bm-sub-vehicle');
+  if(!sel) return;
+  const currentVid = parseInt(document.getElementById('bm-vehicle')?.value);
+  sel.innerHTML = ALL_VEHICLES.filter(v=>v.id!==currentVid).map(v=>`<option value="${v.id}">${v.plate} · ${stripYear(v.name)}</option>`).join('');
+}
+function addSubstitutePeriod(){
+  const vehicleId = parseInt(document.getElementById('bm-sub-vehicle').value);
+  const fromDate = document.getElementById('bm-sub-from').value;
+  const toDate = document.getElementById('bm-sub-to').value;
+  const comment = document.getElementById('bm-sub-comment').value.trim();
+  if(!vehicleId || !fromDate || !toDate){ alert('Оберіть авто та обидві дати'); return; }
+  if(toDate < fromDate){ alert('Дата "По" не може бути раніше дати "З"'); return; }
+
+  const conflict = bookings.find(b =>
+    b.vehicleId === vehicleId && b.id !== editBid &&
+    fromDate <= getEffectiveEnd(b) && b.start <= toDate
+  );
+  if(conflict){
+    const st = SM[conflict.status];
+    alert(`Це авто вже зайняте на цей період: "${st?.label||conflict.status}" (${fmt(conflict.start)}–${fmt(getEffectiveEnd(conflict))}). Оберіть інше авто або дати.`);
+    return;
+  }
+
+  currentSubstitutes.push({vehicleId, fromDate, toDate, comment});
+  document.getElementById('bm-sub-from').value = '';
+  document.getElementById('bm-sub-to').value = '';
+  document.getElementById('bm-sub-comment').value = '';
+  renderSubstituteList();
+}
+function renderSubstituteList(){
+  const wrap = document.getElementById('bm-substitute-list');
+  if(!wrap) return;
+  wrap.innerHTML = currentSubstitutes.map((s,i) => {
+    const v = getVehicle(s.vehicleId);
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 10px;font-size:11px">
+      <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.comment?' · <i>'+s.comment+'</i>':''}</span>
+      <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+function deleteSubstitutePeriod(i){
+  currentSubstitutes.splice(i,1);
+  renderSubstituteList();
 }
 function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
