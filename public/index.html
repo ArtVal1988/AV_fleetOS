@@ -6169,6 +6169,20 @@ function calcDebtAtDate(dateStr, from, totalDays, total, paid){
   const proratedCost = totalDays>0 ? total*(elapsedDays/totalDays) : 0;
   return Math.max(0, Math.round((proratedCost - paid)*100)/100);
 }
+// Like calcDebtAtDate, but for dates past the extension's own end keeps
+// charging the same daily rate per extra day instead of capping at the
+// fixed extension total — only meaningful while the extension is still
+// active (the car hasn't actually been returned/closed out early).
+function calcDebtAtDateExtrapolated(dateStr, from, totalDays, total, paid){
+  const atDate = new Date(dateStr+'T00:00:00');
+  const fromD = new Date(from+'T00:00:00');
+  const elapsedDaysRaw = Math.round((atDate - fromD)/86400000);
+  if(elapsedDaysRaw <= totalDays) return calcDebtAtDate(dateStr, from, totalDays, total, paid);
+  const dailyRate = totalDays>0 ? total/totalDays : 0;
+  const extraDays = elapsedDaysRaw - totalDays;
+  const fullDebt = Math.max(0, total - paid);
+  return Math.round((fullDebt + extraDays*dailyRate)*100)/100;
+}
 function toggleExtDebtWidget(){
   const panel = document.getElementById('ext-debt-panel');
   const icon = document.getElementById('ext-debt-toggle-icon');
@@ -6216,10 +6230,12 @@ function renderExtDebtAtDate(){
   const curColor = c => c==='₴' ? '#166534' : '#1d4ed8';
   const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${amount.toLocaleString('uk-UA')} ${c}</span>`;
 
-  const renderRow = (dateStr, resultId) => {
+  const renderRow = (dateStr, resultId, extrapolate) => {
     const el = document.getElementById(resultId);
     if(!el || !dateStr) return;
-    const debt = calcDebtAtDate(dateStr, from, totalDays, total, paid);
+    const debt = extrapolate
+      ? calcDebtAtDateExtrapolated(dateStr, from, totalDays, total, paid)
+      : calcDebtAtDate(dateStr, from, totalDays, total, paid);
     el.innerHTML = debt>0 ? amtSpan(debt, cur) : '<span style="color:#16a34a">немає боргу</span>';
   };
 
@@ -6254,7 +6270,7 @@ function renderExtDebtAtDate(){
   renderRow(to, 'ext-debt-result-end');
 
   const picked = document.getElementById('ext-debt-date-picked')?.value;
-  renderRow(picked, 'ext-debt-result-picked');
+  renderRow(picked, 'ext-debt-result-picked', true);
 }
 
 function saveExtensionEntry(){
