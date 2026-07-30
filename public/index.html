@@ -3350,7 +3350,7 @@ function showTooltip(e,bid){
             <div style="font-size:11.5px;text-align:center">${boundaryLine}</div>
             <div style="display:flex;gap:8px">
               <div style="flex:1;font-size:11.5px;display:flex;align-items:center;gap:4px"><span>📅</span><span style="color:var(--muted)">На сьогодні:</span> <b>${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
-              <div style="flex:1;font-size:11.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px"><span>🏁</span><span style="color:var(--muted)">На кінець періоду:</span> <b>${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:11.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:4px"><span>🏁</span><span style="color:var(--muted)">На ${fmtShortYear(ext.toDate)}:</span> <b>${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
             </div>
           </div>
         `;
