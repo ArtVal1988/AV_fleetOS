@@ -2470,26 +2470,25 @@ input.dm-pf-val.tel{font-size:14px;}
             <span class="extras-toggle-chevron" id="ext-debt-chevron">▾</span>
           </button>
           <div class="extras-panel" id="ext-debt-panel" style="display:none;margin-top:8px;padding:14px;background:linear-gradient(135deg,#fef9f3,#fdf4ec);border:1px solid #fbe0c0;border-radius:12px;box-shadow:0 1px 3px rgba(194,97,13,.08)">
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px;text-align:center">
               <span style="font-size:14px;flex-shrink:0">📍</span>
               <span id="ext-debt-result-1" style="font-size:12px;font-weight:700;color:#c2610d"></span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
-              <span style="font-size:14px;flex-shrink:0">📅</span>
-              <div style="font-size:11px;color:#9a4d0a;flex-shrink:0">Сьогодні <span style="font-family:var(--font-mono);font-weight:600;color:#6b7280">(<span id="ext-debt-today-lbl"></span>)</span></div>
-              <span id="ext-debt-result-today" style="font-size:13px;font-weight:700;color:#c2610d;margin-left:auto;flex-shrink:0"></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
-              <span style="font-size:14px;flex-shrink:0">🏁</span>
-              <div style="font-size:11px;color:#9a4d0a;flex-shrink:0">Кінець періоду <span style="font-family:var(--font-mono);font-weight:600;color:#6b7280">(<span id="ext-debt-end-lbl"></span>)</span></div>
-              <span id="ext-debt-result-end" style="font-size:13px;font-weight:700;color:#c2610d;margin-left:auto;flex-shrink:0"></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #93c5fd;border-radius:8px;padding:8px 10px">
-              <span style="font-size:14px;flex-shrink:0">🎯</span>
-              <div style="font-size:11px;color:#1d4ed8;flex-shrink:0">Обрана дата</div>
-              <input type="date" id="ext-debt-date-picked" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);background:#eff6ff">
-              <span id="ext-debt-result-picked" style="font-size:13px;font-weight:700;color:#1d4ed8;margin-left:auto;flex-shrink:0"></span>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px">
+              <div style="text-align:center;font-size:10px;color:#9a4d0a;font-weight:700">📅 Сьогодні</div>
+              <div style="text-align:center;font-size:10px;color:#9a4d0a;font-weight:700">🏁 Кінець періоду</div>
+              <div style="text-align:center;font-size:10px;color:#1d4ed8;font-weight:700">🎯 Обрана дата</div>
+
+              <div style="text-align:center;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#6b7280"><span id="ext-debt-today-lbl"></span></div>
+              <div style="text-align:center;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#6b7280"><span id="ext-debt-end-lbl"></span></div>
+              <div style="text-align:center">
+                <input type="date" id="ext-debt-date-picked" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);background:#eff6ff;width:100%;box-sizing:border-box">
+              </div>
+
+              <div style="text-align:center"><span id="ext-debt-result-today" style="font-size:13px;font-weight:700;color:#c2610d"></span></div>
+              <div style="text-align:center"><span id="ext-debt-result-end" style="font-size:13px;font-weight:700;color:#c2610d"></span></div>
+              <div style="text-align:center"><span id="ext-debt-result-picked" style="font-size:13px;font-weight:700;color:#1d4ed8"></span></div>
             </div>
           </div>
           </div>
