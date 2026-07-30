@@ -3322,7 +3322,7 @@ function showTooltip(e,bid){
       if(st !== 'paid' && ext.fromDate && ext.toDate && ext.cost>0){
         const extCur = ext.currency||b.currency||'$';
         const extCurColor = extCur==='₴' ? '#166534' : '#1d4ed8';
-        const amtSpan = amt => `<span style="color:${extCurColor};font-weight:400">${fmt1(amt)} ${extCur}</span>`;
+        const amtSpan = amt => `<span style="color:${extCurColor};font-weight:600">${fmt1(amt)} ${extCur}</span>`;
         const totalDays = ext.days>0 ? ext.days : Math.max(1, Math.round((new Date(ext.toDate)-new Date(ext.fromDate))/86400000));
         const paid = ext.amountPaid||0;
         const dailyRate = ext.cost/totalDays;
@@ -3333,7 +3333,7 @@ function showTooltip(e,bid){
         } else {
           const boundaryD = new Date(ext.fromDate+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered+1);
           const boundaryStr = fmtShortYear(dStr(boundaryD.getFullYear(), boundaryD.getMonth(), boundaryD.getDate()));
-          const dateSpan = `<span style="font-weight:500">${boundaryStr}</span>`;
+          const dateSpan = `<span style="font-weight:600">${boundaryStr}</span>`;
           const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
           const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
           boundaryLine = paidTowardDay>0.005
