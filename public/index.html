@@ -10887,7 +10887,7 @@ function startAutoRefresh(){
   _autoRefreshTimer = setInterval(() => {
     if(!_token || isAnyModalOpen()) return;
     syncFromServer();
-  }, 12000); // every 12s
+  }, 60000); // every 60s
 }
 
 </script>
