@@ -5863,7 +5863,10 @@ function generateProfitabilityReport(){
       const endUTC = new Date(Date.UTC(overlapEnd.getUTCFullYear(), overlapEnd.getUTCMonth(), overlapEnd.getUTCDate()));
       while(cur <= endUTC){
         const dateStr = dStr(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate());
-        const sub = b.substituteVehicles.find(s => dateStr >= s.fromDate && dateStr <= s.toDate);
+        // The handover day (fromDate) itself still belongs to the main
+        // vehicle — the substitute vehicle's revenue starts the day after,
+        // matching the same boundary convention used for extension history.
+        const sub = b.substituteVehicles.find(s => dateStr > s.fromDate && dateStr <= s.toDate);
         if(sub){
           mainDays--;
           subDaysMap.set(sub.vehicleId, (subDaysMap.get(sub.vehicleId)||0) + 1);
