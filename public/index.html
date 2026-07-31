@@ -354,7 +354,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .td-day.today-col .cell-date-num{color:#0055ff;font-weight:700;opacity:1;}
 .day-cell{height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;position:relative;}
 .day-cell.empty{background:transparent;color:transparent;}
-.td-day.substitute-covered .day-cell{box-shadow:inset 0 0 0 2px #8b5cf6;}
 .td-day.substitute-covered .day-cell::after{content:'🔄';position:absolute;top:1px;right:1px;font-size:8px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.6));}
 .day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
 .td-day.empty-cell-pending{background:#dbeafe!important;outline:2px solid #2563eb;outline-offset:-2px;}
@@ -2667,6 +2666,7 @@ const STATUSES=[
   {key:'investor',  label:'У Інвестора',           color:'#60d0f0', isBooking:false},
   {key:'storage',   label:'На зберіганні',         color:'#f0d060', isBooking:false},
   {key:'personal',  label:'Особисте використання', color:'#f060c0', isBooking:false},
+  {key:'substitute',label:'Підмінне авто',         color:'#a78bfa', isBooking:false},
 ];
 const SM=Object.fromEntries(STATUSES.map(s=>[s.key,s]));
 // Load any statuses an admin previously created/renamed/recolored via the Статуси panel.
@@ -3182,7 +3182,7 @@ function renderCalendar(){
               onmouseenter="showTooltip(event,${subInfo.booking.id})"
               onmouseleave="hideTooltip()"
               onclick="event.stopPropagation();expandBooking(${subInfo.booking.id})">
-              <div class="day-cell booked" style="background:#8b5cf6;color:#fff" title="Підміна для ${origV?origV.plate:''}">
+              <div class="day-cell booked" style="background:${SM['substitute']?.color||'#a78bfa'};color:#fff" title="Підміна для ${origV?origV.plate:''}">
                 <span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span>
               </div></td>`;
           }
@@ -3268,12 +3268,18 @@ function renderCalendar(){
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${isHalfLastDay?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
         })();
         // Main vehicle's cell during an active substitution period — the
-        // usual booking still renders normally (billing/history stays on
-        // this vehicle), just flagged with a distinct border so it's clear
-        // the car itself wasn't actually here that day.
-        return (subInfo && subInfo.type==='covered')
-          ? cellHtml.replace('<td class="td-day', '<td class="td-day substitute-covered"')
-          : cellHtml;
+        // usual booking still renders normally for billing/history
+        // purposes (tooltip/click/status unchanged), but the visible
+        // background swaps to a light version of the substitute color so
+        // it's clear the car itself wasn't actually here that day.
+        if(subInfo && subInfo.type==='covered'){
+          const lightSub = mixWithWhite(SM['substitute']?.color||'#a78bfa', .55);
+          return cellHtml
+            .replace('<td class="td-day', '<td class="td-day substitute-covered"')
+            .replace(/background:[^;"]+;/, 'background:'+lightSub+';')
+            .replace(/color:#fff/, 'color:#3b1f7a');
+        }
+        return cellHtml;
       }).join('');
       const isHl = highlightedVid===v.id;
       html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle" style="'+tdVehStyle+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
@@ -10145,7 +10151,7 @@ function renderStatusesPanelList(){
             : 'background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280'
         }">${s.isBooking!==false ? '📋 Замовлення' : '🏷️ Лише статус'}</button>
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
-      ${s.key==='extension'
+      ${(s.key==='extension'||s.key==='substitute')
         ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
         : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
@@ -10173,8 +10179,8 @@ function addNewStatus(){
 function deleteStatus(key){
   const s = SM[key];
   if(!s) return;
-  if(key==='extension'){
-    alert('Статус "Пролонгація без $" використовується системою для позначення продовжень оренди в графіку і не може бути видалений.');
+  if(key==='extension' || key==='substitute'){
+    alert(`Статус "${s.label}" використовується системою для позначення ${key==='extension'?'продовжень оренди':'підмінних авто'} в графіку і не може бути видалений.`);
     return;
   }
   const inUse = bookings.filter(b=>b.status===key).length;
