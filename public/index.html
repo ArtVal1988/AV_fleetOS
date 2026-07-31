@@ -354,6 +354,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .td-day.today-col .cell-date-num{color:#0055ff;font-weight:700;opacity:1;}
 .day-cell{height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;position:relative;}
 .day-cell.empty{background:transparent;color:transparent;}
+.td-day.substitute-covered .day-cell{box-shadow:inset 0 0 0 2px #8b5cf6;}
+.td-day.substitute-covered .day-cell::after{content:'🔄';position:absolute;top:1px;right:1px;font-size:8px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.6));}
 .day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
 .td-day.empty-cell-pending{background:#dbeafe!important;outline:2px solid #2563eb;outline-offset:-2px;}
 .td-day.empty-cell-pending .day-cell.empty{background:transparent;color:#1d4ed8!important;}
@@ -2910,6 +2912,31 @@ function getBookingById(id){ return bookingsById.get(id) || bookings.find(x=>x.i
 
 function cellKey(vid,d){const dt=colDate(d);return`${vid}_${dt.getUTCFullYear()}_${dt.getUTCMonth()}_${dt.getUTCDate()}`;}
 
+// Substitute-vehicle lookup: a separate map alongside cellMap, keyed the
+// same way, so the main rendering loop can check it without touching
+// buildCellMap()'s own delicate logic. Each substitution period registers
+// two kinds of entries: 'active' on the substitute vehicle's own row (the
+// car actually being used there), and 'covered' on the original vehicle's
+// row for the same days (that car is temporarily out, its normal
+// booking still 'occupies' the cell for billing/history purposes, but the
+// cell gets a distinct visual treatment to show it wasn't really there).
+function buildSubstituteCellMap(){
+  const map = new Map();
+  bookings.forEach(b => {
+    (b.substituteVehicles||[]).forEach(sub => {
+      const cur = new Date(sub.fromDate);
+      const end = new Date(sub.toDate);
+      while(cur <= end){
+        const y = cur.getUTCFullYear(), m = cur.getUTCMonth(), dNum = cur.getUTCDate();
+        map.set(`${sub.vehicleId}_${y}_${m}_${dNum}`, {type:'active', booking:b, sub});
+        map.set(`${b.vehicleId}_${y}_${m}_${dNum}`, {type:'covered', booking:b, sub});
+        cur.setUTCDate(cur.getUTCDate()+1);
+      }
+    });
+  });
+  return map;
+}
+
 /* ── RENDER ── */
 
 const ICON_SERVICE   = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
@@ -3116,6 +3143,7 @@ function removeSticker(id){
 
 function renderCalendar(){
   const cellMap=buildCellMap();
+  const subMap=buildSubstituteCellMap();
   const total=VIEW_DAYS;
   const days=Array.from({length:total},(_,i)=>i+1);
   const isToday=d=>{const dt=colDate(d);return dt.getFullYear()===today.getFullYear()&&dt.getMonth()===today.getMonth()&&dt.getDate()===today.getDate();};
@@ -3144,7 +3172,20 @@ function renderCalendar(){
         const k=cellKey(v.id,d);
         const bookingArr=cellMap.get(k);
         const visibleArr=bookingArr?bookingArr.filter(b=>!hiddenStatuses.has(b.status)):[];
+        const subInfo = subMap.get(k);
+        const cellHtml = (()=>{
         if(!visibleArr.length){
+          if(subInfo && subInfo.type==='active'){
+            const origV = getVehicle(subInfo.booking.vehicleId);
+            return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
+              data-vid="${v.id}" data-day="${d}"
+              onmouseenter="showTooltip(event,${subInfo.booking.id})"
+              onmouseleave="hideTooltip()"
+              onclick="event.stopPropagation();expandBooking(${subInfo.booking.id})">
+              <div class="day-cell booked" style="background:#8b5cf6;color:#fff" title="Підміна для ${origV?origV.plate:''}">
+                <span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span>
+              </div></td>`;
+          }
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
             data-vid="${v.id}" data-day="${d}" data-empty="1"
             onmouseenter="showTooltipEmpty(event)"
@@ -3225,6 +3266,14 @@ function renderCalendar(){
           onmouseleave="hideTooltip()"
           onclick="selectBooking(${booking.id},event)">
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${isHalfLastDay?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
+        })();
+        // Main vehicle's cell during an active substitution period — the
+        // usual booking still renders normally (billing/history stays on
+        // this vehicle), just flagged with a distinct border so it's clear
+        // the car itself wasn't actually here that day.
+        return (subInfo && subInfo.type==='covered')
+          ? cellHtml.replace('<td class="td-day', '<td class="td-day substitute-covered"')
+          : cellHtml;
       }).join('');
       const isHl = highlightedVid===v.id;
       html += '<tr class="veh-row'+(isHl?' row-hl':'')+'" data-vid="'+v.id+'"><td class="td-vehicle" style="'+tdVehStyle+'">' + buildVehCell(v) + '</td>' + cells + '</tr>';
