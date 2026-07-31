@@ -5849,16 +5849,43 @@ function generateProfitabilityReport(){
       return;
     }
 
-    const overlapDays = Math.round((overlapEnd - overlapStart)/86400000) + 1;
-    if(overlapDays <= 0) return;
-    // Revenue is calculated directly from the daily rate × days actually
-    // within the selected period — not prorated from the booking's full
-    // total, which would incorrectly include one-time extras/services.
-    const revenueInPeriod = toUSD(overlapDays * (b.rate||0), b.currency, b.exchangeRate, fallbackRate);
+    const overlapDaysTotal = Math.round((overlapEnd - overlapStart)/86400000) + 1;
+    if(overlapDaysTotal <= 0) return;
+
+    // Split days by substitute coverage: a day covered by an active
+    // substitution attributes its revenue (at this booking's own rate) to
+    // the substitute vehicle instead of the main one — the client wasn't
+    // actually in this car that day.
+    let mainDays = overlapDaysTotal;
+    const subDaysMap = new Map(); // substituteVehicleId -> day count
+    if(b.substituteVehicles && b.substituteVehicles.length){
+      const cur = new Date(Date.UTC(overlapStart.getUTCFullYear(), overlapStart.getUTCMonth(), overlapStart.getUTCDate()));
+      const endUTC = new Date(Date.UTC(overlapEnd.getUTCFullYear(), overlapEnd.getUTCMonth(), overlapEnd.getUTCDate()));
+      while(cur <= endUTC){
+        const dateStr = dStr(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate());
+        const sub = b.substituteVehicles.find(s => dateStr >= s.fromDate && dateStr <= s.toDate);
+        if(sub){
+          mainDays--;
+          subDaysMap.set(sub.vehicleId, (subDaysMap.get(sub.vehicleId)||0) + 1);
+        }
+        cur.setUTCDate(cur.getUTCDate()+1);
+      }
+    }
 
     entry.bookingsCount++;
-    entry.days += overlapDays;
-    entry.revenueUSD += revenueInPeriod;
+    if(mainDays > 0){
+      entry.days += mainDays;
+      entry.revenueUSD += toUSD(mainDays * (b.rate||0), b.currency, b.exchangeRate, fallbackRate);
+    }
+    subDaysMap.forEach((subDays, subVehicleId) => {
+      const subV = getVehicle(subVehicleId);
+      if(!subV) return;
+      if(!perVehicle.has(subVehicleId)) perVehicle.set(subVehicleId, {v:subV, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
+      const subEntry = perVehicle.get(subVehicleId);
+      subEntry.bookingsCount++;
+      subEntry.days += subDays;
+      subEntry.revenueUSD += toUSD(subDays * (b.rate||0), b.currency, b.exchangeRate, fallbackRate);
+    });
   });
 
   const rows = [...perVehicle.values()].sort((a,b) => b.revenueUSD - a.revenueUSD);
