@@ -3179,7 +3179,7 @@ function renderCalendar(){
             const origV = getVehicle(subInfo.booking.vehicleId);
             return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
               data-vid="${v.id}" data-day="${d}"
-              onmouseenter="showTooltip(event,${subInfo.booking.id})"
+              onmouseenter="showTooltip(event,${subInfo.booking.id},{fromDate:'${subInfo.sub.fromDate}',toDate:'${subInfo.sub.toDate}'})"
               onmouseleave="hideTooltip()"
               onclick="event.stopPropagation();expandBooking(${subInfo.booking.id})">
               <div class="day-cell booked" style="background:${SM['substitute']?.color||'#a78bfa'};color:#fff" title="Підміна для ${origV?origV.plate:''}">
@@ -3294,9 +3294,9 @@ function renderCalendar(){
 const tt=document.getElementById('tooltip');
 let ttHideTimer=null;
 let ttShownBid=null;
-function showTooltip(e,bid){
+function showTooltip(e,bid,subContext){
   clearTimeout(ttHideTimer);
-  if(ttShownBid===bid){ positionTooltip(e); return; } // same booking as already shown — just follow the cursor, skip rebuilding the whole tooltip
+  if(ttShownBid===bid && !subContext){ positionTooltip(e); return; } // same booking as already shown — just follow the cursor, skip rebuilding the whole tooltip
   ttShownBid=bid;
   const b=getBookingById(bid);
   if(!b)return;
@@ -3452,6 +3452,25 @@ function showTooltip(e,bid){
     `;
   }
 
+  // Substitute vehicle history — shown whenever this booking has one or
+  // more recorded substitution periods, regardless of which specific day
+  // triggered the tooltip (matches how extension history is shown too).
+  let substituteBlock = '';
+  if(b.substituteVehicles && b.substituteVehicles.length){
+    const fmtSY = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
+    substituteBlock = `
+      <div class="tt-divider"></div>
+      <div class="tt-label" style="margin-bottom:4px">🔄 Підмінне авто</div>
+      ${b.substituteVehicles.map(s=>{
+        const sv = getVehicle(s.vehicleId);
+        return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span class="tt-val" style="text-align:left;color:var(--text);font-weight:700;font-family:var(--font-mono)">${sv?sv.plate:'?'}</span>
+          <span class="tt-val" style="color:var(--text)">${fmtSY(s.fromDate)}–${fmtSY(s.toDate)}</span>
+        </div>${s.comment?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px"><i>${s.comment}</i></div>`:''}`;
+      }).join('')}
+    `;
+  }
+
   // 6: all notes (important ones highlighted)
   const allNotes = parseNotesLog(b.notes);
   const notesBlock = allNotes.length ? `
@@ -3482,9 +3501,12 @@ function showTooltip(e,bid){
   tt.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <span style="display:flex;align-items:center;gap:5px">
-        <span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
+        ${subContext
+          ? `<span class="tt-badge" style="margin-bottom:0;background:${SM['substitute']?.color||'#a78bfa'}20;color:${SM['substitute']?.color||'#a78bfa'}">🔄 Підміна · ${(()=>{const ov=getVehicle(b.vehicleId);return ov?ov.plate:'?';})()} · ${(()=>{const fs=s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};return fs(subContext.fromDate)+'–'+fs(subContext.toDate);})()}</span>`
+          : `<span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
         ${b.orderCompany==='toprent'?'<span title="TopRent" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#1d4ed8;letter-spacing:.3px">TR</span>':''}
-        ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}
+        ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}`
+        }
       </span>
       ${(()=>{
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
@@ -3517,6 +3539,7 @@ function showTooltip(e,bid){
     ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val">${fmt1(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
     `:''}
     ${extBlock}
+    ${substituteBlock}
     ${notesBlock}
     <div class="tt-mobile-edit-row">
       <button type="button" class="btn btn-primary" style="width:100%" onclick="editBooking(${bid})">✏ Редагувати замовлення</button>
