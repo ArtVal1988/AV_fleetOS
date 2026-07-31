@@ -3294,10 +3294,13 @@ function renderCalendar(){
 const tt=document.getElementById('tooltip');
 let ttHideTimer=null;
 let ttShownBid=null;
+let ttShownSubMode=false;
 function showTooltip(e,bid,subContext){
   clearTimeout(ttHideTimer);
-  if(ttShownBid===bid && !subContext){ positionTooltip(e); return; } // same booking as already shown — just follow the cursor, skip rebuilding the whole tooltip
+  const isSubNow = !!subContext;
+  if(ttShownBid===bid && ttShownSubMode===isSubNow){ positionTooltip(e); return; } // same booking, same mode as already shown — just follow the cursor, skip rebuilding the whole tooltip
   ttShownBid=bid;
+  ttShownSubMode=isSubNow;
   const b=getBookingById(bid);
   if(!b)return;
   const v=getVehicle(b.vehicleId);
@@ -3548,7 +3551,7 @@ function showTooltip(e,bid,subContext){
   positionTooltip(e);
   tt.classList.add('visible');
 }
-function showTooltipEmpty(e){clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;}
+function showTooltipEmpty(e){clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null; ttShownSubMode=false;}
 
 function showTooltipSplit(e,bid1,bid2){
   clearTimeout(ttHideTimer);
@@ -3653,7 +3656,7 @@ function expandBooking(bid){
 }
 function hideTooltip(){
   if(tt.classList.contains('mobile-tap')) return;
-  ttHideTimer=setTimeout(()=>{tt.classList.remove('visible'); ttShownBid=null;},120);
+  ttHideTimer=setTimeout(()=>{tt.classList.remove('visible'); ttShownBid=null; ttShownSubMode=false;},120);
 }
 let ttW=240, ttH=160;
 function positionTooltip(e){
