@@ -6206,9 +6206,23 @@ function renderSubstituteList(){
     const v = getVehicle(s.vehicleId);
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 10px;font-size:11px">
       <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.comment?' · <i>'+s.comment+'</i>':''}</span>
-      <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0;flex-shrink:0">✕</button>
+      <span style="display:flex;gap:4px;flex-shrink:0">
+        <button type="button" onclick="editSubstitutePeriod(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
+        <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
+      </span>
     </div>`;
   }).join('');
+}
+function editSubstitutePeriod(i){
+  const s = currentSubstitutes[i];
+  if(!s) return;
+  currentSubstitutes.splice(i,1);
+  renderSubstituteList();
+  populateSubVehicleDropdown();
+  document.getElementById('bm-sub-vehicle').value = s.vehicleId;
+  document.getElementById('bm-sub-from').value = s.fromDate;
+  document.getElementById('bm-sub-to').value = s.toDate;
+  document.getElementById('bm-sub-comment').value = s.comment||'';
 }
 function deleteSubstitutePeriod(i){
   currentSubstitutes.splice(i,1);
