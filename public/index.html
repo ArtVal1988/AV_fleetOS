@@ -396,7 +396,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .day-cell.b-solo{border-radius:4px;}
 
 /* HOVER TOOLTIP */
-.tooltip{position:fixed;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.18);border-radius:8px;padding:13px 16px;z-index:500;pointer-events:none;min-width:276px;max-width:396px;box-shadow:0 8px 32px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;font-size:12px;}
+.tooltip{position:fixed;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.18);border-radius:8px;padding:13px 16px;z-index:500;pointer-events:none;width:396px;box-sizing:border-box;box-shadow:0 8px 32px rgba(0,0,0,.18);opacity:0;transition:opacity .12s;font-size:12px;}
 .tooltip.visible{opacity:1;}
 .tooltip.mobile-tap{pointer-events:auto!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);overflow-y:auto;z-index:501;}
 .tt-mobile-edit-row{display:none;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
@@ -3458,8 +3458,8 @@ function showTooltip(e,bid,subContext){
           <div style="margin-top:4px;padding:5px 6px;background:rgba(194,97,13,.08);border-radius:6px;display:flex;flex-direction:column;gap:3px">
             <div style="font-size:11.5px;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(194,97,13,.2)">${boundaryLine}</div>
             <div style="display:flex;gap:4px">
-              <div style="flex:1;font-size:9.5px;display:flex;align-items:center;gap:2px;min-width:0;white-space:nowrap;overflow:hidden"><span style="color:var(--muted);flex-shrink:0">Сьогодні:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
-              <div style="flex:1;font-size:9.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:2px;min-width:0;white-space:nowrap;overflow:hidden"><span style="color:var(--muted);flex-shrink:0">На ${fmtShortYear(ext.toDate)}:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:9.5px;display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">📅</span><span style="color:var(--muted);flex-shrink:0">На сьогодні:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:9.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">🏁</span><span style="color:var(--muted);flex-shrink:0">На ${fmtShortYear(ext.toDate)}:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
             </div>
           </div>
         `;
@@ -3672,7 +3672,7 @@ function hideTooltip(){
   if(tt.classList.contains('mobile-tap')) return;
   ttHideTimer=setTimeout(()=>{tt.classList.remove('visible'); ttShownBid=null; ttShownSubMode=false;},120);
 }
-let ttW=240, ttH=160;
+let ttW=396, ttH=160;
 function positionTooltip(e){
   let x=e.clientX+14, y=e.clientY-10;
   if(x+ttW>window.innerWidth-8)x=e.clientX-ttW-10;
