@@ -3307,6 +3307,19 @@ function showTooltip(e,bid,subContext){
   ttShownSubMode=isSubNow;
   const b=getBookingById(bid);
   if(!b)return;
+
+  if(subContext){
+    const ov = getVehicle(b.vehicleId);
+    const fs = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
+    const subColor = SM['substitute']?.color||'#a78bfa';
+    tt.innerHTML = `<div style="display:flex;align-items:center;gap:6px">
+      <span class="tt-badge" style="margin-bottom:0;background:${subColor}20;color:${subColor}">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span>
+    </div>`;
+    tt.classList.add('visible');
+    positionTooltip(e);
+    return;
+  }
+
   const v=getVehicle(b.vehicleId);
   const st=SM[b.status];
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
@@ -3508,12 +3521,9 @@ function showTooltip(e,bid,subContext){
   tt.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <span style="display:flex;align-items:center;gap:5px">
-        ${subContext
-          ? `<span class="tt-badge" style="margin-bottom:0;background:${SM['substitute']?.color||'#a78bfa'}20;color:${SM['substitute']?.color||'#a78bfa'}">🔄 Підміна · ${(()=>{const ov=getVehicle(b.vehicleId);return ov?ov.plate:'?';})()} · ${(()=>{const fs=s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};return fs(subContext.fromDate)+'–'+fs(subContext.toDate);})()}</span>`
-          : `<span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
+        <span class="tt-badge" style="margin-bottom:0;background:${st.color}20;color:${st.color}">${st.label}</span>
         ${b.orderCompany==='toprent'?'<span title="TopRent" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#1d4ed8;letter-spacing:.3px">TR</span>':''}
-        ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}`
-        }
+        ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}
       </span>
       ${(()=>{
         const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
