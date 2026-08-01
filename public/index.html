@@ -3177,7 +3177,7 @@ function renderCalendar(){
         if(!visibleArr.length){
           if(subInfo && subInfo.type==='active'){
             const origV = getVehicle(subInfo.booking.vehicleId);
-            return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
+            return`<td class="td-day substitute-covered${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
               data-vid="${v.id}" data-day="${d}"
               onmouseenter="showTooltip(event,${subInfo.booking.id},{fromDate:'${subInfo.sub.fromDate}',toDate:'${subInfo.sub.toDate}'})"
               onmouseleave="hideTooltip()"
