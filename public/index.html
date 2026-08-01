@@ -3270,15 +3270,18 @@ function renderCalendar(){
         })();
         // Main vehicle's cell during an active substitution period — the
         // usual booking still renders normally for billing/history
-        // purposes (tooltip/click/status unchanged), but the visible
-        // background swaps to a light version of the substitute color so
-        // it's clear the car itself wasn't actually here that day.
+        // purposes (tooltip/click/status unchanged). The background is
+        // split diagonally: half the original status color (so debt/paid
+        // state stays visible at a glance) and half the substitute color
+        // (so it's clear the car itself wasn't actually here that day).
         if(subInfo && subInfo.type==='covered'){
-          const lightSub = mixWithWhite(SM['substitute']?.color||'#a78bfa', .55);
+          const subColor = SM['substitute']?.color||'#a78bfa';
+          const bgMatch = cellHtml.match(/background:([^;"]+);/);
+          const origColor = bgMatch ? bgMatch[1] : '#9ca3af';
+          const splitBg = `linear-gradient(135deg, ${origColor} 0%, ${origColor} 50%, ${subColor} 50%, ${subColor} 100%)`;
           return cellHtml
             .replace('<td class="td-day', '<td class="td-day substitute-covered"')
-            .replace(/background:[^;"]+;/, 'background:'+lightSub+';')
-            .replace(/color:#fff/, 'color:#3b1f7a');
+            .replace(/background:[^;"]+;/, 'background:'+splitBg+';');
         }
         return cellHtml;
       }).join('');
