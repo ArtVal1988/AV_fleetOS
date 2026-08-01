@@ -2512,25 +2512,29 @@ input.dm-pf-val.tel{font-size:14px;}
       </button>
       <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:10px">
         <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
-          <div style="flex:1;min-width:110px">
-            <label class="vf-lbl">Підмінне авто</label>
-            <select id="bm-sub-vehicle" class="vf-inp" style="width:100%;height:36px"></select>
+        <div style="display:flex;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:110px">
+              <label class="vf-lbl">Підмінне авто</label>
+              <select id="bm-sub-vehicle" class="vf-inp" style="width:100%;height:36px"></select>
+            </div>
+            <div>
+              <label class="vf-lbl">З</label>
+              <input type="date" id="bm-sub-from" class="vf-inp" style="height:36px">
+            </div>
+            <div>
+              <label class="vf-lbl">По</label>
+              <input type="date" id="bm-sub-to" class="vf-inp" style="height:36px">
+            </div>
           </div>
-          <div>
-            <label class="vf-lbl">З</label>
-            <input type="date" id="bm-sub-from" class="vf-inp" style="height:36px">
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div style="flex:1;min-width:160px">
+              <label class="vf-lbl">Коментар</label>
+              <input type="text" id="bm-sub-comment" class="vf-inp" placeholder="напр. ремонт двигуна" style="width:100%;height:36px">
+            </div>
+            <button type="button" id="bm-sub-add-btn" onclick="addSubstitutePeriod()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:0 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">+ Додати</button>
+            <button type="button" id="bm-sub-cancel-btn" onclick="cancelEditSubstitute()" style="display:none;height:36px;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">Скасувати</button>
           </div>
-          <div>
-            <label class="vf-lbl">По</label>
-            <input type="date" id="bm-sub-to" class="vf-inp" style="height:36px">
-          </div>
-          <div style="flex:2;min-width:160px">
-            <label class="vf-lbl">Коментар</label>
-            <input type="text" id="bm-sub-comment" class="vf-inp" placeholder="напр. ремонт двигуна" style="width:100%;height:36px">
-          </div>
-          <button type="button" id="bm-sub-add-btn" onclick="addSubstitutePeriod()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:0 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">+ Додати</button>
-          <button type="button" id="bm-sub-cancel-btn" onclick="cancelEditSubstitute()" style="display:none;height:36px;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">Скасувати</button>
         </div>
       </div>
     </div>
