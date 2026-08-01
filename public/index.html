@@ -7398,6 +7398,10 @@ function autoCalcKaskoEndDate(){
   d.setFullYear(d.getFullYear()+1);
   d.setDate(d.getDate()-1);
   document.getElementById('ck-end').value = dStr(d.getFullYear(), d.getMonth(), d.getDate());
+  // The quarterly payment dates are anchored to the contract's start date —
+  // rebuild them now so they don't stay stale from whenever they were last
+  // built (e.g. defaulted to today if start wasn't filled in yet).
+  buildCalKaskoPayments();
 }
 function setCalPayType(t){
   calKPayType=t;
