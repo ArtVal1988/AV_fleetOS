@@ -3313,7 +3313,7 @@ function showTooltip(e,bid,subContext){
     const fs = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const subColor = SM['substitute']?.color||'#a78bfa';
     tt.innerHTML = `<div style="display:flex;align-items:center;gap:6px">
-      <span class="tt-badge" style="margin-bottom:0;background:${subColor}20;color:${subColor}">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span>
+      <span class="tt-badge" style="margin-bottom:0;background:${subColor}20;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span>
     </div>`;
     tt.classList.add('visible');
     positionTooltip(e);
