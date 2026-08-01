@@ -2529,7 +2529,8 @@ input.dm-pf-val.tel{font-size:14px;}
             <label class="vf-lbl">Коментар</label>
             <input type="text" id="bm-sub-comment" class="vf-inp" placeholder="напр. ремонт двигуна" style="width:100%;height:36px">
           </div>
-          <button type="button" onclick="addSubstitutePeriod()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:0 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">+ Додати</button>
+          <button type="button" id="bm-sub-add-btn" onclick="addSubstitutePeriod()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:0 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">+ Додати</button>
+          <button type="button" id="bm-sub-cancel-btn" onclick="cancelEditSubstitute()" style="display:none;height:36px;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">Скасувати</button>
         </div>
       </div>
     </div>
@@ -4009,7 +4010,9 @@ function openBookingModal(vid=null,start=null,end=null){
   renderExtTimeline();
 
   currentSubstitutes = [];
+  editingSubstituteIndex = null;
   renderSubstituteList();
+  updateSubstituteFormMode();
   const subPanel0 = document.getElementById('bm-substitute-panel');
   const subIcon0 = document.getElementById('bm-substitute-toggle-icon');
   const subChevron0 = document.getElementById('bm-substitute-chevron');
@@ -4171,7 +4174,9 @@ function editBooking(bid){
   updateKmDiff();
 
   currentSubstitutes = (b.substituteVehicles||[]).slice();
+  editingSubstituteIndex = null;
   renderSubstituteList();
+  updateSubstituteFormMode();
   const subPanel = document.getElementById('bm-substitute-panel');
   const subIcon = document.getElementById('bm-substitute-toggle-icon');
   const subChevron = document.getElementById('bm-substitute-chevron');
@@ -6158,6 +6163,7 @@ function openExtensionForNewEntry(){
   if(hasData) closeAndStartNewExtension();
 }
 let currentSubstitutes = []; // working copy, mirrors currentExtHistory's pattern
+let editingSubstituteIndex = null; // set while editing an existing entry, so 'Додати' updates it in place instead of appending a duplicate
 
 function toggleSubstituteSection(){
   const panel = document.getElementById('bm-substitute-panel');
@@ -6193,19 +6199,47 @@ function addSubstitutePeriod(){
     return;
   }
 
-  currentSubstitutes.push({vehicleId, fromDate, toDate, comment});
+  if(editingSubstituteIndex !== null){
+    currentSubstitutes[editingSubstituteIndex] = {vehicleId, fromDate, toDate, comment};
+    editingSubstituteIndex = null;
+  } else {
+    currentSubstitutes.push({vehicleId, fromDate, toDate, comment});
+  }
   document.getElementById('bm-sub-from').value = '';
   document.getElementById('bm-sub-to').value = '';
   document.getElementById('bm-sub-comment').value = '';
+  updateSubstituteFormMode();
   renderSubstituteList();
+}
+function updateSubstituteFormMode(){
+  const btn = document.getElementById('bm-sub-add-btn');
+  const cancelBtn = document.getElementById('bm-sub-cancel-btn');
+  if(!btn) return;
+  if(editingSubstituteIndex !== null){
+    btn.textContent = '💾 Оновити';
+    btn.style.background = '#166534';
+    if(cancelBtn) cancelBtn.style.display = '';
+  } else {
+    btn.textContent = '+ Додати';
+    btn.style.background = '#2563eb';
+    if(cancelBtn) cancelBtn.style.display = 'none';
+  }
+}
+function cancelEditSubstitute(){
+  editingSubstituteIndex = null;
+  document.getElementById('bm-sub-from').value = '';
+  document.getElementById('bm-sub-to').value = '';
+  document.getElementById('bm-sub-comment').value = '';
+  updateSubstituteFormMode();
 }
 function renderSubstituteList(){
   const wrap = document.getElementById('bm-substitute-list');
   if(!wrap) return;
   wrap.innerHTML = currentSubstitutes.map((s,i) => {
     const v = getVehicle(s.vehicleId);
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 10px;font-size:11px">
-      <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.comment?' · <i>'+s.comment+'</i>':''}</span>
+    const isEditing = editingSubstituteIndex === i;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:${isEditing?'#fef9c3':'#eff6ff'};border:1px solid ${isEditing?'#fde047':'#bfdbfe'};border-radius:6px;padding:7px 10px;font-size:11px">
+      <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.comment?' · <i>'+s.comment+'</i>':''}${isEditing?' · <b style="color:#a16207">редагується…</b>':''}</span>
       <span style="display:flex;gap:4px;flex-shrink:0">
         <button type="button" onclick="editSubstitutePeriod(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
         <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
@@ -6216,15 +6250,18 @@ function renderSubstituteList(){
 function editSubstitutePeriod(i){
   const s = currentSubstitutes[i];
   if(!s) return;
-  currentSubstitutes.splice(i,1);
-  renderSubstituteList();
+  editingSubstituteIndex = i;
   populateSubVehicleDropdown();
   document.getElementById('bm-sub-vehicle').value = s.vehicleId;
   document.getElementById('bm-sub-from').value = s.fromDate;
   document.getElementById('bm-sub-to').value = s.toDate;
   document.getElementById('bm-sub-comment').value = s.comment||'';
+  updateSubstituteFormMode();
+  renderSubstituteList();
 }
 function deleteSubstitutePeriod(i){
+  if(editingSubstituteIndex === i) cancelEditSubstitute();
+  else if(editingSubstituteIndex !== null && i < editingSubstituteIndex) editingSubstituteIndex--;
   currentSubstitutes.splice(i,1);
   renderSubstituteList();
 }
