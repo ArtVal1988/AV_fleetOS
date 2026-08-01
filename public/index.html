@@ -2344,6 +2344,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу без ПДВ</span>
           <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
           <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
+          <span id="dp-perday-vat-usd" style="color:#6b7280;font-weight:600;font-size:11px;margin-left:6px">—</span>
         </div>
         <div class="vat-table-row">
           <span class="vat-row-label">
@@ -8686,6 +8687,8 @@ function updateVatPreview(){
   if(isVat){
     document.getElementById('dp-perday-vat').textContent = rate ? fmtF(toForeign(netPerDay)) : '—';
     document.getElementById('dp-perday-vat-uah').textContent = rate ? fmtU(toUah(netPerDay)) : '—';
+    const usdEl = document.getElementById('dp-perday-vat-usd');
+    if(usdEl) usdEl.textContent = (exRate>0) ? '≈ '+fmt2(netPerDay/exRate)+' $' : '—';
   }
 
   // Total preview (requires start/end dates)
