@@ -247,7 +247,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .to-modal-title{width:100%;order:3;}
 
   .modal-body{padding:12px 14px 14px;gap:10px;}
-  .msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6,.msec-ext{padding:9px 11px;}
+  .msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6,.msec-ext,.msec-sub{padding:9px 11px;}
 
   /* Any two/three-column grid — named class or raw inline style — becomes
      one column so nothing gets squeezed unreadable or clipped. */
@@ -952,7 +952,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .modal-body{padding:16px 26px 18px;display:flex;flex-direction:column;gap:12px;}
 .bm-order-details-wrap{display:flex;flex-direction:column;gap:12px;}
 .msec{margin-bottom:0;}
-.msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6,.msec-ext{padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.07);border-left:3px solid transparent;}
+.msec-b1,.msec-b2,.msec-b3,.msec-b4,.msec-b5,.msec-b6,.msec-ext,.msec-sub{padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.07);border-left:3px solid transparent;}
 .msec-b1{background:#f5f3ff;border-left-color:#a78bfa;}
 .msec-b2{background:#eff6ff;border-left-color:#60a5fa;}
 .msec-b3{background:#f0fdf4;border-left-color:#4ade80;}
@@ -960,6 +960,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-block-extras{padding-top:0!important;}
 .msec-b4{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-ext{background:#fffbeb;border-left-color:#fbbf24;}
+.msec-sub{background:#f5f3ff;border-left-color:#a78bfa;}
 #bm-return-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 #bm-pickup-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 .fin-label-style label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af!important;}
@@ -2504,14 +2505,13 @@ input.dm-pf-val.tel{font-size:14px;}
 
     </div>
 
-    <div class="msec-inner-sep" style="margin-top:10px" id="bm-substitute-section">
-      <div style="display:flex;align-items:stretch;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;overflow:hidden">
-        <button type="button" onclick="toggleSubstituteSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:8px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#2563eb;letter-spacing:.3px;text-align:left">
+    <div class="msec msec-sub" id="bm-substitute-section" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <button type="button" onclick="toggleSubstituteSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#6d28d9;letter-spacing:.3px;text-align:left">
           <span id="bm-substitute-toggle-icon">⊕</span>
           <span>🔄 Підмінне авто</span>
-          <span class="extras-toggle-chevron" id="bm-substitute-chevron" style="margin-left:auto">▾</span>
         </button>
-        <button type="button" onclick="openSubstituteForNewEntry()" style="background:#dbeafe;border:none;border-left:1px solid #bfdbfe;color:#1d4ed8;padding:0 12px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати</button>
+        <button type="button" onclick="openSubstituteForNewEntry()" style="background:#ede9fe;border:1px solid #ddd6fe;color:#6d28d9;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати підмінне авто</button>
       </div>
       <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:10px">
         <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
