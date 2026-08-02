@@ -2505,17 +2505,17 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec-inner-sep" style="margin-top:10px" id="bm-substitute-section">
-      <div style="display:flex;align-items:center;gap:8px">
-      <button type="button" class="extras-toggle" id="bm-substitute-toggle-btn" onclick="toggleSubstituteSection()" style="flex:1;width:auto">
-        <span id="bm-substitute-toggle-icon">⊕</span>
-        <span>🔄 Підмінне авто</span>
-        <span class="extras-toggle-chevron" id="bm-substitute-chevron">▾</span>
-      </button>
-      <button type="button" onclick="openSubstituteForNewEntry()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ Додати підмінне авто</button>
+      <div style="display:flex;align-items:stretch;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:6px;overflow:hidden">
+        <button type="button" onclick="toggleSubstituteSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:8px 12px;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#2563eb;letter-spacing:.3px;text-align:left">
+          <span id="bm-substitute-toggle-icon">⊕</span>
+          <span>🔄 Підмінне авто</span>
+          <span class="extras-toggle-chevron" id="bm-substitute-chevron" style="margin-left:auto">▾</span>
+        </button>
+        <button type="button" onclick="openSubstituteForNewEntry()" style="background:#dbeafe;border:none;border-left:1px solid #bfdbfe;color:#1d4ed8;padding:0 12px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати</button>
       </div>
       <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:10px">
-        <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-        <div style="display:flex;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+        <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+        <div id="bm-substitute-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
             <div style="flex:1;min-width:110px">
               <label class="vf-lbl">Підмінне авто</label>
@@ -2536,7 +2536,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <input type="text" id="bm-sub-comment" class="vf-inp" placeholder="напр. ремонт двигуна" style="width:100%;height:36px">
             </div>
             <button type="button" id="bm-sub-add-btn" onclick="addSubstitutePeriod()" style="height:36px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:0 14px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">+ Додати</button>
-            <button type="button" id="bm-sub-cancel-btn" onclick="cancelEditSubstitute()" style="display:none;height:36px;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">Скасувати</button>
+            <button type="button" id="bm-sub-cancel-btn" onclick="cancelEditSubstitute()" style="height:36px;background:#fff;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-sizing:border-box">Скасувати</button>
           </div>
         </div>
       </div>
@@ -4032,6 +4032,7 @@ function openBookingModal(vid=null,start=null,end=null){
   editingSubstituteIndex = null;
   renderSubstituteList();
   updateSubstituteFormMode();
+  hideSubstituteForm();
   const subPanel0 = document.getElementById('bm-substitute-panel');
   const subIcon0 = document.getElementById('bm-substitute-toggle-icon');
   const subChevron0 = document.getElementById('bm-substitute-chevron');
@@ -4196,6 +4197,7 @@ function editBooking(bid){
   editingSubstituteIndex = null;
   renderSubstituteList();
   updateSubstituteFormMode();
+  hideSubstituteForm();
   const subPanel = document.getElementById('bm-substitute-panel');
   const subIcon = document.getElementById('bm-substitute-toggle-icon');
   const subChevron = document.getElementById('bm-substitute-chevron');
@@ -6181,11 +6183,20 @@ function openExtensionForNewEntry(){
   const hasData = getExtDateField('bm-ext-from') && getExtDateField('bm-ext-to');
   if(hasData) closeAndStartNewExtension();
 }
+function showSubstituteForm(){
+  const w = document.getElementById('bm-substitute-form-wrap');
+  if(w) w.style.display = 'flex';
+}
+function hideSubstituteForm(){
+  const w = document.getElementById('bm-substitute-form-wrap');
+  if(w) w.style.display = 'none';
+}
 function openSubstituteForNewEntry(){
   const panel = document.getElementById('bm-substitute-panel');
   if(panel && panel.style.display === 'none'){
     toggleSubstituteSection();
   }
+  showSubstituteForm();
   document.getElementById('bm-sub-vehicle')?.focus();
 }
 let currentSubstitutes = []; // working copy, mirrors currentExtHistory's pattern
@@ -6200,6 +6211,7 @@ function toggleSubstituteSection(){
   if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
   if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
   if(!isOpen) populateSubVehicleDropdown();
+  else hideSubstituteForm(); // closing the whole section — no reason to keep the add-form open underneath
 }
 function populateSubVehicleDropdown(){
   const sel = document.getElementById('bm-sub-vehicle');
@@ -6235,20 +6247,18 @@ function addSubstitutePeriod(){
   document.getElementById('bm-sub-to').value = '';
   document.getElementById('bm-sub-comment').value = '';
   updateSubstituteFormMode();
+  hideSubstituteForm();
   renderSubstituteList();
 }
 function updateSubstituteFormMode(){
   const btn = document.getElementById('bm-sub-add-btn');
-  const cancelBtn = document.getElementById('bm-sub-cancel-btn');
   if(!btn) return;
   if(editingSubstituteIndex !== null){
     btn.textContent = '💾 Оновити';
     btn.style.background = '#166534';
-    if(cancelBtn) cancelBtn.style.display = '';
   } else {
     btn.textContent = '+ Додати';
     btn.style.background = '#2563eb';
-    if(cancelBtn) cancelBtn.style.display = 'none';
   }
 }
 function cancelEditSubstitute(){
@@ -6257,6 +6267,8 @@ function cancelEditSubstitute(){
   document.getElementById('bm-sub-to').value = '';
   document.getElementById('bm-sub-comment').value = '';
   updateSubstituteFormMode();
+  hideSubstituteForm();
+  renderSubstituteList();
 }
 function renderSubstituteList(){
   const wrap = document.getElementById('bm-substitute-list');
@@ -6283,6 +6295,7 @@ function editSubstitutePeriod(i){
   document.getElementById('bm-sub-to').value = s.toDate;
   document.getElementById('bm-sub-comment').value = s.comment||'';
   updateSubstituteFormMode();
+  showSubstituteForm();
   renderSubstituteList();
 }
 function deleteSubstitutePeriod(i){
