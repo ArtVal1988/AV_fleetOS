@@ -10602,6 +10602,7 @@ async function syncFromServer(){
     // One-time migration for statuses saved before the isBooking field existed.
     STATUSES.forEach(s=>{
       if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
+      if(s.key==='substitute' && s.isBooking!==false){ s.isBooking = false; apiFetch('PUT','/settings/statuses',{value:STATUSES}); }
     });
     // The 'extension' status is used internally to color extension-period
     // calendar cells, not a user-facing status — if it was ever deleted
