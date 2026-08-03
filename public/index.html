@@ -11051,7 +11051,6 @@ document.addEventListener('mousedown', e => {
 // whatever is underneath (e.g. opening the day-cell status/reservation
 // picker). The user needs a second, separate tap to act on that cell.
 document.addEventListener('click', e => {
-  if(!isMobileViewport()) return;
   const popup = document.getElementById('vehicle-specs-popup');
   if(!popup || popup.style.display !== 'block') return;
   if(e.target.closest('#vehicle-specs-popup, .veh-name-click, .veh-act-btn')) return;
