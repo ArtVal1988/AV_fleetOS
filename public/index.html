@@ -6834,7 +6834,17 @@ function markExtensionPaid(bid){
 
 
 /* ── MAINTENANCE MODAL ── */
-let toVehicleId = null, nextWorkId = 900;
+let toVehicleId = null;
+// Work IDs must be unique across the whole fleet (not just per-vehicle) —
+// a static counter that resets to a fixed starting value on every page load
+// would eventually collide with already-saved work entries once enough of
+// them exist, causing openWorkDetail()/saveWork() to find the WRONG entry
+// (the first one matching that reused ID, not the one just added).
+function getNextWorkId(){
+  let maxId = 899;
+  ALL_VEHICLES.forEach(v => (v.works||[]).forEach(w => { if(w.id > maxId) maxId = w.id; }));
+  return maxId + 1;
+}
 
 function openToModal(vid){
   clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
@@ -7074,7 +7084,7 @@ function saveWork(){
     if(idx !== -1) v.works[idx] = { ...v.works[idx], ...newWorkData };
     editingWorkId = null;
   } else {
-    v.works.push({ id:nextWorkId++, ...newWorkData });
+    v.works.push({ id:getNextWorkId(), ...newWorkData });
   }
 
   // Deduct matched materials from the spare-parts stock — only for genuinely
