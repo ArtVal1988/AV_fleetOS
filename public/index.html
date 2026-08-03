@@ -8765,16 +8765,18 @@ function updateVatPreview(){
   }
 
   if(dualTotal){ dualTotal.style.display = ''; }
-  document.getElementById('dual-days-label').textContent = `${days} ${pluralDoba(days)} × ${rate.toLocaleString('uk-UA')} ${cur}`;
+  const dualDaysLabelText = `${days} ${pluralDoba(days)} × ${rate.toLocaleString('uk-UA')} ${cur}`;
+  const usdEquivSuffix = (cur==='₴' && exRate>0) ? ` <span style="color:#1d4ed8">(${fmt2(rate/exRate)} $)</span>` : '';
+  document.getElementById('dual-days-label').innerHTML = dualDaysLabelText + usdEquivSuffix;
   document.getElementById('dual-days-label').style.color = cur==='₴' ? '#166534' : '#1d4ed8';
   document.getElementById('dual-days-label').style.fontWeight = '600';
-  document.getElementById('dp-gross').textContent = fmtF(toForeign(gross));
+  document.getElementById('dp-gross').textContent = toForeign(gross)!==null ? fmtF(toForeign(gross)) : (exRate>0 ? '≈ '+fmt2(gross/exRate)+' $' : '—');
   document.getElementById('dp-gross-uah').textContent = fmtU(toUah(gross));
 
   const dpTaxRow = document.getElementById('dp-tax-row');
   if(dpTaxRow) dpTaxRow.style.display = isVat ? '' : 'none';
   if(isVat){
-    document.getElementById('dp-vat').textContent = toForeign(vatTotal)!==null?'+'+fmtF(toForeign(vatTotal)):'—';
+    document.getElementById('dp-vat').textContent = toForeign(vatTotal)!==null ? '+'+fmtF(toForeign(vatTotal)) : (exRate>0 ? '≈ +'+fmt2(vatTotal/exRate)+' $' : '—');
     document.getElementById('dp-vat-uah').textContent = toUah(vatTotal)!==null?'+'+fmtU(toUah(vatTotal)):'—';
     document.getElementById('dp-pct-label').textContent = vatPct + '%';
   }
@@ -8788,13 +8790,13 @@ function updateVatPreview(){
   const extrasForeignColumn = anchorNonUah ? extrasTotal : null;
   if(dpExtrasRow) dpExtrasRow.style.display = (extrasTotal > 0 || extrasUahNative > 0) ? '' : 'none';
   if(extrasTotal > 0 || extrasUahNative > 0){
-    document.getElementById('dp-extras').textContent = extrasForeignColumn !== null ? fmtF(extrasForeignColumn) : '—';
+    document.getElementById('dp-extras').textContent = extrasForeignColumn !== null ? fmtF(extrasForeignColumn) : (exRate>0 && extrasUahColumn>0 ? '≈ '+fmt2(extrasUahColumn/exRate)+' $' : '—');
     document.getElementById('dp-extras-uah').textContent = extrasUahColumn > 0 ? (isCompany?fmt2(extrasUahColumn):Math.round(extrasUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
   }
 
   const grandTotalUahColumn = (!anchorNonUah ? (gross+extrasOrigNative) : (needsConv ? (gross+extrasOrigNative) * exRate : 0)) + extrasUahNative;
   const grandTotalForeignColumn = anchorNonUah ? grandTotal : null;
-  document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : '—';
+  document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : (exRate>0 && grandTotalUahColumn>0 ? '≈ '+fmt2(grandTotalUahColumn/exRate)+' $' : '—');
   document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmt2(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
   if(document.getElementById('bm-partial-active')?.checked) updatePartialPaymentUI();
 }
