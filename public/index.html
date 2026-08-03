@@ -1436,11 +1436,11 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
           <div>
             <label class="vf-lbl">Період з</label>
-            <input type="date" id="rep-from" class="vf-inp">
+            <input type="date" readonly id="rep-from" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)">
           </div>
           <div>
             <label class="vf-lbl">по</label>
-            <input type="date" id="rep-to" class="vf-inp">
+            <input type="date" readonly id="rep-to" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)">
           </div>
           <button onclick="generateProfitabilityReport()" style="margin-left:auto;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Сформувати звіт</button>
         </div>
@@ -1583,7 +1583,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div style="flex:1">
           <label class="vf-lbl">Дата народження</label>
-          <input id="cf-birthdate" type="date" class="vf-inp" style="width:100%">
+          <input id="cf-birthdate" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -1628,7 +1628,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
               <div style="flex:1">
                 <label class="vf-lbl">Дата видачі</label>
-                <input id="cf-passport-date" type="date" class="vf-inp" style="width:100%">
+                <input id="cf-passport-date" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
               </div>
               <div style="flex:2">
                 <label class="vf-lbl">Ким виданий</label>
@@ -1656,7 +1656,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
               <div style="flex:1">
                 <label class="vf-lbl">Дата видачі</label>
-                <input id="cf-idcard-date" type="date" class="vf-inp" style="width:100%">
+                <input id="cf-idcard-date" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
               </div>
               <div style="flex:1">
                 <label class="vf-lbl">Орган видачі</label>
@@ -1684,7 +1684,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
               <div style="flex:1">
                 <label class="vf-lbl">Дата видачі</label>
-                <input id="cf-license-date" type="date" class="vf-inp" style="width:100%">
+                <input id="cf-license-date" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
               </div>
             </div>
           </div>
@@ -1706,11 +1706,11 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="display:flex;gap:10px;margin-bottom:10px">
           <div style="flex:1">
             <label class="vf-lbl">Дата видачі</label>
-            <input id="cf-nr-passport-date" type="date" class="vf-inp" style="width:100%">
+            <input id="cf-nr-passport-date" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
           </div>
           <div style="flex:1">
             <label class="vf-lbl">Дійсний до</label>
-            <input id="cf-nr-passport-expiry" type="date" class="vf-inp" style="width:100%">
+            <input id="cf-nr-passport-expiry" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
           </div>
         </div>
         <div style="margin-bottom:10px">
@@ -1735,7 +1735,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <div style="flex:1">
             <label class="vf-lbl">Дійсне до</label>
-            <input id="cf-nr-license-expiry" type="date" class="vf-inp" style="width:100%">
+            <input id="cf-nr-license-expiry" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
           </div>
         </div>
       </div>
@@ -2033,7 +2033,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="nav-picker" id="nav-picker" style="display:none">
       <div class="np-section">
         <div class="np-label">З дати</div>
-        <input type="date" id="np-date" class="np-date-input" onchange="jumpToDate(this.value)">
+        <input type="date" readonly id="np-date" class="np-date-input custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="jumpToDate(this.value)">
       </div>
       <div class="np-divider"></div>
       <div class="np-section">
@@ -2513,7 +2513,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <div style="text-align:center;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#6b7280"><span id="ext-debt-today-lbl"></span></div>
               <div style="text-align:center;font-size:11px;font-family:var(--font-mono);font-weight:600;color:#6b7280"><span id="ext-debt-end-lbl"></span></div>
               <div style="text-align:center">
-                <input type="date" id="ext-debt-date-picked" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);background:#eff6ff;width:100%;box-sizing:border-box;text-align:center">
+                <input type="date" readonly id="ext-debt-date-picked" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" oninput="renderExtDebtAtDate()" style="font-size:11px;padding:3px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);background:#eff6ff;width:100%;box-sizing:border-box;text-align:center">
               </div>
 
               <div style="text-align:center"><span id="ext-debt-result-today" style="font-size:13px;font-weight:700;color:#c2610d"></span></div>
@@ -2546,11 +2546,11 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div>
               <label class="vf-lbl">З</label>
-              <input type="date" id="bm-sub-from" class="vf-inp" style="height:36px">
+              <input type="date" readonly id="bm-sub-from" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="height:36px">
             </div>
             <div>
               <label class="vf-lbl">По</label>
-              <input type="date" id="bm-sub-to" class="vf-inp" style="height:36px">
+              <input type="date" readonly id="bm-sub-to" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="height:36px">
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -7505,7 +7505,7 @@ function buildCalKaskoPayments(){
   if(calKPayType==='single'){
     const paid = !!calKPaid[0];
     list.innerHTML='<div class="im-pay-row" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">' +
-      '<input type="date" id="ckp-date-0" value="'+(start||'')+'" style="flex:1;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">' +
+      '<input type="date" readonly id="ckp-date-0" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" value="'+(start||'')+'" style="flex:1;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">' +
       '<input type="number" id="ckp-amt-0" value="'+total+'" style="width:64px;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">' +
       '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-0" onclick="toggleCKP(0)" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>' +
     '</div>';
@@ -7517,7 +7517,7 @@ function buildCalKaskoPayments(){
       const paid = !!calKPaid[q];
       return '<div class="im-pay-row'+(paid?'':' next-pay')+'" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+q+'</span>'+
-        '<input type="date" id="ckp-date-'+q+'" value="'+qd.toISOString().split('T')[0]+'" style="flex:1;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">'+
+        '<input type="date" readonly id="ckp-date-'+q+'" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" value="'+qd.toISOString().split('T')[0]+'" style="flex:1;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">'+
         '<input type="number" id="ckp-amt-'+q+'" value="'+perQ+'" style="width:56px;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">'+
         '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-'+q+'" onclick="toggleCKP('+q+')" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>'+
       '</div>';
@@ -7742,7 +7742,7 @@ function renderDocsModalBody(v){
       <div class="dm-card">
         <div class="dm-sts-grid">
           <div><div class="dm-field-lbl">Номер</div><input type="text" id="dm-sts-number" class="dm-field-val mono" value="${v.sts?.number||''}" placeholder="—"></div>
-          <div style="text-align:right"><div class="dm-field-lbl">Дата видачі</div><input type="date" id="dm-sts-date" class="dm-field-val" style="text-align:right" value="${v.sts?.date||''}"></div>
+          <div style="text-align:right"><div class="dm-field-lbl">Дата видачі</div><input type="date" readonly id="dm-sts-date" class="dm-field-val custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="text-align:right" value="${v.sts?.date||''}"></div>
         </div>
       </div>
     </div>
@@ -7859,7 +7859,7 @@ function renderDocsModalBody(v){
             '<div style="display:flex;flex-direction:column;gap:8px">'+
               '<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:8px">'+
                 '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;flex-shrink:0">Строк дії до</span>'+
-                '<input type="date" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;width:auto;min-width:0;box-sizing:border-box">'+
+                '<input type="date" readonly class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value)" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;width:auto;min-width:0;box-sizing:border-box">'+
               '</div>'+
               (v.poaExpiry?'<div style="background:'+pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pl+'</div>':'')+
             '</div>'+
@@ -10876,7 +10876,6 @@ window.restoreVehicleFromArchive = function(id){
 };
 
 // ── Close modals on Escape or overlay background click ──────────
-// Chromium quirk workaround: a focused <input type="date">'s native picker
 let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0;
 function extShortFmt(iso){
   if(!iso) return '';
@@ -11040,14 +11039,8 @@ document.addEventListener('mousedown', e => {
     closeCustomTimePicker();
   }
 });
-// Remaining native <input type="date"> fields (reports, nav-jump, service
-// modals) still get this best-effort focus-workaround for the same
-// popup can sometimes fail to release focus when the user clicks a nearby
-// field inside a scrollable modal, causing the calendar to flicker/reopen.
-// blur() alone isn't reliably honored by the browser while the native
-// picker is open, so explicitly focus the real click target instead.
-// Mobile-only: while the vehicle characteristics popup is open, the first
-// tap anywhere else on the page should just close it — not ALSO trigger
+// While the vehicle characteristics popup is open, the first click
+// anywhere else on the page should just close it — not ALSO trigger
 // whatever is underneath (e.g. opening the day-cell status/reservation
 // picker). The user needs a second, separate tap to act on that cell.
 document.addEventListener('click', e => {
@@ -11168,7 +11161,7 @@ function startAutoRefresh(){
         <div class="to-af-field"><label>Тип</label>
           <select id="aw-type"><option value="planned">Планове ТО</option><option value="unplanned">Позапланове / Ремонт</option></select>
         </div>
-        <div class="to-af-field"><label>Дата</label><input type="date" id="aw-date"></div>
+        <div class="to-af-field"><label>Дата</label><input type="date" readonly id="aw-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="to-af-field"><label>Коротка назва роботи</label><input type="text" id="aw-name" placeholder="Наприклад: Заміна масла та фільтрів"></div>
         <div class="to-af-field"><label>Пробіг (км)</label><input type="text" inputmode="numeric" id="aw-mileage" placeholder="85 000" oninput="formatKmInput(this)"></div>
         <div class="to-af-field full"><label>Опис / причина / коментар</label><textarea id="aw-desc" style="min-height:56px;width:100%" placeholder="Деталі..."></textarea></div>
@@ -11234,7 +11227,7 @@ function startAutoRefresh(){
       <div class="fgrid">
         <div class="fg full"><label>Страхова компанія</label><input type="text" id="co-insurer" list="insurer-datalist" placeholder="АХА Страхування"></div>
         <div class="fg"><label>Номер полісу</label><input type="text" id="co-policy" placeholder="АС/12345678"></div>
-        <div class="fg"><label>Дата закінчення</label><input type="date" id="co-end"></div>
+        <div class="fg"><label>Дата закінчення</label><input type="date" readonly id="co-end" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="fg full">
           <label>Поліс (PDF)</label>
           <div id="co-attach-area"></div>
@@ -11263,8 +11256,8 @@ function startAutoRefresh(){
         <div class="fg"><label>Номер полісу</label><input type="text" id="ck-policy" placeholder="КС/98765432"></div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr 1fr 1.2fr;gap:8px;margin-top:10px">
-        <div class="fg"><label>Дата початку</label><input type="date" id="ck-start" onchange="autoCalcKaskoEndDate()"></div>
-        <div class="fg"><label>Дата закінчення</label><input type="date" id="ck-end"></div>
+        <div class="fg"><label>Дата початку</label><input type="date" readonly id="ck-start" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="autoCalcKaskoEndDate()"></div>
+        <div class="fg"><label>Дата закінчення</label><input type="date" readonly id="ck-end" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="fg"><label>Страхова сума</label><input type="text" inputmode="numeric" id="ck-sum" placeholder="450 000" oninput="formatThousandsInput(this);recalcKaskoTariffPayment();recalcKaskoDeductible()"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
@@ -11320,7 +11313,7 @@ function startAutoRefresh(){
     </div>
     <div class="docs-modal-body">
       <div class="fgrid">
-        <div class="fg"><label>Дата випадку</label><input type="date" id="cm-date"></div>
+        <div class="fg"><label>Дата випадку</label><input type="date" readonly id="cm-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="fg"><label>Поліс</label>
           <select id="cm-policy"><option value="kasko">КАСКО</option><option value="osago">ОСЦПВ</option></select>
         </div>
