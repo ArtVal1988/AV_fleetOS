@@ -2674,7 +2674,7 @@ const STATUSES=[
   {key:'investor',  label:'У Інвестора',           color:'#60d0f0', isBooking:false},
   {key:'storage',   label:'На зберіганні',         color:'#f0d060', isBooking:false},
   {key:'personal',  label:'Особисте використання', color:'#f060c0', isBooking:false},
-  {key:'substitute',label:'Підмінне авто',         color:'#a78bfa', isBooking:true},
+  {key:'substitute',label:'Підмінне авто',         color:'#a78bfa', isBooking:false},
 ];
 const SM=Object.fromEntries(STATUSES.map(s=>[s.key,s]));
 // Load any statuses an admin previously created/renamed/recolored via the Статуси panel.
@@ -2690,7 +2690,6 @@ try{
 // One-time migration for statuses saved before the isBooking field existed.
 STATUSES.forEach(s=>{
   if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
-  if(s.key==='substitute') s.isBooking = true; // was initially set to false, now reclassified as Замовлення level
 });
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
@@ -10603,7 +10602,6 @@ async function syncFromServer(){
     // One-time migration for statuses saved before the isBooking field existed.
     STATUSES.forEach(s=>{
       if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
-      if(s.key==='substitute' && s.isBooking!==true){ s.isBooking = true; apiFetch('PUT','/settings/statuses',{value:STATUSES}); }
     });
     // The 'extension' status is used internally to color extension-period
     // calendar cells, not a user-facing status — if it was ever deleted
