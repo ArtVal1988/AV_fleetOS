@@ -1485,6 +1485,22 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<div id="maintenance-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">⚙ Тех. обслуговування — весь парк</div>
+      <input id="maint-search" type="text" placeholder="Пошук за номером, назвою…" oninput="renderMaintenancePanelList()"
+        style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:260px">
+      <button onclick="closeMaintenancePanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="maint-summary-row" style="display:flex;gap:10px;margin-bottom:18px"></div>
+      <div id="maint-panel-list"></div>
+    </div>
+  </div>
+</div>
+
+
 <div id="spare-part-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:520;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:14px;width:380px;max-width:calc(100vw - 24px);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
     <div style="font-size:15px;font-weight:700;margin-bottom:14px" id="sp-form-title">Нова запчастина</div>
@@ -1973,7 +1989,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item" data-label="Клієнти" onclick="openClientsPanel()"><span class="nav-icon">👤</span><span class="nav-label">Клієнти</span></div>
     <div class="nav-item" data-label="Запчастини" onclick="openSparePartsPanel()"><span class="nav-icon">🔩</span><span class="nav-label">Запчастини</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
-    <div class="nav-item" data-label="Тех. обслуговування"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
+    <div class="nav-item" data-label="Тех. обслуговування" onclick="openMaintenancePanel()"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-doctemplates" data-label="Шаблони документів" onclick="openDocTemplatesPanel()" style="display:none"><span class="nav-icon">📄</span><span class="nav-label">Шаблони документів</span></div>
@@ -9375,6 +9391,66 @@ async function loadSparePartsFromServer(){
   if(!_token) return;
   const r = await apiFetch('GET', '/spare-parts');
   if(Array.isArray(r)) SPARE_PARTS = r;
+}
+function openMaintenancePanel(){
+  document.getElementById('maintenance-panel-overlay').style.display='flex';
+  document.getElementById('maint-search').value='';
+  renderMaintenancePanelList();
+}
+function closeMaintenancePanel(){
+  document.getElementById('maintenance-panel-overlay').style.display='none';
+}
+function renderMaintenancePanelList(){
+  const q = (document.getElementById('maint-search')?.value||'').trim().toLowerCase();
+  const matches = v => !q || v.plate.toLowerCase().includes(q) || v.name.toLowerCase().includes(q);
+
+  const rows = ALL_VEHICLES.filter(matches).map(v => {
+    const svc = v.service || {};
+    const cur = v.currentKm ?? svc.lastKm ?? 0;
+    const next = v.nextServiceKm ?? svc.nextKm ?? 0;
+    const kmLeft = next - cur;
+    const status = v.service ? computeServiceStatus(v) : 'ok';
+    return {v, kmLeft, status, lastDate: svc.lastDate||''};
+  }).sort((a,b) => a.kmLeft - b.kmLeft);
+
+  const groups = {
+    danger: rows.filter(r => r.status==='danger'),
+    warn: rows.filter(r => r.status==='warn'),
+    ok: rows.filter(r => r.status==='ok'),
+  };
+
+  const summaryHtml = [
+    {key:'danger', label:'Прострочено / терміново', color:'#ef4444', bg:'#fef2f2'},
+    {key:'warn', label:'Незабаром', color:'#f59e0b', bg:'#fffbeb'},
+    {key:'ok', label:'В нормі', color:'#22c55e', bg:'#f0fdf4'},
+  ].map(g => `<div style="flex:1;background:${g.bg};border:1px solid ${g.color}33;border-radius:10px;padding:12px;text-align:center">
+    <div style="font-size:22px;font-weight:800;color:${g.color}">${groups[g.key].length}</div>
+    <div style="font-size:10px;color:${g.color};font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${g.label}</div>
+  </div>`).join('');
+  document.getElementById('maint-summary-row').innerHTML = summaryHtml;
+
+  const renderGroup = (label, color, items) => {
+    if(!items.length) return '';
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${label} (${items.length})</div>
+      ${items.map(r => {
+        const kmText = r.kmLeft <= 0 ? `Прострочено на ${Math.abs(r.kmLeft).toLocaleString('uk-UA')} км` : `${r.kmLeft.toLocaleString('uk-UA')} км залишилось`;
+        return `<div onclick="closeMaintenancePanel();openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.75);cursor:pointer">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <span style="font-family:var(--font-mono);font-weight:700;font-size:12px;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;flex-shrink:0">${r.v.plate}</span>
+            <span style="color:#374151;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stripYear(r.v.name)}</span>
+          </div>
+          <span style="color:${color};font-weight:700;font-size:12px;flex-shrink:0;white-space:nowrap">${kmText}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  };
+
+  const listHtml = renderGroup('⚠ Прострочено / терміново', '#ef4444', groups.danger) +
+    renderGroup('🔶 Незабаром', '#f59e0b', groups.warn) +
+    renderGroup('✓ В нормі', '#22c55e', groups.ok);
+
+  document.getElementById('maint-panel-list').innerHTML = listHtml || '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Авто не знайдено</div>';
 }
 function openSparePartsPanel(){
   document.getElementById('spare-parts-panel-overlay').style.display='flex';
