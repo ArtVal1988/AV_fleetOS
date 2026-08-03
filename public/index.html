@@ -3703,9 +3703,10 @@ function hideTooltip(){
 }
 let ttW=396, ttH=160;
 function positionTooltip(e){
+  const actualH = tt.offsetHeight || ttH;
   let x=e.clientX+14, y=e.clientY-10;
   if(x+ttW>window.innerWidth-8)x=e.clientX-ttW-10;
-  if(y+ttH>window.innerHeight-8)y=window.innerHeight-ttH-8;
+  if(y+actualH>window.innerHeight-8)y=Math.max(8, window.innerHeight-actualH-8);
   tt.style.left=x+'px'; tt.style.top=y+'px';
 }
 let ttMoveRAF=null, ttLastEvent=null;
