@@ -8100,7 +8100,7 @@ function updateBookingDetailsVisibility(){
   const hide = st ? (st.isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
 
   wrap.style.display = 'flex'; // block 2 (dates) always stays visible
-  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-block-4','bm-block-5'].forEach(id=>{
+  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-substitute-section','bm-block-4','bm-block-5'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = hide ? 'none' : '';
   });
