@@ -5086,7 +5086,6 @@ async function showVehicleSpecs(e, vid){
     popup.style.width = popupWidth + 'px';
   } else {
     popup.style.transform = '';
-    popup.style.maxHeight = '';
     popup.style.width = '260px';
     const rect = e.currentTarget.getBoundingClientRect();
     let left = rect.left;
@@ -5095,8 +5094,15 @@ async function showVehicleSpecs(e, vid){
     const popupWidth = 260;
     if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
     if(top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320);
+    if(top < 8) top = 8;
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
+    // Constrain height to whatever room is actually left below the chosen
+    // top position, with scrolling — otherwise tall content (especially
+    // with price-comparison links appended at the bottom) can overflow off
+    // the bottom of the screen with no way to reach/copy it.
+    popup.style.maxHeight = `calc(100vh - ${Math.round(top)}px - 16px)`;
+    popup.style.overflowY = 'auto';
   }
 
   if(s?.priceLink || s?.priceLink2) await loadPriceIntoSpecsPopup(vid, s.priceLink, s.priceLink2);
