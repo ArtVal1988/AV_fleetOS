@@ -7738,6 +7738,11 @@ function closeDocsModal(){
 }
 
 function renderDocsModalBody(v){
+  // If a date picker is open for a field in this modal (e.g. Дата видачі),
+  // rebuilding the body below destroys and recreates that input — close
+  // the picker first so it never gets orphaned (stuck open, detached from
+  // its original field) when the user then opens a different date field.
+  if(typeof closeCustomDatePicker === 'function') closeCustomDatePicker();
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   const ini = name => { if(!name)return'?'; const p=name.trim().split(' '); return (p[0]?.[0]||'')+(p[1]?.[0]||''); };
   const en = v.docsEnabled || {};
@@ -10940,6 +10945,18 @@ function closeCustomDatePicker(){
   document.getElementById('custom-dp')?.remove();
   _customDpInput = null;
 }
+// Safety net: if the field a picker was opened for ever gets removed from
+// the DOM (some section of the page rebuilding its innerHTML while the
+// picker is still open — a scenario found in several forms), the picker
+// itself becomes an orphan: still visible, but no longer wired to
+// anything real. A lightweight periodic check closes it automatically
+// rather than requiring every single re-render call site in the app to
+// remember to call closeCustomDatePicker() first.
+setInterval(() => {
+  if(_customDpInput && !document.body.contains(_customDpInput)){
+    closeCustomDatePicker();
+  }
+}, 400);
 function customDpChangeMonth(delta){
   _customDpViewMonth += delta;
   if(_customDpViewMonth < 0){ _customDpViewMonth = 11; _customDpViewYear--; }
