@@ -10985,6 +10985,16 @@ document.addEventListener('mousedown', e => {
   if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
     closeCustomDatePicker();
   }
+}, true);
+// Backup: focus moving to any other field (via mouse, Tab key, etc) should
+// also close the picker — focusin is harder for some intervening handler to
+// accidentally suppress than mousedown/click, so this catches cases the
+// mousedown listener alone might miss (e.g. a nearby modal/field stopping
+// propagation on the click itself).
+document.addEventListener('focusin', e => {
+  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
+    closeCustomDatePicker();
+  }
 });
 let _customTpInput = null;
 function openCustomTimePicker(inputEl){
