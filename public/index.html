@@ -5114,10 +5114,11 @@ async function showVehicleSpecs(e, vid){
     const rect = e.currentTarget.getBoundingClientRect();
     let left = rect.left;
     let top = rect.bottom + 6;
+    const actualHeight = popup.offsetHeight || 320;
     // Keep it on-screen
     const popupWidth = 260;
     if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
-    if(top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320);
+    if(top + actualHeight > window.innerHeight) top = Math.max(8, rect.top - actualHeight);
     if(top < 8) top = 8;
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
