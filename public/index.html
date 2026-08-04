@@ -3527,6 +3527,7 @@ function showTooltip(e,bid,subContext){
     const fmtSY = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     substituteBlock = `
       <div class="tt-divider"></div>
+      <div style="background:#a78bfa14;border-radius:6px;padding:8px 10px">
       <div class="tt-label" style="margin-bottom:4px">🔄 Підмінне авто</div>
       ${b.substituteVehicles.map(s=>{
         const sv = getVehicle(s.vehicleId);
@@ -3545,6 +3546,7 @@ function showTooltip(e,bid,subContext){
           <span style="color:var(--text);text-align:right">${priceText}</span>
         </div>`;
       }).join('')}
+      </div>
     `;
   }
 
