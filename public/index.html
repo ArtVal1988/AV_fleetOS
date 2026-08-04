@@ -3364,7 +3364,6 @@ const tt=document.getElementById('tooltip');
 let ttHideTimer=null;
 let ttShownBid=null;
 let ttShownSubMode=false;
-function curColor(c){ return c==='₴' ? '#166534' : '#1d4ed8'; }
 function showTooltip(e,bid,subContext){
   clearTimeout(ttHideTimer);
   const isSubNow = !!subContext;
@@ -3476,7 +3475,7 @@ function showTooltip(e,bid,subContext){
       return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:${curColor(h.currency||'$')};font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
+          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * ${fmt1(h.rate||0)} ${h.currency||'$'} = ${total} ${h.currency||'$'}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
         </span>
       </div>`;
@@ -3491,7 +3490,7 @@ function showTooltip(e,bid,subContext){
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         ${st==='paid' ? `<span style="display:flex;align-items:center;gap:6px">
-          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmt1(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
+          ${ext.cost?`<span class="tt-val" style="color:var(--text);font-weight:500">${fmt1(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
           <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
         </span>` : ''}
       </div>`;
@@ -3631,12 +3630,12 @@ function showTooltip(e,bid,subContext){
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700;color:${curColor(cur)}">${b.rate?`${days} * ${b.rate.toLocaleString('uk-UA')} ${cur} = ${fmt2(days*b.rate)} ${cur}`:days}</span></div>
-    ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700;color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
-    ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val" style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmt2tt(vatUah)+'₴':'+'+fmt2tt(vatAmount)+cur+(vatUah!==null?' · +'+fmt2tt(vatUah)+'₴':'')}</span></div>`:''}
+    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * ${b.rate.toLocaleString('uk-UA')} ${cur} = ${fmt2(days*b.rate)} ${cur}`:days}</span></div>
+    ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
+    ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?'+'+fmt2tt(vatUah)+'₴':'+'+fmt2tt(vatAmount)+cur+(vatUah!==null?' · +'+fmt2tt(vatUah)+'₴':'')}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
-    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val" style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmt1(totalUah)+' ₴':fmt1(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
-    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val" style="color:${curColor(b.depositCur||cur)}">${fmt1(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
+    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val">${canShowUahOnly?fmt1(totalUah)+' ₴':fmt1(total)+' '+cur}${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
+    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val">${fmt1(b.deposit)} ${b.depositCur||cur}${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
     `:''}
     ${extBlock}
     ${substituteBlock}
@@ -6789,6 +6788,7 @@ function renderExtDebtAtDate(){
 
   // Matches the booking tooltip's own currency-color convention (see
   // dual-days-label): UAH amounts in green, other currencies in blue.
+  const curColor = c => c==='₴' ? '#166534' : '#1d4ed8';
   const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${amount.toLocaleString('uk-UA')} ${c}</span>`;
 
   const renderRow = (dateStr, resultId, extrapolate) => {
