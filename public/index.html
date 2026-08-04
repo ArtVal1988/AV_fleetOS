@@ -9684,7 +9684,7 @@ function renderInsuranceOverviewPanel(){
           <div style="color:#6b7280;font-size:10.5px;margin-top:2px">${stripYear(v.name)}</div>
         </td>
         <td style="padding:8px;vertical-align:top">${osagoHtml}</td>
-        <td style="padding:8px;vertical-align:top">${kaskoHtml}</td>
+        <td style="padding:8px;vertical-align:top${v.kasko?.end?';background:#eff6ff':''}">${kaskoHtml}</td>
       </tr>`;
     });
   });
