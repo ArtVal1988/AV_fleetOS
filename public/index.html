@@ -3385,8 +3385,8 @@ function showTooltip(e,bid,subContext){
       const courseSuffix = subEntry.exchangeRate>0 ? ` (${fmt1(subEntry.exchangeRate)})` : '';
       priceLine = ` ${days} * ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
     }
-    tt.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap;color:#000">🔄 Підміна · ${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</div>
-      <div style="font-size:12px;white-space:nowrap;color:#000;margin-top:3px">${fs(subContext.fromDate)}–${fs(subContext.toDate)} ${priceLine}</div>`;
+    tt.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap"><span style="color:#472c97">🔄 Підміна ·</span> <span style="color:#000">${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</span></div>
+      <div style="font-size:12px;white-space:nowrap;margin-top:3px"><span style="color:#472c97">${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span> <span style="color:#000">${priceLine}</span></div>`;
     tt.classList.add('visible');
     positionTooltip(e);
     return;
