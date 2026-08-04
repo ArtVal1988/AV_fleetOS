@@ -5787,7 +5787,11 @@ function renderDashboard(){
   // ── 3. Needs attention ────────────────────────────────────────────
   const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
   const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
-  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
+  const getKaskoNextDue = v => {
+    const unpaid = (v.kasko?.payments||[]).filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    return unpaid[0]?.date || v.kasko?.end;
+  };
+  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
   const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)))
     .sort((a,b) => {
       const leftA = a.service.nextKm-(a.currentKm??a.service.lastKm??0);
@@ -5802,7 +5806,7 @@ function renderDashboard(){
         <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; })}</div>
         <div style="display:flex;flex-direction:column;gap:12px">
           ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
-          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(v.kasko.end))}
+          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(getKaskoNextDue(v)))}
         </div>
       </div>
     </div>`;
