@@ -3383,8 +3383,8 @@ function showTooltip(e,bid,subContext){
       const days = Math.round((new Date(subEntry.toDate)-new Date(subEntry.fromDate))/86400000);
       const cur = subEntry.currency||'$';
       const total = days*subEntry.rate;
-      const courseSuffix = subEntry.exchangeRate>0 ? ` (${fmt1(subEntry.exchangeRate)})` : '';
-      priceLine = ` ${days} * ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
+      const courseSuffix = subEntry.exchangeRate>0 ? ` (${fmtSmart(subEntry.exchangeRate)})` : '';
+      priceLine = ` ${days} * <span style="color:${curColor(cur)}">${fmtSmart(subEntry.rate)} ${cur}</span> = <span style="color:${curColor(cur)}">${fmtSmart(total)} ${cur}</span>${courseSuffix}`;
     }
     tt.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap"><span style="color:#472c97">🔄 Підміна ·</span> <span style="color:#000">${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;white-space:nowrap;margin-top:3px"><span style="color:#472c97">${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span><span style="color:#000">${priceLine.trim()}</span></div>`;
@@ -3448,8 +3448,8 @@ function showTooltip(e,bid,subContext){
   const servicesBlock = hasServices ? `
     <div class="tt-divider"></div>
     <div class="tt-label" style="margin-bottom:4px">Додаткові послуги</div>
-    ${extrasList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">${x.icon||''} ${x.label}${x.qty>1?' ×'+x.qty:''}</span><span class="tt-val">${x.price?x.price+(x.cur==='uah'?'₴':cur):''}</span></div>`).join('')}
-    ${equipList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">🔧 ${x.name}</span><span class="tt-val">${x.price?x.price+(x.cur==='uah'?'₴':cur):''}</span></div>`).join('')}
+    ${extrasList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">${x.icon||''} ${x.label}${x.qty>1?' ×'+x.qty:''}</span><span class="tt-val">${x.price?`<span style="color:${curColor(x.cur==='uah'?'₴':cur)}">${x.price}${x.cur==='uah'?'₴':cur}</span>`:''}</span></div>`).join('')}
+    ${equipList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">🔧 ${x.name}</span><span class="tt-val">${x.price?`<span style="color:${curColor(x.cur==='uah'?'₴':cur)}">${x.price}${x.cur==='uah'?'₴':cur}</span>`:''}</span></div>`).join('')}
   ` : '';
 
   // extension info
@@ -3471,12 +3471,12 @@ function showTooltip(e,bid,subContext){
     const moreIndicator = hiddenCount > 0 ? `<div class="tt-row" style="padding:2px 4px"><span class="tt-val" style="text-align:left;color:var(--muted);font-style:italic;font-size:10px">… ще ${hiddenCount} попередніх — повна історія в замовленні</span></div>` : '';
     const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
-      const total = fmt1(hDays*(h.rate||0));
+      const total = fmtSmart(hDays*(h.rate||0));
       const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
       return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(h.currency||'$')}">${fmt1(h.rate||0)} ${h.currency||'$'}</span> = <span style="color:${curColor(h.currency||'$')}">${total} ${h.currency||'$'}</span>${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''}</span>
+          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(h.currency||'$')}">${fmtSmart(h.rate||0)} ${h.currency||'$'}</span> = <span style="color:${curColor(h.currency||'$')}">${total} ${h.currency||'$'}</span>${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
         </span>
       </div>`;
@@ -3491,7 +3491,7 @@ function showTooltip(e,bid,subContext){
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         ${st==='paid' ? `<span style="display:flex;align-items:center;gap:6px">
-          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmt1(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
+          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmtSmart(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
           <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
         </span>` : ''}
       </div>`;
@@ -3560,7 +3560,7 @@ function showTooltip(e,bid,subContext){
         const cur = s.currency||'$';
         const total = days*(s.rate||0);
         const priceText = s.rate>0
-          ? `${days} * ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' ('+fmt1(s.exchangeRate)+')':''}`
+          ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(s.rate)} ${cur}</span> = <span style="color:${curColor(cur)}">${fmtSmart(total)} ${cur}</span>${s.exchangeRate>0?' ('+fmtSmart(s.exchangeRate)+')':''}`
           : '';
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px">
           <span style="flex-shrink:0"><b style="font-family:var(--font-mono);color:var(--text)">${sv?sv.plate:'?'}</b></span>
@@ -3631,12 +3631,12 @@ function showTooltip(e,bid,subContext){
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${b.rate.toLocaleString('uk-UA')} ${cur}</span> = <span style="color:${curColor(cur)}">${fmt2(days*b.rate)} ${cur}</span>`:days}</span></div>
-    ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700;color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmt2tt(extrasUah)+'₴':'+'+fmt2tt(extrasTotal)+cur}</span></div>`:''}
-    ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?`<span style="color:${curColor('₴')}">+${fmt2tt(vatUah)}₴</span>`:`<span style="color:${curColor(cur)}">+${fmt2tt(vatAmount)}${cur}</span>${vatUah!==null?` · <span style="color:${curColor('₴')}">+${fmt2tt(vatUah)}₴</span>`:''}`}</span></div>`:''}
+    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span> = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>
+    ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700;color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmtSmart(extrasUah)+'₴':'+'+fmtSmart(extrasTotal)+cur}</span></div>`:''}
+    ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?`<span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:`<span style="color:${curColor(cur)}">+${fmtSmart(vatAmount)}${cur}</span>${vatUah!==null?` · <span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:''}`}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
-    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmt1(totalUah)+' ₴':fmt1(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
-    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val"><span style="color:${curColor(b.depositCur||cur)}">${fmt1(b.deposit)} ${b.depositCur||cur}</span>${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
+    ${b.rate?`<div class="tt-total-row"><span class="tt-total-label">Загалом</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
+    ${b.deposit?`<div class="tt-total-row tt-deposit-row"><span class="tt-total-label">Депозит</span><span class="tt-total-val"><span style="color:${curColor(b.depositCur||cur)}">${fmtSmart(b.deposit)} ${b.depositCur||cur}</span>${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
     `:''}
     ${extBlock}
     ${substituteBlock}
@@ -6789,7 +6789,7 @@ function renderExtDebtAtDate(){
 
   // Matches the booking tooltip's own currency-color convention (see
   // dual-days-label): UAH amounts in green, other currencies in blue.
-  const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${amount.toLocaleString('uk-UA')} ${c}</span>`;
+  const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${fmtSmart(amount)} ${c}</span>`;
 
   const renderRow = (dateStr, resultId, extrapolate) => {
     const el = document.getElementById(resultId);
@@ -8897,6 +8897,9 @@ function fmt2(n){
 }
 function fmt1(n){
   return (Math.round((n||0)*10)/10).toLocaleString('uk-UA',{minimumFractionDigits:1,maximumFractionDigits:1});
+}
+function fmtSmart(n){
+  return (n||0).toLocaleString('uk-UA',{minimumFractionDigits:0,maximumFractionDigits:2});
 }
 function updateVatPreview(){
   const type = document.getElementById('bm-client-type').value;
