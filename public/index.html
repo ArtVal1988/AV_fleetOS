@@ -3536,11 +3536,14 @@ function showTooltip(e,bid,subContext){
         const priceText = s.rate>0
           ? `${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' (курс '+fmt1(s.exchangeRate)+')':''}`
           : '';
-        return `<div style="display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:2px">
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px">
           <span style="flex-shrink:0"><b style="font-family:var(--font-mono);color:var(--text)">${sv?sv.plate:'?'}</b></span>
+          <span style="color:var(--muted);text-align:right"><i>${s.comment||''}</i></span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;margin-bottom:6px">
           <span style="color:var(--text)">${fmtSY(s.fromDate)}–${fmtSY(s.toDate)}</span>
-          ${priceText?`<span style="color:var(--text)">${priceText}</span>`:''}
-        </div>${s.comment?`<div style="font-size:10px;color:var(--muted);margin:-1px 0 6px"><i>${s.comment}</i></div>`:''}`;
+          <span style="color:var(--text);text-align:right">${priceText}</span>
+        </div>`;
       }).join('')}
     `;
   }
