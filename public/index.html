@@ -3409,11 +3409,6 @@ function showTooltip(e,bid,subContext){
   const vatUah = needsConv ? vatAmount*b.exchangeRate : (cur==='₴'?vatAmount:null);
   const extrasUah = needsConv ? extrasTotal*b.exchangeRate : (cur==='₴'?extrasTotal:null);
   const fmt2tt = n => (Math.round((n||0)*100)/100).toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtSmart = n => {
-    const rounded = Math.round((n||0)*100)/100;
-    const hasCents = Math.abs(rounded - Math.round(rounded)) > 0.001;
-    return rounded.toLocaleString('uk-UA', hasCents ? {minimumFractionDigits:2,maximumFractionDigits:2} : {maximumFractionDigits:0});
-  };
 
   // 1: name left, phone right, same row
   const msgEntries = Object.entries(b.messengers||{}).filter(([,m])=>m.active&&m.contact);
