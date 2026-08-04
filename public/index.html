@@ -4424,6 +4424,17 @@ function saveBooking(){
     return;
   }
 
+  // Every recorded substitute vehicle period must have its own exchange
+  // rate — catches entries saved before this became mandatory, or any
+  // other way a period could end up without one, not just the sub-form's
+  // own + Додати button (which only guards new/edited entries).
+  const subMissingCourse = currentSubstitutes.find(s => !(s.exchangeRate>0));
+  if(subMissingCourse){
+    const subV = getVehicle(subMissingCourse.vehicleId);
+    alert(`Вкажіть курс обміну для підмінного авто ${subV?subV.plate:''} (${fmt(subMissingCourse.fromDate)}–${fmt(subMissingCourse.toDate)})`);
+    return;
+  }
+
   const orderStatuses = ['rented', 'res-docs', 'reserved'];
   if(orderStatuses.includes(document.getElementById('bm-status').value)){
     const clientName = document.getElementById('bm-name').value.trim();
