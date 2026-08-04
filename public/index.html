@@ -3382,11 +3382,11 @@ function showTooltip(e,bid,subContext){
       const days = Math.round((new Date(subEntry.toDate)-new Date(subEntry.fromDate))/86400000);
       const cur = subEntry.currency||'$';
       const total = days*subEntry.rate;
-      const courseSuffix = subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
-      priceLine = ` ${days} ${pluralDoba(days)} × ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
+      const courseSuffix = subEntry.exchangeRate>0 ? ` (${fmt1(subEntry.exchangeRate)})` : '';
+      priceLine = ` ${days} * ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
     }
-    tt.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap;color:#472c97">🔄 Підміна · ${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</div>
-      <div style="font-size:12px;white-space:nowrap;color:#472c97;margin-top:3px">${fs(subContext.fromDate)}–${fs(subContext.toDate)} ${priceLine}</div>`;
+    tt.innerHTML = `<div style="font-size:13px;font-weight:700;white-space:nowrap;color:#000">🔄 Підміна · ${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</div>
+      <div style="font-size:12px;white-space:nowrap;color:#000;margin-top:3px">${fs(subContext.fromDate)}–${fs(subContext.toDate)} ${priceLine}</div>`;
     tt.classList.add('visible');
     positionTooltip(e);
     return;
