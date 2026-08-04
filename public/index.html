@@ -3354,9 +3354,13 @@ function showTooltip(e,bid,subContext){
     const ov = getVehicle(b.vehicleId);
     const fs = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const subColor = SM['substitute']?.color||'#a78bfa';
+    const subEntry = (b.substituteVehicles||[]).find(s => s.fromDate===subContext.fromDate && s.toDate===subContext.toDate);
+    const priceLine = subEntry?.rate>0
+      ? `<div style="font-size:11px;color:var(--text);margin-top:6px">${fmt1(subEntry.rate)} ${subEntry.currency||'$'}/добу${subEntry.currency==='₴' && subEntry.exchangeRate>0 ? ` · курс ${fmt1(subEntry.exchangeRate)}` : ''}</div>`
+      : '';
     tt.innerHTML = `<div style="display:flex;align-items:center;gap:6px">
       <span class="tt-badge" style="margin-bottom:0;background:${subColor}20;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</span>
-    </div>`;
+    </div>${priceLine}`;
     tt.classList.add('visible');
     positionTooltip(e);
     return;
