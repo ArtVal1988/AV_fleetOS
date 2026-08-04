@@ -9639,16 +9639,19 @@ function renderInsuranceOverviewPanel(){
         const k = v.kasko;
         const durationText = `${fmt(k.start)}–${fmt(k.end)}`;
         const payments = k.payments || [];
-        const paymentsHtml = payments.map(p=>{
+        const paymentCellHtml = p => {
+          if(!p) return '';
           const label = k.paymentType==='quarterly' ? 'Q'+p.quarter : 'Платіж';
           const color = p.paid ? '#166534' : insColor(daysFromNow(p.date));
-          const bg = p.paid ? '#f0fdf4' : 'transparent';
-          return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};border-radius:4px;padding:2px 5px">
-            <span style="color:#9ca3af;font-size:9.5px">${label}</span>
-            <span style="color:${color};font-weight:700;font-family:var(--font-mono);font-size:10.5px">${fmt(p.date)}</span>
-            <span style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓':(p.amount?fmtMon(p.amount):'')}</span>
-          </span>`;
-        }).join('');
+          return `<div style="background:${p.paid?'#f0fdf4':'transparent'};border-radius:4px;padding:2px 4px">
+            <div style="color:#9ca3af;font-size:9.5px;text-transform:uppercase">${label}</div>
+            <div style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</div>
+            <div style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</div>
+          </div>`;
+        };
+        const paymentsHtml = payments.length
+          ? `<div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px">${[0,1,2,3].map(i=>paymentCellHtml(payments[i])).join('')}</div>`
+          : '<span style="color:#c7c7c7;font-style:italic;font-size:10.5px">Графік платежів не вказано</span>';
         kaskoHtml = `
           <div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;padding-bottom:5px;border-bottom:1px solid #f0f2f5;margin-bottom:5px">
             <div>
@@ -9668,9 +9671,7 @@ function renderInsuranceOverviewPanel(){
               <div style="font-weight:600;color:var(--text)">${k.deductiblePct?fmt1(k.deductiblePct)+'% · ':''}${k.deductible?fmtMon(k.deductible):'—'}</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            ${paymentsHtml || '<span style="color:#c7c7c7;font-style:italic;font-size:10.5px">Графік платежів не вказано</span>'}
-          </div>`;
+          ${paymentsHtml}`;
       }
 
       rowsHtml += `<tr class="ins-ov-row" onclick="openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6">
