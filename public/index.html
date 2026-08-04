@@ -11149,6 +11149,15 @@ document.addEventListener('keydown', e => {
   if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') closeStatusesPanel();
   if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
   if(document.getElementById('edituser-overlay')?.style.display==='flex') closeEditUser();
+  if(document.getElementById('dashboard-panel-overlay')?.style.display==='flex') closeDashboard();
+  if(document.getElementById('report-panel-overlay')?.style.display==='flex') closeReportPanel();
+  if(document.getElementById('vehicles-panel-overlay')?.style.display==='flex') closeVehiclesPanel();
+  if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
+  if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
+  if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
+  if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
+  if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
+  if(document.getElementById('activitylog-panel-overlay')?.style.display==='flex') closeActivityLogPanel();
 });
 // (outside-click-to-close intentionally removed — modals close only via their ✕ button)
 
