@@ -3219,13 +3219,12 @@ function renderCalendar(){
         const cellHtml = (()=>{
         if(!visibleArr.length){
           if(subInfo && subInfo.type==='active'){
-            const origV = getVehicle(subInfo.booking.vehicleId);
             return`<td class="td-day substitute-covered${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
               data-vid="${v.id}" data-day="${d}"
               onmouseenter="showTooltip(event,${subInfo.booking.id},{fromDate:'${subInfo.sub.fromDate}',toDate:'${subInfo.sub.toDate}'})"
               onmouseleave="hideTooltip()"
               onclick="event.stopPropagation();expandBooking(${subInfo.booking.id})">
-              <div class="day-cell booked" style="background:${SM['substitute']?.color||'#a78bfa'};color:#fff" title="Підміна для ${origV?origV.plate:''}">
+              <div class="day-cell booked" style="background:${SM['substitute']?.color||'#a78bfa'};color:#fff">
                 <span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span>
               </div></td>`;
           }
