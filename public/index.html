@@ -3364,6 +3364,7 @@ const tt=document.getElementById('tooltip');
 let ttHideTimer=null;
 let ttShownBid=null;
 let ttShownSubMode=false;
+function curColor(c){ return c==='₴' ? '#166534' : '#1d4ed8'; }
 function showTooltip(e,bid,subContext){
   clearTimeout(ttHideTimer);
   const isSubNow = !!subContext;
@@ -6788,7 +6789,6 @@ function renderExtDebtAtDate(){
 
   // Matches the booking tooltip's own currency-color convention (see
   // dual-days-label): UAH amounts in green, other currencies in blue.
-  const curColor = c => c==='₴' ? '#166534' : '#1d4ed8';
   const amtSpan = (amount, c) => `<span style="color:${curColor(c)}">${amount.toLocaleString('uk-UA')} ${c}</span>`;
 
   const renderRow = (dateStr, resultId, extrapolate) => {
