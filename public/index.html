@@ -2552,6 +2552,18 @@ input.dm-pf-val.tel{font-size:14px;}
               <label class="vf-lbl">По</label>
               <input type="date" readonly id="bm-sub-to" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="height:36px">
             </div>
+            <div>
+              <label class="vf-lbl">Ціна</label>
+              <input type="text" inputmode="numeric" id="bm-sub-rate" class="no-spinner vf-inp" style="width:64px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" oninput="formatThousandsInput(this)">
+            </div>
+            <div class="dep-inline-wrap" style="background:none;border:none;padding:0;align-self:end;margin-bottom:1px">
+              <button type="button" id="sub-cur-btn-usd" class="dep-cur-pill active" onclick="setSubCurrency('$')">$</button>
+              <button type="button" id="sub-cur-btn-uah" class="dep-cur-pill" onclick="setSubCurrency('₴')">₴</button>
+            </div>
+            <div id="bm-sub-rate2-field" style="display:none">
+              <label class="vf-lbl">Курс</label>
+              <input type="number" id="bm-sub-rate2" class="no-spinner vf-inp" style="width:56px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="00,0" step="0.1">
+            </div>
           </div>
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
             <div style="flex:1;min-width:160px">
@@ -4057,6 +4069,7 @@ function openBookingModal(vid=null,start=null,end=null){
   renderSubstituteList();
   updateSubstituteFormMode();
   hideSubstituteForm();
+  setSubCurrency('$');
   const subPanel0 = document.getElementById('bm-substitute-panel');
   const subIcon0 = document.getElementById('bm-substitute-toggle-icon');
   const subChevron0 = document.getElementById('bm-substitute-chevron');
@@ -4222,6 +4235,7 @@ function editBooking(bid){
   renderSubstituteList();
   updateSubstituteFormMode();
   hideSubstituteForm();
+  setSubCurrency('$');
   const subPanel = document.getElementById('bm-substitute-panel');
   const subIcon = document.getElementById('bm-substitute-toggle-icon');
   const subChevron = document.getElementById('bm-substitute-chevron');
@@ -6275,6 +6289,14 @@ function openSubstituteForNewEntry(){
 }
 let currentSubstitutes = []; // working copy, mirrors currentExtHistory's pattern
 let editingSubstituteIndex = null; // set while editing an existing entry, so 'Додати' updates it in place instead of appending a duplicate
+let subCurrency = '$';
+function setSubCurrency(cur){
+  subCurrency = cur;
+  document.getElementById('sub-cur-btn-usd')?.classList.toggle('active', cur==='$');
+  document.getElementById('sub-cur-btn-uah')?.classList.toggle('active', cur==='₴');
+  const rate2Field = document.getElementById('bm-sub-rate2-field');
+  if(rate2Field) rate2Field.style.display = cur==='₴' ? '' : 'none';
+}
 
 function toggleSubstituteSection(){
   const panel = document.getElementById('bm-substitute-panel');
@@ -6298,6 +6320,9 @@ function addSubstitutePeriod(){
   const fromDate = document.getElementById('bm-sub-from').value;
   const toDate = document.getElementById('bm-sub-to').value;
   const comment = document.getElementById('bm-sub-comment').value.trim();
+  const rate = parseThousands(document.getElementById('bm-sub-rate').value)||0;
+  const currency = subCurrency;
+  const exchangeRate = parseFloat((document.getElementById('bm-sub-rate2').value||'').replace(',','.'))||0;
   if(!vehicleId || !fromDate || !toDate){ alert('Оберіть авто та обидві дати'); return; }
   if(toDate < fromDate){ alert('Дата "По" не може бути раніше дати "З"'); return; }
 
@@ -6312,14 +6337,17 @@ function addSubstitutePeriod(){
   }
 
   if(editingSubstituteIndex !== null){
-    currentSubstitutes[editingSubstituteIndex] = {vehicleId, fromDate, toDate, comment};
+    currentSubstitutes[editingSubstituteIndex] = {vehicleId, fromDate, toDate, comment, rate, currency, exchangeRate};
     editingSubstituteIndex = null;
   } else {
-    currentSubstitutes.push({vehicleId, fromDate, toDate, comment});
+    currentSubstitutes.push({vehicleId, fromDate, toDate, comment, rate, currency, exchangeRate});
   }
   document.getElementById('bm-sub-from').value = '';
   document.getElementById('bm-sub-to').value = '';
   document.getElementById('bm-sub-comment').value = '';
+  document.getElementById('bm-sub-rate').value = '';
+  document.getElementById('bm-sub-rate2').value = '';
+  setSubCurrency('$');
   updateSubstituteFormMode();
   hideSubstituteForm();
   renderSubstituteList();
@@ -6340,6 +6368,9 @@ function cancelEditSubstitute(){
   document.getElementById('bm-sub-from').value = '';
   document.getElementById('bm-sub-to').value = '';
   document.getElementById('bm-sub-comment').value = '';
+  document.getElementById('bm-sub-rate').value = '';
+  document.getElementById('bm-sub-rate2').value = '';
+  setSubCurrency('$');
   updateSubstituteFormMode();
   hideSubstituteForm();
   renderSubstituteList();
@@ -6351,7 +6382,7 @@ function renderSubstituteList(){
     const v = getVehicle(s.vehicleId);
     const isEditing = editingSubstituteIndex === i;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:${isEditing?'#fef9c3':'#eff6ff'};border:1px solid ${isEditing?'#fde047':'#bfdbfe'};border-radius:6px;padding:7px 10px;font-size:11px">
-      <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.comment?' · <i>'+s.comment+'</i>':''}${isEditing?' · <b style="color:#a16207">редагується…</b>':''}</span>
+      <span><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span> · ${fmt(s.fromDate)}–${fmt(s.toDate)}${s.rate?' · '+fmt1(s.rate)+' '+(s.currency||'$')+'/добу':''}${s.comment?' · <i>'+s.comment+'</i>':''}${isEditing?' · <b style="color:#a16207">редагується…</b>':''}</span>
       <span style="display:flex;gap:4px;flex-shrink:0">
         <button type="button" onclick="editSubstitutePeriod(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
         <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
@@ -6368,6 +6399,9 @@ function editSubstitutePeriod(i){
   document.getElementById('bm-sub-from').value = s.fromDate;
   document.getElementById('bm-sub-to').value = s.toDate;
   document.getElementById('bm-sub-comment').value = s.comment||'';
+  document.getElementById('bm-sub-rate').value = s.rate ? s.rate.toLocaleString('uk-UA') : '';
+  document.getElementById('bm-sub-rate2').value = s.exchangeRate || '';
+  setSubCurrency(s.currency || '$');
   updateSubstituteFormMode();
   showSubstituteForm();
   renderSubstituteList();
