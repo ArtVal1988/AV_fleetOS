@@ -2560,7 +2560,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <button type="button" id="sub-cur-btn-usd" class="dep-cur-pill active" onclick="setSubCurrency('$')">$</button>
               <button type="button" id="sub-cur-btn-uah" class="dep-cur-pill" onclick="setSubCurrency('₴')">₴</button>
             </div>
-            <div id="bm-sub-rate2-field" style="display:none">
+            <div id="bm-sub-rate2-field">
               <label class="vf-lbl">Курс</label>
               <input type="number" id="bm-sub-rate2" class="no-spinner vf-inp" style="width:56px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="00,0" step="0.1">
             </div>
@@ -3354,10 +3354,15 @@ function showTooltip(e,bid,subContext){
     const ov = getVehicle(b.vehicleId);
     const fs = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const subEntry = (b.substituteVehicles||[]).find(s => s.fromDate===subContext.fromDate && s.toDate===subContext.toDate);
-    const priceSuffix = subEntry?.rate>0
-      ? ` · ${fmt1(subEntry.rate)} ${subEntry.currency||'$'}${subEntry.currency==='₴' && subEntry.exchangeRate>0 ? ` · курс ${fmt1(subEntry.exchangeRate)}` : ''}`
-      : '';
-    tt.innerHTML = `<span style="font-size:11.5px;font-weight:600;white-space:nowrap;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}${priceSuffix}</span>`;
+    let priceLine = '';
+    if(subEntry?.rate>0){
+      const days = Math.round((new Date(subEntry.toDate)-new Date(subEntry.fromDate))/86400000);
+      const cur = subEntry.currency||'$';
+      const total = days*subEntry.rate;
+      const courseSuffix = cur==='₴' && subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
+      priceLine = `<div style="font-size:11.5px;font-weight:600;color:#472c97;margin-top:2px">${days} ${pluralDoba(days)} × ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}</div>`;
+    }
+    tt.innerHTML = `<div style="font-size:11.5px;font-weight:600;white-space:nowrap;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</div>${priceLine}`;
     tt.classList.add('visible');
     positionTooltip(e);
     return;
@@ -6320,8 +6325,6 @@ function setSubCurrency(cur){
   subCurrency = cur;
   document.getElementById('sub-cur-btn-usd')?.classList.toggle('active', cur==='$');
   document.getElementById('sub-cur-btn-uah')?.classList.toggle('active', cur==='₴');
-  const rate2Field = document.getElementById('bm-sub-rate2-field');
-  if(rate2Field) rate2Field.style.display = cur==='₴' ? '' : 'none';
 }
 
 function toggleSubstituteSection(){
@@ -6351,6 +6354,7 @@ function addSubstitutePeriod(){
   const exchangeRate = parseFloat((document.getElementById('bm-sub-rate2').value||'').replace(',','.'))||0;
   if(!vehicleId || !fromDate || !toDate){ alert('Оберіть авто та обидві дати'); return; }
   if(toDate < fromDate){ alert('Дата "По" не може бути раніше дати "З"'); return; }
+  if(rate>0 && !(exchangeRate>0)){ alert('Вкажіть курс обміну для підмінного авто'); return; }
 
   const conflict = bookings.find(b =>
     b.vehicleId === vehicleId && b.id !== editBid &&
