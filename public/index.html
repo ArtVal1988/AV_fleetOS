@@ -6436,20 +6436,16 @@ function renderSubstituteList(){
       ? `${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' (курс '+fmt1(s.exchangeRate)+')':''} ·`
       : '—';
     return `<div class="ext-history-row" style="display:flex;flex-direction:column;gap:2px;background:${isEditing?'#fef9c3':(i%2?'#eceef1':'transparent')};border:${isEditing?'1px solid #fde047':'none'};border-radius:4px;padding:5px 6px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <span style="font-size:11px"><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span></span>
-        <span style="display:flex;align-items:center;gap:8px">
-          ${s.comment?`<span style="font-size:10.5px;color:#6b7280"><i>${s.comment}</i></span>`:''}
-          <span style="display:flex;gap:4px;flex-shrink:0">
-            <button type="button" onclick="editSubstitutePeriod(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
-            <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
-          </span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;flex-shrink:0"><b style="font-family:var(--font-mono)">${v?v.plate:'?'}</b> <span style="color:#6b7280">${v?stripYear(v.name):''}</span></span>
+        <span class="eh-dates">${fmt(s.fromDate)}–${fmt(s.toDate)}</span>
+        <span class="eh-amt" style="flex:0 1 auto;text-align:left">${priceText}</span>
+        <span style="display:flex;gap:4px;flex-shrink:0;margin-left:auto">
+          <button type="button" onclick="editSubstitutePeriod(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
+          <button type="button" onclick="deleteSubstitutePeriod(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
         </span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <span class="eh-dates">${fmt(s.fromDate)}–${fmt(s.toDate)}</span>
-        <span class="eh-amt">${priceText}</span>
-      </div>
+      ${s.comment?`<div style="font-size:10.5px;color:#6b7280;text-align:left"><i>${s.comment}</i></div>`:''}
       ${isEditing?'<div style="font-size:10px;color:#a16207;font-weight:700">редагується…</div>':''}
     </div>`;
   }).join('');
