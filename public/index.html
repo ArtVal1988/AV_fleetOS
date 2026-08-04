@@ -3362,7 +3362,7 @@ function showTooltip(e,bid,subContext){
       const courseSuffix = subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
       priceSuffix = ` · ${days} ${pluralDoba(days)} × ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
     }
-    tt.innerHTML = `<div style="font-size:11.5px;font-weight:600;white-space:nowrap;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}${priceSuffix}</div>`;
+    tt.innerHTML = `<div style="font-size:10px;font-weight:600;white-space:nowrap;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}${priceSuffix}</div>`;
     tt.classList.add('visible');
     positionTooltip(e);
     return;
