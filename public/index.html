@@ -9643,10 +9643,10 @@ function renderInsuranceOverviewPanel(){
           if(!p) return '';
           const label = k.paymentType==='quarterly' ? 'Q'+p.quarter : 'Платіж';
           const color = p.paid ? '#166534' : insColor(daysFromNow(p.date));
-          return `<div style="background:${p.paid?'#f0fdf4':'transparent'};border-radius:4px;padding:2px 4px">
-            <div style="color:#9ca3af;font-size:9.5px;text-transform:uppercase">${label}</div>
-            <div style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</div>
-            <div style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</div>
+          return `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;background:${p.paid?'#f0fdf4':'transparent'};border-radius:4px;padding:2px 4px">
+            <span style="color:#9ca3af;font-size:9.5px">${label}</span>
+            <span style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</span>
+            <span style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</span>
           </div>`;
         };
         const paymentsHtml = payments.length
