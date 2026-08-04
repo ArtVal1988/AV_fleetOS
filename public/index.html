@@ -9633,14 +9633,22 @@ function renderInsuranceOverviewPanel(){
           <div style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(v.osago.end)}</div>`;
       }
 
-      // ── КАСКО cell: top row of 4 parts, bottom row = next payment ──
+      // ── КАСКО cell: top row of 4 parts, bottom row = all payments (quarterly: Q1-Q4, or the single payment) ──
       let kaskoHtml = '<span style="color:#c7c7c7;font-style:italic">не вказано</span>';
       if(v.kasko?.end){
         const k = v.kasko;
         const durationText = `${fmt(k.start)}–${fmt(k.end)}`;
-        const info = calKaskoInfo(v);
-        const nextColor = info ? insColor(info.days) : '#9ca3af';
-        const nextLabel = info?.isEnd ? 'кін. договору' : (info ? `наступний платіж (${info.label})` : '');
+        const payments = k.payments || [];
+        const paymentsHtml = payments.map(p=>{
+          const label = k.paymentType==='quarterly' ? 'Q'+p.quarter : 'Платіж';
+          const color = p.paid ? '#166534' : insColor(daysFromNow(p.date));
+          const bg = p.paid ? '#f0fdf4' : 'transparent';
+          return `<span style="display:inline-flex;align-items:center;gap:3px;background:${bg};border-radius:4px;padding:2px 5px">
+            <span style="color:#9ca3af;font-size:9.5px">${label}</span>
+            <span style="color:${color};font-weight:700;font-family:var(--font-mono);font-size:10.5px">${fmt(p.date)}</span>
+            <span style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓':(p.amount?fmtMon(p.amount):'')}</span>
+          </span>`;
+        }).join('');
         kaskoHtml = `
           <div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;padding-bottom:5px;border-bottom:1px solid #f0f2f5;margin-bottom:5px">
             <div>
@@ -9660,8 +9668,8 @@ function renderInsuranceOverviewPanel(){
               <div style="font-weight:600;color:var(--text)">${k.deductiblePct?fmt1(k.deductiblePct)+'% · ':''}${k.deductible?fmtMon(k.deductible):'—'}</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${info ? `<span style="color:${nextColor};font-weight:700;font-family:var(--font-mono)">${fmt(info.date)}</span><span style="color:#9ca3af;font-size:10px">${nextLabel}${info.isEnd?'':' · '+(k.payments?.find(p=>p.date===info.date)?.amount ? fmtMon(k.payments.find(p=>p.date===info.date).amount) : '')}</span>` : ''}
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            ${paymentsHtml || '<span style="color:#c7c7c7;font-style:italic;font-size:10.5px">Графік платежів не вказано</span>'}
           </div>`;
       }
 
