@@ -6361,7 +6361,7 @@ function addSubstitutePeriod(){
   const exchangeRate = parseFloat((document.getElementById('bm-sub-rate2').value||'').replace(',','.'))||0;
   if(!vehicleId || !fromDate || !toDate){ alert('Оберіть авто та обидві дати'); return; }
   if(toDate < fromDate){ alert('Дата "По" не може бути раніше дати "З"'); return; }
-  if(rate>0 && !(exchangeRate>0)){ alert('Вкажіть курс обміну для підмінного авто'); return; }
+  if(!(exchangeRate>0)){ alert('Вкажіть курс обміну для підмінного авто'); return; }
 
   const conflict = bookings.find(b =>
     b.vehicleId === vehicleId && b.id !== editBid &&
