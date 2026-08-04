@@ -3530,10 +3530,17 @@ function showTooltip(e,bid,subContext){
       <div class="tt-label" style="margin-bottom:4px">🔄 Підмінне авто</div>
       ${b.substituteVehicles.map(s=>{
         const sv = getVehicle(s.vehicleId);
+        const priceLine = s.rate>0 ? (()=>{
+          const days = Math.round((new Date(s.toDate)-new Date(s.fromDate))/86400000);
+          const cur = s.currency||'$';
+          const total = days*s.rate;
+          const courseSuffix = s.exchangeRate>0 ? ` (курс ${fmt1(s.exchangeRate)})` : '';
+          return `<div style="font-size:10px;color:var(--text);text-align:right;margin:-2px 0 4px">${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}</div>`;
+        })() : '';
         return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span class="tt-val" style="text-align:left;color:var(--text);font-weight:700;font-family:var(--font-mono)">${sv?sv.plate:'?'}</span>
           <span class="tt-val" style="color:var(--text)">${fmtSY(s.fromDate)}–${fmtSY(s.toDate)}</span>
-        </div>${s.comment?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px"><i>${s.comment}</i></div>`:''}`;
+        </div>${priceLine}${s.comment?`<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px"><i>${s.comment}</i></div>`:''}`;
       }).join('')}
     `;
   }
