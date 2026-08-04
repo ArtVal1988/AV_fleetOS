@@ -9674,7 +9674,7 @@ function renderInsuranceOverviewPanel(){
           ${paymentsHtml}`;
       }
 
-      rowsHtml += `<tr class="ins-ov-row" onclick="openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6">
+      rowsHtml += `<tr class="ins-ov-row" onclick="closeInsuranceOverviewPanel();openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6">
         <td style="padding:8px;white-space:nowrap;vertical-align:top">
           <span style="font-family:var(--font-mono);font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;font-size:11px">${v.plate}</span>
           <div style="color:#6b7280;font-size:10.5px;margin-top:2px">${stripYear(v.name)}</div>
