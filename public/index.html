@@ -1508,7 +1508,7 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 
-<div id="insurance-overview-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+<div id="insurance-overview-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:1180px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🛡 Страхування — весь парк</div>
@@ -7462,12 +7462,14 @@ function toggleCalKaskoQ(vid,quarter){
   const p=v.kasko.payments.find(x=>x.quarter===quarter); if(p)p.paid=!p.paid;
   persistVehicle(v);
   renderInsuranceModal(v); render();
+  if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
 }
 function toggleCalKaskoSingle(vid){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v?.kasko)return;
   if(v.kasko.payments[0])v.kasko.payments[0].paid=!v.kasko.payments[0].paid;
   persistVehicle(v);
   renderInsuranceModal(v); render();
+  if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
 }
 
 /* ── INSURANCE CASES ── */
@@ -7617,6 +7619,7 @@ function saveCalOsago(){
   persistVehicle(v);
   document.getElementById('cal-osago-modal').classList.remove('open');
   renderInsuranceModal(v); render();
+  if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
 }
 
 /* КАСКО edit */
@@ -7780,6 +7783,7 @@ function saveCalKasko(){
   persistVehicle(v);
   document.getElementById('cal-kasko-modal').classList.remove('open');
   renderInsuranceModal(v); render();
+  if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
 }
 
 
@@ -9674,7 +9678,7 @@ function renderInsuranceOverviewPanel(){
           ${paymentsHtml}`;
       }
 
-      rowsHtml += `<tr class="ins-ov-row" onclick="closeInsuranceOverviewPanel();openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6">
+      rowsHtml += `<tr class="ins-ov-row" onclick="openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6">
         <td style="padding:8px;white-space:nowrap;vertical-align:top">
           <span style="font-family:var(--font-mono);font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;font-size:11px">${v.plate}</span>
           <div style="color:#6b7280;font-size:10.5px;margin-top:2px">${stripYear(v.name)}</div>
