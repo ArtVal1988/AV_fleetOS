@@ -6182,12 +6182,37 @@ async function exportProfitabilityStyledXLSX(){
     row.getCell(2).font = {bold:true};
     activeVehicles.forEach(({v}, vi) => {
       const col = 3+vi;
-      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
       const cell = row.getCell(col);
-      if(b){
-        cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
-        cell.alignment = {horizontal:'center'};
+
+      // This vehicle as a SUBSTITUTE on this day: find any booking (on any
+      // other vehicle) whose substituteVehicles cover this date with this
+      // vehicle as the substitute — show that period's own rate here
+      // instead of whatever the main booking's own vehicle would show.
+      let subForThisDay = null, subOwnerBooking = null;
+      for(const bk of bookings){
+        const sub = (bk.substituteVehicles||[]).find(s => s.vehicleId===v.id && dStr > s.fromDate && dStr <= s.toDate);
+        if(sub){ subForThisDay = sub; subOwnerBooking = bk; break; }
       }
+      if(subForThisDay){
+        const rate = subForThisDay.rate>0 ? subForThisDay.rate : subOwnerBooking.rate;
+        const cur = subForThisDay.rate>0 ? (subForThisDay.currency||'$') : subOwnerBooking.currency;
+        const exRate = subForThisDay.rate>0 ? subForThisDay.exchangeRate : subOwnerBooking.exchangeRate;
+        cell.value = Math.round(toUSD(rate, cur, exRate) * 100) / 100;
+        cell.alignment = {horizontal:'center'};
+        return;
+      }
+
+      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
+      if(!b) return;
+
+      // This vehicle as the MAIN vehicle, but substituted out on this
+      // specific day — revenue belongs to the substitute instead, leave
+      // this cell empty.
+      const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
+      if(isSubstitutedOut) return;
+
+      cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
+      cell.alignment = {horizontal:'center'};
     });
   });
 
