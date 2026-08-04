@@ -5733,7 +5733,20 @@ function renderDashboard(){
 
   // ── 1. Today's activity ──────────────────────────────────────────
   const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr);
-  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr);
+  // Substitute-vehicle returns: when a substitution period ends, the
+  // client returns THAT vehicle (not necessarily the main booking's own
+  // vehicle, which may still be mid-rental) — these don't show up in a
+  // plain booking-end filter at all, so add them as separate entries
+  // pointing at the substitute vehicle.
+  const substituteReturns = [];
+  bookings.forEach(b => {
+    (b.substituteVehicles||[]).forEach(s => {
+      if(s.toDate === todayStr){
+        substituteReturns.push(Object.assign({}, b, {vehicleId: s.vehicleId, _isSubReturn: true}));
+      }
+    });
+  });
+  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr).concat(substituteReturns);
   const overdue = bookings
     .filter(b => calcBookingDebt(b) > 0)
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
@@ -5841,6 +5854,7 @@ function dashActivityCol(title, list, color, locField){
       return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
         <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
         <span style="color:#6b7280"> — ${displayName}</span>
+        ${b._isSubReturn ? `<span style="color:#6d28d9;font-size:9.5px;font-weight:700"> 🔄 підмінне</span>` : ''}
         ${isCustomLoc ? `<div style="font-size:9.5px;color:#9a4d0a;margin-top:1px">📍 ${loc}</div>` : ''}
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
