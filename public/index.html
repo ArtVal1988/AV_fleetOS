@@ -3354,7 +3354,6 @@ function showTooltip(e,bid,subContext){
     const sv = getVehicle(b.vehicleId);
     const fs = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     const subEntry = (b.substituteVehicles||[]).find(s => s.fromDate===subContext.fromDate && s.toDate===subContext.toDate);
-    const subVehicle = subEntry ? getVehicle(subEntry.vehicleId) : null;
     let priceLine = '';
     if(subEntry?.rate>0){
       const days = Math.round((new Date(subEntry.toDate)-new Date(subEntry.fromDate))/86400000);
@@ -3363,7 +3362,7 @@ function showTooltip(e,bid,subContext){
       const courseSuffix = subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
       priceLine = ` ${days} ${pluralDoba(days)} × ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}`;
     }
-    tt.innerHTML = `<div style="font-size:11px;font-weight:700;white-space:nowrap;color:#472c97">🔄 Підмінне авто · ${subVehicle?subVehicle.plate:(sv?sv.plate:'?')} ${subVehicle?stripYear(subVehicle.name):''}</div>
+    tt.innerHTML = `<div style="font-size:11px;font-weight:700;white-space:nowrap;color:#472c97">🔄 Підміна · ${sv?sv.plate:'?'} ${sv?stripYear(sv.name):''}</div>
       <div style="font-size:10px;white-space:nowrap;color:#472c97;margin-top:2px">${fs(subContext.fromDate)}–${fs(subContext.toDate)} ${priceLine}</div>`;
     tt.classList.add('visible');
     positionTooltip(e);
