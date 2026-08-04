@@ -3359,7 +3359,7 @@ function showTooltip(e,bid,subContext){
       const days = Math.round((new Date(subEntry.toDate)-new Date(subEntry.fromDate))/86400000);
       const cur = subEntry.currency||'$';
       const total = days*subEntry.rate;
-      const courseSuffix = cur==='₴' && subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
+      const courseSuffix = subEntry.exchangeRate>0 ? ` (курс ${fmt1(subEntry.exchangeRate)})` : '';
       priceLine = `<div style="font-size:11.5px;font-weight:600;color:#472c97;margin-top:2px">${days} ${pluralDoba(days)} × ${fmt1(subEntry.rate)} ${cur} = ${fmt1(total)} ${cur}${courseSuffix}</div>`;
     }
     tt.innerHTML = `<div style="font-size:11.5px;font-weight:600;white-space:nowrap;color:#472c97">🔄 Підміна · ${ov?ov.plate:'?'} · ${fs(subContext.fromDate)}–${fs(subContext.toDate)}</div>${priceLine}`;
