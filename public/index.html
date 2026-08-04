@@ -3559,7 +3559,7 @@ function showTooltip(e,bid,subContext){
         const cur = s.currency||'$';
         const total = days*(s.rate||0);
         const priceText = s.rate>0
-          ? `${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' (курс '+fmt1(s.exchangeRate)+')':''}`
+          ? `${days} * ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' ('+fmt1(s.exchangeRate)+')':''}`
           : '';
         return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px">
           <span style="flex-shrink:0"><b style="font-family:var(--font-mono);color:var(--text)">${sv?sv.plate:'?'}</b></span>
