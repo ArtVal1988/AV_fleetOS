@@ -4316,6 +4316,7 @@ function openBookingModal(vid=null,start=null,end=null){
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
   mileageOverageAmtTouched = false;
+  mileageDeductionDismissed = false;
   clearAllFieldHighlights();
   document.getElementById('bm-discount').value='0';
   document.getElementById('bm-notes-hidden').value='';
@@ -5697,6 +5698,12 @@ function toggleDed(key){
   radio.textContent = active ? '○' : '●';
   radio.style.color = active ? '' : '#dc2626';
   if(wrap) wrap.style.display = active ? 'none' : 'flex';
+  if(key==='mileage'){
+    // The user explicitly chose to turn this off (or back on) — respect
+    // that choice going forward and stop the auto-detection logic from
+    // silently re-forcing it back on every time the km fields recompute.
+    mileageDeductionDismissed = active;
+  }
   updateDeductionsTotal();
 }
 function setDedCur(key, cur){
@@ -5877,6 +5884,7 @@ function readDeductions(){
 
 function loadDeductions(ded){
   resetDeductions();
+  mileageDeductionDismissed = false;
   if(!ded) return;
   DED_KEYS.forEach(k=>{
     if(ded.std?.[k]){
@@ -5886,6 +5894,13 @@ function loadDeductions(ded){
       if(k==='mileage') mileageOverageAmtTouched = true;
     }
   });
+  // This booking was already saved once before — if it doesn't have the
+  // mileage deduction active in the saved data, that's a deliberate choice
+  // (there was excess km but the user decided not to charge for it, or
+  // there simply wasn't any excess at save time) that should be respected
+  // on every subsequent re-open, not silently overridden by the
+  // auto-detection logic re-forcing it back on.
+  if(!ded.std?.mileage) mileageDeductionDismissed = true;
   if(ded.damage?.length){
     toggleDedDamage();
     // first row was auto-added by toggleDedDamage
@@ -5909,6 +5924,7 @@ function loadDeductions(ded){
 // ── END POST-RENTAL DEDUCTIONS ──────────────────────────────────
 
 let mileageOverageAmtTouched = false; // true once the user manually edits the auto-calculated Перепробіг amount
+let mileageDeductionDismissed = false; // true once the user explicitly turns the Перепробіг deduction off (not charging the client) — stops it from being auto-reactivated
 function updateKmDiff(){
   const s = parseThousands(document.getElementById('bm-start-km').value);
   const e = parseThousands(document.getElementById('bm-end-km').value);
@@ -5949,17 +5965,21 @@ function updateKmDiff(){
             avgBadge.style.color = '#991b1b';
             // Auto-open the post-rental deductions panel and activate/fill
             // the Перепробіг line, using the vehicle's tariff class rate —
-            // unless the user has already manually typed their own amount
-            // in, in which case we don't want to silently overwrite it.
-            const dedPanel = document.getElementById('ded-panel');
-            if(dedPanel && dedPanel.style.display==='none') toggleDedPanel();
-            if(!isDedActive('mileage')) toggleDed('mileage');
-            if(!mileageOverageAmtTouched && tariffClass){
-              setDedCur('mileage', '₴');
-              const cost = Math.round(excess * (tariffClass.rate || 0) * 100) / 100;
-              const amtEl = document.getElementById('ded-amt-mileage');
-              if(amtEl) amtEl.value = cost ? cost.toLocaleString('uk-UA') : '';
-              updateDeductionsTotal();
+            // unless the user has already explicitly dismissed it (decided
+            // not to charge the client), in which case we respect that and
+            // leave it off, or has manually typed their own amount in, in
+            // which case we don't want to silently overwrite it.
+            if(!mileageDeductionDismissed){
+              const dedPanel = document.getElementById('ded-panel');
+              if(dedPanel && dedPanel.style.display==='none') toggleDedPanel();
+              if(!isDedActive('mileage')) toggleDed('mileage');
+              if(!mileageOverageAmtTouched && tariffClass){
+                setDedCur('mileage', '₴');
+                const cost = Math.round(excess * (tariffClass.rate || 0) * 100) / 100;
+                const amtEl = document.getElementById('ded-amt-mileage');
+                if(amtEl) amtEl.value = cost ? cost.toLocaleString('uk-UA') : '';
+                updateDeductionsTotal();
+              }
             }
           } else {
             avgBadge.innerHTML = `✅ <span>В межах ліміту</span>`;
