@@ -3412,9 +3412,18 @@ function renderCalendar(){
           const bgMatch = cellHtml.match(/background:([^;"]+);/);
           const origColor = bgMatch ? bgMatch[1] : '#9ca3af';
           const splitBg = `linear-gradient(135deg, ${subColor} 0%, ${subColor} 50%, ${origColor} 50%, ${origColor} 100%)`;
-          return cellHtml
+          let result = cellHtml
             .replace('<td class="td-day', '<td class="td-day substitute-covered"')
             .replace(/background:[^;"]+;/, 'background:'+splitBg+';');
+          // Two things occupy this cell (the substitution and a genuine
+          // separate booking on this vehicle) — clicking should offer a
+          // choice between them, same principle as the existing 2-bookings-
+          // same-day split cell, rather than jumping straight into
+          // whichever one the normal single-booking click would open.
+          if(visibleArr.length===1){
+            result = result.replace(/onclick="[^"]*"/, `onclick="event.stopPropagation();selectSubOverlapCell(event,${subInfo.booking.id},'${subInfo.sub.fromDate}','${subInfo.sub.toDate}',${visibleArr[0].id})"`);
+          }
+          return result;
         }
         return cellHtml;
       }).join('');
@@ -3812,6 +3821,79 @@ function renderSplitPanel(bid1,bid2){
     <button class="btn btn-primary" onclick="expandBooking(${bid2})" style="flex:1;background:#0891b2">↑ Отримання</button>`;
 }
 
+function selectSubOverlapCell(e, mainBookingId, subFromDate, subToDate, realBookingId){
+  e.stopPropagation();
+  closeMiniPicker();
+  clearTimeout(ttHideTimer);
+  tt.classList.remove('visible'); ttShownBid=null;
+  const mainB = bookings.find(x=>x.id===mainBookingId);
+  const realB = bookings.find(x=>x.id===realBookingId);
+  if(!mainB || !realB) return;
+  selectedBid = realBookingId;
+  document.getElementById('split-modal-overlay').classList.add('open');
+  renderSubOverlapPanel(mainBookingId, subFromDate, subToDate, realBookingId);
+  renderCalendar();
+}
+function renderSubOverlapPanel(mainBookingId, subFromDate, subToDate, realBookingId){
+  const mainB = bookings.find(x=>x.id===mainBookingId);
+  const realB = bookings.find(x=>x.id===realBookingId);
+  if(!mainB || !realB) return;
+  const v = getVehicle(realB.vehicleId);
+  const origV = getVehicle(mainB.vehicleId);
+  const subEntry = (mainB.substituteVehicles||[]).find(s=>s.fromDate===subFromDate && s.toDate===subToDate);
+  const st = SM[realB.status];
+
+  document.getElementById('bp-head-content').innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">Підміна та нове замовлення · ${v?.name||''}</div>
+    <div class="bp-plate">${v?.plate||''}</div>`;
+
+  const days = realB.daysOverride>0?realB.daysOverride:countDays(realB.start,realB.end);
+  const total = calcTotal(realB);
+  const hasCompany = realB.customer?.company;
+  const loc = realB.pickup?.loc;
+  const realMini = `<div style="background:#f7f8fb;border:1px solid #dde0e6;border-left:3px solid ${st.color};border-radius:6px;padding:12px 14px;margin-bottom:10px;cursor:pointer" onclick="expandBooking(${realB.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:${st.color};font-weight:600">↑ Отримання · ${realB.pickup?.time||'—'}</div>
+        <span style="font-size:9px;background:${st.color}20;color:${st.color};padding:2px 6px;border-radius:2px">${st.label}</span>
+      </div>
+      <div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:2px">${hasCompany?realB.customer.company:(realB.customer?.name||'—')}</div>
+      ${loc?`<div style="font-size:10px;color:var(--muted)">📍 ${loc}</div>`:''}
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--muted);margin-top:6px">
+        <span>📅 ${fmt(realB.start)}–${fmt(realB.end)}</span>
+        <span>· ${days} ${pluralDoba(days)}</span>
+        ${realB.rate?`<span style="color:var(--accent);font-weight:600;margin-left:auto">${fmtMoney(total,realB.currency)}</span>`:''}
+      </div>
+      <div style="font-size:10px;color:#aaa;margin-top:6px">Натисніть для деталей ↗</div>
+    </div>`;
+
+  const priceText = subEntry?.rate>0
+    ? `${fmt1(subEntry.rate)} ${subEntry.currency||'$'}/добу`
+    : '';
+  const subMini = `<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-left:3px solid #a78bfa;border-radius:6px;padding:12px 14px;margin-bottom:10px;cursor:pointer" onclick="expandBooking(${mainB.id})">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;font-weight:600">🔄 Підміна · до ${fmt(subToDate)}</div>
+      </div>
+      <div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:2px">Підміна для ${origV?.plate||''}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:2px">${origV?.name||''}</div>
+      ${subEntry?.comment?`<div style="font-size:10px;color:var(--muted);margin-top:4px"><i>${subEntry.comment}</i></div>`:''}
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--muted);margin-top:6px">
+        <span>📅 ${fmt(subFromDate)}–${fmt(subToDate)}</span>
+        ${priceText?`<span style="color:#6d28d9;font-weight:600;margin-left:auto">${priceText}</span>`:''}
+      </div>
+      <div style="font-size:10px;color:#aaa;margin-top:6px">Натисніть для деталей ↗</div>
+    </div>`;
+
+  document.getElementById('bp-body').innerHTML = `
+    <div style="background:#fff3cd;border:1px solid #f0d060;border-radius:5px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:#856404;display:flex;align-items:center;gap:6px">
+      ⇄ Підміна завершується в той самий день, коли починається нове замовлення — перевірте передачу авто
+    </div>
+    <div class="bp-section"><div class="bps-title">Підміна (до ${fmt(subToDate)})</div>${subMini}</div>
+    <div class="bp-section"><div class="bps-title">Нове замовлення</div>${realMini}</div>`;
+
+  document.getElementById('bp-footer').innerHTML = `
+    <button class="btn btn-primary" onclick="expandBooking(${mainB.id})" style="flex:1;background:#6d28d9">🔄 Підміна</button>
+    <button class="btn btn-primary" onclick="expandBooking(${realB.id})" style="flex:1">↑ Нове замовлення</button>`;
+}
 function expandBooking(bid){
   editBooking(bid);
 }
