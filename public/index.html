@@ -554,7 +554,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-section{background:#fff;border:1px solid #e8eaef;border-radius:10px;padding:16px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(20,25,40,.05);}
 .im-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .im-sec-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
-.im-sec-label.osago{color:#22c55e;}
+.im-sec-label.osago{color:#2F6364;}
 .im-sec-label.kasko{color:#0891b2;}
 .im-type-badge{font-size:9px;padding:2px 7px;border-radius:3px;background:#f0f0f0;color:#6b7280;}
 
@@ -577,7 +577,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-pct-pill.green{background:#dcfce7;color:#166534;}
 .im-pct-pill.blue{background:#dbeafe;color:#1d4ed8;}
 .imf-val.blue{color:#0891b2;}
-.imf-val.green{color:#22c55e;font-size:14px;font-weight:700;}
+.imf-val.green{color:#2F6364;font-size:14px;font-weight:700;}
 
 .im-pay-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;background:#f8f9fb;border:1px solid #e5e7eb;margin-bottom:5px;font-size:11px;}
 .im-pay-row.next-pay{background:#eff6ff;border-color:#bfdbfe;}
@@ -2767,7 +2767,7 @@ const CASE_CATEGORIES=[
 const CASE_STATUSES=[
   {key:'filed',      label:'Подано',       color:'#9090a8'},
   {key:'processing', label:'На розгляді',  color:'#f0a060'},
-  {key:'paid',       label:'Сплачено',     color:'#22c55e'},
+  {key:'paid',       label:'Сплачено',     color:'#2F6364'},
   {key:'rejected',   label:'Відхилено',    color:'#f06060'},
 ];
 
@@ -3100,7 +3100,7 @@ const SHIELD_PATH = 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
 function insStatusColor(status){
   if(status==='danger') return '#ef4444';
   if(status==='warn') return '#f59e0b';
-  if(status==='ok') return '#22c55e';
+  if(status==='ok') return '#2F6364';
   return null; // no policy on file — leave that half empty
 }
 // Builds the insurance shield split into two vertical halves: left colored
@@ -3457,7 +3457,7 @@ function showTooltip(e,bid,subContext){
       <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
       ${orig?`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Початковий період</span><span class="tt-val">${fmt(orig.start)}–${fmt(orig.end)}</span></div>`:''}
       <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Продовжено по</span><span class="tt-val">${fmt(b.end)}</span></div>
-      <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Оплата</span><span class="tt-val" style="color:${b.extensionPaid?'#22c55e':'#ef4444'};font-weight:700">${b.extensionPaid?'✓':'не внесена ⚠'}</span></div>
+      <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Оплата</span><span class="tt-val" style="color:${b.extensionPaid?'#2F6364':'#ef4444'};font-weight:700">${b.extensionPaid?'✓':'не внесена ⚠'}</span></div>
     `;
   } else if((b.extensionHistory && b.extensionHistory.length) || (b.extension && b.extension.active)){
     const fmtShortYear = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
@@ -3473,7 +3473,7 @@ function showTooltip(e,bid,subContext){
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
           <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(h.currency||'$')}">${fmtSmart(h.rate||0)} ${h.currency||'$'}</span> = <span style="color:${curColor(h.currency||'$')}">${total} ${h.currency||'$'}</span>${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''}</span>
-          <span class="tt-val" style="color:#22c55e;font-weight:700">✓</span>
+          <span class="tt-val" style="color:#2F6364;font-weight:700">✓</span>
         </span>
       </div>`;
     }).join('');
@@ -3482,7 +3482,7 @@ function showTooltip(e,bid,subContext){
     if(b.extension && b.extension.active){
       const ext = b.extension;
       const st = getExtStatus(ext);
-      const color = st==='paid'?'#22c55e':st==='partial'?'#f0a830':'#ef4444';
+      const color = st==='paid'?'#2F6364':st==='partial'?'#f0a830':'#ef4444';
       const label = st==='paid'?'✓':'Борг '+fmt1((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
@@ -3526,8 +3526,8 @@ function showTooltip(e,bid,subContext){
           <div style="margin-top:4px;padding:5px 6px;background:rgba(194,97,13,.08);border-radius:6px;display:flex;flex-direction:column;gap:3px">
             <div style="font-size:11.5px;text-align:center;padding-bottom:4px;border-bottom:1px solid rgba(194,97,13,.2)">${boundaryLine}</div>
             <div style="display:flex;gap:4px">
-              <div style="flex:1;font-size:9.5px;display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">📅</span><span style="color:var(--muted);flex-shrink:0">На сьогодні:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtToday>0?amtSpan(debtToday):'<span style="color:#22c55e">0</span>'}</b></div>
-              <div style="flex:1;font-size:9.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">🏁</span><span style="color:var(--muted);flex-shrink:0">На ${fmtShortYear(ext.toDate)}:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtEnd>0?amtSpan(debtEnd):'<span style="color:#22c55e">0</span>'}</b></div>
+              <div style="flex:1;font-size:9.5px;display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">📅</span><span style="color:var(--muted);flex-shrink:0">На сьогодні:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtToday>0?amtSpan(debtToday):'<span style="color:#2F6364">0</span>'}</b></div>
+              <div style="flex:1;font-size:9.5px;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;min-width:0;white-space:nowrap;overflow:hidden"><span style="flex-shrink:0">🏁</span><span style="color:var(--muted);flex-shrink:0">На ${fmtShortYear(ext.toDate)}:</span> <b style="overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%;white-space:nowrap">${debtEnd>0?amtSpan(debtEnd):'<span style="color:#2F6364">0</span>'}</b></div>
             </div>
           </div>
         `;
@@ -7805,7 +7805,7 @@ function insColor(d){
   if(d===null) return '#9ca3af';
   if(d<0||d<=5) return '#ef4444';
   if(d<=30) return '#f59e0b';
-  return '#22c55e';
+  return '#2F6364';
 }
 function fmtMon(n,c){return n?Number(n).toLocaleString('uk-UA')+' '+(c||'₴'):'—';}
 
@@ -7908,7 +7908,7 @@ function renderDocsModalBody(v){
 
   // ── TOP GRID: STS + POA side by side ──────────────────────────
   const d = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
-  const pCol = d===null?'#9ca3af':d<0||d<=7?'#ef4444':d<=30?'#f59e0b':'#22c55e';
+  const pCol = d===null?'#9ca3af':d<0||d<=7?'#ef4444':d<=30?'#f59e0b':'#2F6364';
   const pBg  = d===null?'#f7f8fb':d<0||d<=7?'#fee2e2':d<=30?'#fff8e6':'#f0fdf4';
   const pBdr = d===null?'#e5e7eb':d<0||d<=7?'#fca5a5':d<=30?'#f0d060':'#86efac';
   const pLabel = d===null?'—':d<0?'прострочено '+Math.abs(d)+' дн.':d===0?'сьогодні':d+' дн.';
@@ -8022,7 +8022,7 @@ function renderDocsModalBody(v){
       const has = (v.docs?.files?.[d.key]||[]).length > 0;
       if(d.key==='poa_owner'){
         const dd = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
-        const pc  = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#22c55e';
+        const pc  = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#2F6364';
         const pb  = dd===null?'#f7f8fb':dd<0||dd<=7?'#fee2e2':dd<=30?'#fff8e6':'#f0fdf4';
         const pbd = dd===null?'#e5e7eb':dd<0||dd<=7?'#fca5a5':dd<=30?'#f0d060':'#86efac';
         const pl  = dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні закінчується':'залишилось '+dd+' дн.';
@@ -8208,7 +8208,7 @@ function openVehiclePanel(vid, tab){
   document.getElementById('content-split').classList.add('panel-open');
   renderList();
 
-  const stMap = {ok:'#22c55e', warn:'#f59e0b', danger:'#ef4444'};
+  const stMap = {ok:'#2F6364', warn:'#f59e0b', danger:'#ef4444'};
   const fmt2 = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
   // Head
@@ -8231,7 +8231,7 @@ function openVehiclePanel(vid, tab){
   const svc=v.service, ins=v.insurance, docs=v.docs;
   const svcC=svc?stMap[computeServiceStatus(v)]:'#9ca3af';
   const insC=stMap[ins?.status]||'#9ca3af';
-  const docC=(docs?.missingCount||0)>1?'#ef4444':(docs?.missingCount||0)>0?'#f59e0b':'#22c55e';
+  const docC=(docs?.missingCount||0)>1?'#ef4444':(docs?.missingCount||0)>0?'#f59e0b':'#2F6364';
   document.getElementById('dp-status-bar').innerHTML=`
     <div class="dp-sb"><div class="dp-sb-lbl">Тех. обслуговування</div>
       <div class="dp-sb-val" style="color:${svcC}">${svc?`до ${svc.nextKm.toLocaleString('uk-UA')} км`:'—'}</div>
@@ -9642,8 +9642,8 @@ function renderInsuranceOverviewPanel(){
       // ── ОСЦПВ cell: 2 rows — company name, then end date (color-coded by urgency) ──
       // Local color remap for this page specifically: red/orange/green use
       // a distinct, more saturated palette than the shared insColor() default.
-      const kaskoInsColor = d => { const c = insColor(d); return c==='#ef4444'?'#ff0000':c==='#f59e0b'?'#df8c00':c==='#22c55e'?'#009b39':c; };
-      const kaskoInsBg = d => { const c = insColor(d); return c==='#ef4444'?'#fee2e2':c==='#f59e0b'?'#fef3e0':c==='#22c55e'?'#e8f8ee':'transparent'; };
+      const kaskoInsColor = d => { const c = insColor(d); return c==='#ef4444'?'#ff0000':c==='#f59e0b'?'#df8c00':c==='#2F6364'?'#009b39':c; };
+      const kaskoInsBg = d => { const c = insColor(d); return c==='#ef4444'?'#fee2e2':c==='#f59e0b'?'#fef3e0':c==='#2F6364'?'#e8f8ee':'transparent'; };
       let osagoHtml = '<span style="color:#c7c7c7;font-style:italic">не вказано</span>';
       if(v.osago?.end){
         const days = daysFromNow(v.osago.end);
@@ -9743,7 +9743,7 @@ function renderMaintenancePanelList(){
   const summaryHtml = [
     {key:'danger', label:'Прострочено / терміново', color:'#ef4444', bg:'#fef2f2'},
     {key:'warn', label:'Незабаром', color:'#f59e0b', bg:'#fffbeb'},
-    {key:'ok', label:'В нормі', color:'#22c55e', bg:'#f0fdf4'},
+    {key:'ok', label:'В нормі', color:'#2F6364', bg:'#f0fdf4'},
   ].map(g => `<div style="flex:1;background:${g.bg};border:1px solid ${g.color}33;border-radius:10px;padding:12px;text-align:center">
     <div style="font-size:22px;font-weight:800;color:${g.color}">${groups[g.key].length}</div>
     <div style="font-size:10px;color:${g.color};font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${g.label}</div>
@@ -9769,7 +9769,7 @@ function renderMaintenancePanelList(){
 
   const listHtml = renderGroup('⚠ Прострочено / терміново', '#ef4444', groups.danger) +
     renderGroup('🔶 Незабаром', '#f59e0b', groups.warn) +
-    renderGroup('✓ В нормі', '#22c55e', groups.ok);
+    renderGroup('✓ В нормі', '#2F6364', groups.ok);
 
   document.getElementById('maint-panel-list').innerHTML = listHtml || '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Авто не знайдено</div>';
 }
