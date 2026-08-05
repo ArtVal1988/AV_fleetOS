@@ -2674,7 +2674,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('wash')"><span class="extra-radio" id="ded-radio-wash">○</span></button>
             <span class="ded-icon">🚿</span><span class="ded-name">Мийка авто</span>
             <div class="ded-price-wrap" id="ded-wrap-wash" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-wash" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
+              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-wash" placeholder="0" style="color:#166534" oninput="formatRateInput(this);updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-wash-uah" onclick="setDedCur('wash','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-wash-usd" onclick="setDedCur('wash','$')">$</button></div>
             </div>
           </div>
@@ -2682,7 +2682,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('fuel')"><span class="extra-radio" id="ded-radio-fuel">○</span></button>
             <span class="ded-icon">⛽</span><span class="ded-name">Дозаправка</span>
             <div class="ded-price-wrap" id="ded-wrap-fuel" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fuel" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
+              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-fuel" placeholder="0" style="color:#166534" oninput="formatRateInput(this);updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-fuel-uah" onclick="setDedCur('fuel','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-fuel-usd" onclick="setDedCur('fuel','$')">$</button></div>
             </div>
           </div>
@@ -2690,7 +2690,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('mileage')"><span class="extra-radio" id="ded-radio-mileage">○</span></button>
             <span class="ded-icon">🛣️</span><span class="ded-name">Перепробіг</span>
             <div class="ded-price-wrap" id="ded-wrap-mileage" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" style="color:#166534" oninput="mileageOverageAmtTouched=true;updateDeductionsTotal()">
+              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" style="color:#166534" oninput="formatRateInput(this);mileageOverageAmtTouched=true;updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-mileage-uah" onclick="setDedCur('mileage','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-mileage-usd" onclick="setDedCur('mileage','$')">$</button></div>
             </div>
           </div>
@@ -2698,7 +2698,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('fines')"><span class="extra-radio" id="ded-radio-fines">○</span></button>
             <span class="ded-icon">🚔</span><span class="ded-name">Штрафи</span>
             <div class="ded-price-wrap" id="ded-wrap-fines" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fines" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
+              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-fines" placeholder="0" style="color:#166534" oninput="formatRateInput(this);updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-fines-uah" onclick="setDedCur('fines','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-fines-usd" onclick="setDedCur('fines','$')">$</button></div>
             </div>
           </div>
@@ -2710,7 +2710,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('refund')"><span class="extra-radio" id="ded-radio-refund">○</span></button>
             <span class="ded-icon">↩️</span><span class="ded-name">Повернення клієнту</span>
             <div class="ded-price-wrap" id="ded-wrap-refund" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-refund" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
+              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-refund" placeholder="0" style="color:#166534" oninput="formatRateInput(this);updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-refund-uah" onclick="setDedCur('refund','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-refund-usd" onclick="setDedCur('refund','$')">$</button></div>
             </div>
           </div>
@@ -5555,7 +5555,7 @@ function getDedCur(key){
   return document.getElementById('ded-cur-' + key + '-uah')?.classList.contains('active') ? '₴' : '$';
 }
 function getDedAmt(key){
-  return parseFloat(document.getElementById('ded-amt-' + key)?.value) || 0;
+  return parseThousands(document.getElementById('ded-amt-' + key)?.value) || 0;
 }
 function isDedActive(key){
   return document.getElementById('ded-radio-' + key)?.textContent === '●';
@@ -5584,7 +5584,7 @@ function addDamageRow(){
   row.className = 'ded-damage-entry';
   row.id = 'ded-dmg-' + id;
   row.innerHTML = `<input type="text" placeholder="Деталь / опис пошкодження" id="ded-dmg-part-${id}" oninput="updateDeductionsTotal()">
-    <input type="number" placeholder="0" class="no-spinner" id="ded-dmg-amt-${id}" oninput="updateDeductionsTotal()">
+    <input type="text" inputmode="decimal" placeholder="0" class="no-spinner" id="ded-dmg-amt-${id}" oninput="formatRateInput(this);updateDeductionsTotal()">
     <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-dmg-cur-${id}-uah" onclick="setDmgCur(${id},'₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-dmg-cur-${id}-usd" onclick="setDmgCur(${id},'$')">$</button></div>
     <button type="button" class="ext-del-btn" onclick="removeDamageRow(${id})">✕</button>`;
   document.getElementById('ded-damage-list').appendChild(row);
@@ -5618,7 +5618,7 @@ function addDedCustomRow(){
   row.className = 'ded-custom-row';
   row.id = 'ded-cust-' + id;
   row.innerHTML = `<input type="text" placeholder="Назва утримання" id="ded-cust-name-${id}" oninput="updateDeductionsTotal()">
-    <input type="number" placeholder="0" class="no-spinner" id="ded-cust-amt-${id}" oninput="updateDeductionsTotal()">
+    <input type="text" inputmode="decimal" placeholder="0" class="no-spinner" id="ded-cust-amt-${id}" oninput="formatRateInput(this);updateDeductionsTotal()">
     <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cust-cur-${id}-uah" onclick="setCustDedCur(${id},'₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cust-cur-${id}-usd" onclick="setCustDedCur(${id},'$')">$</button></div>
     <button type="button" class="ext-del-btn" onclick="removeDedCustomRow(${id})">✕</button>`;
   document.getElementById('bm-ded-custom-list').appendChild(row);
@@ -5657,13 +5657,13 @@ function updateDeductionsTotal(){
   });
   // Damage rows
   dedDamageItems.forEach(({id}) => {
-    const amt = parseFloat(document.getElementById('ded-dmg-amt-' + id)?.value)||0;
+    const amt = parseThousands(document.getElementById('ded-dmg-amt-' + id)?.value)||0;
     const cur = document.getElementById('ded-dmg-cur-' + id + '-uah')?.classList.contains('active') ? '₴' : '$';
     if(amt > 0) parts.push(`<span style="color:${curColor(cur)}">${amt.toLocaleString('uk-UA')} ${cur}</span>`);
   });
   // Custom rows
   dedCustomItems.forEach(({id}) => {
-    const amt = parseFloat(document.getElementById('ded-cust-amt-' + id)?.value)||0;
+    const amt = parseThousands(document.getElementById('ded-cust-amt-' + id)?.value)||0;
     const cur = document.getElementById('ded-cust-cur-' + id + '-uah')?.classList.contains('active') ? '₴' : '$';
     if(amt > 0) parts.push(`<span style="color:${curColor(cur)}">${amt.toLocaleString('uk-UA')} ${cur}</span>`);
   });
@@ -5705,12 +5705,12 @@ function readDeductions(){
   });
   const damage = dedDamageItems.map(({id})=>({
     part: document.getElementById('ded-dmg-part-'+id)?.value.trim()||'',
-    amount: parseFloat(document.getElementById('ded-dmg-amt-'+id)?.value)||0,
+    amount: parseThousands(document.getElementById('ded-dmg-amt-'+id)?.value)||0,
     currency: document.getElementById('ded-dmg-cur-'+id+'-uah')?.classList.contains('active')?'₴':'$',
   })).filter(x=>x.part||x.amount>0);
   const custom = dedCustomItems.map(({id})=>({
     name: document.getElementById('ded-cust-name-'+id)?.value.trim()||'',
-    amount: parseFloat(document.getElementById('ded-cust-amt-'+id)?.value)||0,
+    amount: parseThousands(document.getElementById('ded-cust-amt-'+id)?.value)||0,
     currency: document.getElementById('ded-cust-cur-'+id+'-uah')?.classList.contains('active')?'₴':'$',
   })).filter(x=>x.name||x.amount>0);
   const hasDamage = document.getElementById('ded-radio-damage')?.textContent==='●';
@@ -5723,7 +5723,7 @@ function loadDeductions(ded){
   DED_KEYS.forEach(k=>{
     if(ded.std?.[k]){
       toggleDed(k);
-      const a=document.getElementById('ded-amt-'+k); if(a) a.value=ded.std[k].amount||0;
+      const a=document.getElementById('ded-amt-'+k); if(a) a.value=ded.std[k].amount?Number(ded.std[k].amount).toLocaleString('uk-UA'):'';
       setDedCur(k, ded.std[k].currency||'₴');
       if(k==='mileage') mileageOverageAmtTouched = true;
     }
@@ -5735,7 +5735,7 @@ function loadDeductions(ded){
       if(i>0) addDamageRow();
       const lastId = dedDamageItems[dedDamageItems.length-1].id;
       const p=document.getElementById('ded-dmg-part-'+lastId); if(p) p.value=d.part||'';
-      const a=document.getElementById('ded-dmg-amt-'+lastId); if(a) a.value=d.amount||0;
+      const a=document.getElementById('ded-dmg-amt-'+lastId); if(a) a.value=d.amount?Number(d.amount).toLocaleString('uk-UA'):'';
       setDmgCur(lastId, d.currency||'₴');
     });
   }
@@ -5743,7 +5743,7 @@ function loadDeductions(ded){
     addDedCustomRow();
     const lastId = dedCustomItems[dedCustomItems.length-1].id;
     const n=document.getElementById('ded-cust-name-'+lastId); if(n) n.value=c.name||'';
-    const a=document.getElementById('ded-cust-amt-'+lastId); if(a) a.value=c.amount||0;
+    const a=document.getElementById('ded-cust-amt-'+lastId); if(a) a.value=c.amount?Number(c.amount).toLocaleString('uk-UA'):'';
     setCustDedCur(lastId, c.currency||'₴');
   });
   updateDeductionsTotal();
@@ -5800,7 +5800,7 @@ function updateKmDiff(){
               setDedCur('mileage', '₴');
               const cost = Math.round(excess * (tariffClass.rate || 0) * 100) / 100;
               const amtEl = document.getElementById('ded-amt-mileage');
-              if(amtEl) amtEl.value = cost || '';
+              if(amtEl) amtEl.value = cost ? cost.toLocaleString('uk-UA') : '';
               updateDeductionsTotal();
             }
           } else {
