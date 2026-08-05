@@ -9666,10 +9666,13 @@ function renderInsuranceOverviewPanel(){
           const days = daysFromNow(p.date);
           const color = p.paid ? '#166534' : (isNext ? kaskoInsColor(days) : '#9ca3af');
           const bg = p.paid ? '#f0fdf4' : (isNext ? kaskoInsBg(days) : 'transparent');
+          const amtColor = p.paid ? '#166534' : (isNext ? '#000' : '#9ca3af');
+          const amtWeight = p.paid ? 400 : (isNext ? 600 : 400);
+          const amtSize = isNext && !p.paid ? 'inherit' : '10px';
           return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;background:${bg};border-radius:4px;padding:2px 4px">
             <span style="color:#9ca3af;font-size:9.5px">${label}</span>
             <span style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</span>
-            <span style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</span>
+            <span style="color:${amtColor};font-weight:${amtWeight};font-size:${amtSize}">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</span>
           </div>`;
         };
         const paymentsHtml = payments.length
