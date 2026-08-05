@@ -2674,7 +2674,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('wash')"><span class="extra-radio" id="ded-radio-wash">○</span></button>
             <span class="ded-icon">🚿</span><span class="ded-name">Мийка авто</span>
             <div class="ded-price-wrap" id="ded-wrap-wash" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-wash" placeholder="0" oninput="updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-wash" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-wash-uah" onclick="setDedCur('wash','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-wash-usd" onclick="setDedCur('wash','$')">$</button></div>
             </div>
           </div>
@@ -2682,7 +2682,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('fuel')"><span class="extra-radio" id="ded-radio-fuel">○</span></button>
             <span class="ded-icon">⛽</span><span class="ded-name">Дозаправка</span>
             <div class="ded-price-wrap" id="ded-wrap-fuel" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fuel" placeholder="0" oninput="updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fuel" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-fuel-uah" onclick="setDedCur('fuel','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-fuel-usd" onclick="setDedCur('fuel','$')">$</button></div>
             </div>
           </div>
@@ -2690,7 +2690,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('mileage')"><span class="extra-radio" id="ded-radio-mileage">○</span></button>
             <span class="ded-icon">🛣️</span><span class="ded-name">Перепробіг</span>
             <div class="ded-price-wrap" id="ded-wrap-mileage" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" oninput="mileageOverageAmtTouched=true;updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" style="color:#166534" oninput="mileageOverageAmtTouched=true;updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-mileage-uah" onclick="setDedCur('mileage','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-mileage-usd" onclick="setDedCur('mileage','$')">$</button></div>
             </div>
           </div>
@@ -2698,7 +2698,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('fines')"><span class="extra-radio" id="ded-radio-fines">○</span></button>
             <span class="ded-icon">🚔</span><span class="ded-name">Штрафи</span>
             <div class="ded-price-wrap" id="ded-wrap-fines" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fines" placeholder="0" oninput="updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-fines" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-fines-uah" onclick="setDedCur('fines','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-fines-usd" onclick="setDedCur('fines','$')">$</button></div>
             </div>
           </div>
@@ -2710,7 +2710,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('refund')"><span class="extra-radio" id="ded-radio-refund">○</span></button>
             <span class="ded-icon">↩️</span><span class="ded-name">Повернення клієнту</span>
             <div class="ded-price-wrap" id="ded-wrap-refund" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-refund" placeholder="0" oninput="updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-refund" placeholder="0" style="color:#166534" oninput="updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-refund-uah" onclick="setDedCur('refund','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-refund-usd" onclick="setDedCur('refund','$')">$</button></div>
             </div>
           </div>
@@ -5547,6 +5547,8 @@ function setDedCur(key, cur){
     const b = document.getElementById(id);
     if(b) b.classList.toggle('active', c === cur);
   });
+  const amtEl = document.getElementById('ded-amt-' + key);
+  if(amtEl) amtEl.style.color = curColor(cur);
   updateDeductionsTotal();
 }
 function getDedCur(key){
@@ -5604,6 +5606,8 @@ function setDmgCur(id, cur){
     const b = document.getElementById(`ded-dmg-cur-${id}-${c==='₴'?'uah':'usd'}`);
     if(b) b.classList.toggle('active', c===cur);
   });
+  const amtEl = document.getElementById('ded-dmg-amt-' + id);
+  if(amtEl) amtEl.style.color = curColor(cur);
   updateDeductionsTotal();
 }
 
@@ -5629,6 +5633,8 @@ function setCustDedCur(id, cur){
     const b = document.getElementById(`ded-cust-cur-${id}-${c==='₴'?'uah':'usd'}`);
     if(b) b.classList.toggle('active', c===cur);
   });
+  const amtEl = document.getElementById('ded-cust-amt-' + id);
+  if(amtEl) amtEl.style.color = curColor(cur);
   updateDeductionsTotal();
 }
 
@@ -5646,26 +5652,26 @@ function updateDeductionsTotal(){
     if(isDedActive(k)){
       const amt = getDedAmt(k);
       const cur = getDedCur(k);
-      if(amt > 0) parts.push(`${amt.toLocaleString('uk-UA')} ${cur}`);
+      if(amt > 0) parts.push(`<span style="color:${curColor(cur)}">${amt.toLocaleString('uk-UA')} ${cur}</span>`);
     }
   });
   // Damage rows
   dedDamageItems.forEach(({id}) => {
     const amt = parseFloat(document.getElementById('ded-dmg-amt-' + id)?.value)||0;
     const cur = document.getElementById('ded-dmg-cur-' + id + '-uah')?.classList.contains('active') ? '₴' : '$';
-    if(amt > 0) parts.push(`${amt.toLocaleString('uk-UA')} ${cur}`);
+    if(amt > 0) parts.push(`<span style="color:${curColor(cur)}">${amt.toLocaleString('uk-UA')} ${cur}</span>`);
   });
   // Custom rows
   dedCustomItems.forEach(({id}) => {
     const amt = parseFloat(document.getElementById('ded-cust-amt-' + id)?.value)||0;
     const cur = document.getElementById('ded-cust-cur-' + id + '-uah')?.classList.contains('active') ? '₴' : '$';
-    if(amt > 0) parts.push(`${amt.toLocaleString('uk-UA')} ${cur}`);
+    if(amt > 0) parts.push(`<span style="color:${curColor(cur)}">${amt.toLocaleString('uk-UA')} ${cur}</span>`);
   });
   const totalRow = document.getElementById('bm-ded-total-row');
   const totalVal = document.getElementById('bm-ded-total-val');
   if(parts.length){
     if(totalRow) totalRow.style.display='flex';
-    if(totalVal) totalVal.textContent = parts.join(' + ');
+    if(totalVal) totalVal.innerHTML = parts.join(' <span style="color:#991b1b">+</span> ');
   } else {
     if(totalRow) totalRow.style.display='none';
   }
@@ -6441,6 +6447,8 @@ function setSubCurrency(cur){
   subCurrency = cur;
   document.getElementById('sub-cur-btn-usd')?.classList.toggle('active', cur==='$');
   document.getElementById('sub-cur-btn-uah')?.classList.toggle('active', cur==='₴');
+  const rateField = document.getElementById('bm-sub-rate');
+  if(rateField) rateField.style.color = curColor(cur);
 }
 
 function toggleSubstituteSection(){
@@ -6667,6 +6675,8 @@ function setExtTotalCurrency(cur){
   if(disp) disp.textContent = cur;
   const rateField = document.getElementById('bm-ext-total-rate-field');
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
+  const totalField = document.getElementById('bm-ext-total');
+  if(totalField) totalField.style.color = curColor(cur);
   updateExtensionPaidUI();
 }
 function setExtPaidCurrency(cur){
@@ -6674,6 +6684,8 @@ function setExtPaidCurrency(cur){
   if(disp) disp.textContent = cur;
   const rateField = document.getElementById('bm-ext-paid-rate-field');
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
+  const paidField = document.getElementById('bm-ext-paid');
+  if(paidField) paidField.style.color = curColor(cur);
 }
 function onExtRateInput(){
   const val = document.getElementById('bm-ext-rate2').value;
@@ -6700,6 +6712,8 @@ function onExtCurrencyChange(){
     const id = c==='$'?'ext-cur-btn-usd':'ext-cur-btn-uah';
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
+  const extRateField = document.getElementById('bm-ext-rate');
+  if(extRateField) extRateField.style.color = curColor(cur);
   // Курс (bm-ext-rate2) is purely informational for extensions, for every
   // client type — a long-running rental can span many extensions, each
   // potentially at a different real-world rate, so it's just recorded as a
@@ -8885,6 +8899,8 @@ function setDepositCur(currency){
     const btn = document.getElementById(id);
     if(btn) btn.classList.toggle('active', c === currency);
   });
+  const depositField = document.getElementById('bm-deposit');
+  if(depositField) depositField.style.color = curColor(currency);
 }
 let bmPayMethod = 'cash', bmDepositPayMethod = 'cash';
 function setPayMethod(method){
@@ -8915,6 +8931,8 @@ function onCurrencyChange(){
   });
   const rateLabel = document.getElementById('bm-rate-label2');
   if(rateLabel) rateLabel.textContent = 'Курс';
+  const rateField = document.getElementById('bm-rate');
+  if(rateField) rateField.style.color = curColor(cur);
   updateExtrasTotal();
   updateVatPreview();
 }
