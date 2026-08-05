@@ -6066,7 +6066,7 @@ function renderDashboard(){
       }
     });
   });
-  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr).concat(substituteReturns);
+  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr && !(b.endKm>0)).concat(substituteReturns);
   const overdue = bookings
     .filter(b => calcBookingDebt(b) > 0)
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
