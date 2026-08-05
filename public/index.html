@@ -1532,6 +1532,36 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<div id="tariffs-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:480px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">📐 Тарифи</div>
+      <button onclick="closeTariffsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">🛣️ Перепробіг</div>
+      <div style="display:flex;flex-direction:column;gap:12px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:14px">
+        <div>
+          <label class="vf-lbl">Ліміт пробігу (км/добу)</label>
+          <input type="number" id="tf-km-per-day" class="vf-inp" style="width:100%" placeholder="200">
+        </div>
+        <div style="display:flex;gap:8px;align-items:end">
+          <div style="flex:1">
+            <label class="vf-lbl">Тариф за 1 км перепробігу</label>
+            <input type="number" id="tf-overage-rate" class="vf-inp" style="width:100%" placeholder="5">
+          </div>
+          <div class="dep-inline-wrap" style="background:none;border:none;padding:0;margin-bottom:1px">
+            <button type="button" id="tf-cur-btn-uah" class="dep-cur-pill active" onclick="setTariffCurrency('₴')">₴</button>
+            <button type="button" id="tf-cur-btn-usd" class="dep-cur-pill" onclick="setTariffCurrency('$')">$</button>
+          </div>
+        </div>
+        <div style="font-size:10.5px;color:#9ca3af">Дозволений пробіг = дні оренди × ліміт/добу. Перевищення автоматично рахується як "Перепробіг" в утриманнях після повернення.</div>
+      </div>
+      <button onclick="saveTariffs()" style="margin-top:16px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <div id="spare-part-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:520;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:14px;width:380px;max-width:calc(100vw - 24px);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
     <div style="font-size:15px;font-weight:700;margin-bottom:14px" id="sp-form-title">Нова запчастина</div>
@@ -2022,6 +2052,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування" onclick="openMaintenancePanel()"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Страхування" onclick="openInsuranceOverviewPanel()"><span class="nav-icon">🛡</span><span class="nav-label">Страхування</span></div>
+    <div class="nav-item" data-label="Тарифи" onclick="openTariffsPanel()"><span class="nav-icon">📐</span><span class="nav-label">Тарифи</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
     <div class="nav-item nav-admin-only" id="nav-doctemplates" data-label="Шаблони документів" onclick="openDocTemplatesPanel()" style="display:none"><span class="nav-icon">📄</span><span class="nav-label">Шаблони документів</span></div>
@@ -2652,7 +2683,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('mileage')"><span class="extra-radio" id="ded-radio-mileage">○</span></button>
             <span class="ded-icon">🛣️</span><span class="ded-name">Перепробіг</span>
             <div class="ded-price-wrap" id="ded-wrap-mileage" style="display:none">
-              <input type="number" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" oninput="updateDeductionsTotal()">
+              <input type="number" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" oninput="mileageOverageAmtTouched=true;updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-mileage-uah" onclick="setDedCur('mileage','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-mileage-usd" onclick="setDedCur('mileage','$')">$</button></div>
             </div>
           </div>
@@ -2725,6 +2756,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <script>
 /* ── CONSTANTS ── */
+let TARIFFS = { kmPerDay: 200, overageRate: 5, overageCurrency: '₴' };
 const STATUSES=[
   {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
   {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
@@ -4158,6 +4190,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-days-override').value='';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
+  mileageOverageAmtTouched = false;
   document.getElementById('bm-discount').value='0';
   document.getElementById('bm-notes-hidden').value='';
   document.getElementById('bm-new-note').value='';
@@ -5668,6 +5701,7 @@ function loadDeductions(ded){
       toggleDed(k);
       const a=document.getElementById('ded-amt-'+k); if(a) a.value=ded.std[k].amount||0;
       setDedCur(k, ded.std[k].currency||'₴');
+      if(k==='mileage') mileageOverageAmtTouched = true;
     }
   });
   if(ded.damage?.length){
@@ -5692,6 +5726,7 @@ function loadDeductions(ded){
 }
 // ── END POST-RENTAL DEDUCTIONS ──────────────────────────────────
 
+let mileageOverageAmtTouched = false; // true once the user manually edits the auto-calculated Перепробіг amount
 function updateKmDiff(){
   const s = parseThousands(document.getElementById('bm-start-km').value);
   const e = parseThousands(document.getElementById('bm-end-km').value);
@@ -5705,11 +5740,12 @@ function updateKmDiff(){
       if(valEl) valEl.textContent = diff.toLocaleString('uk-UA');
       badge.style.display='flex';
 
-      // Excess mileage (перепробіг) over the 350 km/day allowance, using the
-      // same day count as the cost calc (respects a manual days-override),
-      // plus any extension days — the allowance should cover the whole
-      // rental period, not just the original booking's date range.
-      const KM_ALLOWANCE_PER_DAY = 350;
+      // Excess mileage (перепробіг) over the configured daily allowance
+      // (Тарифи page), using the same day count as the cost calc (respects
+      // a manual days-override), plus any extension days — the allowance
+      // should cover the whole rental period, not just the original
+      // booking's date range.
+      const KM_ALLOWANCE_PER_DAY = TARIFFS.kmPerDay || 350;
       const startVal = document.getElementById('bm-start').value;
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
@@ -5725,6 +5761,20 @@ function updateKmDiff(){
             avgBadge.innerHTML = `⚠️ <span>Перепробіг:</span> <span>+${excess.toLocaleString('uk-UA')}</span> <span>км</span>`;
             avgBadge.style.background = '#fef2f2';
             avgBadge.style.color = '#991b1b';
+            // Auto-open the post-rental deductions panel and activate/fill
+            // the Перепробіг line, using the configured rate — unless the
+            // user has already manually typed their own amount in, in
+            // which case we don't want to silently overwrite it.
+            const dedPanel = document.getElementById('ded-panel');
+            if(dedPanel && dedPanel.style.display==='none') toggleDedPanel();
+            if(!isDedActive('mileage')) toggleDed('mileage');
+            if(!mileageOverageAmtTouched){
+              setDedCur('mileage', TARIFFS.overageCurrency || '₴');
+              const cost = Math.round(excess * (TARIFFS.overageRate || 0) * 100) / 100;
+              const amtEl = document.getElementById('ded-amt-mileage');
+              if(amtEl) amtEl.value = cost || '';
+              updateDeductionsTotal();
+            }
           } else {
             avgBadge.innerHTML = `✅ <span>В межах ліміту</span>`;
             avgBadge.style.background = '#f0fdf4';
@@ -9607,6 +9657,28 @@ async function loadSparePartsFromServer(){
   if(Array.isArray(r)) SPARE_PARTS = r;
 }
 let insOvKaskoOnly = false;
+let tariffCurrencyDraft = '₴';
+function openTariffsPanel(){
+  document.getElementById('tariffs-panel-overlay').style.display='flex';
+  document.getElementById('tf-km-per-day').value = TARIFFS.kmPerDay || '';
+  document.getElementById('tf-overage-rate').value = TARIFFS.overageRate || '';
+  setTariffCurrency(TARIFFS.overageCurrency || '₴');
+}
+function closeTariffsPanel(){
+  document.getElementById('tariffs-panel-overlay').style.display='none';
+}
+function setTariffCurrency(cur){
+  tariffCurrencyDraft = cur;
+  document.getElementById('tf-cur-btn-uah')?.classList.toggle('active', cur==='₴');
+  document.getElementById('tf-cur-btn-usd')?.classList.toggle('active', cur==='$');
+}
+function saveTariffs(){
+  const kmPerDay = parseFloat(document.getElementById('tf-km-per-day').value) || 0;
+  const overageRate = parseFloat(document.getElementById('tf-overage-rate').value) || 0;
+  TARIFFS = { kmPerDay, overageRate, overageCurrency: tariffCurrencyDraft };
+  apiFetch('PUT','/settings/tariffs',{value:TARIFFS});
+  closeTariffsPanel();
+}
 function openInsuranceOverviewPanel(){
   document.getElementById('insurance-overview-panel-overlay').style.display='flex';
   document.getElementById('ins-ov-search').value='';
@@ -11001,6 +11073,9 @@ async function syncFromServer(){
     }
   }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
+  if(sSettings && sSettings.tariffs){
+    Object.assign(TARIFFS, sSettings.tariffs);
+  }
   if(sSettings && Array.isArray(sSettings.statuses) && sSettings.statuses.length){
     STATUSES.length = 0;
     sSettings.statuses.forEach(s=>STATUSES.push(s));
@@ -11395,6 +11470,7 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
   else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
   else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
+  else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
   else if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
   else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
   else if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
