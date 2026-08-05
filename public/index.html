@@ -9627,10 +9627,14 @@ function renderInsuranceOverviewPanel(){
 
     vehicles.forEach(v=>{
       // ── ОСЦПВ cell: 2 rows — company name, then end date (color-coded by urgency) ──
+      // Local color remap for this page specifically: red/orange/green use
+      // a distinct, more saturated palette than the shared insColor() default.
+      const kaskoInsColor = d => { const c = insColor(d); return c==='#ef4444'?'#ff0000':c==='#f59e0b'?'#df8c00':c==='#22c55e'?'#009b39':c; };
+      const kaskoInsBg = d => { const c = insColor(d); return c==='#ef4444'?'#fee2e2':c==='#f59e0b'?'#fef3e0':c==='#22c55e'?'#e8f8ee':'transparent'; };
       let osagoHtml = '<span style="color:#c7c7c7;font-style:italic">не вказано</span>';
       if(v.osago?.end){
         const days = daysFromNow(v.osago.end);
-        const color = insColor(days);
+        const color = kaskoInsColor(days);
         osagoHtml = `<div style="font-weight:600;color:var(--text)">${v.osago.insurer||'—'}</div>
           <div style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(v.osago.end)}</div>`;
       }
@@ -9644,8 +9648,10 @@ function renderInsuranceOverviewPanel(){
         const paymentCellHtml = p => {
           if(!p) return '';
           const label = k.paymentType==='quarterly' ? 'Q'+p.quarter : 'Платіж';
-          const color = p.paid ? '#166534' : insColor(daysFromNow(p.date));
-          return `<div style="display:flex;align-items:center;gap:5px;white-space:nowrap;background:${p.paid?'#f0fdf4':'transparent'};border-radius:4px;padding:2px 4px">
+          const days = daysFromNow(p.date);
+          const color = p.paid ? '#166534' : kaskoInsColor(days);
+          const bg = p.paid ? '#f0fdf4' : kaskoInsBg(days);
+          return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;background:${bg};border-radius:4px;padding:2px 4px">
             <span style="color:#9ca3af;font-size:9.5px">${label}</span>
             <span style="color:${color};font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</span>
             <span style="color:${p.paid?'#166534':'#9ca3af'};font-size:10px">${p.paid?'✓ сплачено':(p.amount?fmtMon(p.amount):'')}</span>
@@ -9655,13 +9661,13 @@ function renderInsuranceOverviewPanel(){
           ? `<div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px">${[0,1,2,3].map(i=>paymentCellHtml(payments[i])).join('')}</div>`
           : '<span style="color:#c7c7c7;font-style:italic;font-size:10.5px">Графік платежів не вказано</span>';
         kaskoHtml = `
-          <div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;padding-bottom:5px;border-bottom:1px solid #f0f2f5;margin-bottom:5px">
+          <div style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;padding-bottom:5px;border-bottom:1px solid #f0f2f5;margin-bottom:5px;text-align:center">
             <div>
               <div style="font-weight:600;color:var(--text)">${k.insurer||'—'}</div>
-              <div style="color:#9ca3af;font-size:10px;font-family:var(--font-mono)">${durationText}</div>
+              <div style="font-size:10px;font-family:var(--font-mono)">${durationText}</div>
             </div>
             <div>
-              <div style="color:#9ca3af;font-size:9.5px;text-transform:uppercase">Сума</div>
+              <div style="color:#9ca3af;font-size:9.5px;text-transform:uppercase">Страхова сума</div>
               <div style="font-weight:600;color:var(--text)">${k.insuredSum?fmtMon(k.insuredSum):'—'}</div>
             </div>
             <div>
@@ -9676,7 +9682,7 @@ function renderInsuranceOverviewPanel(){
           ${paymentsHtml}`;
       }
 
-      rowsHtml += `<tr class="ins-ov-row" onclick="openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6${v.kasko?.end?';background:#f7fafe':''}">
+      rowsHtml += `<tr class="ins-ov-row" onclick="openInsuranceModal(${v.id})" style="cursor:pointer;border-bottom:1px solid #f3f4f6${v.kasko?.end?';background:#dae5f3':''}">
         <td style="padding:8px;white-space:nowrap;vertical-align:top">
           <span style="font-family:var(--font-mono);font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;font-size:11px">${v.plate}</span>
           <div style="color:#6b7280;font-size:10.5px;margin-top:2px">${stripYear(v.name)}</div>
