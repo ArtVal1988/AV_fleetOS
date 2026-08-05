@@ -9726,7 +9726,7 @@ function renderTariffClassList(){
   if(!wrap) return;
   wrap.innerHTML = TARIFF_CLASSES.map(cls => `
     <div style="display:flex;align-items:center;gap:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 12px">
-      <div style="flex:1.4;font-size:12px;font-weight:600;color:var(--text)">${cls.label}</div>
+      <div style="flex:1.4"><input type="text" id="tfc-label-${cls.key}" class="vf-inp" style="width:100%;font-weight:600" value="${cls.label}"></div>
       <div style="width:100px"><input type="number" step="0.01" id="tfc-rate-${cls.key}" class="vf-inp" style="width:100%" value="${cls.rate}"></div>
       <div style="width:100px"><input type="number" id="tfc-km-${cls.key}" class="vf-inp" style="width:100%" value="${cls.kmPerDay}"></div>
       <button type="button" onclick="deleteTariffClass('${cls.key}')" title="Видалити" style="width:20px;height:20px;flex-shrink:0;background:none;border:1px solid #e5e7eb;border-radius:4px;color:#dc2626;font-size:11px;cursor:pointer;padding:0">✕</button>
@@ -9751,8 +9751,10 @@ function deleteTariffClass(key){
 }
 function saveTariffClasses(){
   TARIFF_CLASSES.forEach(cls=>{
+    const labelEl = document.getElementById('tfc-label-'+cls.key);
     const rateEl = document.getElementById('tfc-rate-'+cls.key);
     const kmEl = document.getElementById('tfc-km-'+cls.key);
+    cls.label = labelEl?.value.trim() || cls.label;
     cls.rate = parseFloat(rateEl?.value) || 0;
     cls.kmPerDay = parseFloat(kmEl?.value) || 0;
   });
