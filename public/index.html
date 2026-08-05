@@ -3421,7 +3421,9 @@ function renderCalendar(){
           // same-day split cell, rather than jumping straight into
           // whichever one the normal single-booking click would open.
           if(visibleArr.length===1){
-            result = result.replace(/onclick="[^"]*"/, `onclick="event.stopPropagation();selectSubOverlapCell(event,${subInfo.booking.id},'${subInfo.sub.fromDate}','${subInfo.sub.toDate}',${visibleArr[0].id})"`);
+            result = result
+              .replace(/onmouseenter="[^"]*"/, `onmouseenter="showTooltipSubOverlap(event,${subInfo.booking.id},'${subInfo.sub.fromDate}','${subInfo.sub.toDate}',${visibleArr[0].id})"`)
+              .replace(/onclick="[^"]*"/, `onclick="event.stopPropagation();selectSubOverlapCell(event,${subInfo.booking.id},'${subInfo.sub.fromDate}','${subInfo.sub.toDate}',${visibleArr[0].id})"`);
           }
           return result;
         }
@@ -3821,6 +3823,33 @@ function renderSplitPanel(bid1,bid2){
     <button class="btn btn-primary" onclick="expandBooking(${bid2})" style="flex:1;background:#0891b2">↑ Отримання</button>`;
 }
 
+function showTooltipSubOverlap(e, mainBookingId, subFromDate, subToDate, realBookingId){
+  clearTimeout(ttHideTimer);
+  ttShownBid=null;
+  const mainB=bookings.find(x=>x.id===mainBookingId), realB=bookings.find(x=>x.id===realBookingId);
+  if(!mainB||!realB)return;
+  const st=SM[realB.status];
+  const origV = getVehicle(mainB.vehicleId);
+  const subEntry = (mainB.substituteVehicles||[]).find(s=>s.fromDate===subFromDate && s.toDate===subToDate);
+  const priceText = subEntry?.rate>0 ? `${fmt1(subEntry.rate)} ${subEntry.currency||'$'}/добу` : '';
+  tt.innerHTML=`
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">← Підміна закінчується, нове замовлення →</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="padding:8px;background:#f5f3ff;border-radius:5px;border-left:3px solid #a78bfa">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#6d28d9;margin-bottom:3px">🔄 Підміна · до ${fmt(subToDate)}</div>
+        <div style="font-weight:600;font-size:12px">Підміна для ${origV?.plate||''}</div>
+        ${priceText?`<div style="font-size:11px;color:#6d28d9">${priceText}</div>`:''}
+      </div>
+      <div style="padding:8px;background:#f5f6f8;border-radius:5px;border-left:3px solid ${st.color}">
+        <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:${st.color};margin-bottom:3px">↑ Нове замовлення · ${realB.pickup?.time||'—'}</div>
+        <div style="font-weight:600;font-size:12px">${realB.customer?.company||realB.customer?.name||'—'}</div>
+        <div style="font-size:11px;color:#6b7280">${realB.customer?.phone||''}</div>
+      </div>
+    </div>`;
+  ttW=tt.offsetWidth||240; ttH=tt.offsetHeight||160;
+  positionTooltip(e);
+  tt.classList.add('visible');
+}
 function selectSubOverlapCell(e, mainBookingId, subFromDate, subToDate, realBookingId){
   e.stopPropagation();
   closeMiniPicker();
