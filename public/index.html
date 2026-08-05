@@ -4308,6 +4308,7 @@ function openBookingModal(vid=null,start=null,end=null){
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
   mileageOverageAmtTouched = false;
+  clearAllFieldHighlights();
   document.getElementById('bm-discount').value='0';
   document.getElementById('bm-notes-hidden').value='';
   document.getElementById('bm-new-note').value='';
@@ -4352,6 +4353,7 @@ function editBooking(bid){
   document.getElementById('tooltip-mobile-backdrop')?.classList.remove('visible');
   const b=bookings.find(x=>x.id===bid);if(!b)return;
   editBid=bid;
+  clearAllFieldHighlights();
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='';
   document.getElementById('bm-gen-contract-btn').style.display='';
@@ -4486,6 +4488,7 @@ function editBooking(bid){
 function closeBookingModal(){
   document.getElementById('booking-modal').classList.remove('open');
   editBid=null;
+  clearAllFieldHighlights();
   // applyOrderLockState() sets inline opacity/pointer-events overrides on
   // these elements while the modal is open (so the client-type block stays
   // clickable even when the rest is locked). Those inline styles persist
@@ -4543,19 +4546,34 @@ function applyOrderLockState(){
   const ctSwitcher = document.getElementById('client-type-switcher');
   if(ctSwitcher){ ctSwitcher.style.opacity = '1'; ctSwitcher.style.pointerEvents = 'auto'; }
 }
+let highlightedFieldIds = new Set();
 function highlightField(ids){
   const list = (Array.isArray(ids) ? ids : [ids]).map(id => typeof id==='string' ? document.getElementById(id) : id).filter(Boolean);
   list.forEach(el=>{
     el.style.outline = '2px solid #dc2626';
     el.style.outlineOffset = '1px';
     el.style.borderRadius = el.style.borderRadius || '4px';
-    const clear = () => { el.style.outline=''; el.style.outlineOffset=''; };
+    if(el.id) highlightedFieldIds.add(el.id);
+    const clear = () => { el.style.outline=''; el.style.outlineOffset=''; if(el.id) highlightedFieldIds.delete(el.id); };
     el.addEventListener('input', clear, {once:true});
     el.addEventListener('focus', clear, {once:true});
     el.addEventListener('change', clear, {once:true});
     el.addEventListener('click', clear, {once:true});
   });
   if(list[0]) list[0].scrollIntoView({behavior:'smooth', block:'center'});
+}
+function clearAllFieldHighlights(){
+  // Highlighting should only ever appear as a direct result of a failed
+  // save attempt — clear any stale outline left over from a previous
+  // session whenever the booking form is (re)opened fresh, otherwise a
+  // field the user never touched (no input/focus/change/click) keeps
+  // showing red the next time they open a booking, looking like it's
+  // highlighting for no reason.
+  highlightedFieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ el.style.outline=''; el.style.outlineOffset=''; }
+  });
+  highlightedFieldIds.clear();
 }
 function saveBooking(){
   const isAdmin = _currentUser && _currentUser.role === 'admin';
