@@ -3399,6 +3399,23 @@ function renderCalendar(){
             .replace('<td class="td-day', '<td class="td-day substitute-covered"')
             .replace(/background:[^;"]+;/, 'background:'+splitBg+';');
         }
+        // Substitute vehicle's own cell, but a genuine separate booking
+        // also exists for it on this same day (e.g. the substitute period
+        // ended and the vehicle got its own new rental starting the same
+        // day) — visibleArr.length>=1 above already took priority and
+        // rendered the real booking's own cell (single or split), so the
+        // substitute marker never got a chance to show at all. Same
+        // diagonal-split treatment as the 'covered' case, so neither piece
+        // of information (real booking status vs. substitution) is lost.
+        if(subInfo && subInfo.type==='active' && visibleArr.length>=1){
+          const subColor = SM['substitute']?.color||'#a78bfa';
+          const bgMatch = cellHtml.match(/background:([^;"]+);/);
+          const origColor = bgMatch ? bgMatch[1] : '#9ca3af';
+          const splitBg = `linear-gradient(135deg, ${subColor} 0%, ${subColor} 50%, ${origColor} 50%, ${origColor} 100%)`;
+          return cellHtml
+            .replace('<td class="td-day', '<td class="td-day substitute-covered"')
+            .replace(/background:[^;"]+;/, 'background:'+splitBg+';');
+        }
         return cellHtml;
       }).join('');
       const isHl = highlightedVid===v.id;
