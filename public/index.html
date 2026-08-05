@@ -4566,18 +4566,81 @@ function saveBooking(){
   const start=document.getElementById('bm-start').value;
   const end=document.getElementById('bm-end').value;
   const vid=parseInt(document.getElementById('bm-vehicle').value);
-  if(!start||!end||!vid){
-    highlightField([!vid?'bm-vehicle':null, !start?'bm-pickup-date':null, !end?'bm-return-date':null].filter(Boolean));
-    alert('Вкажіть авто та дати');return;
+  const statusVal = document.getElementById('bm-status').value;
+  const currentStatusIsBooking = statusVal ? (SM[statusVal]?.isBooking !== false) : true; // assume booking-type until a status is actually picked, so the rest of the checks still run and surface together
+
+  // Collect every validation failure instead of stopping at the first one,
+  // so all the missing fields can be highlighted together in a single pass.
+  const errors = []; // {fields: string|string[], message: string, before?: fn}
+  if(!vid) errors.push({fields:'bm-vehicle', message:'Оберіть авто'});
+  if(!start) errors.push({fields:'bm-pickup-date', message:'Вкажіть дату отримання'});
+  if(!end) errors.push({fields:'bm-return-date', message:'Вкажіть дату повернення'});
+  if(!statusVal) errors.push({fields:'bm-status', message:'Оберіть статус замовлення'});
+  if(currentStatusIsBooking && statusVal && COMPANY_REQUIRED_STATUSES.includes(statusVal) && !currentOrderCompany){
+    errors.push({fields:['bm-company-toprent','bm-company-rentplus'], message:'Оберіть компанію: TopRent або RentPlus'});
   }
-  if(!document.getElementById('bm-status').value){highlightField('bm-status');alert('Оберіть статус замовлення');return;}
-  const currentStatusIsBooking = SM[document.getElementById('bm-status').value]?.isBooking !== false;
-  if(currentStatusIsBooking && COMPANY_REQUIRED_STATUSES.includes(document.getElementById('bm-status').value) && !currentOrderCompany){highlightField(['bm-company-toprent','bm-company-rentplus']);alert('Оберіть компанію: TopRent або RentPlus');return;}
+
+  const clientType = document.getElementById('bm-client-type').value;
+  if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
+    errors.push({fields:'bm-edrpou', message:'Вкажіть ЄДРПОУ'});
+  }
+
+  // Exchange rate is mandatory for every real booking, regardless of
+  // currency or client type — the profitability report converts everything
+  // to USD, and needs a valid rate for both $ bookings (UAH-equivalent
+  // tracking) and ₴ bookings (USD conversion) to extract accurately. Not
+  // required for plain 'Лише статус' entries (repair/storage/etc), since
+  // those aren't rental income at all.
+  if(currentStatusIsBooking && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
+    errors.push({fields:'bm-exchange-rate', message:'Курс обміну є обов\'язковим полем'});
+  }
+
+  // Deposit is mandatory too — must be explicitly filled in (0 is a valid
+  // choice meaning "no deposit required"), just not left blank.
+  if(currentStatusIsBooking && document.getElementById('bm-deposit').value.trim()===''){
+    errors.push({fields:'bm-deposit', message:'Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)'});
+  }
+
+  // Every recorded substitute vehicle period must have its own exchange
+  // rate — catches entries saved before this became mandatory, or any
+  // other way a period could end up without one, not just the sub-form's
+  // own + Додати button (which only guards new/edited entries).
+  const subMissingCourse = currentSubstitutes.find(s => !(s.exchangeRate>0));
+  if(subMissingCourse){
+    const subV = getVehicle(subMissingCourse.vehicleId);
+    errors.push({
+      fields:'bm-substitute-section',
+      message:`Вкажіть курс обміну для підмінного авто ${subV?subV.plate:''} (${fmt(subMissingCourse.fromDate)}–${fmt(subMissingCourse.toDate)})`,
+      before: () => { const p=document.getElementById('bm-substitute-panel'); if(p && p.style.display==='none') toggleSubstituteSection(); }
+    });
+  }
+
+  const orderStatuses = ['rented', 'res-docs', 'reserved'];
+  if(statusVal && orderStatuses.includes(statusVal)){
+    const clientName = document.getElementById('bm-name').value.trim();
+    const clientPhone = document.getElementById('bm-phone').value.trim();
+    if(!clientName) errors.push({fields:'bm-name', message:'Вкажіть прізвище клієнта'});
+    if(!clientPhone) errors.push({fields:'bm-phone', message:'Вкажіть номер телефону клієнта'});
+  }
+
+  for(const e of EXTRAS_CONFIG){
+    if(!extrasActive[e.key]) continue;
+    const rawVal = (document.getElementById('ex-price-' + e.key)?.value || '').trim();
+    if(!rawVal) errors.push({fields:'ex-price-' + e.key, message:'Вкажіть суму для послуги «' + e.label + '» (можна 0, якщо безкоштовно)'});
+  }
+
+  const isCompanyClient = document.getElementById('bm-client-type').value !== 'individual';
+  if(isCompanyClient && document.getElementById('bm-ext-active')?.checked){
+    const extRate2 = (document.getElementById('bm-ext-rate2')?.value || '').trim();
+    if(!extRate2) errors.push({fields:'bm-ext-rate2', message:'Вкажіть курс для продовження оренди'});
+  }
 
   // If an extension is currently active (filled in but not yet committed via
   // "Зберегти продовження"), it still needs to be checked for overlap with
   // other bookings on the same vehicle before the whole booking gets saved.
-  if(document.getElementById('bm-ext-active')?.checked){
+  // Not a missing-field error (no single field to highlight), so this one
+  // still short-circuits on its own rather than joining the collected list.
+  if(vid && document.getElementById('bm-ext-active')?.checked){
     const extFrom = getExtDateField('bm-ext-from');
     const extTo = getExtDateField('bm-ext-to');
     if(extFrom && extTo){
@@ -4593,66 +4656,12 @@ function saveBooking(){
     }
   }
 
-  const clientType = document.getElementById('bm-client-type').value;
-  if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
-    highlightField('bm-edrpou');
-    alert('Вкажіть ЄДРПОУ');
+  if(errors.length){
+    errors.forEach(err => err.before && err.before());
+    highlightField(errors.flatMap(err => Array.isArray(err.fields) ? err.fields : [err.fields]));
+    const list = errors.map(err => '• ' + err.message).join('\n');
+    alert(errors.length===1 ? errors[0].message : `Заповніть, будь ласка, наступні поля:\n\n${list}`);
     return;
-  }
-
-  // Exchange rate is mandatory for every real booking, regardless of
-  // currency or client type — the profitability report converts everything
-  // to USD, and needs a valid rate for both $ bookings (UAH-equivalent
-  // tracking) and ₴ bookings (USD conversion) to extract accurately. Not
-  // required for plain 'Лише статус' entries (repair/storage/etc), since
-  // those aren't rental income at all.
-  if(currentStatusIsBooking && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
-    highlightField('bm-exchange-rate');
-    alert('Курс обміну є обов\'язковим полем');
-    return;
-  }
-
-  // Deposit is mandatory too — must be explicitly filled in (0 is a valid
-  // choice meaning "no deposit required"), just not left blank.
-  if(currentStatusIsBooking && document.getElementById('bm-deposit').value.trim()===''){
-    highlightField('bm-deposit');
-    alert('Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)');
-    return;
-  }
-
-  // Every recorded substitute vehicle period must have its own exchange
-  // rate — catches entries saved before this became mandatory, or any
-  // other way a period could end up without one, not just the sub-form's
-  // own + Додати button (which only guards new/edited entries).
-  const subMissingCourse = currentSubstitutes.find(s => !(s.exchangeRate>0));
-  if(subMissingCourse){
-    const subV = getVehicle(subMissingCourse.vehicleId);
-    const subPanel = document.getElementById('bm-substitute-panel');
-    if(subPanel && subPanel.style.display==='none') toggleSubstituteSection();
-    highlightField('bm-substitute-section');
-    alert(`Вкажіть курс обміну для підмінного авто ${subV?subV.plate:''} (${fmt(subMissingCourse.fromDate)}–${fmt(subMissingCourse.toDate)})`);
-    return;
-  }
-
-  const orderStatuses = ['rented', 'res-docs', 'reserved'];
-  if(orderStatuses.includes(document.getElementById('bm-status').value)){
-    const clientName = document.getElementById('bm-name').value.trim();
-    const clientPhone = document.getElementById('bm-phone').value.trim();
-    if(!clientName){ highlightField('bm-name'); alert('Вкажіть прізвище клієнта'); return; }
-    if(!clientPhone){ highlightField('bm-phone'); alert('Вкажіть номер телефону клієнта'); return; }
-    if(!start || !end){ highlightField(['bm-pickup-date','bm-return-date']); alert('Вкажіть дати оренди'); return; }
-  }
-
-  for(const e of EXTRAS_CONFIG){
-    if(!extrasActive[e.key]) continue;
-    const rawVal = (document.getElementById('ex-price-' + e.key)?.value || '').trim();
-    if(!rawVal){ highlightField('ex-price-' + e.key); alert('Вкажіть суму для послуги «' + e.label + '» (можна 0, якщо безкоштовно)'); return; }
-  }
-
-  const isCompanyClient = document.getElementById('bm-client-type').value !== 'individual';
-  if(isCompanyClient && document.getElementById('bm-ext-active')?.checked){
-    const extRate2 = (document.getElementById('bm-ext-rate2')?.value || '').trim();
-    if(!extRate2){ highlightField('bm-ext-rate2'); alert('Вкажіть курс для продовження оренди'); return; }
   }
 
   // Block genuine double-booking for the same vehicle. A 1-day touch
