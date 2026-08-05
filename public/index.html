@@ -6052,7 +6052,7 @@ function renderDashboard(){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
   // ── 1. Today's activity ──────────────────────────────────────────
-  const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr);
+  const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr && !(b.startKm>0));
   // Substitute-vehicle returns: when a substitution period ends, the
   // client returns THAT vehicle (not necessarily the main booking's own
   // vehicle, which may still be mid-rental) — these don't show up in a
@@ -6074,7 +6074,7 @@ function renderDashboard(){
   const activityHtml = `
     <div class="msec-b2" style="margin-bottom:18px">
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-        ${dashActivityCol('↑ Отримання', pickupsToday, '#2563eb', 'pickup')}
+        ${dashActivityCol('↑ Видача', pickupsToday, '#2563eb', 'pickup')}
         ${dashActivityCol('↓ Повернення', returnsToday, '#166534', 'ret')}
         ${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626')}
       </div>
