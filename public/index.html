@@ -1533,31 +1533,15 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 <div id="tariffs-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;width:480px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26">📐 Тарифи</div>
+  <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">📐 Тарифи · Перепробіг за класом</div>
       <button onclick="closeTariffsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">🛣️ Перепробіг</div>
-      <div style="display:flex;flex-direction:column;gap:12px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:14px">
-        <div>
-          <label class="vf-lbl">Ліміт пробігу (км/добу)</label>
-          <input type="number" id="tf-km-per-day" class="vf-inp" style="width:100%" placeholder="200">
-        </div>
-        <div style="display:flex;gap:8px;align-items:end">
-          <div style="flex:1">
-            <label class="vf-lbl">Тариф за 1 км перепробігу</label>
-            <input type="number" id="tf-overage-rate" class="vf-inp" style="width:100%" placeholder="5">
-          </div>
-          <div class="dep-inline-wrap" style="background:none;border:none;padding:0;margin-bottom:1px">
-            <button type="button" id="tf-cur-btn-uah" class="dep-cur-pill active" onclick="setTariffCurrency('₴')">₴</button>
-            <button type="button" id="tf-cur-btn-usd" class="dep-cur-pill" onclick="setTariffCurrency('$')">$</button>
-          </div>
-        </div>
-        <div style="font-size:10.5px;color:#9ca3af">Дозволений пробіг = дні оренди × ліміт/добу. Перевищення автоматично рахується як "Перепробіг" в утриманнях після повернення.</div>
-      </div>
-      <button onclick="saveTariffs()" style="margin-top:16px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:14px">Дозволений пробіг = дні оренди × ліміт/добу для класу, призначеного авто (у формі "Транспортні засоби"). Перевищення автоматично рахується як "Перепробіг" в утриманнях після повернення, за тарифом цього класу.</div>
+      <div id="tariffs-class-list" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button onclick="saveTariffClasses()" style="margin-top:16px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
     </div>
   </div>
 </div>
@@ -1957,6 +1941,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
         <div><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label class="vf-lbl">Тарифікація «клас» для перепробігу</label>
+        <select id="vf-tariff-class" class="vf-inp" style="width:100%">
+          <option value="">— не призначено —</option>
+        </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="vf-lbl">Колір кузова</label><input id="vf-color" type="text" class="vf-inp" placeholder="Білий"></div>
@@ -2756,7 +2746,18 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <script>
 /* ── CONSTANTS ── */
-let TARIFFS = { kmPerDay: 200, overageRate: 5, overageCurrency: '₴' };
+let TARIFF_CLASSES = [
+  {key:'econom',        label:'Економ клас',                              rate:5.00,  kmPerDay:350},
+  {key:'middle',        label:'Середній клас',                            rate:7.50,  kmPerDay:350},
+  {key:'business_lo',   label:'Бізнес клас до 2,49 літрів',                rate:10.00, kmPerDay:350},
+  {key:'business_hi',   label:'Бізнес клас від 2,50 літрів',               rate:15.00, kmPerDay:350},
+  {key:'4x4',           label:'4х4 до 2,49 літрів',                        rate:10.00, kmPerDay:350},
+  {key:'minivan_lo',    label:'Мінівени до 2,49 літрів',                   rate:10.00, kmPerDay:350},
+  {key:'suv_hi',        label:'Позашляховики від 2,50 літрів',             rate:15.00, kmPerDay:350},
+  {key:'minivan_hi',    label:'Мінівени від 2,50 літрів',                  rate:15.00, kmPerDay:350},
+  {key:'rep_lo',        label:'Представницький клас до 3,09 літрів',       rate:25.00, kmPerDay:350},
+  {key:'rep_hi',        label:'Представницький клас від 3,10 літрів',      rate:45.00, kmPerDay:350},
+];
 const STATUSES=[
   {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
   {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
@@ -5740,12 +5741,15 @@ function updateKmDiff(){
       if(valEl) valEl.textContent = diff.toLocaleString('uk-UA');
       badge.style.display='flex';
 
-      // Excess mileage (перепробіг) over the configured daily allowance
-      // (Тарифи page), using the same day count as the cost calc (respects
-      // a manual days-override), plus any extension days — the allowance
-      // should cover the whole rental period, not just the original
-      // booking's date range.
-      const KM_ALLOWANCE_PER_DAY = TARIFFS.kmPerDay || 350;
+      // Excess mileage (перепробіг) over the daily allowance for the
+      // vehicle's assigned tariff class (Тарифи page), using the same day
+      // count as the cost calc (respects a manual days-override), plus any
+      // extension days — the allowance should cover the whole rental
+      // period, not just the original booking's date range.
+      const selectedVid = parseInt(document.getElementById('bm-vehicle')?.value);
+      const selectedVeh = selectedVid ? getVehicle(selectedVid) : null;
+      const tariffClass = selectedVeh ? TARIFF_CLASSES.find(c=>c.key===selectedVeh.tariffClass) : null;
+      const KM_ALLOWANCE_PER_DAY = tariffClass?.kmPerDay || 350;
       const startVal = document.getElementById('bm-start').value;
       const endVal = document.getElementById('bm-end').value;
       const daysInput = document.getElementById('bm-days-override');
@@ -5758,19 +5762,20 @@ function updateKmDiff(){
           const allowance = days * KM_ALLOWANCE_PER_DAY;
           const excess = diff - allowance;
           if(excess > 0){
-            avgBadge.innerHTML = `⚠️ <span>Перепробіг:</span> <span>+${excess.toLocaleString('uk-UA')}</span> <span>км</span>`;
+            const noClassNote = !tariffClass ? ` <span style="font-weight:400">(немає класу тарифікації — вкажіть в картці авто)</span>` : '';
+            avgBadge.innerHTML = `⚠️ <span>Перепробіг:</span> <span>+${excess.toLocaleString('uk-UA')}</span> <span>км</span>${noClassNote}`;
             avgBadge.style.background = '#fef2f2';
             avgBadge.style.color = '#991b1b';
             // Auto-open the post-rental deductions panel and activate/fill
-            // the Перепробіг line, using the configured rate — unless the
-            // user has already manually typed their own amount in, in
-            // which case we don't want to silently overwrite it.
+            // the Перепробіг line, using the vehicle's tariff class rate —
+            // unless the user has already manually typed their own amount
+            // in, in which case we don't want to silently overwrite it.
             const dedPanel = document.getElementById('ded-panel');
             if(dedPanel && dedPanel.style.display==='none') toggleDedPanel();
             if(!isDedActive('mileage')) toggleDed('mileage');
-            if(!mileageOverageAmtTouched){
-              setDedCur('mileage', TARIFFS.overageCurrency || '₴');
-              const cost = Math.round(excess * (TARIFFS.overageRate || 0) * 100) / 100;
+            if(!mileageOverageAmtTouched && tariffClass){
+              setDedCur('mileage', '₴');
+              const cost = Math.round(excess * (tariffClass.rate || 0) * 100) / 100;
               const amtEl = document.getElementById('ded-amt-mileage');
               if(amtEl) amtEl.value = cost || '';
               updateDeductionsTotal();
@@ -9657,26 +9662,43 @@ async function loadSparePartsFromServer(){
   if(Array.isArray(r)) SPARE_PARTS = r;
 }
 let insOvKaskoOnly = false;
-let tariffCurrencyDraft = '₴';
 function openTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='flex';
-  document.getElementById('tf-km-per-day').value = TARIFFS.kmPerDay || '';
-  document.getElementById('tf-overage-rate').value = TARIFFS.overageRate || '';
-  setTariffCurrency(TARIFFS.overageCurrency || '₴');
+  renderTariffClassList();
 }
 function closeTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='none';
 }
-function setTariffCurrency(cur){
-  tariffCurrencyDraft = cur;
-  document.getElementById('tf-cur-btn-uah')?.classList.toggle('active', cur==='₴');
-  document.getElementById('tf-cur-btn-usd')?.classList.toggle('active', cur==='$');
+function renderTariffClassList(){
+  const wrap = document.getElementById('tariffs-class-list');
+  if(!wrap) return;
+  wrap.innerHTML = TARIFF_CLASSES.map(cls => `
+    <div style="display:flex;align-items:end;gap:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px">
+      <div style="flex:1.4">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${cls.label}</div>
+      </div>
+      <div style="width:120px">
+        <label class="vf-lbl">Тариф за 1 км</label>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" step="0.01" id="tfc-rate-${cls.key}" class="vf-inp" style="width:100%" value="${cls.rate}">
+          <span style="font-size:11px;color:#9ca3af;flex-shrink:0">₴</span>
+        </div>
+      </div>
+      <div style="width:120px">
+        <label class="vf-lbl">Ліміт, км/добу</label>
+        <input type="number" id="tfc-km-${cls.key}" class="vf-inp" style="width:100%" value="${cls.kmPerDay}">
+      </div>
+    </div>
+  `).join('');
 }
-function saveTariffs(){
-  const kmPerDay = parseFloat(document.getElementById('tf-km-per-day').value) || 0;
-  const overageRate = parseFloat(document.getElementById('tf-overage-rate').value) || 0;
-  TARIFFS = { kmPerDay, overageRate, overageCurrency: tariffCurrencyDraft };
-  apiFetch('PUT','/settings/tariffs',{value:TARIFFS});
+function saveTariffClasses(){
+  TARIFF_CLASSES.forEach(cls=>{
+    const rateEl = document.getElementById('tfc-rate-'+cls.key);
+    const kmEl = document.getElementById('tfc-km-'+cls.key);
+    cls.rate = parseFloat(rateEl?.value) || 0;
+    cls.kmPerDay = parseFloat(kmEl?.value) || 0;
+  });
+  apiFetch('PUT','/settings/tariffClasses',{value:TARIFF_CLASSES.map(c=>({key:c.key, rate:c.rate, kmPerDay:c.kmPerDay}))});
   closeTariffsPanel();
 }
 function openInsuranceOverviewPanel(){
@@ -10676,6 +10698,10 @@ function openVehicleForm(vehicleId){
   vfOptions = [...(s.options || [])];
   renderVehicleOptionChips();
 
+  document.getElementById('vf-tariff-class').innerHTML = '<option value="">— не призначено —</option>' +
+    TARIFF_CLASSES.map(c=>`<option value="${c.key}">${c.label} (${fmt1(c.rate)} ₴/км)</option>`).join('');
+  document.getElementById('vf-tariff-class').value = v?.tariffClass || '';
+
   document.getElementById('vehicle-form-overlay').style.display = 'flex';
 }
 function closeVehicleForm(){
@@ -10736,6 +10762,7 @@ function saveVehicleForm(){
     options: [...vfOptions]
   };
   const displayName = `${brand} ${model}${year ? ' ' + year : ''}`.trim();
+  const tariffClass = document.getElementById('vf-tariff-class').value || null;
 
   if(id){
     // Editing an existing vehicle — mutate in place (same object reference in
@@ -10747,6 +10774,7 @@ function saveVehicleForm(){
     v.vin = vin;
     v.specs = specs;
     v.category = categoryName;
+    v.tariffClass = tariffClass;
     // Move to a different category group if it changed
     const currentCat = CATEGORIES.find(c=>c.vehicles.includes(v));
     if(!currentCat || currentCat.name !== categoryName){
@@ -10759,6 +10787,7 @@ function saveVehicleForm(){
     const newId = ALL_VEHICLES.reduce((m,x)=>Math.max(m,x.id), 0) + 1;
     const vehicle = {
       id: newId, name: displayName, plate, vin, specs, category: categoryName,
+      tariffClass,
       service: {lastKm:0, nextKm:0, lastDate:'', status:'ok'},
       insurance: null, osago: null, kasko: null,
       sts: {number:'', date:''}, poaExpiry: null,
@@ -11073,8 +11102,11 @@ async function syncFromServer(){
     }
   }
   if(sStickers){ stickers.length=0; sStickers.forEach(s=>stickers.push(s)); nextStickerId=stickers.length?Math.max(...stickers.map(s=>s.id))+1:1; }
-  if(sSettings && sSettings.tariffs){
-    Object.assign(TARIFFS, sSettings.tariffs);
+  if(sSettings && Array.isArray(sSettings.tariffClasses)){
+    sSettings.tariffClasses.forEach(saved=>{
+      const cls = TARIFF_CLASSES.find(c=>c.key===saved.key);
+      if(cls){ cls.rate = saved.rate; cls.kmPerDay = saved.kmPerDay; }
+    });
   }
   if(sSettings && Array.isArray(sSettings.statuses) && sSettings.statuses.length){
     STATUSES.length = 0;
