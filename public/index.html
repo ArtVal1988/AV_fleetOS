@@ -2184,7 +2184,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <div class="modal-overlay" id="booking-modal">
 <div class="modal">
   <div class="modal-head">
-    <select id="bm-vehicle" class="bm-head-select veh-plate-badge"></select>
+    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="if(!editBid){prefillStartKmFromPrevBooking(this.value);updateKmDiff();}"></select>
     <div style="display:flex;align-items:center;gap:8px">
       <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">TopRent</button>
       <div class="modal-title" id="bm-title">Замовлення</div>
@@ -4241,6 +4241,14 @@ function clearHighlight(){
 }
 
 /* ── BOOKING MODAL ── */
+function prefillStartKmFromPrevBooking(vid){
+  document.getElementById('bm-start-km').value = '';
+  if(!vid) return;
+  const prevBookings = bookings
+    .filter(x => x.vehicleId === parseInt(vid) && x.endKm > 0)
+    .sort((a,b) => getEffectiveEnd(b).localeCompare(getEffectiveEnd(a)));
+  if(prevBookings[0]) document.getElementById('bm-start-km').value = Number(prevBookings[0].endKm).toLocaleString('uk-UA');
+}
 function openBookingModal(vid=null,start=null,end=null){
   closeMiniPicker();
   clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
@@ -4336,11 +4344,12 @@ function openBookingModal(vid=null,start=null,end=null){
   customEquipment = [];
   renderEquipmentList();
   resetDeductions();
-  // Pre-fill start km from vehicle
-  if(vid){
-    const veh=ALL_VEHICLES.find(x=>x.id===parseInt(vid));
-    if(veh?.service?.lastKm) document.getElementById('bm-start-km').value=Number(veh.service.lastKm).toLocaleString('uk-UA');
-  }
+  // Pre-fill start km from the most recent previous booking's end km for
+  // this vehicle — NOT from service.lastKm (that's the odometer reading at
+  // last maintenance, an unrelated figure that could be wildly out of date
+  // compared to the actual mileage after the last rental). Leave the field
+  // empty if no prior booking recorded an end km at all.
+  prefillStartKmFromPrevBooking(vid);
   document.getElementById('bm-closed').checked = false;
   bookingWasClosedOnOpen = false;
   applyOrderLockState();
