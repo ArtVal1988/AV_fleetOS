@@ -1562,12 +1562,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div onclick="openRepresentativesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">🖋</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Представники (ФОП)</div>
-        <div style="font-size:10.5px;color:#9ca3af">Від чийого імені видається авто, шаблони для кожного</div>
+        <div style="font-size:10.5px;color:#9ca3af">Для фізосіб, ФОП/ТОВ без та з ПДВ — окремо</div>
       </div>
       <div onclick="openDocTemplatesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">📄</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Шаблони документів</div>
-        <div style="font-size:10.5px;color:#9ca3af">Загальний договір, акт для генерації</div>
+        <div style="font-size:10.5px;color:#9ca3af">Загальний договір, акт (запасний варіант)</div>
       </div>
     </div>
   </div>
@@ -1895,42 +1895,15 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- DOCUMENT TEMPLATES ADMIN PANEL -->
 <div id="representatives-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:480;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26">🖋 Представники (ФОП)</div>
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">🖋 Представники компанії</div>
       <button onclick="closeRepresentativesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:14px">Особи/ФОП, від імені яких видається авто та підписується договір. У замовленні можна обрати одного з них — тоді генеруються саме їхні договір/акт (якщо завантажені), інакше використовується загальний шаблон.</div>
-      <div id="rep-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-      <button onclick="openRepresentativeForm(null)" style="width:100%;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">+ Додати представника</button>
-    </div>
-  </div>
-</div>
-
-<div id="representative-form-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:520;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:14px;width:460px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)">
-    <div style="font-size:15px;font-weight:700;margin-bottom:14px" id="rep-form-title">Новий представник</div>
-    <input type="hidden" id="rep-form-key">
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div><label class="vf-lbl">ПІБ</label><input id="rep-name" type="text" class="vf-inp" style="width:100%" placeholder="Іваненко Іван Іванович"></div>
-      <div><label class="vf-lbl">Посада</label><input id="rep-position" type="text" class="vf-inp" style="width:100%" placeholder="Директор / ФОП"></div>
-      <div><label class="vf-lbl">Реєстраційний номер / ЄДРПОУ</label><input id="rep-edrpou" type="text" class="vf-inp" style="width:100%" placeholder="1234567890"></div>
-      <div><label class="vf-lbl">Юридична адреса</label><input id="rep-address" type="text" class="vf-inp" style="width:100%"></div>
-      <div><label class="vf-lbl">Телефон</label><input id="rep-phone" type="text" class="vf-inp" style="width:100%"></div>
-      <div><label class="vf-lbl">Банківські реквізити</label><input id="rep-bank" type="text" class="vf-inp" style="width:100%" placeholder="IBAN, назва банку"></div>
-      <div>
-        <label class="vf-lbl">Для яких клієнтів доступний</label>
-        <select id="rep-scope" class="vf-inp" style="width:100%">
-          <option value="both">Фізособи та бізнес</option>
-          <option value="individual">Лише фізособи</option>
-          <option value="business">Лише бізнес (ТОВ/ФОП-клієнти)</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:18px">
-      <button onclick="closeRepresentativeForm()" style="flex:1;background:#fff;border:1px solid #e5e7eb;color:#6b7280;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Скасувати</button>
-      <button onclick="saveRepresentativeForm()" style="flex:1;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:16px">Для кожної юридичної форми клієнта — свій представник компанії, від чийого імені видається авто. Визначається автоматично за типом клієнта в замовленні, без ручного вибору. Договір/акт для кожної форми теж свої (якщо завантажені).</div>
+      <div id="rep-slots"></div>
+      <button onclick="saveRepresentativeSlots()" style="margin-top:8px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
     </div>
   </div>
 </div>
@@ -2840,12 +2813,6 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       </div>
       <input type="hidden" id="bm-notes-hidden">
-    </div>
-    <div class="msec" style="margin-top:10px;padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.07)">
-      <label class="vf-lbl">Представник компанії (від чийого імені видається авто)</label>
-      <select id="bm-representative" class="vf-inp" style="width:100%">
-        <option value="">— не вказано (загальний шаблон) —</option>
-      </select>
     </div>
   </div>
   <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
@@ -4523,7 +4490,6 @@ function editBooking(bid){
   loadMessengers(b.messengers||[]);
   setClientType(b.clientType||'individual', false);
   updateClientTypeLock((b.clientType||'individual')==='individual');
-  if(document.getElementById('bm-representative')) document.getElementById('bm-representative').value = b.representativeId || '';
   document.getElementById('bm-pickup-date').value=b.pickup?.date||'';
   document.getElementById('bm-pickup-time').value=b.pickup?.time||'09:00';
   document.getElementById('bm-pickup-loc').value=b.pickup?.loc||'';
@@ -4890,7 +4856,6 @@ function saveBooking(){
 
     startKm:parseThousands(document.getElementById('bm-start-km')?.value),
     endKm:parseThousands(document.getElementById('bm-end-km')?.value),
-    representativeId: document.getElementById('bm-representative')?.value || null,
     deductions:readDeductions(),
     extras:readExtrasFromForm(),
     equipment:customEquipment.filter(item => item.name?.trim() || item.price > 0).map(({id, ...rest}) => rest),
@@ -8787,19 +8752,6 @@ function updateClientTypeLock(lock){
     btn.title = '';
   });
 }
-function populateRepresentativeDropdown(isCompany){
-  const sel = document.getElementById('bm-representative');
-  if(!sel) return;
-  const currentVal = sel.value;
-  const scope = isCompany ? 'business' : 'individual';
-  const filtered = REPRESENTATIVES.filter(r => r.scope==='both' || r.scope===scope);
-  sel.innerHTML = '<option value="">— не вказано (загальний шаблон) —</option>' +
-    filtered.map(r => `<option value="${r.key}">${r.name}${r.position?' · '+r.position:''}</option>`).join('');
-  // Keep the previous selection if it's still valid for the new scope,
-  // otherwise fall back to unset rather than silently keeping a rep that
-  // shouldn't apply to this client type.
-  sel.value = filtered.some(r=>r.key===currentVal) ? currentVal : '';
-}
 function setClientType(type, isUserAction = true){
   document.getElementById('bm-client-type').value = type;
   document.querySelectorAll('.ct-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
@@ -8822,7 +8774,6 @@ function setClientType(type, isUserAction = true){
   document.getElementById('bm-edrpou-row').style.display  = isCompany ? '' : 'none';
   // Exchange rate row visibility is handled by currency, not client type
 
-  populateRepresentativeDropdown(isCompany);
 
   // Name label
   document.getElementById('bm-name-label').textContent =
@@ -10657,79 +10608,56 @@ let DOC_FIELDS = [];
 let DOC_MAPPING = { contract: {}, act: {} };
 let DOC_SCANNED = { contract: [], act: [] };
 let DOC_CUSTOM = { contract: [], act: [] };
-let REPRESENTATIVES = [];
-function getRepresentativesList(){
-  return REPRESENTATIVES;
-}
+let REPRESENTATIVES = {}; // keyed by slot: individual / business_no_vat / business_vat
+const REP_SLOTS = [
+  {key:'individual', label:'Фізична особа'},
+  {key:'business_no_vat', label:'ФОП / ТОВ без ПДВ'},
+  {key:'business_vat', label:'ФОП / ТОВ з ПДВ'},
+];
 function openRepresentativesPanel(){
   closeSettingsHubPanel();
   document.getElementById('representatives-panel-overlay').style.display='flex';
-  renderRepList();
+  renderRepSlots();
 }
 function closeRepresentativesPanel(){
   document.getElementById('representatives-panel-overlay').style.display='none';
 }
-const REP_SCOPE_LABEL = {both:'Фізособи та бізнес', individual:'Лише фізособи', business:'Лише бізнес'};
-function renderRepList(){
-  const wrap = document.getElementById('rep-list');
+function renderRepSlots(){
+  const wrap = document.getElementById('rep-slots');
   if(!wrap) return;
-  wrap.innerHTML = REPRESENTATIVES.length ? REPRESENTATIVES.map(r => `
-    <div style="display:flex;align-items:center;gap:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12.5px;font-weight:700;color:var(--text)">${r.name||'—'}</div>
-        <div style="font-size:10.5px;color:#9ca3af">${r.position?r.position+' · ':''}${REP_SCOPE_LABEL[r.scope]||''}</div>
+  wrap.innerHTML = REP_SLOTS.map(slot => {
+    const r = REPRESENTATIVES[slot.key] || {};
+    return `<div style="background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12.5px;font-weight:700;color:var(--text)">${slot.label}</div>
+        <button onclick="openDocTemplatesPanel('${slot.key}')" title="Шаблони документів для цієї форми" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:5px;padding:6px 10px;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Шаблони</button>
       </div>
-      <button onclick="openDocTemplatesPanel('${r.key}')" title="Шаблони документів для цього представника" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:5px;padding:6px 10px;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Шаблони</button>
-      <button onclick="openRepresentativeForm('${r.key}')" title="Редагувати" style="width:26px;height:26px;flex-shrink:0;background:none;border:1px solid #e5e7eb;border-radius:5px;color:#2563eb;font-size:12px;cursor:pointer">✏️</button>
-      <button onclick="deleteRepresentative('${r.key}')" title="Видалити" style="width:26px;height:26px;flex-shrink:0;background:none;border:1px solid #e5e7eb;border-radius:5px;color:#dc2626;font-size:12px;cursor:pointer">✕</button>
-    </div>
-  `).join('') : '<div style="color:#9ca3af;font-style:italic;font-size:12px;text-align:center;padding:16px 0">Ще не додано жодного представника</div>';
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="grid-column:span 2"><label class="vf-lbl">ПІБ</label><input id="rep-${slot.key}-name" type="text" class="vf-inp" style="width:100%" placeholder="Іваненко Іван Іванович" value="${r.name||''}"></div>
+        <div><label class="vf-lbl">Посада</label><input id="rep-${slot.key}-position" type="text" class="vf-inp" style="width:100%" placeholder="Директор / ФОП" value="${r.position||''}"></div>
+        <div><label class="vf-lbl">Реєстраційний номер / ЄДРПОУ</label><input id="rep-${slot.key}-edrpou" type="text" class="vf-inp" style="width:100%" value="${r.edrpou||''}"></div>
+        <div style="grid-column:span 2"><label class="vf-lbl">Юридична адреса</label><input id="rep-${slot.key}-address" type="text" class="vf-inp" style="width:100%" value="${r.address||''}"></div>
+        <div><label class="vf-lbl">Телефон</label><input id="rep-${slot.key}-phone" type="text" class="vf-inp" style="width:100%" value="${r.phone||''}"></div>
+        <div><label class="vf-lbl">Банківські реквізити</label><input id="rep-${slot.key}-bank" type="text" class="vf-inp" style="width:100%" placeholder="IBAN, назва банку" value="${r.bank||''}"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
-function openRepresentativeForm(key){
-  document.getElementById('representative-form-overlay').style.display='flex';
-  const rep = key ? REPRESENTATIVES.find(r=>r.key===key) : null;
-  document.getElementById('rep-form-title').textContent = rep ? 'Редагувати представника' : 'Новий представник';
-  document.getElementById('rep-form-key').value = key || '';
-  document.getElementById('rep-name').value = rep?.name || '';
-  document.getElementById('rep-position').value = rep?.position || '';
-  document.getElementById('rep-edrpou').value = rep?.edrpou || '';
-  document.getElementById('rep-address').value = rep?.address || '';
-  document.getElementById('rep-phone').value = rep?.phone || '';
-  document.getElementById('rep-bank').value = rep?.bank || '';
-  document.getElementById('rep-scope').value = rep?.scope || 'both';
-}
-function closeRepresentativeForm(){
-  document.getElementById('representative-form-overlay').style.display='none';
-}
-async function saveRepresentativeForm(){
-  const name = document.getElementById('rep-name').value.trim();
-  if(!name){ alert('Вкажіть ПІБ представника'); return; }
-  let key = document.getElementById('rep-form-key').value;
-  const rep = {
-    key: key || ('rep_' + Date.now()),
-    name,
-    position: document.getElementById('rep-position').value.trim(),
-    edrpou: document.getElementById('rep-edrpou').value.trim(),
-    address: document.getElementById('rep-address').value.trim(),
-    phone: document.getElementById('rep-phone').value.trim(),
-    bank: document.getElementById('rep-bank').value.trim(),
-    scope: document.getElementById('rep-scope').value,
-  };
-  const idx = REPRESENTATIVES.findIndex(r=>r.key===rep.key);
-  if(idx !== -1) REPRESENTATIVES[idx] = rep;
-  else REPRESENTATIVES.push(rep);
+async function saveRepresentativeSlots(){
+  REP_SLOTS.forEach(slot => {
+    REPRESENTATIVES[slot.key] = {
+      name: document.getElementById(`rep-${slot.key}-name`).value.trim(),
+      position: document.getElementById(`rep-${slot.key}-position`).value.trim(),
+      edrpou: document.getElementById(`rep-${slot.key}-edrpou`).value.trim(),
+      address: document.getElementById(`rep-${slot.key}-address`).value.trim(),
+      phone: document.getElementById(`rep-${slot.key}-phone`).value.trim(),
+      bank: document.getElementById(`rep-${slot.key}-bank`).value.trim(),
+    };
+  });
   await apiFetch('PUT', '/settings/representatives', {value: REPRESENTATIVES});
-  closeRepresentativeForm();
-  renderRepList();
+  closeRepresentativesPanel();
 }
-async function deleteRepresentative(key){
-  const rep = REPRESENTATIVES.find(r=>r.key===key);
-  if(!confirm(`Видалити представника "${rep?.name||''}"? Замовлення, де він був обраний, залишать посилання на видаленого представника (буде показано як "не вказано").`)) return;
-  REPRESENTATIVES = REPRESENTATIVES.filter(r=>r.key!==key);
-  await apiFetch('PUT', '/settings/representatives', {value: REPRESENTATIVES});
-  renderRepList();
-}
-let currentDocTemplateRepKey = null; // null = shared/default templates; otherwise a representative's key
+let currentDocTemplateRepKey = null; // null = shared/default templates; otherwise a representative slot key
 async function openDocTemplatesPanel(repKey){
   closeSettingsHubPanel();
   currentDocTemplateRepKey = repKey || null;
@@ -10737,11 +10665,10 @@ async function openDocTemplatesPanel(repKey){
   const subtitleEl = document.getElementById('dt-scope-subtitle');
   if(subtitleEl){
     if(currentDocTemplateRepKey){
-      const reps = getRepresentativesList();
-      const rep = reps.find(r=>r.key===currentDocTemplateRepKey);
-      subtitleEl.textContent = rep ? `Шаблони для: ${rep.name}` : '';
+      const slot = REP_SLOTS.find(s=>s.key===currentDocTemplateRepKey);
+      subtitleEl.textContent = slot ? `Шаблони для: ${slot.label}` : '';
     } else {
-      subtitleEl.textContent = 'Загальні шаблони (за замовчуванням)';
+      subtitleEl.textContent = 'Загальні шаблони (запасний варіант)';
     }
   }
   const qs = currentDocTemplateRepKey ? '?repKey='+encodeURIComponent(currentDocTemplateRepKey) : '';
@@ -11625,7 +11552,7 @@ async function syncFromServer(){
   if(sSettings && sSettings.workingHours){
     Object.assign(WORKING_HOURS, sSettings.workingHours);
   }
-  if(sSettings && Array.isArray(sSettings.representatives)){
+  if(sSettings && sSettings.representatives && typeof sSettings.representatives === 'object'){
     REPRESENTATIVES = sSettings.representatives;
   }
   if(sSettings && Array.isArray(sSettings.statuses) && sSettings.statuses.length){
@@ -12023,7 +11950,6 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
   else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
   else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
-  else if(document.getElementById('representative-form-overlay')?.style.display==='flex') closeRepresentativeForm();
   else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
   else if(document.getElementById('representatives-panel-overlay')?.style.display==='flex') closeRepresentativesPanel();
   else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();

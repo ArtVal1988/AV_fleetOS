@@ -142,7 +142,15 @@ function getMapping(repKey) {
 }
 function getRepresentatives() {
   const row = db.prepare("SELECT value FROM settings WHERE key = ?").get('representatives');
-  return row ? JSON.parse(row.value) : [];
+  return row ? JSON.parse(row.value) : {};
+}
+// The 3 legal-form representative slots are fixed (not a free list the user
+// picks from per-booking) — the slot is derived automatically from the
+// booking's own client type, matching what's configured once in Налаштування.
+function repSlotForClientType(clientType) {
+  if (clientType === 'individual' || !clientType) return 'individual';
+  if (clientType === 'fop_no_vat') return 'business_no_vat';
+  return 'business_vat'; // 'fop' or 'tov'
 }
 // Templates are named per-representative when a representative has their
 // own uploaded contract/act (dogovir_{repKey}.docx / akt_{repKey}.docx) —
@@ -208,13 +216,11 @@ function getBookingContext(bookingId) {
     if (cRow) client = { ...JSON.parse(cRow.data), id: cRow.id };
   }
 
-  let rep = null;
-  if (b.representativeId) {
-    const reps = getRepresentatives();
-    rep = reps.find(r => r.key === b.representativeId) || null;
-  }
+  const repSlot = repSlotForClientType(b.clientType);
+  const reps = getRepresentatives();
+  const rep = reps[repSlot] || null;
 
-  return { booking: b, vehicle, client, rep };
+  return { booking: b, vehicle, client, rep, repSlot };
 }
 
 // ── Admin: field catalog ────────────────────────────────────────
@@ -273,7 +279,7 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   const ctx = getBookingContext(bookingId);
   if (!ctx) return res.status(404).json({ error: 'Замовлення не знайдено' });
 
-  const repKey = ctx.booking.representativeId || null;
+  const repKey = ctx.repSlot;
   const templateFile = templateFileName(type, repKey);
   const templatePath = path.join(TEMPLATES_DIR, templateFile);
   if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Шаблон не знайдено' });
