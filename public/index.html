@@ -1459,7 +1459,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <div id="vehicles-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div id="veh-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🚗 Транспортні засоби</div>
+      <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🚗 Автомобілі</div>
       <input id="veh-search" type="text" placeholder="Пошук за номером, маркою, моделлю…" oninput="renderVehiclesPanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
       <button onclick="openVehicleForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати авто</button>
@@ -1521,7 +1521,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <table style="width:100%;border-collapse:collapse;font-size:11.5px">
         <thead>
           <tr style="border-bottom:2px solid #e5e7eb">
-            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Транспортний засіб</th>
+            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Автомобіль</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;width:180px">ОСЦПВ</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">КАСКО</th>
           </tr>
@@ -1588,7 +1588,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button onclick="closeTariffsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:14px">Дозволений пробіг = дні оренди × ліміт/добу для класу, призначеного авто (у формі "Транспортні засоби"). Перевищення автоматично рахується як "Перепробіг" в утриманнях після повернення, за тарифом цього класу.</div>
+      <div style="font-size:10.5px;color:#9ca3af;margin-bottom:14px">Дозволений пробіг = дні оренди × ліміт/добу для класу, призначеного авто (у формі "Автомобілі"). Перевищення автоматично рахується як "Перепробіг" в утриманнях після повернення, за тарифом цього класу.</div>
       <div style="display:flex;gap:10px;padding:0 12px 6px;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">
         <div style="flex:1.4">Клас</div>
         <div style="width:100px">Тариф за 1 км</div>
@@ -2102,7 +2102,7 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="sidebar-scroll">
   <nav>
     <div class="nav-item" data-label="Дашборд" onclick="openDashboard()"><span class="nav-icon">◈</span><span class="nav-label">Дашборд</span></div>
-    <div class="nav-item" data-label="Транспортні засоби" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Транспортні засоби</span></div>
+    <div class="nav-item" data-label="Автомобілі" onclick="openVehiclesPanel()"><span class="nav-icon">◻</span><span class="nav-label">Автомобілі</span></div>
     <div class="nav-item" data-label="Клієнти" onclick="openClientsPanel()"><span class="nav-icon">👤</span><span class="nav-label">Клієнти</span></div>
     <div class="nav-item" data-label="Запчастини" onclick="openSparePartsPanel()"><span class="nav-icon">🔩</span><span class="nav-label">Запчастини</span></div>
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
@@ -3321,7 +3321,7 @@ function renderCalendar(){
     <div class="th-day-dow">${getDow(d)}</div></th>`;
   }).join('');
 
-  let html=`<thead><tr><th class="th-vehicle">Транспортний засіб</th>${thDays}</tr></thead><tbody>`;
+  let html=`<thead><tr><th class="th-vehicle">Автомобіль</th>${thDays}</tr></thead><tbody>`;
 
   // Архів always renders last, regardless of where it sits in the underlying array.
   const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
@@ -5374,7 +5374,7 @@ function highlightRow(vid){
 }
 
 // ── VEHICLE SPECS POPUP ──────────────────────────────────────────
-// Shows the brand/model/engine/etc. specs (set via the Транспортні засоби
+// Shows the brand/model/engine/etc. specs (set via the Автомобілі
 // form) for the clicked vehicle, right next to where it was clicked.
 const SPEC_ROWS = [
   ['color', '🎨'], ['engineCombined', '⚙️'],
@@ -5397,7 +5397,7 @@ async function showVehicleSpecs(e, vid){
   const s = v.specs;
   let bodyHtml;
   if(!s){
-    bodyHtml = '<div style="color:#9ca3af;font-style:italic;padding:6px 0">Характеристики ще не вказані. Додайте їх у «Транспортні засоби» → редагувати авто.</div>';
+    bodyHtml = '<div style="color:#9ca3af;font-style:italic;padding:6px 0">Характеристики ще не вказані. Додайте їх у «Автомобілі» → редагувати авто.</div>';
   } else {
     const specsForRows = {...s};
     if(s.engine || s.power){
@@ -8552,7 +8552,7 @@ function openVehiclePanel(vid, tab){
 
   // Head
   document.getElementById('bp-head-content').innerHTML = `
-    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:3px">Транспортний засіб</div>
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:3px">Автомобіль</div>
     <div style="font-family:var(--font-head);font-size:16px;font-weight:800">${v.name}</div>
     <div style="font-size:10px;color:#0891b2;letter-spacing:1.5px;margin-top:3px">${v.plate}</div>`;
 
@@ -11401,7 +11401,7 @@ async function syncFromServer(){
   if(sVehicles){
     ALL_VEHICLES.forEach(v=>{ if(sVehicles[v.id]) Object.assign(v,sVehicles[v.id]); });
     // Any vehicle the server knows about but isn't in our hardcoded seed list
-    // (created via the Транспортні засоби form) needs to be added back too.
+    // (created via the Автомобілі form) needs to be added back too.
     const knownIds = new Set(ALL_VEHICLES.map(v=>v.id));
     Object.keys(sVehicles).forEach(idStr=>{
       const id = parseInt(idStr);
