@@ -2273,9 +2273,8 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Client type switcher -->
       <div class="client-type-switcher" id="client-type-switcher" style="margin-bottom:12px">
         <button type="button" class="ct-btn active" data-type="individual" onclick="setClientType('individual')">Фіз. особа</button>
-        <button type="button" class="ct-btn" data-type="fop_no_vat" onclick="setClientType('fop_no_vat')">ФОП без ПДВ</button>
-        <button type="button" class="ct-btn" data-type="fop" onclick="setClientType('fop')">ФОП з ПДВ</button>
-        <button type="button" class="ct-btn" data-type="tov" onclick="setClientType('tov')">ТОВ з ПДВ</button>
+        <button type="button" class="ct-btn" data-type="fop_no_vat" onclick="setClientType('fop_no_vat')">ФОП / ТОВ без ПДВ</button>
+        <button type="button" class="ct-btn" data-type="fop" onclick="setClientType('fop')">ФОП / ТОВ з ПДВ</button>
       </div>
 
       <div class="fg-pair" style="grid-template-columns:1.6fr 1fr">
@@ -3840,7 +3839,7 @@ function renderSplitPanel(bid1,bid2){
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500">День передачі авто · ${v?.name||''}</div>
     <div class="bp-plate">${v?.plate||''}</div>`;
 
-  const ctLabel = ct => ct==='tov'?'ТОВ з ПДВ':ct==='fop'?'ФОП з ПДВ':ct==='fop_no_vat'?'ФОП без ПДВ':'';
+  const ctLabel = ct => (ct==='tov'||ct==='fop')?'ФОП / ТОВ з ПДВ':ct==='fop_no_vat'?'ФОП / ТОВ без ПДВ':'';
 
   const renderMini=(b,role,time,arrow)=>{
     const st=SM[b.status];
@@ -4103,8 +4102,8 @@ function renderPanel(bid){
     bodyHtml+=`<div class="bp-section">
       <div class="bps-title">Замовник</div>
       <div class="bp-field-grid">
-        <div class="bp-field full"><div class="bpf-label">${b.clientType==='tov'?'Представник':(b.clientType==='fop'||b.clientType==='fop_no_vat')?'Підприємець':'ПІБ'}</div><div class="bpf-val" style="font-family:var(--font-head);font-size:14px;font-weight:700">${b.customer.name}</div></div>
-        ${b.customer?.company?`<div class="bp-field full"><div class="bpf-label">${b.clientType==='tov'?'ТОВ':'ФОП'}</div><div class="bpf-val" style="font-weight:600;color:#2563eb">${b.customer.company}</div></div>`:''}
+        <div class="bp-field full"><div class="bpf-label">${b.clientType==='individual'?'ПІБ':'Підприємець / представник'}</div><div class="bpf-val" style="font-family:var(--font-head);font-size:14px;font-weight:700">${b.customer.name}</div></div>
+        ${b.customer?.company?`<div class="bp-field full"><div class="bpf-label">Компанія</div><div class="bpf-val" style="font-weight:600;color:#2563eb">${b.customer.company}</div></div>`:''}
         ${b.customer?.edrpou?`<div class="bp-field"><div class="bpf-label">ЄДРПОУ</div><div class="bpf-val mono">${b.customer.edrpou}</div></div>`:''}
         <div class="bp-field${b.customer?.edrpou?'':' full'}">
           <div class="bpf-label">Телефон</div>
@@ -8754,7 +8753,9 @@ function updateClientTypeLock(lock){
 }
 function setClientType(type, isUserAction = true){
   document.getElementById('bm-client-type').value = type;
-  document.querySelectorAll('.ct-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  // 'tov' still exists as a legacy stored value on old bookings — the
+  // merged button (data-type="fop") should show active for both.
+  document.querySelectorAll('.ct-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type || (b.dataset.type==='fop' && type==='tov')));
 
   const isCompany = type !== 'individual';    // показати поля компанії
   const isVat     = type === 'fop' || type === 'tov'; // показати ПДВ
@@ -8777,14 +8778,11 @@ function setClientType(type, isUserAction = true){
 
   // Name label
   document.getElementById('bm-name-label').textContent =
-    type === 'individual'  ? 'ПІБ замовника'  :
-    type === 'fop_no_vat'  ? 'ПІБ підприємця' :
-    type === 'fop'         ? 'ПІБ підприємця' : 'ПІБ представника';
+    type === 'individual'  ? 'ПІБ замовника'  : 'ПІБ підприємця / представника';
 
   // Company label
   const companyLabel = document.querySelector('#bm-company-row label');
-  if(companyLabel) companyLabel.textContent =
-    type === 'tov' ? 'Назва ТОВ' : 'ФОП (ПІБ або назва)';
+  if(companyLabel) companyLabel.textContent = 'Назва компанії (ФОП/ТОВ)';
 
   // VAT field in finances
   document.getElementById('bm-vat-field').style.display   = isVat ? '' : 'none';
