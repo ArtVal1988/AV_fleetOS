@@ -1559,15 +1559,10 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="font-size:13px;font-weight:700;color:var(--text)">Статуси</div>
         <div style="font-size:10.5px;color:#9ca3af">Кольори, назви, рівні статусів</div>
       </div>
-      <div onclick="openRepresentativesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div onclick="openRepresentativesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
         <div style="font-size:22px">🖋</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text)">Представники (ФОП)</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Дані ФОП та шаблони договорів/актів</div>
         <div style="font-size:10.5px;color:#9ca3af">Для фізосіб, ФОП/ТОВ без та з ПДВ — окремо</div>
-      </div>
-      <div onclick="openDocTemplatesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
-        <div style="font-size:22px">📄</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text)">Шаблони документів</div>
-        <div style="font-size:10.5px;color:#9ca3af">Загальний договір, акт (запасний варіант)</div>
       </div>
     </div>
   </div>
@@ -1897,7 +1892,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <div id="representatives-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:480;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26">🖋 Представники компанії</div>
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">🖋 Дані ФОП та шаблони договорів/актів</div>
       <button onclick="closeRepresentativesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
@@ -10608,9 +10603,9 @@ let DOC_SCANNED = { contract: [], act: [] };
 let DOC_CUSTOM = { contract: [], act: [] };
 let REPRESENTATIVES = {}; // keyed by slot: individual / business_no_vat / business_vat
 const REP_SLOTS = [
-  {key:'individual', label:'Фізична особа'},
-  {key:'business_no_vat', label:'ФОП / ТОВ без ПДВ'},
-  {key:'business_vat', label:'ФОП / ТОВ з ПДВ'},
+  {key:'individual', label:'Фізична особа', bg:'#eff6ff', border:'#bfdbfe', accent:'#1d4ed8'},
+  {key:'business_no_vat', label:'ФОП / ТОВ без ПДВ', bg:'#fffbeb', border:'#fde68a', accent:'#b45309'},
+  {key:'business_vat', label:'ФОП / ТОВ з ПДВ', bg:'#f0fdf4', border:'#bbf7d0', accent:'#166534'},
 ];
 function openRepresentativesPanel(){
   closeSettingsHubPanel();
@@ -10625,10 +10620,10 @@ function renderRepSlots(){
   if(!wrap) return;
   wrap.innerHTML = REP_SLOTS.map(slot => {
     const r = REPRESENTATIVES[slot.key] || {};
-    return `<div style="background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px">
+    return `<div style="background:${slot.bg};border:1px solid ${slot.border};border-radius:8px;padding:14px;margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:12.5px;font-weight:700;color:var(--text)">${slot.label}</div>
-        <button onclick="openDocTemplatesPanel('${slot.key}')" title="Шаблони документів для цієї форми" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:5px;padding:6px 10px;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Шаблони</button>
+        <div style="font-size:12.5px;font-weight:700;color:${slot.accent}">${slot.label}</div>
+        <button onclick="openDocTemplatesPanel('${slot.key}')" title="Шаблони документів для цієї форми" style="background:#fff;border:1px solid ${slot.border};color:${slot.accent};border-radius:5px;padding:6px 10px;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Шаблони</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div style="grid-column:span 2"><label class="vf-lbl">ПІБ</label><input id="rep-${slot.key}-name" type="text" class="vf-inp" style="width:100%" placeholder="Іваненко Іван Іванович" value="${r.name||''}"></div>
