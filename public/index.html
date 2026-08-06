@@ -9853,6 +9853,7 @@ function doLogout(){
 
 // ── USERS MANAGEMENT ──────────────────────────────────────────
 async function openUsersPanel(){
+  closeSettingsHubPanel();
   document.getElementById('users-panel-overlay').style.display='flex';
   await loadUsersList();
 }
@@ -9962,6 +9963,7 @@ const WORK_DAYS = [
 ];
 let WORKING_HOURS = Object.fromEntries(WORK_DAYS.map(d=>[d.key, {closed:false, from:'09:00', to:'19:00'}]));
 function openWorkingHoursPanel(){
+  closeSettingsHubPanel();
   document.getElementById('working-hours-panel-overlay').style.display='flex';
   renderWorkingHoursList();
 }
@@ -9995,6 +9997,7 @@ function saveWorkingHours(){
   closeWorkingHoursPanel();
 }
 function openTariffsPanel(){
+  closeSettingsHubPanel();
   document.getElementById('tariffs-panel-overlay').style.display='flex';
   renderTariffClassList();
 }
@@ -10578,6 +10581,7 @@ let DOC_MAPPING = { contract: {}, act: {} };
 let DOC_SCANNED = { contract: [], act: [] };
 let DOC_CUSTOM = { contract: [], act: [] };
 async function openDocTemplatesPanel(){
+  closeSettingsHubPanel();
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
   const [fields, mappingData] = await Promise.all([
     apiFetch('GET', '/generate-document/fields'),
@@ -11147,6 +11151,7 @@ function saveVehicleForm(){
 }
 
 function openStatusesPanel(){
+  closeSettingsHubPanel();
   document.getElementById('statuses-panel-overlay').style.display='flex';
   renderStatusesPanelList();
 }
