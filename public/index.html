@@ -1492,7 +1492,7 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
-<div id="maintenance-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+<div id="maintenance-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:200;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">⚙ Тех. обслуговування — весь парк</div>
@@ -5756,6 +5756,7 @@ function saveCurrentKm(vid){
   renderToKmBar(v);
   renderToTabs(v);
   render(); // update icon colors in calendar
+  if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') renderMaintenancePanelList();
 }
 
 /* ── BOOKING MILEAGE SYNC ── */
@@ -7636,6 +7637,7 @@ function saveWork(){
   document.getElementById('add-work-modal').classList.remove('open');
   persistVehicle(v);
   renderToKmBar(v); renderToTabs(v); render();
+  if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') renderMaintenancePanelList();
 }
 
 /* ── INSURANCE MODAL ── */
@@ -10190,7 +10192,7 @@ function renderMaintenancePanelList(){
       <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${label} (${items.length})</div>
       ${items.map(r => {
         const kmText = r.kmLeft <= 0 ? `Прострочено на ${Math.abs(r.kmLeft).toLocaleString('uk-UA')} км` : `${r.kmLeft.toLocaleString('uk-UA')} км залишилось`;
-        return `<div onclick="closeMaintenancePanel();openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.75);cursor:pointer">
+        return `<div onclick="openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.75);cursor:pointer">
           <div style="display:flex;align-items:center;gap:10px;min-width:0">
             <span style="font-family:var(--font-mono);font-weight:700;font-size:12px;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;flex-shrink:0">${r.v.plate}</span>
             <span style="color:#374151;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stripYear(r.v.name)}</span>
