@@ -1532,6 +1532,55 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<div id="settings-hub-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">⚙️ Налаштування</div>
+      <button onclick="closeSettingsHubPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div onclick="closeSettingsHubPanel();openTariffsPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:22px">📐</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Тарифи</div>
+        <div style="font-size:10.5px;color:#9ca3af">Класи перепробігу, ставки та ліміти</div>
+      </div>
+      <div onclick="closeSettingsHubPanel();openWorkingHoursPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:22px">🕐</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Робочі години</div>
+        <div style="font-size:10.5px;color:#9ca3af">Час роботи офісу по днях тижня</div>
+      </div>
+      <div onclick="closeSettingsHubPanel();openUsersPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:22px">👥</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Користувачі</div>
+        <div style="font-size:10.5px;color:#9ca3af">Доступ, ролі, паролі</div>
+      </div>
+      <div onclick="closeSettingsHubPanel();openStatusesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:22px">🏷️</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Статуси</div>
+        <div style="font-size:10.5px;color:#9ca3af">Кольори, назви, рівні статусів</div>
+      </div>
+      <div onclick="closeSettingsHubPanel();openDocTemplatesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
+        <div style="font-size:22px">📄</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Шаблони документів</div>
+        <div style="font-size:10.5px;color:#9ca3af">Договір, акт та інші шаблони для генерації</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="working-hours-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:420px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">🕐 Робочі години</div>
+      <button onclick="closeWorkingHoursPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div id="wh-day-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      <button onclick="saveWorkingHours()" style="margin-top:16px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+    </div>
+  </div>
+</div>
+
 <div id="tariffs-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
@@ -2059,14 +2108,11 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="nav-item active" data-label="Графік зайнятості"><span class="nav-icon">▦</span><span class="nav-label">Графік зайнятості</span></div>
     <div class="nav-item" data-label="Тех. обслуговування" onclick="openMaintenancePanel()"><span class="nav-icon">⚙</span><span class="nav-label">Тех. обслуговування</span></div>
     <div class="nav-item" data-label="Страхування" onclick="openInsuranceOverviewPanel()"><span class="nav-icon">🛡</span><span class="nav-label">Страхування</span></div>
-    <div class="nav-item" data-label="Тарифи" onclick="openTariffsPanel()"><span class="nav-icon">📐</span><span class="nav-label">Тарифи</span></div>
     <div class="nav-item" data-label="Нагадування"><span class="nav-icon">⊙</span><span class="nav-label">Нагадування</span></div>
     <div class="nav-item nav-admin-only" id="nav-reports" data-label="Звіти" onclick="openReportPanel()" style="display:none"><span class="nav-icon">≡</span><span class="nav-label">Звіти</span></div>
-    <div class="nav-item nav-admin-only" id="nav-doctemplates" data-label="Шаблони документів" onclick="openDocTemplatesPanel()" style="display:none"><span class="nav-icon">📄</span><span class="nav-label">Шаблони документів</span></div>
     <div class="nav-item nav-admin-only" id="nav-docarchive" data-label="База договорів" onclick="openDocArchivePanel()" style="display:none"><span class="nav-icon">🗂</span><span class="nav-label">База договорів</span></div>
     <div class="nav-item nav-admin-only" id="nav-activitylog" data-label="Журнал дій" onclick="openActivityLogPanel()" style="display:none"><span class="nav-icon">📜</span><span class="nav-label">Журнал дій</span></div>
-    <div class="nav-item nav-admin-only" id="nav-users" data-label="Користувачі" onclick="openUsersPanel()" style="display:none"><span class="nav-icon">👥</span><span class="nav-label">Користувачі</span></div>
-    <div class="nav-item nav-admin-only" id="nav-statuses" data-label="Статуси" onclick="openStatusesPanel()" style="display:none"><span class="nav-icon">🏷️</span><span class="nav-label">Статуси</span></div>
+    <div class="nav-item nav-admin-only" id="nav-settings" data-label="Налаштування" onclick="openSettingsHubPanel()" style="display:none"><span class="nav-icon">⚙️</span><span class="nav-label">Налаштування</span></div>
   </nav>
   </div>
   <div style="margin-top:auto">
@@ -9792,7 +9838,7 @@ async function doLogin(){
     localStorage.setItem('av_fleet_token',_token);
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
+    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -9800,8 +9846,7 @@ async function doLogin(){
 function doLogout(){
   _token=''; _currentUser=null;
   localStorage.removeItem('av_fleet_token');
-  document.getElementById('nav-users').style.display='none';
-  document.getElementById('nav-statuses').style.display='none';
+  document.getElementById('nav-settings').style.display='none';
   document.getElementById('nav-reports').style.display='none';
   showLoginOverlay();
 }
@@ -9904,6 +9949,51 @@ async function loadSparePartsFromServer(){
   if(Array.isArray(r)) SPARE_PARTS = r;
 }
 let insOvKaskoOnly = false;
+function openSettingsHubPanel(){
+  document.getElementById('settings-hub-panel-overlay').style.display='flex';
+}
+function closeSettingsHubPanel(){
+  document.getElementById('settings-hub-panel-overlay').style.display='none';
+}
+
+const WORK_DAYS = [
+  {key:'mon', label:'Понеділок'}, {key:'tue', label:'Вівторок'}, {key:'wed', label:'Середа'},
+  {key:'thu', label:'Четвер'}, {key:'fri', label:"П'ятниця"}, {key:'sat', label:'Субота'}, {key:'sun', label:'Неділя'},
+];
+let WORKING_HOURS = Object.fromEntries(WORK_DAYS.map(d=>[d.key, {closed:false, from:'09:00', to:'19:00'}]));
+function openWorkingHoursPanel(){
+  document.getElementById('working-hours-panel-overlay').style.display='flex';
+  renderWorkingHoursList();
+}
+function closeWorkingHoursPanel(){
+  document.getElementById('working-hours-panel-overlay').style.display='none';
+}
+function renderWorkingHoursList(){
+  const wrap = document.getElementById('wh-day-list');
+  if(!wrap) return;
+  wrap.innerHTML = WORK_DAYS.map(d=>{
+    const wh = WORKING_HOURS[d.key] || {closed:false, from:'09:00', to:'19:00'};
+    return `<div style="display:flex;align-items:center;gap:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 12px">
+      <div style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${d.label}</div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#6b7280;cursor:pointer;flex-shrink:0">
+        <input type="checkbox" id="wh-closed-${d.key}" ${wh.closed?'checked':''} onchange="renderWorkingHoursList()"> Вихідний
+      </label>
+      <input type="time" id="wh-from-${d.key}" value="${wh.from}" ${wh.closed?'disabled':''} style="width:90px;padding:5px 6px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+      <span style="color:#9ca3af;font-size:11px">—</span>
+      <input type="time" id="wh-to-${d.key}" value="${wh.to}" ${wh.closed?'disabled':''} style="width:90px;padding:5px 6px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+    </div>`;
+  }).join('');
+}
+function saveWorkingHours(){
+  WORK_DAYS.forEach(d=>{
+    const closed = document.getElementById('wh-closed-'+d.key)?.checked || false;
+    const from = document.getElementById('wh-from-'+d.key)?.value || '09:00';
+    const to = document.getElementById('wh-to-'+d.key)?.value || '19:00';
+    WORKING_HOURS[d.key] = {closed, from, to};
+  });
+  apiFetch('PUT','/settings/workingHours',{value:WORKING_HOURS});
+  closeWorkingHoursPanel();
+}
 function openTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='flex';
   renderTariffClassList();
@@ -11364,6 +11454,9 @@ async function syncFromServer(){
       else { TARIFF_CLASSES.push({key:saved.key, label:saved.label||saved.key, rate:saved.rate, kmPerDay:saved.kmPerDay}); }
     });
   }
+  if(sSettings && sSettings.workingHours){
+    Object.assign(WORKING_HOURS, sSettings.workingHours);
+  }
   if(sSettings && Array.isArray(sSettings.statuses) && sSettings.statuses.length){
     STATUSES.length = 0;
     sSettings.statuses.forEach(s=>STATUSES.push(s));
@@ -11757,6 +11850,8 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('vehicles-panel-overlay')?.style.display==='flex') closeVehiclesPanel();
   else if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
   else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
+  else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
+  else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();
   else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
   else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
   else if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
@@ -11778,7 +11873,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     _currentUser = await res.json();
     hideLoginOverlay();
     showSidebarUser(_currentUser);
-    if(_currentUser.role==='admin'){ document.getElementById('nav-users').style.display='flex'; document.getElementById('nav-statuses').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-doctemplates').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
+    if(_currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
     await syncFromServer();
     startAutoRefresh();
   } catch(e){ showLoginOverlay(); }
