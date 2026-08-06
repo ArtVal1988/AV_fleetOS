@@ -80,6 +80,12 @@ const FIELD_CATALOG = [
   { key: 'deposit_pay_method', label: 'Спосіб оплати застави', get: ctx => ctx.booking.depositPayMethod === 'card' ? 'Банківська картка' : ctx.booking.depositPayMethod === 'cash' ? 'Готівка' : '' },
   { key: 'status_label', label: 'Статус замовлення', get: ctx => ctx.booking.status || '' },
   { key: 'notes', label: 'Нотатки замовлення', get: ctx => ctx.booking.notes || '' },
+  { key: 'rep_name', label: 'Представник компанії: ПІБ', get: ctx => ctx.rep?.name || '' },
+  { key: 'rep_position', label: 'Представник компанії: посада', get: ctx => ctx.rep?.position || '' },
+  { key: 'rep_edrpou', label: 'Представник (ФОП): реєстраційний номер/ЄДРПОУ', get: ctx => ctx.rep?.edrpou || '' },
+  { key: 'rep_address', label: 'Представник (ФОП): юридична адреса', get: ctx => ctx.rep?.address || '' },
+  { key: 'rep_phone', label: 'Представник компанії: телефон', get: ctx => ctx.rep?.phone || '' },
+  { key: 'rep_bank', label: 'Представник (ФОП): банківські реквізити', get: ctx => ctx.rep?.bank || '' },
   { key: 'blank', label: '(порожньо — залишити поле для ручного заповнення)', get: () => '' },
 ];
 
@@ -126,15 +132,37 @@ const DEFAULT_MAPPING = {
     'счет1': 'vehicle_vin', 'адрес1': 'vehicle_sts', 'лицо2': 'client_name', 'адрес2': 'client_phone',
   },
 };
-function getMapping() {
+function getMapping(repKey) {
+  if (repKey) {
+    const repRow = db.prepare('SELECT value FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY + '_' + repKey);
+    if (repRow) return JSON.parse(repRow.value);
+  }
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
   return row ? JSON.parse(row.value) : DEFAULT_MAPPING;
 }
-function setMapping(mapping) {
+function getRepresentatives() {
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get('representatives');
+  return row ? JSON.parse(row.value) : [];
+}
+// Templates are named per-representative when a representative has their
+// own uploaded contract/act (dogovir_{repKey}.docx / akt_{repKey}.docx) —
+// falls back to the shared default (dogovir.docx / akt.docx) whenever a
+// booking has no representative selected, or that representative hasn't
+// had their own template uploaded yet.
+function templateFileName(type, repKey) {
+  const base = type === 'contract' ? 'dogovir' : 'akt';
+  if (repKey) {
+    const named = path.join(TEMPLATES_DIR, `${base}_${repKey}.docx`);
+    if (fs.existsSync(named)) return `${base}_${repKey}.docx`;
+  }
+  return `${base}.docx`;
+}
+function setMapping(mapping, repKey) {
+  const settingsKey = repKey ? MAPPING_SETTINGS_KEY + '_' + repKey : MAPPING_SETTINGS_KEY;
   const json = JSON.stringify(mapping);
-  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
-  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(json, MAPPING_SETTINGS_KEY);
-  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(settingsKey);
+  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(json, settingsKey);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(settingsKey, json);
 }
 
 // Scan a docx template for #placeholder tokens (Cyrillic/Latin/digits)
@@ -180,7 +208,13 @@ function getBookingContext(bookingId) {
     if (cRow) client = { ...JSON.parse(cRow.data), id: cRow.id };
   }
 
-  return { booking: b, vehicle, client };
+  let rep = null;
+  if (b.representativeId) {
+    const reps = getRepresentatives();
+    rep = reps.find(r => r.key === b.representativeId) || null;
+  }
+
+  return { booking: b, vehicle, client, rep };
 }
 
 // ── Admin: field catalog ────────────────────────────────────────
@@ -190,24 +224,42 @@ router.get('/fields', auth, adminOnly, (req, res) => {
 
 // ── Admin: mapping get/set ───────────────────────────────────────
 router.get('/mapping', auth, adminOnly, async (req, res) => {
-  const mapping = getMapping();
-  const contractPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, 'dogovir.docx'));
-  const actPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, 'akt.docx'));
-  res.json({ mapping, contractPlaceholders, actPlaceholders });
+  const repKey = (req.query.repKey || '').trim() || null;
+  const mapping = getMapping(repKey);
+  const contractFile = templateFileName('contract', repKey);
+  const actFile = templateFileName('act', repKey);
+  const contractPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, contractFile));
+  const actPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, actFile));
+  res.json({ mapping, contractPlaceholders, actPlaceholders, contractFile, actFile });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
-  setMapping(req.body);
+  const repKey = (req.query.repKey || '').trim() || null;
+  setMapping(req.body, repKey);
   res.json({ ok: true });
 });
 
 // ── Admin: template upload ───────────────────────────────────────
+// ?repKey=xxx uploads a representative-specific template instead of the
+// shared default — used when a ФОП needs their own contract/act wording.
 router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res) => {
   const { type } = req.params;
+  const repKey = (req.query.repKey || '').trim();
   if (!['contract', 'act'].includes(type)) return res.status(400).json({ error: 'Невідомий тип шаблону' });
   if (!req.file) return res.status(400).json({ error: 'Файл не завантажено' });
-  const fileName = type === 'contract' ? 'dogovir.docx' : 'akt.docx';
+  const base = type === 'contract' ? 'dogovir' : 'akt';
+  const fileName = repKey ? `${base}_${repKey}.docx` : `${base}.docx`;
   if (!fs.existsSync(TEMPLATES_DIR)) fs.mkdirSync(TEMPLATES_DIR, { recursive: true });
   fs.writeFileSync(path.join(TEMPLATES_DIR, fileName), req.file.buffer);
+  res.json({ ok: true });
+});
+// DELETE a representative-specific template, reverting that rep back to the shared default
+router.delete('/template/:type', auth, adminOnly, (req, res) => {
+  const { type } = req.params;
+  const repKey = (req.query.repKey || '').trim();
+  if (!['contract', 'act'].includes(type) || !repKey) return res.status(400).json({ error: 'Невідомий тип шаблону' });
+  const base = type === 'contract' ? 'dogovir' : 'akt';
+  const filePath = path.join(TEMPLATES_DIR, `${base}_${repKey}.docx`);
+  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   res.json({ ok: true });
 });
 
@@ -221,11 +273,12 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   const ctx = getBookingContext(bookingId);
   if (!ctx) return res.status(404).json({ error: 'Замовлення не знайдено' });
 
-  const templateFile = type === 'contract' ? 'dogovir.docx' : 'akt.docx';
+  const repKey = ctx.booking.representativeId || null;
+  const templateFile = templateFileName(type, repKey);
   const templatePath = path.join(TEMPLATES_DIR, templateFile);
   if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Шаблон не знайдено' });
 
-  const mapping = getMapping()[type] || {};
+  const mapping = getMapping(repKey)[type] || {};
   const placeholders = await scanTemplatePlaceholders(templatePath);
   const values = {};
   placeholders.forEach(ph => {
