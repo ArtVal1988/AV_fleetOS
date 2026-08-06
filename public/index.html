@@ -1532,34 +1532,34 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
-<div id="settings-hub-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+<div id="settings-hub-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:200;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
       <div style="font-size:16px;font-weight:700;color:#1a1d26">⚙️ Налаштування</div>
       <button onclick="closeSettingsHubPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div onclick="closeSettingsHubPanel();openTariffsPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div onclick="openTariffsPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">📐</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Тарифи</div>
         <div style="font-size:10.5px;color:#9ca3af">Класи перепробігу, ставки та ліміти</div>
       </div>
-      <div onclick="closeSettingsHubPanel();openWorkingHoursPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div onclick="openWorkingHoursPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">🕐</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Робочі години</div>
         <div style="font-size:10.5px;color:#9ca3af">Час роботи офісу по днях тижня</div>
       </div>
-      <div onclick="closeSettingsHubPanel();openUsersPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div onclick="openUsersPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">👥</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Користувачі</div>
         <div style="font-size:10.5px;color:#9ca3af">Доступ, ролі, паролі</div>
       </div>
-      <div onclick="closeSettingsHubPanel();openStatusesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+      <div onclick="openStatusesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
         <div style="font-size:22px">🏷️</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Статуси</div>
         <div style="font-size:10.5px;color:#9ca3af">Кольори, назви, рівні статусів</div>
       </div>
-      <div onclick="closeSettingsHubPanel();openDocTemplatesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
+      <div onclick="openDocTemplatesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
         <div style="font-size:22px">📄</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Шаблони документів</div>
         <div style="font-size:10.5px;color:#9ca3af">Договір, акт та інші шаблони для генерації</div>
@@ -9853,7 +9853,6 @@ function doLogout(){
 
 // ── USERS MANAGEMENT ──────────────────────────────────────────
 async function openUsersPanel(){
-  closeSettingsHubPanel();
   document.getElementById('users-panel-overlay').style.display='flex';
   await loadUsersList();
 }
@@ -9963,7 +9962,6 @@ const WORK_DAYS = [
 ];
 let WORKING_HOURS = Object.fromEntries(WORK_DAYS.map(d=>[d.key, {closed:false, from:'09:00', to:'19:00'}]));
 function openWorkingHoursPanel(){
-  closeSettingsHubPanel();
   document.getElementById('working-hours-panel-overlay').style.display='flex';
   renderWorkingHoursList();
 }
@@ -9997,7 +9995,6 @@ function saveWorkingHours(){
   closeWorkingHoursPanel();
 }
 function openTariffsPanel(){
-  closeSettingsHubPanel();
   document.getElementById('tariffs-panel-overlay').style.display='flex';
   renderTariffClassList();
 }
@@ -10581,7 +10578,6 @@ let DOC_MAPPING = { contract: {}, act: {} };
 let DOC_SCANNED = { contract: [], act: [] };
 let DOC_CUSTOM = { contract: [], act: [] };
 async function openDocTemplatesPanel(){
-  closeSettingsHubPanel();
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
   const [fields, mappingData] = await Promise.all([
     apiFetch('GET', '/generate-document/fields'),
@@ -11151,7 +11147,6 @@ function saveVehicleForm(){
 }
 
 function openStatusesPanel(){
-  closeSettingsHubPanel();
   document.getElementById('statuses-panel-overlay').style.display='flex';
   renderStatusesPanelList();
 }
@@ -11856,11 +11851,11 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
   else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
   else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
+  else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
+  else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
   else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();
   else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
-  else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
   else if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
-  else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
   else if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
   else if(document.getElementById('activitylog-panel-overlay')?.style.display==='flex') closeActivityLogPanel();
 });
