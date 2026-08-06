@@ -9156,6 +9156,12 @@ function selectClientSuggestion(name, phone, clientId){
   }
   const idField = document.getElementById('bm-client-id');
   if(idField) idField.value = clientId || '';
+  // Messengers weren't being pulled in from the client's saved card at all
+  // — only name/phone were. Look the client up by id and load theirs too.
+  if(clientId){
+    const client = (CLIENTS||[]).find(c=>c.id===clientId);
+    if(client) loadMessengers(client.messengers || {});
+  }
   updateClientLinkButton();
   closeClientSuggest();
 }
