@@ -134,11 +134,11 @@ function resolveDataPath(pathStr, ctx) {
 const MAPPING_SETTINGS_KEY = 'document_variable_mapping';
 const DEFAULT_MAPPING = {
   contract: {
-    'номер': 'booking_id', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
+    'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
     'фирма2': 'client_legal', 'код2': 'client_inn', 'лицо2': 'client_name', 'адрес2': 'client_phone',
   },
   act: {
-    'номер': 'booking_id', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
+    'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
     'счет1': 'vehicle_vin', 'адрес1': 'vehicle_sts', 'лицо2': 'client_name', 'адрес2': 'client_phone',
   },
 };
