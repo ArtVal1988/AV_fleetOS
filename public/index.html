@@ -4649,7 +4649,20 @@ function highlightField(ids){
     el.style.outlineOffset = '1px';
     el.style.borderRadius = el.style.borderRadius || '4px';
     if(el.id) highlightedFieldIds.add(el.id);
-    const clear = () => { el.style.outline=''; el.style.outlineOffset=''; if(el.id) highlightedFieldIds.delete(el.id); };
+    // Form fields are reused across every booking open/save attempt (the
+    // DOM isn't recreated) — if a previous highlightField() call already
+    // attached "clear" listeners here and none of them ever fired (the
+    // field was never touched before this fresh call), those stale
+    // listeners must be removed first, otherwise repeated failed saves
+    // over a session accumulate listeners on the same elements indefinitely.
+    if(el._highlightClearFn){
+      el.removeEventListener('input', el._highlightClearFn);
+      el.removeEventListener('focus', el._highlightClearFn);
+      el.removeEventListener('change', el._highlightClearFn);
+      el.removeEventListener('click', el._highlightClearFn);
+    }
+    const clear = () => { el.style.outline=''; el.style.outlineOffset=''; if(el.id) highlightedFieldIds.delete(el.id); el._highlightClearFn = null; };
+    el._highlightClearFn = clear;
     el.addEventListener('input', clear, {once:true});
     el.addEventListener('focus', clear, {once:true});
     el.addEventListener('change', clear, {once:true});
@@ -4666,7 +4679,16 @@ function clearAllFieldHighlights(){
   // highlighting for no reason.
   highlightedFieldIds.forEach(id=>{
     const el = document.getElementById(id);
-    if(el){ el.style.outline=''; el.style.outlineOffset=''; }
+    if(el){
+      el.style.outline=''; el.style.outlineOffset='';
+      if(el._highlightClearFn){
+        el.removeEventListener('input', el._highlightClearFn);
+        el.removeEventListener('focus', el._highlightClearFn);
+        el.removeEventListener('change', el._highlightClearFn);
+        el.removeEventListener('click', el._highlightClearFn);
+        el._highlightClearFn = null;
+      }
+    }
   });
   highlightedFieldIds.clear();
 }
