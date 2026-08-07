@@ -10698,7 +10698,7 @@ function renderDocTemplatesSection(){
       const info = tpl?.info;
       const infoHtml = !info
         ? `<div style="font-size:10.5px;color:#dc2626;background:#fee2e2;border-radius:5px;padding:5px 8px">⚠ Не завантажено</div>`
-        : `<div style="font-size:10.5px;color:#166534;background:#f0fdf4;border-radius:5px;padding:5px 8px">📎 <b>${info.originalName}</b> · ${new Date(info.uploadedAt).toLocaleDateString('uk-UA')}${info.isFallback?' <span style="color:#b45309">(запасний)</span>':''}</div>`;
+        : `<div style="font-size:10.5px;color:#166534;background:#f0fdf4;border-radius:5px;padding:5px 8px">📎 <b>${info.originalName}</b> · ${new Date(info.uploadedAt).toLocaleDateString('uk-UA')} ${new Date(info.uploadedAt).toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'})}${info.isFallback?' <span style="color:#b45309">(запасний)</span>':''}</div>`;
       return `<div style="background:#fff;border:1px solid ${slot.border};border-radius:7px;padding:10px;margin-bottom:8px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="font-size:11.5px;font-weight:700;color:var(--text)">${t.label}</div>
