@@ -337,6 +337,38 @@ router.delete('/template/:type', auth, adminOnly, (req, res) => {
 });
 
 // GET /api/generate-document/:bookingId/:type  (type = contract | act)
+// ── Document archive ─────────────────────────────────────────────
+// These specific routes must come BEFORE the generic /:bookingId/:type
+// below — otherwise Express matches 'archive' as a bookingId and 'list'/
+// an id as the type, which fails the contract/act check and 400s.
+// GET /api/generate-document/archive/list — list all generated documents (no file data, just metadata)
+router.get('/archive/list', auth, (req, res) => {
+  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, created_at
+                            FROM generated_documents ORDER BY created_at DESC`).all();
+  res.json(rows);
+});
+
+// GET /api/generate-document/archive/:id — download a specific archived document
+router.get('/archive/:id', auth, (req, res) => {
+  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Документ не знайдено' });
+  const filePath = path.join(GENERATED_DOCS_DIR, row.file_path);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл більше не існує на диску' });
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(row.file_name)}"`);
+  res.sendFile(filePath);
+});
+
+// DELETE /api/generate-document/archive/:id
+router.delete('/archive/:id', auth, adminOnly, (req, res) => {
+  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
+  if (row) {
+    try { fs.unlinkSync(path.join(GENERATED_DOCS_DIR, row.file_path)); } catch { /* file already gone — fine */ }
+  }
+  db.prepare('DELETE FROM generated_documents WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 router.get('/:bookingId/:type', auth, async (req, res) => {
   const { bookingId, type } = req.params;
   if (!['contract', 'act'].includes(type)) {
@@ -395,35 +427,6 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     console.error('Document generation error:', err);
     res.status(500).json({ error: 'Помилка генерації документа' });
   }
-});
-
-// ── Document archive ─────────────────────────────────────────────
-// GET /api/generate-document/archive/list — list all generated documents (no file data, just metadata)
-router.get('/archive/list', auth, (req, res) => {
-  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, created_at
-                            FROM generated_documents ORDER BY created_at DESC`).all();
-  res.json(rows);
-});
-
-// GET /api/generate-document/archive/:id — download a specific archived document
-router.get('/archive/:id', auth, (req, res) => {
-  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Документ не знайдено' });
-  const filePath = path.join(GENERATED_DOCS_DIR, row.file_path);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл більше не існує на диску' });
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(row.file_name)}"`);
-  res.sendFile(filePath);
-});
-
-// DELETE /api/generate-document/archive/:id
-router.delete('/archive/:id', auth, adminOnly, (req, res) => {
-  const row = db.prepare('SELECT * FROM generated_documents WHERE id = ?').get(req.params.id);
-  if (row) {
-    try { fs.unlinkSync(path.join(GENERATED_DOCS_DIR, row.file_path)); } catch { /* file already gone — fine */ }
-  }
-  db.prepare('DELETE FROM generated_documents WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
 });
 
 module.exports = router;
