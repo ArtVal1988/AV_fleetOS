@@ -1922,24 +1922,26 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="dt-section-contract" style="margin-bottom:28px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="font-size:13px;font-weight:700;color:#1a1d26">Договір оренди</div>
           <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
             ⬆ Завантажити новий шаблон
             <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('contract', this)">
           </label>
         </div>
+        <div id="dt-current-contract" style="margin-bottom:12px"></div>
         <div id="dt-fields-contract"></div>
       </div>
 
       <div id="dt-section-act">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div style="font-size:13px;font-weight:700;color:#1a1d26">Акт приймання-передачі</div>
           <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
             ⬆ Завантажити новий шаблон
             <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('act', this)">
           </label>
         </div>
+        <div id="dt-current-act" style="margin-bottom:12px"></div>
         <div id="dt-fields-act"></div>
       </div>
 
@@ -10704,7 +10706,23 @@ async function openDocTemplatesPanel(repKey){
     DOC_CUSTOM.act = Object.keys(DOC_MAPPING.act||{}).filter(k=>!DOC_SCANNED.act.includes(k));
     renderDocTemplateFields('contract');
     renderDocTemplateFields('act');
+    renderCurrentTemplateInfo('contract', mappingData.contractInfo);
+    renderCurrentTemplateInfo('act', mappingData.actInfo);
   }
+}
+function renderCurrentTemplateInfo(type, info){
+  const el = document.getElementById('dt-current-'+type);
+  if(!el) return;
+  if(!info){
+    el.innerHTML = `<div style="font-size:11px;color:#dc2626;background:#fee2e2;border-radius:5px;padding:6px 10px">⚠ Шаблон ще не завантажено</div>`;
+    return;
+  }
+  const dt = new Date(info.uploadedAt);
+  const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+  const fallbackNote = info.isFallback ? ` <span style="color:#b45309">(запасний шаблон, не свій для цієї форми)</span>` : '';
+  el.innerHTML = `<div style="font-size:11px;color:#166534;background:#f0fdf4;border-radius:5px;padding:6px 10px">
+    📎 <b>${info.originalName}</b> · завантажено ${dateStr}${info.uploadedBy?' · '+info.uploadedBy:''}${fallbackNote}
+  </div>`;
 }
 function addCustomDocField(type){
   const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');

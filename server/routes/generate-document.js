@@ -270,6 +270,15 @@ router.get('/fields', auth, adminOnly, (req, res) => {
 });
 
 // ── Admin: mapping get/set ───────────────────────────────────────
+function getTemplateInfo(actualFileName, base, repKey) {
+  // actualFileName tells us whether templateFileName() resolved to the
+  // rep-specific file or fell back to the shared default — look up info
+  // under whichever one is actually in use, not necessarily the requested repKey.
+  const isRepSpecific = repKey && actualFileName === `${base}_${repKey}.docx`;
+  const infoKey = 'template_info_' + base + '_' + (isRepSpecific ? repKey : 'default');
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(infoKey);
+  return row ? { ...JSON.parse(row.value), isFallback: !isRepSpecific } : null;
+}
 router.get('/mapping', auth, adminOnly, async (req, res) => {
   const repKey = (req.query.repKey || '').trim() || null;
   const mapping = getMapping(repKey);
@@ -277,7 +286,9 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
   const actFile = templateFileName('act', repKey);
   const contractPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, contractFile));
   const actPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, actFile));
-  res.json({ mapping, contractPlaceholders, actPlaceholders, contractFile, actFile });
+  const contractInfo = getTemplateInfo(contractFile, 'dogovir', repKey);
+  const actInfo = getTemplateInfo(actFile, 'akt', repKey);
+  res.json({ mapping, contractPlaceholders, actPlaceholders, contractFile, actFile, contractInfo, actInfo });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
   const repKey = (req.query.repKey || '').trim() || null;
@@ -297,7 +308,15 @@ router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res
   const fileName = repKey ? `${base}_${repKey}.docx` : `${base}.docx`;
   if (!fs.existsSync(TEMPLATES_DIR)) fs.mkdirSync(TEMPLATES_DIR, { recursive: true });
   fs.writeFileSync(path.join(TEMPLATES_DIR, fileName), req.file.buffer);
-  res.json({ ok: true });
+  // The uploaded file gets renamed to a fixed name on disk (dogovir.docx
+  // etc.) so the original filename would otherwise be lost entirely —
+  // store it (plus who/when) so the admin can tell which version is live.
+  const infoKey = 'template_info_' + base + '_' + (repKey || 'default');
+  const info = { originalName: req.file.originalname, uploadedAt: new Date().toISOString(), uploadedBy: req.user?.name || req.user?.username || '' };
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(infoKey);
+  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(JSON.stringify(info), infoKey);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(infoKey, JSON.stringify(info));
+  res.json({ ok: true, info });
 });
 // DELETE a representative-specific template, reverting that rep back to the shared default
 router.delete('/template/:type', auth, adminOnly, (req, res) => {
@@ -307,6 +326,8 @@ router.delete('/template/:type', auth, adminOnly, (req, res) => {
   const base = type === 'contract' ? 'dogovir' : 'akt';
   const filePath = path.join(TEMPLATES_DIR, `${base}_${repKey}.docx`);
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  const infoKey = 'template_info_' + base + '_' + repKey;
+  db.prepare('DELETE FROM settings WHERE key = ?').run(infoKey);
   res.json({ ok: true });
 });
 
