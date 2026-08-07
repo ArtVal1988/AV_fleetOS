@@ -10683,6 +10683,7 @@ let currentDocTemplateRepKey = null; // null = shared/default templates; otherwi
 async function openDocTemplatesPanel(repKey){
   closeSettingsHubPanel();
   currentDocTemplateRepKey = repKey || null;
+  DOC_REMOVED = { contract: [], act: [] };
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
   const subtitleEl = document.getElementById('dt-scope-subtitle');
   if(subtitleEl){
@@ -10742,9 +10743,10 @@ function addCustomDocField(type){
 function closeDocTemplatesPanel(){
   document.getElementById('doctemplates-panel-overlay').style.display='none';
 }
+let DOC_REMOVED = { contract: [], act: [] }; // scanned placeholders the user chose to hide (can't actually delete #placeholder text from the docx itself, so this just stops managing/showing that row)
 function renderDocTemplateFields(type){
   const wrap = document.getElementById('dt-fields-'+type);
-  const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
+  const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]].filter(ph => !DOC_REMOVED[type].includes(ph));
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
   const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
     placeholders.map((ph, idx) => {
@@ -10766,7 +10768,7 @@ function renderDocTemplateFields(type){
           <option disabled>──────────</option>
           ${options}
         </select>
-        ${isCustom?`<button type="button" onclick="removeCustomDocField('${type}','${ph}')" title="Видалити цю змінну" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>`:''}
+        <button type="button" onclick="removeDocField('${type}','${ph}')" title="Видалити цей рядок" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>
       </div>
       <input type="text" class="dt-field-extra" data-type="${type}" data-placeholder="${ph}"
         style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
@@ -10774,7 +10776,8 @@ function renderDocTemplateFields(type){
         value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
     </div>`;
   }).join('');
-  wrap.innerHTML = rowsHtml + `<button type="button" onclick="addCustomDocField('${type}')" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  const hiddenNote = DOC_REMOVED[type].length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields('${type}')">↺ Приховано рядків: ${DOC_REMOVED[type].length} · натисніть, щоб показати знову</div>` : '';
+  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField('${type}')" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
     const val = DOC_MAPPING[type]?.[ph] || '';
@@ -10782,6 +10785,22 @@ function renderDocTemplateFields(type){
     else if(val.startsWith('path:')) sel.value = '__path__';
     else sel.value = val;
   });
+}
+function removeDocField(type, ph){
+  if(!confirm(`Видалити рядок #${ph}?`)) return;
+  if(DOC_CUSTOM[type].includes(ph)){
+    DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
+  } else {
+    // Scanned straight from the .docx file — can't remove the #placeholder
+    // text itself from here, just stop showing/managing this row.
+    DOC_REMOVED[type].push(ph);
+  }
+  delete DOC_MAPPING[type][ph];
+  renderDocTemplateFields(type);
+}
+function restoreDocFields(type){
+  DOC_REMOVED[type] = [];
+  renderDocTemplateFields(type);
 }
 let dtDragSrcIdx = null;
 function dtRowDragStart(e){
@@ -10811,11 +10830,6 @@ function dtRowDrop(e){
 function dtRowDragEnd(e){
   e.currentTarget.style.opacity = '';
   dtDragSrcIdx = null;
-}
-function removeCustomDocField(type, ph){
-  DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
-  delete DOC_MAPPING[type][ph];
-  renderDocTemplateFields(type);
 }
 function onDocFieldSelectChange(sel){
   const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
