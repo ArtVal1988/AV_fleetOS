@@ -186,7 +186,7 @@ function getOrCreateContractNumber(ctx, bookingId) {
   if (ctx.booking.contractNumber) return ctx.booking.contractNumber;
 
   const initials = (ctx.rep?.initials || 'XXX').trim() || 'XXX';
-  const platePart = (ctx.vehicle?.plate || '').trim().replace(/\s+/g, '_') || 'XX';
+  const platePart = (ctx.vehicle?.plate || '').trim().replace(/\s+/g, '') || 'XX';
   const now = new Date();
   const dd = String(now.getDate()).padStart(2, '0');
   const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -400,8 +400,8 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     const now = new Date();
     const genStamp = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear() + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
     const fileName = type === 'contract'
-      ? `Договір_${contractNumber}.docx`
-      : `Акт_${contractNumber}_${genStamp}.docx`; // multiple acts can share one contract number, so disambiguate by generation time
+      ? `${contractNumber}_Договір.docx`
+      : `${contractNumber}_${genStamp}_Акт.docx`; // multiple acts can share one contract number, so disambiguate by generation time
 
     // Archive every generated document to disk — a permanent record
     // independent of later booking edits, so "what was actually handed to
