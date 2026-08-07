@@ -1908,7 +1908,6 @@ input.dm-pf-val.tel{font-size:14px;}
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
       <div>
         <div style="font-size:16px;font-weight:700;color:#1a1d26">📄 Шаблони документів</div>
-        <div id="dt-scope-subtitle" style="font-size:11px;color:#9ca3af;margin-top:2px"></div>
       </div>
       <button onclick="closeDocTemplatesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
@@ -1921,29 +1920,10 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div id="dt-section-contract" style="margin-bottom:28px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:13px;font-weight:700;color:#1a1d26">Договір оренди</div>
-          <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
-            ⬆ Завантажити новий шаблон
-            <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('contract', this)">
-          </label>
-        </div>
-        <div id="dt-current-contract" style="margin-bottom:12px"></div>
-        <div id="dt-fields-contract"></div>
-      </div>
+      <div id="dt-templates-section" style="margin-bottom:24px"></div>
 
-      <div id="dt-section-act">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div style="font-size:13px;font-weight:700;color:#1a1d26">Акт приймання-передачі</div>
-          <label style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer">
-            ⬆ Завантажити новий шаблон
-            <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('act', this)">
-          </label>
-        </div>
-        <div id="dt-current-act" style="margin-bottom:12px"></div>
-        <div id="dt-fields-act"></div>
-      </div>
+      <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:8px;padding-top:8px;border-top:1px solid #f0f2f5">Змінні (спільні для всіх документів вище)</div>
+      <div id="dt-fields-unified"></div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:20px;position:sticky;bottom:0;background:#fff;padding-top:12px;border-top:1px solid #f0f2f5">
         <button onclick="saveDocTemplateMapping()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти налаштування полів</button>
@@ -10600,9 +10580,10 @@ async function deleteClientDoc(id){
 
 // ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
 let DOC_FIELDS = [];
-let DOC_MAPPING = { contract: {}, act: {} };
-let DOC_SCANNED = { contract: [], act: [] };
-let DOC_CUSTOM = { contract: [], act: [] };
+let DOC_MAPPING = {};
+let DOC_SCANNED = [];
+let DOC_CUSTOM = [];
+let DOC_TYPES_REGISTRY = null; // cached from server: {individual:[...], business_no_vat:[...], business_vat:[...]}
 let REPRESENTATIVES = {}; // keyed by slot: individual / business_no_vat / business_vat
 const REP_SLOTS = [
   {key:'individual', label:'Фізична особа', bg:'#eff6ff', border:'#bfdbfe', accent:'#1d4ed8'},
@@ -10679,128 +10660,135 @@ async function saveRepresentativeSlots(){
   await apiFetch('PUT', '/settings/representatives', {value: REPRESENTATIVES});
   closeRepresentativesPanel();
 }
-let currentDocTemplateRepKey = null; // null = shared/default templates; otherwise a representative slot key
+let currentDocSlots = {}; // {individual:{contract:{label,file,placeholders,info},...}, business_no_vat:{...}, business_vat:{...}}
+let scrollToRepKeyOnOpen = null; // set when opened from a slot's own "📄 Шаблони" button, to scroll that block into view
 async function openDocTemplatesPanel(repKey){
   closeSettingsHubPanel();
-  currentDocTemplateRepKey = repKey || null;
-  DOC_REMOVED = { contract: [], act: [] };
+  scrollToRepKeyOnOpen = repKey || null;
+  DOC_REMOVED = [];
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
-  const subtitleEl = document.getElementById('dt-scope-subtitle');
-  if(subtitleEl){
-    if(currentDocTemplateRepKey){
-      const slot = REP_SLOTS.find(s=>s.key===currentDocTemplateRepKey);
-      subtitleEl.textContent = slot ? `Шаблони для: ${slot.label}` : '';
-    } else {
-      subtitleEl.textContent = 'Загальні шаблони (запасний варіант)';
-    }
-  }
-  const qs = currentDocTemplateRepKey ? '?repKey='+encodeURIComponent(currentDocTemplateRepKey) : '';
+  if(!DOC_TYPES_REGISTRY) DOC_TYPES_REGISTRY = await apiFetch('GET', '/generate-document/document-types');
   const [fields, mappingData] = await Promise.all([
     apiFetch('GET', '/generate-document/fields'),
-    apiFetch('GET', '/generate-document/mapping'+qs),
+    apiFetch('GET', '/generate-document/mapping'),
   ]);
   if(Array.isArray(fields)) DOC_FIELDS = fields;
   if(mappingData){
-    DOC_MAPPING = mappingData.mapping || { contract: {}, act: {} };
-    DOC_SCANNED.contract = mappingData.contractPlaceholders || [];
-    DOC_SCANNED.act = mappingData.actPlaceholders || [];
+    DOC_MAPPING = mappingData.mapping || {};
+    currentDocSlots = mappingData.slots || {};
+    DOC_SCANNED = mappingData.placeholders || [];
     // Any mapping key that isn't in the scanned list was added manually in
     // a previous session — keep showing it so it doesn't silently vanish.
-    DOC_CUSTOM.contract = Object.keys(DOC_MAPPING.contract||{}).filter(k=>!DOC_SCANNED.contract.includes(k));
-    DOC_CUSTOM.act = Object.keys(DOC_MAPPING.act||{}).filter(k=>!DOC_SCANNED.act.includes(k));
-    renderDocTemplateFields('contract');
-    renderDocTemplateFields('act');
-    renderCurrentTemplateInfo('contract', mappingData.contractInfo);
-    renderCurrentTemplateInfo('act', mappingData.actInfo);
+    DOC_CUSTOM = Object.keys(DOC_MAPPING).filter(k=>!DOC_SCANNED.includes(k));
+    renderDocTemplatesSection();
+    renderUnifiedDocFields();
+  }
+  if(scrollToRepKeyOnOpen){
+    const el = document.getElementById('dt-slot-'+scrollToRepKeyOnOpen);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
   }
 }
-function renderCurrentTemplateInfo(type, info){
-  const el = document.getElementById('dt-current-'+type);
-  if(!el) return;
-  if(!info){
-    el.innerHTML = `<div style="font-size:11px;color:#dc2626;background:#fee2e2;border-radius:5px;padding:6px 10px">⚠ Шаблон ще не завантажено</div>`;
-    return;
-  }
-  const dt = new Date(info.uploadedAt);
-  const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
-  const fallbackNote = info.isFallback ? ` <span style="color:#b45309">(запасний шаблон, не свій для цієї форми)</span>` : '';
-  el.innerHTML = `<div style="font-size:11px;color:#166534;background:#f0fdf4;border-radius:5px;padding:6px 10px">
-    📎 <b>${info.originalName}</b> · завантажено ${dateStr}${info.uploadedBy?' · '+info.uploadedBy:''}${fallbackNote}
-  </div>`;
+function renderDocTemplatesSection(){
+  const wrap = document.getElementById('dt-templates-section');
+  if(!wrap) return;
+  wrap.innerHTML = REP_SLOTS.map(slot => {
+    const types = DOC_TYPES_REGISTRY?.[slot.key] || [];
+    const cardsHtml = types.map(t => {
+      const tpl = currentDocSlots[slot.key]?.[t.key];
+      const info = tpl?.info;
+      const infoHtml = !info
+        ? `<div style="font-size:10.5px;color:#dc2626;background:#fee2e2;border-radius:5px;padding:5px 8px">⚠ Не завантажено</div>`
+        : `<div style="font-size:10.5px;color:#166534;background:#f0fdf4;border-radius:5px;padding:5px 8px">📎 <b>${info.originalName}</b> · ${new Date(info.uploadedAt).toLocaleDateString('uk-UA')}${info.isFallback?' <span style="color:#b45309">(запасний)</span>':''}</div>`;
+      return `<div style="background:#fff;border:1px solid ${slot.border};border-radius:7px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:11.5px;font-weight:700;color:var(--text)">${t.label}</div>
+          <label style="background:${slot.bg};border:1px solid ${slot.border};color:${slot.accent};border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap">
+            ⬆ Завантажити
+            <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('${t.key}','${slot.key}', this)">
+          </label>
+        </div>
+        ${infoHtml}
+      </div>`;
+    }).join('');
+    return `<div id="dt-slot-${slot.key}" style="background:${slot.bg};border:1px solid ${slot.border};border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:${slot.accent};margin-bottom:10px">${slot.label}</div>
+      ${cardsHtml}
+    </div>`;
+  }).join('');
 }
-function addCustomDocField(type){
+function addCustomDocField(){
   const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
   if(!name) return;
   const clean = name.trim().replace(/^#/,'').replace(/[^а-яА-ЯіІїЇєЄa-zA-Z0-9_]/g,'');
   if(!clean) return;
-  if(DOC_SCANNED[type].includes(clean) || DOC_CUSTOM[type].includes(clean)){
+  if(DOC_SCANNED.includes(clean) || DOC_CUSTOM.includes(clean)){
     alert('Змінна з такою назвою вже є в списку');
     return;
   }
-  DOC_CUSTOM[type].push(clean);
-  renderDocTemplateFields(type);
+  DOC_CUSTOM.push(clean);
+  renderUnifiedDocFields();
 }
 function closeDocTemplatesPanel(){
   document.getElementById('doctemplates-panel-overlay').style.display='none';
 }
-let DOC_REMOVED = { contract: [], act: [] }; // scanned placeholders the user chose to hide (can't actually delete #placeholder text from the docx itself, so this just stops managing/showing that row)
-function renderDocTemplateFields(type){
-  const wrap = document.getElementById('dt-fields-'+type);
-  const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]].filter(ph => !DOC_REMOVED[type].includes(ph));
+let DOC_REMOVED = []; // scanned placeholders the user chose to hide (can't actually delete #placeholder text from the docx itself, so this just stops managing/showing that row)
+function renderUnifiedDocFields(){
+  const wrap = document.getElementById('dt-fields-unified');
+  const placeholders = [...DOC_SCANNED, ...DOC_CUSTOM].filter(ph => !DOC_REMOVED.includes(ph));
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
-  const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
+  const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У завантажених шаблонах не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
     placeholders.map((ph, idx) => {
-    const current = DOC_MAPPING[type]?.[ph] || '';
+    const current = DOC_MAPPING[ph] || '';
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
-    const isCustom = DOC_CUSTOM[type].includes(ph);
-    return `<div class="dt-row" draggable="true" data-type="${type}" data-idx="${idx}"
+    const isCustom = DOC_CUSTOM.includes(ph);
+    return `<div class="dt-row" draggable="true" data-idx="${idx}"
         ondragstart="dtRowDragStart(event)" ondragover="dtRowDragOver(event)" ondrop="dtRowDrop(event)" ondragend="dtRowDragEnd(event)"
         style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px;background:#fff">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="cursor:grab;color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок">⠿</span>
         <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
         <span style="color:#9ca3af;font-size:11px">→</span>
-        <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+        <select data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
           <option value="">— не заповнювати —</option>
           <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
           <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
           <option disabled>──────────</option>
           ${options}
         </select>
-        <button type="button" onclick="removeDocField('${type}','${ph}')" title="Видалити цей рядок" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>
+        <button type="button" onclick="removeDocField('${ph}')" title="Видалити цей рядок" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>
       </div>
-      <input type="text" class="dt-field-extra" data-type="${type}" data-placeholder="${ph}"
+      <input type="text" class="dt-field-extra" data-placeholder="${ph}"
         style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
         placeholder="${isPath?'наприклад: booking.rate або vehicle.specs.color':'текст, який завжди буде тут'}"
         value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
     </div>`;
   }).join('');
-  const hiddenNote = DOC_REMOVED[type].length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields('${type}')">↺ Приховано рядків: ${DOC_REMOVED[type].length} · натисніть, щоб показати знову</div>` : '';
-  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField('${type}')" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  const hiddenNote = DOC_REMOVED.length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields()">↺ Приховано рядків: ${DOC_REMOVED.length} · натисніть, щоб показати знову</div>` : '';
+  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField()" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
-    const val = DOC_MAPPING[type]?.[ph] || '';
+    const val = DOC_MAPPING[ph] || '';
     if(val.startsWith('static:')) sel.value = '__static__';
     else if(val.startsWith('path:')) sel.value = '__path__';
     else sel.value = val;
   });
 }
-function removeDocField(type, ph){
+function removeDocField(ph){
   if(!confirm(`Видалити рядок #${ph}?`)) return;
-  if(DOC_CUSTOM[type].includes(ph)){
-    DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
+  if(DOC_CUSTOM.includes(ph)){
+    DOC_CUSTOM = DOC_CUSTOM.filter(x=>x!==ph);
   } else {
-    // Scanned straight from the .docx file — can't remove the #placeholder
+    // Scanned straight from a .docx file — can't remove the #placeholder
     // text itself from here, just stop showing/managing this row.
-    DOC_REMOVED[type].push(ph);
+    DOC_REMOVED.push(ph);
   }
-  delete DOC_MAPPING[type][ph];
-  renderDocTemplateFields(type);
+  delete DOC_MAPPING[ph];
+  renderUnifiedDocFields();
 }
-function restoreDocFields(type){
-  DOC_REMOVED[type] = [];
-  renderDocTemplateFields(type);
+function restoreDocFields(){
+  DOC_REMOVED = [];
+  renderUnifiedDocFields();
 }
 let dtDragSrcIdx = null;
 function dtRowDragStart(e){
@@ -10814,18 +10802,17 @@ function dtRowDragOver(e){
 }
 function dtRowDrop(e){
   e.preventDefault();
-  const type = e.currentTarget.dataset.type;
   const targetIdx = parseInt(e.currentTarget.dataset.idx);
   if(dtDragSrcIdx === null || dtDragSrcIdx === targetIdx) return;
   // Reorder the underlying scanned/custom placeholder arrays directly —
   // rendering order is driven straight from these, no separate order state needed.
-  const combined = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
+  const combined = [...DOC_SCANNED, ...DOC_CUSTOM];
   const [moved] = combined.splice(dtDragSrcIdx, 1);
   combined.splice(targetIdx, 0, moved);
   // Preserve DOC_CUSTOM's own relative order among themselves, but respect the new overall position split
-  DOC_SCANNED[type] = combined.filter(ph => !DOC_CUSTOM[type].includes(ph));
-  DOC_CUSTOM[type] = combined.filter(ph => DOC_CUSTOM[type].includes(ph));
-  renderDocTemplateFields(type);
+  DOC_SCANNED = combined.filter(ph => !DOC_CUSTOM.includes(ph));
+  DOC_CUSTOM = combined.filter(ph => DOC_CUSTOM.includes(ph));
+  renderUnifiedDocFields();
 }
 function dtRowDragEnd(e){
   e.currentTarget.style.opacity = '';
@@ -10837,12 +10824,12 @@ function onDocFieldSelectChange(sel){
   extra.style.display = showExtra ? 'block' : 'none';
   extra.placeholder = sel.value === '__path__' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
 }
-async function uploadDocTemplate(type, input){
+async function uploadDocTemplate(type, slotKey, input){
   const file = input.files[0];
   if(!file) return;
   const formData = new FormData();
   formData.append('file', file);
-  const qs = currentDocTemplateRepKey ? '?repKey='+encodeURIComponent(currentDocTemplateRepKey) : '';
+  const qs = slotKey ? '?repKey='+encodeURIComponent(slotKey) : '';
   const res = await fetch(API_BASE + '/generate-document/template/' + type + qs, {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + _token },
@@ -10851,24 +10838,23 @@ async function uploadDocTemplate(type, input){
   input.value = '';
   if(!res.ok){ alert('Не вдалося завантажити шаблон'); return; }
   alert('Шаблон оновлено! Оновіть поля нижче за потреби.');
-  openDocTemplatesPanel(currentDocTemplateRepKey);
+  openDocTemplatesPanel(slotKey);
 }
 async function saveDocTemplateMapping(){
-  const newMapping = { contract: {}, act: {} };
+  const newMapping = {};
   document.querySelectorAll('.dt-field-select').forEach(sel => {
-    const type = sel.dataset.type, ph = sel.dataset.placeholder;
+    const ph = sel.dataset.placeholder;
     if(!sel.value) return;
     if(sel.value === '__static__' || sel.value === '__path__'){
       const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
       const extraVal = (extra?.value || '').trim();
       if(!extraVal) return;
-      newMapping[type][ph] = (sel.value === '__static__' ? 'static:' : 'path:') + extraVal;
+      newMapping[ph] = (sel.value === '__static__' ? 'static:' : 'path:') + extraVal;
     } else {
-      newMapping[type][ph] = sel.value;
+      newMapping[ph] = sel.value;
     }
   });
-  const qs = currentDocTemplateRepKey ? '?repKey='+encodeURIComponent(currentDocTemplateRepKey) : '';
-  await apiFetch('PUT', '/generate-document/mapping'+qs, newMapping);
+  await apiFetch('PUT', '/generate-document/mapping', newMapping);
   DOC_MAPPING = newMapping;
   alert('✅ Налаштування збережено');
 }

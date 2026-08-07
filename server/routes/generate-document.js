@@ -11,6 +11,40 @@ const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
 const GENERATED_DOCS_DIR = path.join(__dirname, '..', 'uploads', 'Згенеровані документи');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
+// ── Document types per ФОП slot ──────────────────────────────────
+// Individual clients only ever need a simple contract+act; the two
+// business slots (з/без ПДВ) additionally need invoices and a deposit
+// letter. Same type KEYS are reused across business_no_vat/business_vat —
+// the slot (repKey) already namespaces the actual template files, so no
+// need for separate keys, just different labels for the ПДВ-prefixed ones.
+const DOCUMENT_TYPES = {
+  individual: [
+    { key: 'contract', label: 'Договір' },
+    { key: 'act', label: 'Акт' },
+  ],
+  business_no_vat: [
+    { key: 'contract', label: 'Договір' },
+    { key: 'act', label: 'Акт_приймання-передачі' },
+    { key: 'invoice_rent', label: 'Рахунок_оренда' },
+    { key: 'invoice_deposit', label: 'Рахунок_застава' },
+    { key: 'deposit_letter', label: 'Лист_про_зарахування_застави' },
+    { key: 'service_act', label: 'Акт_надання_послуг' },
+  ],
+  business_vat: [
+    { key: 'contract', label: 'ПДВ - Договір' },
+    { key: 'act', label: 'ПДВ - Акт_приймання-передачі' },
+    { key: 'invoice_rent', label: 'ПДВ - Рахунок_оренда' },
+    { key: 'invoice_deposit', label: 'ПДВ - Рахунок_застава' },
+    { key: 'deposit_letter', label: 'ПДВ - Лист_про_зарахування_застави' },
+    { key: 'service_act', label: 'ПДВ - Акт_надання_послуг' },
+  ],
+};
+const ALL_DOC_TYPE_KEYS = ['contract', 'act', 'invoice_rent', 'invoice_deposit', 'deposit_letter', 'service_act'];
+function docTypeLabel(repKey, type) {
+  const entry = (DOCUMENT_TYPES[repKey] || DOCUMENT_TYPES.business_no_vat).find(t => t.key === type);
+  return entry ? entry.label : type;
+}
+
 function fmtDateUk(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
@@ -132,21 +166,16 @@ function resolveDataPath(pathStr, ctx) {
 
 // ── Mapping storage (reuses the settings table) ─────────────────
 const MAPPING_SETTINGS_KEY = 'document_variable_mapping';
+// One flat, shared mapping per ФОП slot — a #placeholder means the same
+// thing no matter which of the slot's document types it appears in
+// (Договір, Акт, Рахунок_оренда, etc.), so there's no reason to configure
+// the same #номер -> contract_number mapping separately for each one.
 const DEFAULT_MAPPING = {
-  contract: {
-    'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
-    'фирма2': 'client_legal', 'код2': 'client_inn', 'лицо2': 'client_name', 'адрес2': 'client_phone',
-  },
-  act: {
-    'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
-    'счет1': 'vehicle_vin', 'адрес1': 'vehicle_sts', 'лицо2': 'client_name', 'адрес2': 'client_phone',
-  },
+  'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
+  'фирма2': 'client_legal', 'код2': 'client_inn', 'лицо2': 'client_name', 'адрес2': 'client_phone',
+  'счет1': 'vehicle_vin', 'адрес1': 'vehicle_sts',
 };
-function getMapping(repKey) {
-  if (repKey) {
-    const repRow = db.prepare('SELECT value FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY + '_' + repKey);
-    if (repRow) return JSON.parse(repRow.value);
-  }
+function getMapping() {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
   return row ? JSON.parse(row.value) : DEFAULT_MAPPING;
 }
@@ -163,17 +192,16 @@ function repSlotForClientType(clientType) {
   return 'business_vat'; // 'fop' or 'tov'
 }
 // Templates are named per-representative when a representative has their
-// own uploaded contract/act (dogovir_{repKey}.docx / akt_{repKey}.docx) —
-// falls back to the shared default (dogovir.docx / akt.docx) whenever a
-// booking has no representative selected, or that representative hasn't
-// had their own template uploaded yet.
+// own uploaded template for this document type (e.g. contract_business_vat.docx)
+// — falls back to the shared default (contract.docx) whenever a booking
+// has no representative selected, or that representative hasn't had their
+// own template uploaded yet for this specific document type.
 function templateFileName(type, repKey) {
-  const base = type === 'contract' ? 'dogovir' : 'akt';
   if (repKey) {
-    const named = path.join(TEMPLATES_DIR, `${base}_${repKey}.docx`);
-    if (fs.existsSync(named)) return `${base}_${repKey}.docx`;
+    const named = path.join(TEMPLATES_DIR, `${type}_${repKey}.docx`);
+    if (fs.existsSync(named)) return `${type}_${repKey}.docx`;
   }
-  return `${base}.docx`;
+  return `${type}.docx`;
 }
 // The contract number stays the same for a booking across every document
 // generated under it (the contract itself, and every act — a booking can
@@ -213,12 +241,11 @@ function getOrCreateContractNumber(ctx, bookingId) {
   ctx.booking.contractNumber = contractNumber;
   return contractNumber;
 }
-function setMapping(mapping, repKey) {
-  const settingsKey = repKey ? MAPPING_SETTINGS_KEY + '_' + repKey : MAPPING_SETTINGS_KEY;
+function setMapping(mapping) {
   const json = JSON.stringify(mapping);
-  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(settingsKey);
-  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(json, settingsKey);
-  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(settingsKey, json);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
+  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(json, MAPPING_SETTINGS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
 }
 
 // Scan a docx template for #placeholder tokens (Cyrillic/Latin/digits)
@@ -275,31 +302,45 @@ function getBookingContext(bookingId) {
 router.get('/fields', auth, adminOnly, (req, res) => {
   res.json(FIELD_CATALOG.map(f => ({ key: f.key, label: f.label })));
 });
+router.get('/document-types', auth, adminOnly, (req, res) => {
+  res.json(DOCUMENT_TYPES);
+});
 
 // ── Admin: mapping get/set ───────────────────────────────────────
-function getTemplateInfo(actualFileName, base, repKey) {
+function getTemplateInfo(actualFileName, type, repKey) {
   // actualFileName tells us whether templateFileName() resolved to the
   // rep-specific file or fell back to the shared default — look up info
   // under whichever one is actually in use, not necessarily the requested repKey.
-  const isRepSpecific = repKey && actualFileName === `${base}_${repKey}.docx`;
-  const infoKey = 'template_info_' + base + '_' + (isRepSpecific ? repKey : 'default');
+  const isRepSpecific = repKey && actualFileName === `${type}_${repKey}.docx`;
+  const infoKey = 'template_info_' + type + '_' + (isRepSpecific ? repKey : 'default');
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(infoKey);
   return row ? { ...JSON.parse(row.value), isFallback: !isRepSpecific } : null;
 }
+// Returns every document type for all 3 ФОП slots at once (2 for individual,
+// 6 each for the two business slots), each with its scanned placeholders
+// and current-file info, plus ONE deduplicated placeholder list across
+// literally everything — the mapping is fully global (one #placeholder
+// always means the same thing everywhere), so there's exactly one shared
+// table to configure instead of a separate one per document/slot.
 router.get('/mapping', auth, adminOnly, async (req, res) => {
-  const repKey = (req.query.repKey || '').trim() || null;
-  const mapping = getMapping(repKey);
-  const contractFile = templateFileName('contract', repKey);
-  const actFile = templateFileName('act', repKey);
-  const contractPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, contractFile));
-  const actPlaceholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, actFile));
-  const contractInfo = getTemplateInfo(contractFile, 'dogovir', repKey);
-  const actInfo = getTemplateInfo(actFile, 'akt', repKey);
-  res.json({ mapping, contractPlaceholders, actPlaceholders, contractFile, actFile, contractInfo, actInfo });
+  const mapping = getMapping();
+  const slots = {};
+  const allPlaceholdersSet = new Set();
+  for (const repKey of Object.keys(DOCUMENT_TYPES)) {
+    const templates = {};
+    for (const t of DOCUMENT_TYPES[repKey]) {
+      const file = templateFileName(t.key, repKey);
+      const placeholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file));
+      const info = getTemplateInfo(file, t.key, repKey);
+      templates[t.key] = { label: t.label, file, placeholders, info };
+      placeholders.forEach(ph => allPlaceholdersSet.add(ph));
+    }
+    slots[repKey] = templates;
+  }
+  res.json({ mapping, slots, placeholders: [...allPlaceholdersSet] });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
-  const repKey = (req.query.repKey || '').trim() || null;
-  setMapping(req.body, repKey);
+  setMapping(req.body);
   res.json({ ok: true });
 });
 
@@ -309,16 +350,15 @@ router.put('/mapping', auth, adminOnly, (req, res) => {
 router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res) => {
   const { type } = req.params;
   const repKey = (req.query.repKey || '').trim();
-  if (!['contract', 'act'].includes(type)) return res.status(400).json({ error: 'Невідомий тип шаблону' });
+  if (!ALL_DOC_TYPE_KEYS.includes(type)) return res.status(400).json({ error: 'Невідомий тип шаблону' });
   if (!req.file) return res.status(400).json({ error: 'Файл не завантажено' });
-  const base = type === 'contract' ? 'dogovir' : 'akt';
-  const fileName = repKey ? `${base}_${repKey}.docx` : `${base}.docx`;
+  const fileName = repKey ? `${type}_${repKey}.docx` : `${type}.docx`;
   if (!fs.existsSync(TEMPLATES_DIR)) fs.mkdirSync(TEMPLATES_DIR, { recursive: true });
   fs.writeFileSync(path.join(TEMPLATES_DIR, fileName), req.file.buffer);
-  // The uploaded file gets renamed to a fixed name on disk (dogovir.docx
-  // etc.) so the original filename would otherwise be lost entirely —
-  // store it (plus who/when) so the admin can tell which version is live.
-  const infoKey = 'template_info_' + base + '_' + (repKey || 'default');
+  // The uploaded file gets renamed to a fixed name on disk so the original
+  // filename would otherwise be lost entirely — store it (plus who/when)
+  // so the admin can tell which version is live.
+  const infoKey = 'template_info_' + type + '_' + (repKey || 'default');
   // multer/busboy often hands back the filename mis-decoded as latin1 when
   // it's actually UTF-8 (multipart/form-data doesn't strictly define an
   // encoding) — re-interpret the raw bytes correctly, otherwise non-Latin
@@ -334,11 +374,10 @@ router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res
 router.delete('/template/:type', auth, adminOnly, (req, res) => {
   const { type } = req.params;
   const repKey = (req.query.repKey || '').trim();
-  if (!['contract', 'act'].includes(type) || !repKey) return res.status(400).json({ error: 'Невідомий тип шаблону' });
-  const base = type === 'contract' ? 'dogovir' : 'akt';
-  const filePath = path.join(TEMPLATES_DIR, `${base}_${repKey}.docx`);
+  if (!ALL_DOC_TYPE_KEYS.includes(type) || !repKey) return res.status(400).json({ error: 'Невідомий тип шаблону' });
+  const filePath = path.join(TEMPLATES_DIR, `${type}_${repKey}.docx`);
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  const infoKey = 'template_info_' + base + '_' + repKey;
+  const infoKey = 'template_info_' + type + '_' + repKey;
   db.prepare('DELETE FROM settings WHERE key = ?').run(infoKey);
   res.json({ ok: true });
 });
@@ -378,7 +417,7 @@ router.delete('/archive/:id', auth, adminOnly, (req, res) => {
 
 router.get('/:bookingId/:type', auth, async (req, res) => {
   const { bookingId, type } = req.params;
-  if (!['contract', 'act'].includes(type)) {
+  if (!ALL_DOC_TYPE_KEYS.includes(type)) {
     return res.status(400).json({ error: 'Невідомий тип документа' });
   }
 
@@ -392,7 +431,7 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
 
   const contractNumber = getOrCreateContractNumber(ctx, bookingId);
 
-  const mapping = getMapping(repKey)[type] || {};
+  const mapping = getMapping() || {};
   const placeholders = await scanTemplatePlaceholders(templatePath);
   const values = {};
   placeholders.forEach(ph => {
@@ -407,9 +446,14 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     const now = new Date();
     const gk = getKyivDateParts(now);
     const genStamp = gk.dd + gk.mm + gk.yyyy + '_' + gk.hh + gk.min;
+    const label = docTypeLabel(repKey, type);
+    // The contract itself keeps just the stable number in its filename;
+    // every other document type (multiple acts, invoices, etc. can all be
+    // generated more than once under the same contract number) gets a
+    // generation timestamp appended too, so repeat downloads don't collide.
     const fileName = type === 'contract'
-      ? `${contractNumber}_Договір.docx`
-      : `${contractNumber}_${genStamp}_Акт.docx`; // multiple acts can share one contract number, so disambiguate by generation time
+      ? `${contractNumber}_${label}.docx`
+      : `${contractNumber}_${genStamp}_${label}.docx`;
 
     // Archive every generated document to disk — a permanent record
     // independent of later booking edits, so "what was actually handed to
