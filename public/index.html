@@ -3363,7 +3363,14 @@ function renderCalendar(){
           // from the cell map doesn't guarantee this, so verify and swap
           // if needed rather than assuming visibleArr[0] is the return.
           if(getEffectiveEnd(b1) !== ds){ [b1,b2] = [b2,b1]; }
-          const c1=SM[b1.status]?.color||'#888', c2=SM[b2.status]?.color||'#888';
+          // b1's last day might fall inside an unpaid/partially-paid
+          // extension period — same check the single-booking path already
+          // does, otherwise this cell shows b1's normal (paid) status color
+          // even though the extension covering today hasn't been paid.
+          const b1DayExt = getDayExtension(b1, ds);
+          const b1ExtStatus = b1DayExt ? getExtStatus(b1DayExt) : null;
+          const b1StatusKey = (b1ExtStatus === 'unpaid' || b1ExtStatus === 'partial') ? 'extension' : b1.status;
+          const c1=SM[b1StatusKey]?.color||'#888', c2=SM[b2.status]?.color||'#888';
           const isSel=b1.id===selectedBid||b2.id===selectedBid;
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
             onmouseenter="showTooltipSplit(event,${b1.id},${b2.id})"
