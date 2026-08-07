@@ -7645,7 +7645,11 @@ function saveWork(){
   // Check stock for any material that matches the parts catalog exactly.
   const matchedMats = mats.map(m => ({ m, part: SPARE_PARTS.find(p=>p.name.toLowerCase()===m.name.toLowerCase()) }))
     .filter(x => x.part);
-  const insufficient = matchedMats.filter(x => x.m.qty > x.part.quantity);
+  const isPurchase = workType === 'parts_purchase';
+  // A purchase adds to stock, so there's nothing to check availability for
+  // — the insufficient-stock warning only makes sense when parts are being
+  // consumed (repair/maintenance), not acquired.
+  const insufficient = !isPurchase ? matchedMats.filter(x => x.m.qty > x.part.quantity) : [];
   if(insufficient.length){
     const msg = insufficient.map(x=>`"${x.part.name}" — на складі ${x.part.quantity} шт, потрібно ${x.m.qty}`).join('\n');
     if(!confirm(`Недостатньо на складі:\n${msg}\n\nВсе одно зберегти роботу (склад піде в мінус)?`)) return;
@@ -7671,13 +7675,26 @@ function saveWork(){
     v.works.push({ id:getNextWorkId(), ...newWorkData });
   }
 
-  // Deduct matched materials from the spare-parts stock — only for genuinely
-  // new work entries. Skipped when editing an existing one, since the stock
-  // was already deducted the first time it was saved; deducting again here
-  // would double-count it.
+  // Reconcile materials against the spare-parts catalog — matched ones
+  // move stock up or down depending on whether this entry represents parts
+  // being consumed (repair/maintenance) or acquired (purchase); unmatched
+  // ones (not yet in the catalog at all) get created automatically so the
+  // catalog stays complete and future autocomplete/tracking works — only
+  // ever getting their entered qty as an actual stock level (for a
+  // purchase, that's genuinely how many arrived); for repair/maintenance
+  // entries the part was used immediately, so it's created with 0 in
+  // stock rather than falsely appearing available.
+  const unmatchedMats = mats.filter(m => !SPARE_PARTS.find(p=>p.name.toLowerCase()===m.name.toLowerCase()));
+  if(!wasEditing) unmatchedMats.forEach(m => {
+    apiFetch('POST', '/spare-parts', {
+      name: m.name, partNumber: m.partNumber, price: m.price,
+      quantity: isPurchase ? m.qty : 0,
+    }).then(newPart => { if(newPart) SPARE_PARTS.push(newPart); });
+  });
   if(!wasEditing) matchedMats.forEach(x => {
-    apiFetch('POST', '/spare-parts/'+x.part.id+'/deduct', {amount:x.m.qty});
-    x.part.quantity -= x.m.qty; // reflect locally without waiting for the round-trip
+    const delta = isPurchase ? x.m.qty : -x.m.qty;
+    apiFetch('PUT', '/spare-parts/'+x.part.id, {quantity: x.part.quantity + delta});
+    x.part.quantity += delta; // reflect locally without waiting for the round-trip
   });
 
   // Планове ТО, яке вже виконане — автоматично оновлює "Останнє ТО"
