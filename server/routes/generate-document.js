@@ -312,7 +312,12 @@ router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res
   // etc.) so the original filename would otherwise be lost entirely —
   // store it (plus who/when) so the admin can tell which version is live.
   const infoKey = 'template_info_' + base + '_' + (repKey || 'default');
-  const info = { originalName: req.file.originalname, uploadedAt: new Date().toISOString(), uploadedBy: req.user?.name || req.user?.username || '' };
+  // multer/busboy often hands back the filename mis-decoded as latin1 when
+  // it's actually UTF-8 (multipart/form-data doesn't strictly define an
+  // encoding) — re-interpret the raw bytes correctly, otherwise non-Latin
+  // filenames (Ukrainian, etc.) show up as mojibake.
+  const fixedOriginalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+  const info = { originalName: fixedOriginalName, uploadedAt: new Date().toISOString(), uploadedBy: req.user?.name || req.user?.username || '' };
   const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(infoKey);
   if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(JSON.stringify(info), infoKey);
   else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(infoKey, JSON.stringify(info));
