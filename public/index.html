@@ -1183,6 +1183,10 @@ input.dm-pf-val.tel{font-size:14px;}
 .dm-attach-thumb img{width:100%;height:100%;object-fit:cover;}
 .dm-attach-thumb .dm-del{position:absolute;top:-1px;right:-1px;width:13px;height:13px;background:#ef4444;color:#fff;border:none;border-radius:0 0 0 4px;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;}
 .dm-edit-active .dm-attach-thumb .dm-del{display:flex;}
+.dm-attach-thumb .dm-active-star{position:absolute;top:-1px;left:-1px;width:15px;height:15px;background:rgba(255,255,255,.9);color:#d1d5db;border:none;border-radius:0 0 4px 0;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.dm-attach-thumb .dm-active-star.active{color:#f59e0b;}
+.dm-attach-file .dm-active-star-inline{cursor:pointer;color:#d1d5db;font-size:11px;flex-shrink:0;}
+.dm-attach-file .dm-active-star-inline.active{color:#f59e0b;}
 .dm-attach-file{display:flex;align-items:center;gap:4px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:4px;padding:3px 8px;font-size:10px;color:#374151;position:relative;max-width:100%;}
 .dm-attach-file .dm-del-f{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:11px;padding:0 0 0 4px;line-height:1;display:none;}
 .dm-edit-active .dm-attach-file .dm-del-f{display:inline;}
@@ -5237,13 +5241,17 @@ function buildAttachArea(v, key){
   const docs=files.filter(f=>!(f.type.startsWith('image/') || f.thumbUrl));
   const galleryId = 'docs-'+v.id+'-'+key;
   registerAttachGallery(galleryId, imgs.map(f=>({src:f.url, name:f.name, type:f.type})));
+  const activeId = v.docs?.activeFile?.[key];
+  const showActiveMarker = files.length > 1; // pointless clutter with just one file
   let html='<div class="dm-attach-area" onclick="event.stopPropagation()">';
   if(imgs.length){
     html+='<div class="dm-attach-grid">';
     imgs.forEach((f,i)=>{
+      const isActive = activeId ? f.id===activeId : i===0;
       html+='<div class="dm-attach-thumb" onclick="viewAttachmentGallery(\''+galleryId+'\','+i+')">'+
         '<img src="'+(f.thumbUrl||f.url)+'" alt="'+f.name+'" loading="lazy">'+
         (f.type==='application/pdf' ? '<span class="dm-attach-pdf-badge">PDF</span>' : '')+
+        (showActiveMarker ? '<button class="dm-active-star'+(isActive?' active':'')+'" title="'+(isActive?'Актуальний':'Позначити як актуальний')+'" onclick="event.stopPropagation();setActiveDocFile('+v.id+',\''+key+'\','+f.id+')">'+(isActive?'★':'☆')+'</button>' : '')+
         '<button class="dm-del" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+f.id+')">✕</button>'+
       '</div>';
     });
@@ -5252,7 +5260,10 @@ function buildAttachArea(v, key){
   if(docs.length){
     html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">';
     docs.forEach((f,i)=>{
-      html+='<div class="dm-attach-file" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')" style="cursor:pointer">📄<span class="dm-attach-name" title="'+f.name+'">'+f.name+'</span>'+
+      const isActive = activeId ? f.id===activeId : i===0 && !imgs.length;
+      html+='<div class="dm-attach-file" onclick="viewAttachment(\''+f.url+'\',\''+f.name+'\',\''+f.type+'\')" style="cursor:pointer">📄'+
+        (showActiveMarker ? '<span class="dm-active-star-inline'+(isActive?' active':'')+'" title="'+(isActive?'Актуальний':'Позначити як актуальний')+'" onclick="event.stopPropagation();setActiveDocFile('+v.id+',\''+key+'\','+f.id+')">'+(isActive?'★':'☆')+'</span>' : '')+
+        '<span class="dm-attach-name" title="'+f.name+'">'+f.name+'</span>'+
         '<button class="dm-del-f" onclick="event.stopPropagation();removeDocFile('+v.id+',\''+key+'\','+f.id+')">✕</button>'+
       '</div>';
     });
@@ -5264,6 +5275,24 @@ function buildAttachArea(v, key){
   '</button>';
   html+='</div>';
   return html;
+}
+function setActiveDocFile(vid, key, fileId){
+  const v = ALL_VEHICLES.find(x=>x.id===vid);
+  if(!v || !v.docs) return;
+  if(!v.docs.activeFile) v.docs.activeFile = {};
+  v.docs.activeFile[key] = fileId;
+  persistVehicle(v);
+  const attachArea = document.getElementById('co-attach-area');
+  if(attachArea) attachArea.innerHTML = buildAttachArea(v, key);
+  if(insVehicleId === vid) renderInsuranceModal(v);
+}
+// Returns whichever file the admin marked "актуальний" for this key, or the
+// first one if none was explicitly marked (matches the old always-[0] behavior).
+function getActiveDocFile(v, key){
+  const files = v.docs?.files?.[key];
+  if(!files?.length) return null;
+  const activeId = v.docs?.activeFile?.[key];
+  return (activeId && files.find(f=>f.id===activeId)) || files[0];
 }
 
 /* ── KASKO PHOTOS ── */
@@ -7692,7 +7721,7 @@ function renderInsuranceModal(v){
         '<div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+v.osago.notes+'</div></div>' +
       '</div>':'') +
       '<div class="im-action-row"><div class="im-btn hi" onclick="openCalOsagoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalOsago('+v.id+')">↻ Поновити</div>'+
-      ((v.docs?.files?.['osago-policy']?.length) ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(v.docs.files['osago-policy'][0].url)+','+JSON.stringify(v.docs.files['osago-policy'][0].name)+','+JSON.stringify(v.docs.files['osago-policy'][0].type)+')\'>📄 Переглянути</div>' : '')+
+      ((v.docs?.files?.['osago-policy']?.length) ? (f=>'<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(f.url)+','+JSON.stringify(f.name)+','+JSON.stringify(f.type)+')\'>📄 Переглянути'+(v.docs.files['osago-policy'].length>1?' <span style="opacity:.7">('+f.name+')</span>':'')+'</div>')(getActiveDocFile(v,'osago-policy')) : '')+
       '</div>';
   }
 
@@ -7725,8 +7754,8 @@ function renderInsuranceModal(v){
         '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
       '</div>'
     ).join('');
-    const policyFile = (v.docs?.files?.['kasko-policy']||[])[0];
-    const invoiceFile = (v.docs?.files?.['kasko-invoice']||[])[0];
+    const policyFile = getActiveDocFile(v, 'kasko-policy');
+    const invoiceFile = getActiveDocFile(v, 'kasko-invoice');
     const filesRow = '<div class="im-action-row" style="margin-top:6px">' +
       (policyFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(policyFile.url)+','+JSON.stringify(policyFile.name)+','+JSON.stringify(policyFile.type)+')\'>📄 Договір</div>' : '<div class="im-btn" style="opacity:.5">📄 Договір відсутній</div>') +
       (invoiceFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(invoiceFile.url)+','+JSON.stringify(invoiceFile.name)+','+JSON.stringify(invoiceFile.type)+')\'>🧾 Рахунок для оплати</div>' : '<div class="im-btn" style="opacity:.5">🧾 Рахунок відсутній</div>') +
