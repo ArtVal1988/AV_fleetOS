@@ -86,6 +86,7 @@ const FIELD_CATALOG = [
   { key: 'rep_address', label: 'Представник (ФОП): юридична адреса', get: ctx => ctx.rep?.address || '' },
   { key: 'rep_phone', label: 'Представник компанії: телефон', get: ctx => ctx.rep?.phone || '' },
   { key: 'rep_bank', label: 'Представник (ФОП): банківські реквізити', get: ctx => ctx.rep?.bank || '' },
+  { key: 'contract_number', label: 'Номер договору (стабільний, спільний для договору та всіх актів)', get: ctx => ctx.booking.contractNumber || '' },
   { key: 'blank', label: '(порожньо — залишити поле для ручного заповнення)', get: () => '' },
 ];
 
@@ -164,6 +165,37 @@ function templateFileName(type, repKey) {
     if (fs.existsSync(named)) return `${base}_${repKey}.docx`;
   }
   return `${base}.docx`;
+}
+// The contract number stays the same for a booking across every document
+// generated under it (the contract itself, and every act — a booking can
+// reasonably end up with more than one act generated over its lifetime,
+// e.g. after edits or re-issues, but they all belong to the same contract).
+// Format: {ініціали ФОП}-{номер авто}-{ддммрррр}-{ггхх}, e.g. СНК-КА_5119_ЕС-06082026-1432.
+// Generated once, on whichever document (contract or act) is generated
+// first for that booking, then persisted onto the booking so it's stable.
+function getOrCreateContractNumber(ctx, bookingId) {
+  if (ctx.booking.contractNumber) return ctx.booking.contractNumber;
+
+  const initials = (ctx.rep?.initials || 'XXX').trim() || 'XXX';
+  const platePart = (ctx.vehicle?.plate || '').trim().replace(/\s+/g, '_') || 'XX';
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const min = String(now.getMinutes()).padStart(2, '0');
+  const contractNumber = `${initials}-${platePart}-${dd}${mm}${yyyy}-${hh}${min}`;
+
+  // Persist onto the booking's own data blob so it survives independently
+  // of this request and is stably reused for every later document.
+  const row = db.prepare('SELECT data FROM bookings WHERE id = ?').get(bookingId);
+  if (row) {
+    const data = JSON.parse(row.data);
+    data.contractNumber = contractNumber;
+    db.prepare('UPDATE bookings SET data = ? WHERE id = ?').run(JSON.stringify(data), bookingId);
+  }
+  ctx.booking.contractNumber = contractNumber;
+  return contractNumber;
 }
 function setMapping(mapping, repKey) {
   const settingsKey = repKey ? MAPPING_SETTINGS_KEY + '_' + repKey : MAPPING_SETTINGS_KEY;
@@ -284,6 +316,8 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   const templatePath = path.join(TEMPLATES_DIR, templateFile);
   if (!fs.existsSync(templatePath)) return res.status(404).json({ error: 'Шаблон не знайдено' });
 
+  const contractNumber = getOrCreateContractNumber(ctx, bookingId);
+
   const mapping = getMapping(repKey)[type] || {};
   const placeholders = await scanTemplatePlaceholders(templatePath);
   const values = {};
@@ -308,9 +342,9 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
       fs.mkdirSync(GENERATED_DOCS_DIR, { recursive: true });
       const diskName = crypto.randomBytes(16).toString('hex') + '.docx';
       fs.writeFileSync(path.join(GENERATED_DOCS_DIR, diskName), fileBuffer);
-      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '');
+      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by, contract_number)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '', contractNumber);
     } catch (archiveErr) {
       console.error('Failed to archive generated document (continuing anyway):', archiveErr);
     }
@@ -327,7 +361,7 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
 // ── Document archive ─────────────────────────────────────────────
 // GET /api/generate-document/archive/list — list all generated documents (no file data, just metadata)
 router.get('/archive/list', auth, (req, res) => {
-  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, created_at
+  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, created_at
                             FROM generated_documents ORDER BY created_at DESC`).all();
   res.json(rows);
 });
