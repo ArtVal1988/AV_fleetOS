@@ -10744,13 +10744,16 @@ function renderDocTemplateFields(type){
   const placeholders = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
   const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
-    placeholders.map(ph => {
+    placeholders.map((ph, idx) => {
     const current = DOC_MAPPING[type]?.[ph] || '';
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
     const isCustom = DOC_CUSTOM[type].includes(ph);
-    return `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px">
+    return `<div class="dt-row" draggable="true" data-type="${type}" data-idx="${idx}"
+        ondragstart="dtRowDragStart(event)" ondragover="dtRowDragOver(event)" ondrop="dtRowDrop(event)" ondragend="dtRowDragEnd(event)"
+        style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px;background:#fff">
       <div style="display:flex;align-items:center;gap:10px">
+        <span style="cursor:grab;color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок">⠿</span>
         <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
         <span style="color:#9ca3af;font-size:11px">→</span>
         <select data-type="${type}" data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
@@ -10776,6 +10779,35 @@ function renderDocTemplateFields(type){
     else if(val.startsWith('path:')) sel.value = '__path__';
     else sel.value = val;
   });
+}
+let dtDragSrcIdx = null;
+function dtRowDragStart(e){
+  dtDragSrcIdx = parseInt(e.currentTarget.dataset.idx);
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function dtRowDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+function dtRowDrop(e){
+  e.preventDefault();
+  const type = e.currentTarget.dataset.type;
+  const targetIdx = parseInt(e.currentTarget.dataset.idx);
+  if(dtDragSrcIdx === null || dtDragSrcIdx === targetIdx) return;
+  // Reorder the underlying scanned/custom placeholder arrays directly —
+  // rendering order is driven straight from these, no separate order state needed.
+  const combined = [...DOC_SCANNED[type], ...DOC_CUSTOM[type]];
+  const [moved] = combined.splice(dtDragSrcIdx, 1);
+  combined.splice(targetIdx, 0, moved);
+  // Preserve DOC_CUSTOM's own relative order among themselves, but respect the new overall position split
+  DOC_SCANNED[type] = combined.filter(ph => !DOC_CUSTOM[type].includes(ph));
+  DOC_CUSTOM[type] = combined.filter(ph => DOC_CUSTOM[type].includes(ph));
+  renderDocTemplateFields(type);
+}
+function dtRowDragEnd(e){
+  e.currentTarget.style.opacity = '';
+  dtDragSrcIdx = null;
 }
 function removeCustomDocField(type, ph){
   DOC_CUSTOM[type] = DOC_CUSTOM[type].filter(x=>x!==ph);
