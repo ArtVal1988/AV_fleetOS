@@ -1890,7 +1890,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- DOCUMENT TEMPLATES ADMIN PANEL -->
 <div id="representatives-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:480;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
       <div style="font-size:16px;font-weight:700;color:#1a1d26">🖋 Дані ФОП та шаблони договорів/актів</div>
       <button onclick="closeRepresentativesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
@@ -10615,39 +10615,61 @@ function openRepresentativesPanel(){
 function closeRepresentativesPanel(){
   document.getElementById('representatives-panel-overlay').style.display='none';
 }
+const REP_FIELDS = [
+  // Group 1
+  {id:'statusType', label:'Статус суб\'єкта господарювання', full:false, group:1},
+  {id:'name', label:'Назва (ПІБ) суб\'єкта', full:false, placeholder:'Іваненко Іван Іванович', group:1},
+  {id:'registryNumber', label:'№ запису в реєстрі', full:false, group:1},
+  {id:'edrpou', label:'Реєстраційний номер / ЄДРПОУ', full:false, group:1},
+  // Group 2
+  {id:'position', label:'Посада', full:false, placeholder:'Директор / ФОП', group:2},
+  {id:'representativeDetails', label:'Дані представника', full:false, group:2},
+  {id:'legalBasis', label:'Юридичні підстави представника', full:true, group:2},
+  // Group 3
+  {id:'address', label:'Юридична адреса', full:true, group:3},
+  {id:'taxForm', label:'Форма оподаткування', full:false, group:3},
+  {id:'ipn', label:'ІПН (для платників ПДВ)', full:false, group:3},
+  // Group 4
+  {id:'iban', label:'Номер р/р в форматі IBAN', full:false, group:4},
+  {id:'bankName', label:'Назва банку', full:false, group:4},
+  {id:'phone', label:'Контактний номер телефону', full:false, group:4},
+  {id:'email', label:'Адреса ел. пошти', full:false, group:4},
+];
 function renderRepSlots(){
   const wrap = document.getElementById('rep-slots');
   if(!wrap) return;
   wrap.innerHTML = REP_SLOTS.map(slot => {
     const r = REPRESENTATIVES[slot.key] || {};
+    let fieldsHtml = '';
+    let lastGroup = null;
+    REP_FIELDS.forEach(f => {
+      if(lastGroup !== null && f.group !== lastGroup){
+        fieldsHtml += `<div style="grid-column:span 2;border-top:1px dashed ${slot.border};margin:2px 0"></div>`;
+      }
+      lastGroup = f.group;
+      fieldsHtml += `<div${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="rep-${slot.key}-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${f.placeholder||''}" value="${r[f.id]||''}"></div>`;
+    });
     return `<div style="background:${slot.bg};border:1px solid ${slot.border};border-radius:8px;padding:14px;margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:12.5px;font-weight:700;color:${slot.accent}">${slot.label}</div>
         <button onclick="openDocTemplatesPanel('${slot.key}')" title="Шаблони документів для цієї форми" style="background:#fff;border:1px solid ${slot.border};color:${slot.accent};border-radius:5px;padding:6px 10px;font-size:10.5px;font-weight:700;cursor:pointer;white-space:nowrap">📄 Шаблони</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div style="grid-column:span 2"><label class="vf-lbl">ПІБ</label><input id="rep-${slot.key}-name" type="text" class="vf-inp" style="width:100%" placeholder="Іваненко Іван Іванович" value="${r.name||''}"></div>
-        <div><label class="vf-lbl">Посада</label><input id="rep-${slot.key}-position" type="text" class="vf-inp" style="width:100%" placeholder="Директор / ФОП" value="${r.position||''}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div><label class="vf-lbl">Ініціали (для номера договору)</label><input id="rep-${slot.key}-initials" type="text" class="vf-inp" style="width:100%;text-transform:uppercase" placeholder="СНК" maxlength="6" value="${r.initials||''}"></div>
-        <div><label class="vf-lbl">Реєстраційний номер / ЄДРПОУ</label><input id="rep-${slot.key}-edrpou" type="text" class="vf-inp" style="width:100%" value="${r.edrpou||''}"></div>
-        <div style="grid-column:span 2"><label class="vf-lbl">Юридична адреса</label><input id="rep-${slot.key}-address" type="text" class="vf-inp" style="width:100%" value="${r.address||''}"></div>
-        <div><label class="vf-lbl">Телефон</label><input id="rep-${slot.key}-phone" type="text" class="vf-inp" style="width:100%" value="${r.phone||''}"></div>
-        <div><label class="vf-lbl">Банківські реквізити</label><input id="rep-${slot.key}-bank" type="text" class="vf-inp" style="width:100%" placeholder="IBAN, назва банку" value="${r.bank||''}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${fieldsHtml}
       </div>
     </div>`;
   }).join('');
 }
 async function saveRepresentativeSlots(){
   REP_SLOTS.forEach(slot => {
-    REPRESENTATIVES[slot.key] = {
-      name: document.getElementById(`rep-${slot.key}-name`).value.trim(),
-      position: document.getElementById(`rep-${slot.key}-position`).value.trim(),
-      initials: document.getElementById(`rep-${slot.key}-initials`).value.trim().toUpperCase(),
-      edrpou: document.getElementById(`rep-${slot.key}-edrpou`).value.trim(),
-      address: document.getElementById(`rep-${slot.key}-address`).value.trim(),
-      phone: document.getElementById(`rep-${slot.key}-phone`).value.trim(),
-      bank: document.getElementById(`rep-${slot.key}-bank`).value.trim(),
-    };
+    const rep = { initials: document.getElementById(`rep-${slot.key}-initials`).value.trim().toUpperCase() };
+    REP_FIELDS.forEach(f => {
+      rep[f.id] = document.getElementById(`rep-${slot.key}-${f.id}`).value.trim();
+    });
+    REPRESENTATIVES[slot.key] = rep;
   });
   await apiFetch('PUT', '/settings/representatives', {value: REPRESENTATIVES});
   closeRepresentativesPanel();
