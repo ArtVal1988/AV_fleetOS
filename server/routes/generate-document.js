@@ -182,17 +182,24 @@ function templateFileName(type, repKey) {
 // Format: {ініціали ФОП}-{номер авто}-{ддммрррр}-{ггхх}, e.g. СНК-КА_5119_ЕС-06082026-1432.
 // Generated once, on whichever document (contract or act) is generated
 // first for that booking, then persisted onto the booking so it's stable.
+// Server runs in UTC, but the business operates in Ukraine — always format
+// dates/times in Europe/Kyiv explicitly rather than relying on the server's
+// local timezone, otherwise contract numbers end up several hours off.
+function getKyivDateParts(date) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Kyiv',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(date);
+  const get = t => parts.find(p => p.type === t).value;
+  return { dd: get('day'), mm: get('month'), yyyy: get('year'), hh: get('hour'), min: get('minute') };
+}
 function getOrCreateContractNumber(ctx, bookingId) {
   if (ctx.booking.contractNumber) return ctx.booking.contractNumber;
 
   const initials = (ctx.rep?.initials || 'XXX').trim() || 'XXX';
   const platePart = (ctx.vehicle?.plate || '').trim().replace(/\s+/g, '') || 'XX';
-  const now = new Date();
-  const dd = String(now.getDate()).padStart(2, '0');
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const yyyy = now.getFullYear();
-  const hh = String(now.getHours()).padStart(2, '0');
-  const min = String(now.getMinutes()).padStart(2, '0');
+  const { dd, mm, yyyy, hh, min } = getKyivDateParts(new Date());
   const contractNumber = `${initials}-${platePart}-${dd}${mm}${yyyy}-${hh}${min}`;
 
   // Persist onto the booking's own data blob so it survives independently
@@ -398,7 +405,8 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     const clientName = getFieldValue('client_name', ctx);
     const vehiclePlate = getFieldValue('vehicle_plate', ctx);
     const now = new Date();
-    const genStamp = String(now.getDate()).padStart(2,'0') + String(now.getMonth()+1).padStart(2,'0') + now.getFullYear() + '_' + String(now.getHours()).padStart(2,'0') + String(now.getMinutes()).padStart(2,'0');
+    const gk = getKyivDateParts(now);
+    const genStamp = gk.dd + gk.mm + gk.yyyy + '_' + gk.hh + gk.min;
     const fileName = type === 'contract'
       ? `${contractNumber}_Договір.docx`
       : `${contractNumber}_${genStamp}_Акт.docx`; // multiple acts can share one contract number, so disambiguate by generation time
