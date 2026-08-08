@@ -397,23 +397,36 @@ function getTemplateInfo(actualFileName, type, repKey) {
 // table to configure instead of a separate one per document/slot.
 router.get('/mapping', auth, adminOnly, async (req, res) => {
   const mapping = getMapping();
+  const removedRow = db.prepare("SELECT value FROM settings WHERE key = ?").get('document_removed_placeholders');
+  const removed = removedRow ? JSON.parse(removedRow.value) : [];
   const slots = {};
   const allPlaceholdersSet = new Set();
   for (const repKey of Object.keys(DOCUMENT_TYPES)) {
     const templates = {};
     for (const t of DOCUMENT_TYPES[repKey]) {
       const file = templateFileName(t.key, repKey);
-      const placeholders = await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file));
+      const placeholders = (await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file))).filter(ph => !removed.includes(ph));
       const info = getTemplateInfo(file, t.key, repKey);
       templates[t.key] = { label: t.label, file, placeholders, info };
       placeholders.forEach(ph => allPlaceholdersSet.add(ph));
     }
     slots[repKey] = templates;
   }
-  res.json({ mapping, slots, placeholders: [...allPlaceholdersSet] });
+  res.json({ mapping, slots, placeholders: [...allPlaceholdersSet], removed });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
   setMapping(req.body);
+  res.json({ ok: true });
+});
+// Persist which scanned #placeholders the admin explicitly hid — can't
+// remove the actual text from the .docx file itself, but this stops them
+// from reappearing in the list every time the panel is reopened.
+router.put('/mapping/removed', auth, adminOnly, (req, res) => {
+  const removed = Array.isArray(req.body.removed) ? req.body.removed : [];
+  const json = JSON.stringify(removed);
+  const existing = db.prepare("SELECT key FROM settings WHERE key = ?").get('document_removed_placeholders');
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, 'document_removed_placeholders');
+  else db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run('document_removed_placeholders', json);
   res.json({ ok: true });
 });
 

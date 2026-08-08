@@ -10921,7 +10921,6 @@ let scrollToRepKeyOnOpen = null; // set when opened from a slot's own "📄 Ша
 async function openDocTemplatesPanel(repKey){
   closeSettingsHubPanel();
   scrollToRepKeyOnOpen = repKey || null;
-  DOC_REMOVED = [];
   document.getElementById('doctemplates-panel-overlay').style.display='flex';
   if(!DOC_TYPES_REGISTRY) DOC_TYPES_REGISTRY = await apiFetch('GET', '/generate-document/document-types');
   const [fields, mappingData] = await Promise.all([
@@ -10933,6 +10932,7 @@ async function openDocTemplatesPanel(repKey){
     DOC_MAPPING = mappingData.mapping || {};
     currentDocSlots = mappingData.slots || {};
     DOC_SCANNED = mappingData.placeholders || [];
+    DOC_REMOVED = mappingData.removed || []; // persisted server-side — stays hidden across sessions, not reset here
     // Any mapping key that isn't in the scanned list was added manually in
     // a previous session — keep showing it so it doesn't silently vanish.
     DOC_CUSTOM = Object.keys(DOC_MAPPING).filter(k=>!DOC_SCANNED.includes(k));
@@ -11036,15 +11036,20 @@ function removeDocField(ph){
     DOC_CUSTOM = DOC_CUSTOM.filter(x=>x!==ph);
   } else {
     // Scanned straight from a .docx file — can't remove the #placeholder
-    // text itself from here, just stop showing/managing this row.
+    // text itself from here, just stop showing/managing this row. Persist
+    // this choice server-side so it stays hidden across sessions instead
+    // of reappearing every time the panel reopens (it's still physically
+    // in the template file, so a fresh scan would otherwise re-detect it).
     DOC_REMOVED.push(ph);
+    apiFetch('PUT', '/generate-document/mapping/removed', {removed: DOC_REMOVED});
   }
   delete DOC_MAPPING[ph];
   renderUnifiedDocFields();
 }
-function restoreDocFields(){
+async function restoreDocFields(){
   DOC_REMOVED = [];
-  renderUnifiedDocFields();
+  await apiFetch('PUT', '/generate-document/mapping/removed', {removed: DOC_REMOVED});
+  openDocTemplatesPanel(scrollToRepKeyOnOpen); // re-fetch — the server already excluded these from its response, so a full refresh is needed to bring them back into view
 }
 let dtDragSrcIdx = null;
 function dtRowDragStart(e){
@@ -11060,12 +11065,15 @@ function dtRowDrop(e){
   e.preventDefault();
   const targetIdx = parseInt(e.currentTarget.dataset.idx);
   if(dtDragSrcIdx === null || dtDragSrcIdx === targetIdx) return;
-  // Reorder the underlying scanned/custom placeholder arrays directly —
-  // rendering order is driven straight from these, no separate order state needed.
-  const combined = [...DOC_SCANNED, ...DOC_CUSTOM];
-  const [moved] = combined.splice(dtDragSrcIdx, 1);
-  combined.splice(targetIdx, 0, moved);
-  // Preserve DOC_CUSTOM's own relative order among themselves, but respect the new overall position split
+  // data-idx is based on the FILTERED (DOC_REMOVED-excluding) displayed
+  // list, so the reorder must operate on that same filtered list —
+  // previously this spliced the raw DOC_SCANNED+DOC_CUSTOM arrays directly,
+  // which include removed items too, silently misaligning every index
+  // once anything had been removed earlier in the session.
+  const visible = [...DOC_SCANNED, ...DOC_CUSTOM].filter(ph => !DOC_REMOVED.includes(ph));
+  const [moved] = visible.splice(dtDragSrcIdx, 1);
+  visible.splice(targetIdx, 0, moved);
+  const combined = [...visible, ...DOC_REMOVED]; // keep removed ones tracked, just not displayed
   DOC_SCANNED = combined.filter(ph => !DOC_CUSTOM.includes(ph));
   DOC_CUSTOM = combined.filter(ph => DOC_CUSTOM.includes(ph));
   renderUnifiedDocFields();
