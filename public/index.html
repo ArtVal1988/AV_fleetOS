@@ -2691,9 +2691,10 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div class="msec msec-sub" id="bm-fines-section" style="margin-top:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <button type="button" onclick="toggleFinesSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#dc2626;letter-spacing:.3px;text-align:left">
+        <button type="button" onclick="toggleFinesSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#dc2626;letter-spacing:.3px;text-align:left;min-width:0">
           <span id="bm-fines-toggle-icon">⊕</span>
-          <span>🚔 Штрафи</span>
+          <span style="flex-shrink:0">🚔 Штрафи</span>
+          <span id="bm-fines-summary" style="font-weight:400;letter-spacing:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
         </button>
         <button type="button" onclick="openFinesForNewEntry()" style="background:#fee2e2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати штраф</button>
       </div>
@@ -3768,32 +3769,34 @@ function showTooltip(e,bid,subContext){
         ${b.orderCompany==='toprent'?'<span title="TopRent" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#1d4ed8;letter-spacing:.3px">TR</span>':''}
         ${b.orderCompany==='rentplus'?'<span title="RentPlus" style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;background:#f0fdf4;color:#166534;letter-spacing:.3px">R+</span>':''}
       </span>
-      ${(()=>{
-        const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
-        const mainRemaining = b.partialPaymentActive ? Math.max(0, totalForPartial - (b.amountPaid||0)) : 0;
-        const hasActiveExt = b.extension && b.extension.active && getExtStatus(b.extension)!=='paid';
-        const extRemaining = hasActiveExt ? Math.max(0, (b.extension.cost||0) - (b.extension.amountPaid||0)) : 0;
-        if(!b.partialPaymentActive && !hasActiveExt) return '';
-        const isPaidFull = mainRemaining <= 0.009 && extRemaining <= 0.009;
-        if(isPaidFull) return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#dcfce7;color:#166534">✓ Оплачено</span>`;
-        // Show whichever debt exists; if both periods carry debt (rare —
-        // partial main payment plus an unpaid extension), combine them
-        // since they're assumed to share the booking's primary currency.
-        const totalRemaining = mainRemaining + extRemaining;
-        const debtCur = hasActiveExt && !b.partialPaymentActive ? (b.extension.currency||b.currency||'$') : cur;
-        return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">⚠ Борг</span> <span style="color:${curColor(debtCur)}">${fmt1(totalRemaining)} ${debtCur}</span></span>`;
-      })()}
+      <span style="display:flex;align-items:center;gap:5px">
+        ${(()=>{
+          const unpaidFines = (b.fines||[]).filter(f=>!f.paid);
+          if(!unpaidFines.length) return '';
+          // Fines can be in mixed currencies — group and show each separately
+          // rather than assuming they share the booking's own currency.
+          const byCur = {};
+          unpaidFines.forEach(f=>{ byCur[f.currency] = (byCur[f.currency]||0) + f.amount; });
+          const parts = Object.entries(byCur).map(([c,amt])=>`<span style="color:${curColor(c)}">${fmtSmart(amt)} ${c}</span>`).join(' + ');
+          return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">🚔 Штраф${unpaidFines.length>1?' ('+unpaidFines.length+')':''}</span> ${parts}</span>`;
+        })()}
+        ${(()=>{
+          const totalForPartial = cur==='₴' ? (totalUah||0) : (total||0);
+          const mainRemaining = b.partialPaymentActive ? Math.max(0, totalForPartial - (b.amountPaid||0)) : 0;
+          const hasActiveExt = b.extension && b.extension.active && getExtStatus(b.extension)!=='paid';
+          const extRemaining = hasActiveExt ? Math.max(0, (b.extension.cost||0) - (b.extension.amountPaid||0)) : 0;
+          if(!b.partialPaymentActive && !hasActiveExt) return '';
+          const isPaidFull = mainRemaining <= 0.009 && extRemaining <= 0.009;
+          if(isPaidFull) return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#dcfce7;color:#166534">✓ Оплачено</span>`;
+          // Show whichever debt exists; if both periods carry debt (rare —
+          // partial main payment plus an unpaid extension), combine them
+          // since they're assumed to share the booking's primary currency.
+          const totalRemaining = mainRemaining + extRemaining;
+          const debtCur = hasActiveExt && !b.partialPaymentActive ? (b.extension.currency||b.currency||'$') : cur;
+          return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">⚠ Борг</span> <span style="color:${curColor(debtCur)}">${fmt1(totalRemaining)} ${debtCur}</span></span>`;
+        })()}
+      </span>
     </div>
-    ${(()=>{
-      const unpaidFines = (b.fines||[]).filter(f=>!f.paid);
-      if(!unpaidFines.length) return '';
-      // Fines can be in mixed currencies — group and show each separately
-      // rather than assuming they share the booking's own currency.
-      const byCur = {};
-      unpaidFines.forEach(f=>{ byCur[f.currency] = (byCur[f.currency]||0) + f.amount; });
-      const parts = Object.entries(byCur).map(([c,amt])=>`<span style="color:${curColor(c)}">${fmtSmart(amt)} ${c}</span>`).join(' + ');
-      return `<div style="margin-top:6px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">🚔 Штраф${unpaidFines.length>1?' ('+unpaidFines.length+')':''}</span> ${parts}</span></div>`;
-    })()}
     ${nameRow}
     ${pickupRow}
     ${retRow}
@@ -6910,6 +6913,22 @@ function toggleFinesSection(){
   panel.style.display = isOpen ? 'none' : 'block';
   if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
   if(isOpen) hideFinesForm();
+  updateFinesSummary();
+}
+function updateFinesSummary(){
+  const el = document.getElementById('bm-fines-summary');
+  if(!el) return;
+  const panel = document.getElementById('bm-fines-panel');
+  const collapsed = !panel || panel.style.display === 'none';
+  if(!collapsed || !currentFines.length){ el.innerHTML = ''; return; }
+  const paid = currentFines.filter(f=>f.paid).length;
+  const unpaid = currentFines.length - paid;
+  const total = currentFines.length;
+  if(unpaid === 0){
+    el.innerHTML = `— Загалом: ${total} шт. <span style="color:#166534;font-weight:700">Всі оплачено</span>`;
+  } else {
+    el.innerHTML = `— Загалом: ${total} шт. <span style="color:#dc2626;font-weight:700">Не оплачено = ${unpaid} шт</span>${paid?`, <span style="color:#166534;font-weight:700">Оплачено = ${paid} шт</span>`:''}`;
+  }
 }
 function showFinesForm(){
   const w = document.getElementById('bm-fines-form-wrap');
@@ -6987,6 +7006,7 @@ function renderFinesList(){
       ${isEditing?'<div style="font-size:10px;color:#a16207;font-weight:700">редагується…</div>':''}
     </div>`;
   }).join('') || '<div style="font-size:10.5px;color:#9ca3af;font-style:italic;padding:6px 2px">Штрафів ще не додано</div>';
+  updateFinesSummary();
 }
 function loadFines(fines){
   currentFines = (fines||[]).map(f=>({...f}));
