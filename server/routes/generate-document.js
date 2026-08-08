@@ -107,8 +107,24 @@ const FIELD_CATALOG = [
   { key: 'return_time', label: 'Час повернення', get: ctx => ctx.booking.ret?.time || '' },
   { key: 'return_address', label: 'Адреса повернення', get: ctx => ctx.booking.ret?.address || 'Офіс, вул. Антоновича, 112' },
   { key: 'rate_per_day', label: 'Тариф за добу', get: ctx => fmtMoney(ctx.booking.rate) },
+  { key: 'rate_per_day_uah', label: 'Тариф за добу в грн (конвертовано за курсом замовлення)', get: ctx => {
+    const rate = ctx.booking.rate;
+    if (rate === null || rate === undefined || rate === '') return '';
+    const isUsd = ctx.booking.currency === '$';
+    // If the rate itself is already in ₴, no conversion needed. If it's in
+    // $, multiply by the booking's own exchange rate — that's the rate
+    // this specific rental actually used, not some separate/global one.
+    const uah = isUsd ? rate * (Number(ctx.booking.exchangeRate) || 0) : rate;
+    return fmtMoney(Math.round(uah * 100) / 100);
+  } },
   { key: 'currency', label: 'Валюта замовлення', get: ctx => ctx.booking.currency || '' },
   { key: 'total_amount', label: 'Загальна вартість оренди', get: ctx => fmtMoney((ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end)) },
+  { key: 'total_amount_uah', label: 'Загальна вартість оренди в грн (конвертовано за курсом замовлення)', get: ctx => {
+    const total = (ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end);
+    const isUsd = ctx.booking.currency === '$';
+    const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
+    return fmtMoney(Math.round(uah * 100) / 100);
+  } },
   { key: 'deposit', label: 'Сума застави (депозиту)', get: ctx => fmtMoney(ctx.booking.deposit) },
   { key: 'pay_method', label: 'Спосіб оплати послуг', get: ctx => ctx.booking.payMethod === 'card' ? 'Банківська картка' : ctx.booking.payMethod === 'cash' ? 'Готівка' : '' },
   { key: 'deposit_pay_method', label: 'Спосіб оплати застави', get: ctx => ctx.booking.depositPayMethod === 'card' ? 'Банківська картка' : ctx.booking.depositPayMethod === 'cash' ? 'Готівка' : '' },
