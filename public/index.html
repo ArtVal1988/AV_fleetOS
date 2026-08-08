@@ -3595,8 +3595,8 @@ function showTooltip(e,bid,subContext){
   const pickupRow = isSpecialStatus
     ? ''
     : (!b.pickup?.loc || b.pickup.loc === BM_DEFAULT_ADDRESS)
-      ? `<div class="tt-row" style="margin-top:6px"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''} · Офіс</span></div>`
-      : `<div class="tt-row" style="margin-top:6px"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
+      ? `<div class="tt-divider"></div><div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''} · Офіс</span></div>`
+      : `<div class="tt-divider"></div><div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
         `<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.pickup.loc}</div>`;
   const retRow = isSpecialStatus
     ? ''
