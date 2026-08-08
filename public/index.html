@@ -2689,6 +2689,43 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div>
 
+    <div class="msec msec-sub" id="bm-fines-section" style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <button type="button" onclick="toggleFinesSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#dc2626;letter-spacing:.3px;text-align:left">
+          <span id="bm-fines-toggle-icon">⊕</span>
+          <span>🚔 Штрафи</span>
+        </button>
+        <button type="button" onclick="openFinesForNewEntry()" style="background:#fee2e2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати штраф</button>
+      </div>
+      <div class="extras-panel" id="bm-fines-panel" style="display:none;margin-top:10px;padding:0">
+        <div id="bm-fines-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+        <div id="bm-fines-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+          <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+            <div>
+              <label class="vf-lbl">Дата</label>
+              <input type="date" readonly id="bm-fine-date" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="height:36px">
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label class="vf-lbl">Опис / причина</label>
+              <input type="text" id="bm-fine-desc" class="vf-inp" style="width:100%;height:36px" placeholder="Порушення ПДР, камера...">
+            </div>
+            <div style="width:110px">
+              <label class="vf-lbl">Сума</label>
+              <input type="text" inputmode="decimal" id="bm-fine-amount" class="vf-inp no-spinner" style="width:100%;height:36px" placeholder="0" oninput="formatRateInput(this)">
+            </div>
+            <div class="dep-inline-wrap" style="background:none;border:none;padding:0;margin-bottom:1px">
+              <button type="button" id="fine-cur-btn-uah" class="dep-cur-pill active" onclick="setFineCurrency('₴')">₴</button>
+              <button type="button" id="fine-cur-btn-usd" class="dep-cur-pill" onclick="setFineCurrency('$')">$</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button type="button" onclick="hideFinesForm()" style="background:#fff;border:1px solid #e5e7eb;color:#6b7280;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Скасувати</button>
+            <button type="button" onclick="saveFineEntry()" style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Додати</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="bm-return-anchor-ext"></div>
 
     <div class="msec msec-b4" id="bm-block-4">
@@ -2741,14 +2778,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ded-price-wrap" id="ded-wrap-mileage" style="display:none">
               <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-mileage" placeholder="0" style="color:#166534" oninput="formatRateInput(this);mileageOverageAmtTouched=true;updateDeductionsTotal()">
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-mileage-uah" onclick="setDedCur('mileage','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-mileage-usd" onclick="setDedCur('mileage','$')">$</button></div>
-            </div>
-          </div>
-          <div class="ded-row">
-            <button type="button" class="extra-toggle-btn" onclick="toggleDed('fines')"><span class="extra-radio" id="ded-radio-fines">○</span></button>
-            <span class="ded-icon">🚔</span><span class="ded-name">Штрафи</span>
-            <div class="ded-price-wrap" id="ded-wrap-fines" style="display:none">
-              <input type="text" inputmode="decimal" class="ded-price-input no-spinner" id="ded-amt-fines" placeholder="0" style="color:#166534" oninput="formatRateInput(this);updateDeductionsTotal()">
-              <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-fines-uah" onclick="setDedCur('fines','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-fines-usd" onclick="setDedCur('fines','$')">$</button></div>
             </div>
           </div>
           <div class="ded-row ded-dmg-row">
@@ -3755,6 +3784,16 @@ function showTooltip(e,bid,subContext){
         return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">⚠ Борг</span> <span style="color:${curColor(debtCur)}">${fmt1(totalRemaining)} ${debtCur}</span></span>`;
       })()}
     </div>
+    ${(()=>{
+      const unpaidFines = (b.fines||[]).filter(f=>!f.paid);
+      if(!unpaidFines.length) return '';
+      // Fines can be in mixed currencies — group and show each separately
+      // rather than assuming they share the booking's own currency.
+      const byCur = {};
+      unpaidFines.forEach(f=>{ byCur[f.currency] = (byCur[f.currency]||0) + f.amount; });
+      const parts = Object.entries(byCur).map(([c,amt])=>`<span style="color:${curColor(c)}">${fmtSmart(amt)} ${c}</span>`).join(' + ');
+      return `<div style="margin-top:6px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">🚔 Штраф${unpaidFines.length>1?' ('+unpaidFines.length+')':''}</span> ${parts}</span></div>`;
+    })()}
     ${nameRow}
     ${pickupRow}
     ${retRow}
@@ -4430,6 +4469,7 @@ function openBookingModal(vid=null,start=null,end=null){
   customEquipment = [];
   renderEquipmentList();
   resetDeductions();
+  loadFines([]);
   // Pre-fill start km from the most recent previous booking's end km for
   // this vehicle — NOT from service.lastKm (that's the odometer reading at
   // last maintenance, an unrelated figure that could be wildly out of date
@@ -4475,6 +4515,7 @@ function editBooking(bid){
   document.getElementById('bm-end-km').value=b.endKm?Number(b.endKm).toLocaleString('uk-UA'):'';
   updateKmDiff();
   loadDeductions(b.deductions||null);
+  loadFines(b.fines||[]);
   loadMessengers(b.messengers||[]);
   setClientType(b.clientType||'individual', false);
   updateClientTypeLock((b.clientType||'individual')==='individual');
@@ -4867,6 +4908,7 @@ function saveBooking(){
     startKm:parseThousands(document.getElementById('bm-start-km')?.value),
     endKm:parseThousands(document.getElementById('bm-end-km')?.value),
     deductions:readDeductions(),
+    fines: currentFines,
     extras:readExtrasFromForm(),
     equipment:customEquipment.filter(item => item.name?.trim() || item.price > 0).map(({id, ...rest}) => rest),
     messengers:readMessengersFromForm(),
@@ -5825,7 +5867,7 @@ function saveCurrentKm(vid){
 
 /* ── BOOKING MILEAGE SYNC ── */
 // ── POST-RENTAL DEDUCTIONS ──────────────────────────────────────
-const DED_KEYS = ['wash','fuel','mileage','fines','refund'];
+const DED_KEYS = ['wash','fuel','mileage','refund'];
 let dedDamageItems = [];
 let dedCustomItems = [];
 let dedDamageIdSeq = 1;
@@ -6847,6 +6889,112 @@ function cancelEditSubstitute(){
   hideSubstituteForm();
   renderSubstituteList();
 }
+
+// ── Штрафи (fines) — each one recorded individually with its own paid
+// status, replacing the old single lump-sum "Штрафи" deduction amount so
+// multiple fines with different dates/reasons/payment states can coexist.
+let currentFines = [];
+let editingFineIndex = null;
+let fineCurrency = '₴';
+function setFineCurrency(cur){
+  fineCurrency = cur;
+  document.getElementById('fine-cur-btn-uah')?.classList.toggle('active', cur==='₴');
+  document.getElementById('fine-cur-btn-usd')?.classList.toggle('active', cur==='$');
+  const amtField = document.getElementById('bm-fine-amount');
+  if(amtField) amtField.style.color = curColor(cur);
+}
+function toggleFinesSection(){
+  const panel = document.getElementById('bm-fines-panel');
+  const icon = document.getElementById('bm-fines-toggle-icon');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(isOpen) hideFinesForm();
+}
+function showFinesForm(){
+  const w = document.getElementById('bm-fines-form-wrap');
+  if(w) w.style.display = 'flex';
+}
+function hideFinesForm(){
+  const w = document.getElementById('bm-fines-form-wrap');
+  if(w) w.style.display = 'none';
+  editingFineIndex = null;
+  document.getElementById('bm-fine-date').value = '';
+  document.getElementById('bm-fine-desc').value = '';
+  document.getElementById('bm-fine-amount').value = '';
+  setFineCurrency('₴');
+}
+function openFinesForNewEntry(){
+  const panel = document.getElementById('bm-fines-panel');
+  if(panel && panel.style.display === 'none') toggleFinesSection();
+  showFinesForm();
+  document.getElementById('bm-fine-date')?.focus();
+}
+function saveFineEntry(){
+  const date = document.getElementById('bm-fine-date').value;
+  const desc = document.getElementById('bm-fine-desc').value.trim();
+  const amount = parseThousands(document.getElementById('bm-fine-amount').value);
+  if(!date){ alert('Вкажіть дату штрафу'); return; }
+  if(!(amount>0)){ alert('Вкажіть суму штрафу'); return; }
+  const entry = { date, description: desc, amount, currency: fineCurrency, paid: false };
+  if(editingFineIndex !== null){
+    entry.paid = currentFines[editingFineIndex].paid; // preserve paid status while editing
+    currentFines[editingFineIndex] = entry;
+  } else {
+    currentFines.push(entry);
+  }
+  hideFinesForm();
+  renderFinesList();
+}
+function editFineEntry(i){
+  const f = currentFines[i];
+  if(!f) return;
+  editingFineIndex = i;
+  document.getElementById('bm-fine-date').value = f.date;
+  document.getElementById('bm-fine-desc').value = f.description || '';
+  document.getElementById('bm-fine-amount').value = f.amount.toLocaleString('uk-UA');
+  setFineCurrency(f.currency || '₴');
+  showFinesForm();
+}
+function deleteFineEntry(i){
+  if(!confirm('Видалити цей штраф?')) return;
+  currentFines.splice(i,1);
+  if(editingFineIndex === i) hideFinesForm();
+  renderFinesList();
+}
+function toggleFinePaid(i){
+  const f = currentFines[i];
+  if(!f) return;
+  f.paid = !f.paid;
+  renderFinesList();
+}
+function renderFinesList(){
+  const wrap = document.getElementById('bm-fines-list');
+  if(!wrap) return;
+  wrap.innerHTML = currentFines.map((f,i) => {
+    const isEditing = editingFineIndex === i;
+    return `<div class="ext-history-row" style="display:flex;flex-direction:column;gap:2px;background:${isEditing?'#fef9c3':(f.paid?'#f0fdf4':'#fef2f2')};border:${isEditing?'1px solid #fde047':'none'};border-radius:4px;padding:5px 6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button type="button" onclick="toggleFinePaid(${i})" title="${f.paid?'Оплачено — натисніть, щоб позначити неоплаченим':'Не оплачено — натисніть, щоб позначити оплаченим'}" style="background:none;border:none;cursor:pointer;font-size:14px;flex-shrink:0;padding:0">${f.paid?'✅':'⭕'}</button>
+        <span style="font-size:11px;flex-shrink:0;font-family:var(--font-mono)">${fmt(f.date)}</span>
+        <span style="font-size:11px;color:#6b7280;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.description||'—'}</span>
+        <span style="font-size:11px;font-weight:700;color:${curColor(f.currency)};flex-shrink:0">${fmtSmart(f.amount)} ${f.currency}</span>
+        <span style="display:flex;gap:4px;flex-shrink:0">
+          <button type="button" onclick="editFineEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
+          <button type="button" onclick="deleteFineEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
+        </span>
+      </div>
+      ${isEditing?'<div style="font-size:10px;color:#a16207;font-weight:700">редагується…</div>':''}
+    </div>`;
+  }).join('') || '<div style="font-size:10.5px;color:#9ca3af;font-style:italic;padding:6px 2px">Штрафів ще не додано</div>';
+}
+function loadFines(fines){
+  currentFines = (fines||[]).map(f=>({...f}));
+  editingFineIndex = null;
+  hideFinesForm();
+  renderFinesList();
+}
+
 function renderSubstituteList(){
   const wrap = document.getElementById('bm-substitute-list');
   if(!wrap) return;
@@ -8759,7 +8907,7 @@ function updateBookingDetailsVisibility(){
   const hide = st ? (st.isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
 
   wrap.style.display = 'flex'; // block 2 (dates) always stays visible
-  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-substitute-section','bm-block-4','bm-block-5'].forEach(id=>{
+  ['bm-block-1','bm-block-extras','bm-block-3','bm-block-ext-section','bm-substitute-section','bm-fines-section','bm-block-4','bm-block-5'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = hide ? 'none' : '';
   });
