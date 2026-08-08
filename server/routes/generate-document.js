@@ -60,6 +60,15 @@ function fmtMoney(n) {
   if (n === null || n === undefined || n === '') return '';
   return Number(n).toLocaleString('uk-UA');
 }
+// Extra services (pickup/return address delivery, off-hours) store their
+// price alongside a cur mode: 'orig' means the booking's own currency,
+// 'uah' means always ₴ regardless of the booking's currency.
+function getExtraFee(booking, key) {
+  const e = booking.extras?.[key];
+  if (!e || !e.active || !e.price) return null;
+  const currency = e.cur === 'uah' ? '₴' : (booking.currency || '$');
+  return { amount: e.price * (e.qty || 1), currency };
+}
 function buildClientLegalDescription(client, fallbackName) {
   if (!client) return fallbackName || '';
   const parts = [client.name || fallbackName || ''];
@@ -106,6 +115,27 @@ const FIELD_CATALOG = [
   { key: 'pickup_address', label: 'Адреса отримання', get: ctx => ctx.booking.pickup?.address || 'Офіс, вул. Антоновича, 112' },
   { key: 'return_time', label: 'Час повернення', get: ctx => ctx.booking.ret?.time || '' },
   { key: 'return_address', label: 'Адреса повернення', get: ctx => ctx.booking.ret?.address || 'Офіс, вул. Антоновича, 112' },
+  { key: 'pickup_address_fee', label: 'Тариф «Отримання за адресою»', get: ctx => {
+    const f = getExtraFee(ctx.booking, 'pickup_address');
+    return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
+  } },
+  { key: 'return_address_fee', label: 'Тариф «Повернення за адресою»', get: ctx => {
+    const f = getExtraFee(ctx.booking, 'return_address');
+    return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
+  } },
+  { key: 'offhours_total_fee', label: 'Тариф «Загальний за неробочі години» (отримання + повернення)', get: ctx => {
+    const pickup = getExtraFee(ctx.booking, 'pickup_offhours');
+    const ret = getExtraFee(ctx.booking, 'return_offhours');
+    if (!pickup && !ret) return '';
+    // Both fees are normally in the same currency (both derive from the
+    // same booking) — if they somehow differ, show them separately rather
+    // than silently adding mismatched currencies together.
+    if (pickup && ret && pickup.currency === ret.currency) {
+      return `${fmtMoney(pickup.amount + ret.amount)} ${pickup.currency}`;
+    }
+    const parts = [pickup, ret].filter(Boolean).map(f => `${fmtMoney(f.amount)} ${f.currency}`);
+    return parts.join(' + ');
+  } },
   { key: 'rate_per_day', label: 'Тариф за добу', get: ctx => fmtMoney(ctx.booking.rate) },
   { key: 'rate_per_day_uah', label: 'Тариф за добу в грн (конвертовано за курсом замовлення)', get: ctx => {
     const rate = ctx.booking.rate;
@@ -117,6 +147,16 @@ const FIELD_CATALOG = [
     const uah = isUsd ? rate * (Number(ctx.booking.exchangeRate) || 0) : rate;
     return fmtMoney(Math.round(uah * 100) / 100);
   } },
+  { key: 'rate_per_day_usd', label: 'Тариф за добу в долл (конвертовано за курсом замовлення)', get: ctx => {
+    const rate = ctx.booking.rate;
+    if (rate === null || rate === undefined || rate === '') return '';
+    const isUah = ctx.booking.currency === '₴';
+    // If the rate is already in $, no conversion needed. If it's in ₴,
+    // divide by the booking's own exchange rate.
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = isUah ? (exRate > 0 ? rate / exRate : 0) : rate;
+    return fmtMoney(Math.round(usd * 100) / 100);
+  } },
   { key: 'currency', label: 'Валюта замовлення', get: ctx => ctx.booking.currency || '' },
   { key: 'total_amount', label: 'Загальна вартість оренди', get: ctx => fmtMoney((ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end)) },
   { key: 'total_amount_uah', label: 'Загальна вартість оренди в грн (конвертовано за курсом замовлення)', get: ctx => {
@@ -126,6 +166,21 @@ const FIELD_CATALOG = [
     return fmtMoney(Math.round(uah * 100) / 100);
   } },
   { key: 'deposit', label: 'Сума застави (депозиту)', get: ctx => fmtMoney(ctx.booking.deposit) },
+  { key: 'deposit_uah', label: 'Сума застави в грн (конвертовано за курсом замовлення)', get: ctx => {
+    const deposit = ctx.booking.deposit;
+    if (!deposit) return '';
+    const isUsd = (ctx.booking.depositCur || ctx.booking.currency) === '$';
+    const uah = isUsd ? deposit * (Number(ctx.booking.exchangeRate) || 0) : deposit;
+    return fmtMoney(Math.round(uah * 100) / 100);
+  } },
+  { key: 'deposit_usd', label: 'Сума застави в долл (конвертовано за курсом замовлення)', get: ctx => {
+    const deposit = ctx.booking.deposit;
+    if (!deposit) return '';
+    const isUah = (ctx.booking.depositCur || ctx.booking.currency) === '₴';
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = isUah ? (exRate > 0 ? deposit / exRate : 0) : deposit;
+    return fmtMoney(Math.round(usd * 100) / 100);
+  } },
   { key: 'pay_method', label: 'Спосіб оплати послуг', get: ctx => ctx.booking.payMethod === 'card' ? 'Банківська картка' : ctx.booking.payMethod === 'cash' ? 'Готівка' : '' },
   { key: 'deposit_pay_method', label: 'Спосіб оплати застави', get: ctx => ctx.booking.depositPayMethod === 'card' ? 'Банківська картка' : ctx.booking.depositPayMethod === 'cash' ? 'Готівка' : '' },
   { key: 'status_label', label: 'Статус замовлення', get: ctx => ctx.booking.status || '' },
