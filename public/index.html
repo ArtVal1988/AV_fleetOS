@@ -4922,17 +4922,17 @@ async function generateDocument(type){
     const match = disposition.match(/filename="?([^"]+)"?/);
     const fileName = match ? decodeURIComponent(match[1]) : (type==='contract' ? 'Договір.docx' : 'Акт.docx');
     const url = URL.createObjectURL(blob);
-    // No 'download' attribute here on purpose — that attribute always
-    // forces a silent save-to-disk regardless of anything else. Opening
-    // the blob URL directly instead lets the browser/OS's own file
-    // handling take over, which is what actually gives the "open
-    // immediately" behavior (most browsers still save to Downloads first,
-    // since .docx can't render inline, but then hand it straight to Word
-    // instead of just sitting there).
+    // The 'download' attribute is what tells the browser to use OUR chosen
+    // filename for a blob: URL — without it, the browser assigns its own
+    // generic/UUID-style name (confirmed: tried removing it to get an
+    // "auto-open" effect, but that broke naming with no reliable benefit,
+    // since browsers can't render .docx inline anyway and still just save
+    // it first regardless). A correctly-named file matters more (contract
+    // numbers etc. are how documents get identified later).
     const a = document.createElement('a');
-    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    a.href = url; a.download = fileName;
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 30000); // keep alive briefly for the OS handoff to complete
+    URL.revokeObjectURL(url);
   } catch(e){
     alert('Не вдалося сформувати документ. Спробуйте ще раз.');
   } finally {
