@@ -4922,10 +4922,17 @@ async function generateDocument(type){
     const match = disposition.match(/filename="?([^"]+)"?/);
     const fileName = match ? decodeURIComponent(match[1]) : (type==='contract' ? 'Договір.docx' : 'Акт.docx');
     const url = URL.createObjectURL(blob);
+    // No 'download' attribute here on purpose — that attribute always
+    // forces a silent save-to-disk regardless of anything else. Opening
+    // the blob URL directly instead lets the browser/OS's own file
+    // handling take over, which is what actually gives the "open
+    // immediately" behavior (most browsers still save to Downloads first,
+    // since .docx can't render inline, but then hand it straight to Word
+    // instead of just sitting there).
     const a = document.createElement('a');
-    a.href = url; a.download = fileName;
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 30000); // keep alive briefly for the OS handoff to complete
   } catch(e){
     alert('Не вдалося сформувати документ. Спробуйте ще раз.');
   } finally {
