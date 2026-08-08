@@ -248,12 +248,69 @@ function setMapping(mapping) {
   else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
 }
 
+// Word frequently splits what looks like one continuous word into multiple
+// separate <w:r> (run) XML elements internally — happens from autocorrect,
+// spell-check, or just editing/retyping part of a word — even though
+// nothing about it looks unusual when actually looking at the document.
+// When that split happens to fall inside a #placeholder token, a plain
+// string search for "#placeholder" in the raw XML fails silently (the "#"
+// and the rest of the name are in different elements), so the token never
+// gets detected as a variable or replaced during generation. This merges
+// only the specific runs needed to reveal each #placeholder within a
+// paragraph, leaving every other run (and all other formatting) untouched.
+function normalizeDocxRuns(xml) {
+  return xml.replace(/<w:p\b[^>]*>[\s\S]*?<\/w:p>/g, paragraph => {
+    const runRegex = /<w:r\b[^>]*>[\s\S]*?<\/w:r>/g;
+    const runs = paragraph.match(runRegex);
+    if (!runs || runs.length < 2) return paragraph;
+
+    const runInfos = runs.map(runXml => {
+      const textMatch = runXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/);
+      return { xml: runXml, text: textMatch ? textMatch[1] : null };
+    });
+
+    let combined = '';
+    const offsets = [];
+    runInfos.forEach((info, i) => {
+      if (info.text === null) return; // non-text run (tab/break/etc) — don't merge across it
+      const start = combined.length;
+      combined += info.text;
+      offsets.push({ start, end: combined.length, runIndex: i });
+    });
+
+    const placeholderRegex = /#[а-яА-ЯіІїЇєЄa-zA-Z0-9_]+/g;
+    let match;
+    const spansToMerge = [];
+    while ((match = placeholderRegex.exec(combined))) {
+      const mStart = match.index, mEnd = match.index + match[0].length;
+      const involved = offsets.filter(o => o.start < mEnd && o.end > mStart);
+      if (involved.length > 1) {
+        spansToMerge.push({ first: involved[0].runIndex, last: involved[involved.length - 1].runIndex });
+      }
+    }
+    if (!spansToMerge.length) return paragraph;
+
+    let mergedInfos = [...runInfos];
+    spansToMerge.reverse().forEach(({ first, last }) => {
+      const mergedText = mergedInfos.slice(first, last + 1).map(r => r.text || '').join('');
+      const firstRunXml = mergedInfos[first].xml;
+      const mergedRunXml = firstRunXml.replace(/<w:t[^>]*>[\s\S]*?<\/w:t>/, `<w:t xml:space="preserve">${mergedText}</w:t>`);
+      mergedInfos.splice(first, last - first + 1, { xml: mergedRunXml, text: mergedText });
+    });
+
+    const newInner = mergedInfos.map(r => r.xml).join('');
+    const firstRunPos = paragraph.indexOf(runs[0]);
+    const lastRunEnd = paragraph.indexOf(runs[runs.length - 1]) + runs[runs.length - 1].length;
+    return paragraph.slice(0, firstRunPos) + newInner + paragraph.slice(lastRunEnd);
+  });
+}
+
 // Scan a docx template for #placeholder tokens (Cyrillic/Latin/digits)
 async function scanTemplatePlaceholders(templatePath) {
   if (!fs.existsSync(templatePath)) return [];
   const buf = fs.readFileSync(templatePath);
   const zip = await JSZip.loadAsync(buf);
-  const xml = await zip.file('word/document.xml').async('string');
+  const xml = normalizeDocxRuns(await zip.file('word/document.xml').async('string'));
   const matches = xml.match(/#[а-яА-ЯіІїЇєЄa-zA-Z0-9_]+/g) || [];
   return [...new Set(matches.map(m => m.slice(1)))];
 }
@@ -268,7 +325,7 @@ function escapeXml(str) {
 async function fillTemplate(templatePath, values) {
   const buf = fs.readFileSync(templatePath);
   const zip = await JSZip.loadAsync(buf);
-  let xml = await zip.file('word/document.xml').async('string');
+  let xml = normalizeDocxRuns(await zip.file('word/document.xml').async('string'));
   Object.keys(values).forEach(key => {
     const token = '#' + key;
     xml = xml.split(token).join(escapeXml(values[key]));
