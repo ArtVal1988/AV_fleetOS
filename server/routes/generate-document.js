@@ -570,9 +570,18 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   // original booking's — the resulting document is archived under the
   // same stable contract number either way (that's derived from the
   // bookingId, independent of which period this specific generation used).
+  // ?useExtension=1 uses the currently active (not yet committed) extension;
+  // ?extHistoryIndex=N uses a specific already-saved past extension instead.
   if (req.query.useExtension === '1' && ctx.booking.extension?.fromDate && ctx.booking.extension?.toDate) {
     ctx.booking.start = ctx.booking.extension.fromDate;
     ctx.booking.end = ctx.booking.extension.toDate;
+  } else if (req.query.extHistoryIndex !== undefined) {
+    const idx = parseInt(req.query.extHistoryIndex);
+    const entry = ctx.booking.extensionHistory?.[idx];
+    if (entry?.fromDate && entry?.toDate) {
+      ctx.booking.start = entry.fromDate;
+      ctx.booking.end = entry.toDate;
+    }
   }
 
   const repKey = ctx.repSlot;

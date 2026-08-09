@@ -7658,6 +7658,7 @@ function renderExtTimeline(){
         <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</span>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
+        <button type="button" onclick="generateExtHistoryAct(${i})" title="Сформувати акт продовження" style="background:none;border:1px solid #bfdbfe;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#1d4ed8;font-size:10px;padding:0">🖨️</button>
         <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
         <button type="button" onclick="deleteExtHistoryEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
       </div>
@@ -7692,6 +7693,27 @@ function renderExtTimeline(){
   wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
 }
 
+async function generateExtHistoryAct(index){
+  if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
+  const h = currentExtHistory[index];
+  if(!h){ return; }
+  if(!confirm('Переконайтесь, що замовлення збережено — інакше акт сформується зі старими даними. Продовжити?')) return;
+  try{
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?extHistoryIndex=' + index, { headers: apiHeaders() });
+    if(!res.ok){ throw new Error('Помилка сервера'); }
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const fileName = match ? decodeURIComponent(match[1]) : 'Акт.docx';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Не вдалося сформувати акт продовження. Спробуйте ще раз.');
+  }
+}
 function deleteExtHistoryEntry(index){
   if(!confirm('Видалити цей запис продовження з історії?')) return;
   currentExtHistory.splice(index,1);
