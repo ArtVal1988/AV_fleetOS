@@ -112,9 +112,9 @@ const FIELD_CATALOG = [
   { key: 'rental_end', label: 'Дата повернення авто', get: ctx => fmtDateUk(ctx.booking.end) },
   { key: 'rental_days', label: 'Кількість діб оренди', get: ctx => String(countDays(ctx.booking.start, ctx.booking.end)) },
   { key: 'pickup_time', label: 'Час отримання', get: ctx => ctx.booking.pickup?.time || '' },
-  { key: 'pickup_address', label: 'Адреса отримання', get: ctx => ctx.booking.pickup?.address || 'Офіс, вул. Антоновича, 112' },
+  { key: 'pickup_address', label: 'Адреса отримання', get: ctx => ctx.booking.pickup?.loc || 'Офіс, вул. Антоновича, 112' },
   { key: 'return_time', label: 'Час повернення', get: ctx => ctx.booking.ret?.time || '' },
-  { key: 'return_address', label: 'Адреса повернення', get: ctx => ctx.booking.ret?.address || 'Офіс, вул. Антоновича, 112' },
+  { key: 'return_address', label: 'Адреса повернення', get: ctx => ctx.booking.ret?.loc || 'Офіс, вул. Антоновича, 112' },
   { key: 'pickup_address_fee', label: 'Тариф «Отримання за адресою»', get: ctx => {
     const f = getExtraFee(ctx.booking, 'pickup_address');
     return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
