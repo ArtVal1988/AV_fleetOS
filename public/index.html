@@ -5031,12 +5031,22 @@ async function generateExtensionAct(){
   const extFrom = getExtDateField('bm-ext-from');
   const extTo = getExtDateField('bm-ext-to');
   if(!extFrom || !extTo){ alert('Вкажіть дати продовження'); return; }
-  if(!confirm('Переконайтесь, що замовлення збережено з поточними датами продовження — інакше акт сформується зі старими даними. Продовжити?')) return;
   const btn = document.getElementById('bm-ext-gen-act-btn');
   const origHtml = btn.innerHTML;
   btn.innerHTML = '⏳';
   btn.disabled = true;
   try{
+    // saveBooking()'s own server sync (apiFetch PUT) isn't awaited inside
+    // it, so relying on "the user already saved" alone risks generating
+    // from stale server data if the extension dates were just entered —
+    // the PUT could still be in flight (or not even sent yet) when the
+    // generate-document request reaches the server first. Save+await here
+    // explicitly before proceeding, so the server is guaranteed current.
+    _skipCloseOnSave = true;
+    saveBooking();
+    const b = bookings.find(x=>x.id===editBid);
+    if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
+
     const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?useExtension=1', { headers: apiHeaders() });
     if(!res.ok){ throw new Error('Помилка сервера'); }
     const blob = await res.blob();
@@ -7697,8 +7707,14 @@ async function generateExtHistoryAct(index){
   if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
   const h = currentExtHistory[index];
   if(!h){ return; }
-  if(!confirm('Переконайтесь, що замовлення збережено — інакше акт сформується зі старими даними. Продовжити?')) return;
   try{
+    // Same reasoning as generateExtensionAct() — explicitly save+await
+    // before generating, since saveBooking()'s own server sync isn't awaited.
+    _skipCloseOnSave = true;
+    saveBooking();
+    const b = bookings.find(x=>x.id===editBid);
+    if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
+
     const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?extHistoryIndex=' + index, { headers: apiHeaders() });
     if(!res.ok){ throw new Error('Помилка сервера'); }
     const blob = await res.blob();
