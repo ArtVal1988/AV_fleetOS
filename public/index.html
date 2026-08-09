@@ -1715,6 +1715,35 @@ input.dm-pf-val.tel{font-size:14px;}
           <div id="cf-msg-popup" class="msg-popup" style="display:none"></div>
         </div>
       </div>
+      <div class="msec msec-sub" id="cf-extra-contacts-section" style="margin-top:10px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <button type="button" onclick="toggleExtraContactsSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#6b7280;letter-spacing:.3px;text-align:left">
+            <span id="cf-extra-contacts-toggle-icon">⊕</span>
+            <span>☎ Додаткові контакти</span>
+          </button>
+          <button type="button" onclick="openExtraContactsForNewEntry()" style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати контакт</button>
+        </div>
+        <div class="extras-panel" id="cf-extra-contacts-panel" style="display:none;margin-top:10px;padding:0">
+          <div id="cf-extra-contacts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
+          <div id="cf-extra-contacts-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+            <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+              <div style="flex:1;min-width:140px">
+                <label class="vf-lbl">Опис / чий контакт</label>
+                <input type="text" id="cf-extra-contact-desc" class="vf-inp" style="width:100%;height:36px" placeholder="Контакт дружини, робочий...">
+              </div>
+              <div style="width:170px">
+                <label class="vf-lbl">Номер телефону</label>
+                <input type="text" id="cf-extra-contact-phone" class="vf-inp" style="width:100%;height:36px" placeholder="+38 067 000 00 00">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button type="button" onclick="hideExtraContactsForm()" style="background:#fff;border:1px solid #e5e7eb;color:#6b7280;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Скасувати</button>
+              <button type="button" onclick="saveExtraContactEntry()" style="background:#374151;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Додати</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom:10px">
         <label class="vf-lbl" id="cf-address-label">Адреса реєстрації</label>
         <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
@@ -6885,6 +6914,83 @@ function updateSubstituteFormMode(){
     btn.style.background = '#2563eb';
   }
 }
+// ── Додаткові контакти (client card) — a described list of extra phone
+// numbers (spouse, work, etc.) separate from the one primary phone number
+// used everywhere else in the app (booking form, tooltips, documents).
+let currentExtraContacts = [];
+let editingExtraContactIndex = null;
+function toggleExtraContactsSection(){
+  const panel = document.getElementById('cf-extra-contacts-panel');
+  const icon = document.getElementById('cf-extra-contacts-toggle-icon');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
+  if(isOpen) hideExtraContactsForm();
+}
+function showExtraContactsForm(){
+  const w = document.getElementById('cf-extra-contacts-form-wrap');
+  if(w) w.style.display = 'flex';
+}
+function hideExtraContactsForm(){
+  const w = document.getElementById('cf-extra-contacts-form-wrap');
+  if(w) w.style.display = 'none';
+  editingExtraContactIndex = null;
+  document.getElementById('cf-extra-contact-desc').value = '';
+  document.getElementById('cf-extra-contact-phone').value = '';
+}
+function openExtraContactsForNewEntry(){
+  const panel = document.getElementById('cf-extra-contacts-panel');
+  if(panel && panel.style.display === 'none') toggleExtraContactsSection();
+  showExtraContactsForm();
+  document.getElementById('cf-extra-contact-desc')?.focus();
+}
+function saveExtraContactEntry(){
+  const desc = document.getElementById('cf-extra-contact-desc').value.trim();
+  const phone = document.getElementById('cf-extra-contact-phone').value.trim();
+  if(!desc){ alert('Вкажіть опис контакту'); return; }
+  if(!phone){ alert('Вкажіть номер телефону'); return; }
+  const entry = { description: desc, phone };
+  if(editingExtraContactIndex !== null) currentExtraContacts[editingExtraContactIndex] = entry;
+  else currentExtraContacts.push(entry);
+  hideExtraContactsForm();
+  renderExtraContactsList();
+}
+function editExtraContactEntry(i){
+  const c = currentExtraContacts[i];
+  if(!c) return;
+  editingExtraContactIndex = i;
+  document.getElementById('cf-extra-contact-desc').value = c.description || '';
+  document.getElementById('cf-extra-contact-phone').value = c.phone || '';
+  showExtraContactsForm();
+}
+function deleteExtraContactEntry(i){
+  if(!confirm('Видалити цей контакт?')) return;
+  currentExtraContacts.splice(i,1);
+  if(editingExtraContactIndex === i) hideExtraContactsForm();
+  renderExtraContactsList();
+}
+function renderExtraContactsList(){
+  const wrap = document.getElementById('cf-extra-contacts-list');
+  if(!wrap) return;
+  wrap.innerHTML = currentExtraContacts.map((c,i) => {
+    const isEditing = editingExtraContactIndex === i;
+    return `<div style="display:flex;align-items:center;gap:10px;background:${isEditing?'#fef9c3':'#f7f8fb'};border:${isEditing?'1px solid #fde047':'1px solid #e5e7eb'};border-radius:5px;padding:6px 8px">
+      <span style="font-size:11px;color:#6b7280;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.description}</span>
+      <span style="font-size:11px;font-weight:600;font-family:var(--font-mono);flex-shrink:0">${c.phone}</span>
+      <span style="display:flex;gap:4px;flex-shrink:0">
+        <button type="button" onclick="editExtraContactEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#2563eb;font-size:11px;padding:0">✏️</button>
+        <button type="button" onclick="deleteExtraContactEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
+      </span>
+    </div>`;
+  }).join('') || '<div style="font-size:10.5px;color:#9ca3af;font-style:italic;padding:6px 2px">Додаткових контактів ще не додано</div>';
+}
+function loadExtraContacts(contacts){
+  currentExtraContacts = (contacts||[]).map(c=>({...c}));
+  editingExtraContactIndex = null;
+  hideExtraContactsForm();
+  renderExtraContactsList();
+}
+
 function cancelEditSubstitute(){
   editingSubstituteIndex = null;
   document.getElementById('bm-sub-from').value = '';
@@ -10584,6 +10690,7 @@ function openClientForm(id){
   document.getElementById('cf-id').value = id || '';
   document.getElementById('cf-name').value = c?.name || '';
   document.getElementById('cf-phone').value = c?.phone || '';
+  loadExtraContacts(c?.extraContacts || []);
   document.getElementById('cf-birthdate').value = c?.birthdate || '';
   document.getElementById('cf-address').value = c?.address || '';
   document.getElementById('cf-passport-num').value = c?.passportNum || '';
@@ -10745,6 +10852,7 @@ async function saveClientForm(){
     name,
     residency,
     phone: document.getElementById('cf-phone').value.trim(),
+    extraContacts: currentExtraContacts,
     birthdate: document.getElementById('cf-birthdate').value,
     address: document.getElementById('cf-address').value.trim(),
     passportNum: document.getElementById('cf-passport-num').value.trim(),
