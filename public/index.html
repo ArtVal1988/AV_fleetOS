@@ -4511,6 +4511,7 @@ function openBookingModal(vid=null,start=null,end=null){
   if(avgBadgeReset) avgBadgeReset.style.display='none';
   document.getElementById('extras-toggle-btn').classList.remove('open');
   loadExtrasToForm({});
+  updateExtrasOrigCurLabels();
   customEquipment = [];
   renderEquipmentList();
   resetDeductions();
@@ -4662,6 +4663,7 @@ function editBooking(bid){
   document.getElementById('extras-panel').style.display='none';
   document.getElementById('extras-toggle-btn').classList.remove('open');
   loadExtrasToForm(b.extras||{});
+  updateExtrasOrigCurLabels();
   customEquipment = (b.equipment||[]).map(item => ({...item, id: equipIdSeq++}));
   renderEquipmentList();
   updateExtrasTotal();
@@ -9678,8 +9680,22 @@ function onCurrencyChange(){
   if(rateLabel) rateLabel.textContent = 'Курс';
   const rateField = document.getElementById('bm-rate');
   if(rateField) rateField.style.color = curColor(cur);
+  updateExtrasOrigCurLabels();
   updateExtrasTotal();
   updateVatPreview();
+}
+// The 'orig' currency toggle button for each extra service (Отримання/
+// Повернення за адресою, неробочі години) means "same as the booking's own
+// currency" — but its button label was hardcoded as '$' in the HTML and
+// never actually updated, so when a booking was in ₴, the button still
+// showed '$' even though 'orig' really meant ₴ — misleading anyone
+// entering a price there into thinking they were setting a dollar amount.
+function updateExtrasOrigCurLabels(){
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  EXTRAS_CONFIG.forEach(e => {
+    const btn = document.getElementById('ex-cur-btn-orig-' + e.key);
+    if(btn) btn.textContent = cur;
+  });
 }
 function setFinCurrency(cur){
   document.getElementById('bm-currency').value = cur;
