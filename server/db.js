@@ -61,6 +61,7 @@ db.exec(`
     vehicle_plate TEXT,
     generated_by TEXT,
     contract_number TEXT,
+    period_label TEXT,
     created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -135,6 +136,7 @@ ensureColumn('documents', 'thumb_filename', 'TEXT');
 ensureColumn('spare_parts', 'part_number', 'TEXT');
 ensureColumn('spare_parts', 'manufacturer', 'TEXT');
 ensureColumn('generated_documents', 'contract_number', 'TEXT');
+ensureColumn('generated_documents', 'period_label', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
 const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(

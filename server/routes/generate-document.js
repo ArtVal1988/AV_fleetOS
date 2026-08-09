@@ -530,8 +530,12 @@ router.delete('/template/:type', auth, adminOnly, (req, res) => {
 // an id as the type, which fails the contract/act check and 400s.
 // GET /api/generate-document/archive/list — list all generated documents (no file data, just metadata)
 router.get('/archive/list', auth, (req, res) => {
-  const rows = db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, created_at
-                            FROM generated_documents ORDER BY created_at DESC`).all();
+  const bookingId = req.query.bookingId;
+  const rows = bookingId
+    ? db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label, created_at
+                  FROM generated_documents WHERE booking_id = ? ORDER BY created_at DESC`).all(Number(bookingId))
+    : db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label, created_at
+                  FROM generated_documents ORDER BY created_at DESC`).all();
   res.json(rows);
 });
 
@@ -572,13 +576,16 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   // bookingId, independent of which period this specific generation used).
   // ?useExtension=1 uses the currently active (not yet committed) extension;
   // ?extHistoryIndex=N uses a specific already-saved past extension instead.
+  let periodLabel = 'Основний'; // default: the document covers the booking's own original period
   if (req.query.useExtension === '1' && ctx.booking.extension?.fromDate && ctx.booking.extension?.toDate) {
+    periodLabel = `Продовження (${fmtDateUk(ctx.booking.extension.fromDate)}–${fmtDateUk(ctx.booking.extension.toDate)})`;
     ctx.booking.start = ctx.booking.extension.fromDate;
     ctx.booking.end = ctx.booking.extension.toDate;
   } else if (req.query.extHistoryIndex !== undefined) {
     const idx = parseInt(req.query.extHistoryIndex);
     const entry = ctx.booking.extensionHistory?.[idx];
     if (entry?.fromDate && entry?.toDate) {
+      periodLabel = `Продовження (${fmtDateUk(entry.fromDate)}–${fmtDateUk(entry.toDate)})`;
       ctx.booking.start = entry.fromDate;
       ctx.booking.end = entry.toDate;
     }
@@ -625,9 +632,9 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
       fs.mkdirSync(GENERATED_DOCS_DIR, { recursive: true });
       const diskName = crypto.randomBytes(16).toString('hex') + '.docx';
       fs.writeFileSync(path.join(GENERATED_DOCS_DIR, diskName), fileBuffer);
-      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by, contract_number)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '', contractNumber);
+      db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '', contractNumber, periodLabel);
     } catch (archiveErr) {
       console.error('Failed to archive generated document (continuing anyway):', archiveErr);
     }
