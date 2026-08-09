@@ -9684,19 +9684,13 @@ function onCurrencyChange(){
   updateExtrasTotal();
   updateVatPreview();
 }
-// The 'orig' currency toggle button for each extra service (Отримання/
-// Повернення за адресою, неробочі години) means "same as the booking's own
-// currency" — but its button label was hardcoded as '$' in the HTML and
-// never actually updated, so when a booking was in ₴, the button still
-// showed '$' even though 'orig' really meant ₴ — misleading anyone
-// entering a price there into thinking they were setting a dollar amount.
-function updateExtrasOrigCurLabels(){
-  const cur = document.getElementById('bm-currency')?.value || '$';
-  EXTRAS_CONFIG.forEach(e => {
-    const btn = document.getElementById('ex-cur-btn-orig-' + e.key);
-    if(btn) btn.textContent = cur;
-  });
-}
+// mode 'orig' means this extra's price is always entered in $, mode 'uah'
+// always in ₴ — fixed regardless of the booking's own currency (matching
+// getExtrasTotalsSplit(), the actual logic driving the visible extras
+// total in the booking form). The buttons are correctly hardcoded to '$'/
+// '₴' in the HTML already — this function intentionally does nothing to
+// them; kept as a no-op stub since it's still called from a few places.
+function updateExtrasOrigCurLabels(){}
 function setFinCurrency(cur){
   document.getElementById('bm-currency').value = cur;
   onCurrencyChange();

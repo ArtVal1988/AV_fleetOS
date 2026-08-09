@@ -61,13 +61,29 @@ function fmtMoney(n) {
   return Number(n).toLocaleString('uk-UA');
 }
 // Extra services (pickup/return address delivery, off-hours) store their
-// price alongside a cur mode: 'orig' means the booking's own currency,
-// 'uah' means always ₴ regardless of the booking's currency.
+// price alongside a cur mode: 'orig' means the price is always entered in
+// $ (fixed, regardless of the booking's own currency), 'uah' means always
+// ₴ — matching getExtrasTotalsSplit() on the frontend, the logic that
+// actually drives the visible extras total in the booking form. Convert
+// into the booking's own currency here, since that's what the document
+// should show (e.g. a $20 fee on a ₴ booking becomes 900 ₴ at that
+// booking's own exchange rate, not '20 $' left unconverted).
 function getExtraFee(booking, key) {
   const e = booking.extras?.[key];
   if (!e || !e.active || !e.price) return null;
-  const currency = e.cur === 'uah' ? '₴' : (booking.currency || '$');
-  return { amount: e.price * (e.qty || 1), currency };
+  const rawAmount = e.price * (e.qty || 1);
+  const rawCurrency = e.cur === 'uah' ? '₴' : '$';
+  const bookingCurrency = booking.currency || '$';
+  const exRate = Number(booking.exchangeRate) || 0;
+  if (rawCurrency === bookingCurrency) {
+    return { amount: rawAmount, currency: bookingCurrency };
+  }
+  if (bookingCurrency === '₴') {
+    // rawCurrency is $ — convert to ₴ by multiplying by the booking's own rate
+    return { amount: exRate > 0 ? Math.round(rawAmount * exRate * 100) / 100 : rawAmount, currency: '₴' };
+  }
+  // bookingCurrency is $, rawCurrency is ₴ — convert to $ by dividing
+  return { amount: exRate > 0 ? Math.round(rawAmount / exRate * 100) / 100 : rawAmount, currency: bookingCurrency };
 }
 function buildClientLegalDescription(client, fallbackName) {
   if (!client) return fallbackName || '';
