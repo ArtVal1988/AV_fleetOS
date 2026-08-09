@@ -565,6 +565,16 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   const ctx = getBookingContext(bookingId);
   if (!ctx) return res.status(404).json({ error: 'Замовлення не знайдено' });
 
+  // Extension act: same booking/contract, but the rental_start/rental_end/
+  // rental_days fields should reflect the extension period, not the
+  // original booking's — the resulting document is archived under the
+  // same stable contract number either way (that's derived from the
+  // bookingId, independent of which period this specific generation used).
+  if (req.query.useExtension === '1' && ctx.booking.extension?.fromDate && ctx.booking.extension?.toDate) {
+    ctx.booking.start = ctx.booking.extension.fromDate;
+    ctx.booking.end = ctx.booking.extension.toDate;
+  }
+
   const repKey = ctx.repSlot;
   const templateFile = templateFileName(type, repKey);
   const templatePath = path.join(TEMPLATES_DIR, templateFile);

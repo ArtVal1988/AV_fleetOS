@@ -2625,7 +2625,8 @@ input.dm-pf-val.tel{font-size:14px;}
               <span class="ext-cur-display" id="ext-paid-cur-display">$</span>
             </div>
           </div>
-          <div class="ext-fin-field" style="margin-left:auto;text-align:right">
+          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;align-self:center;margin-left:auto;margin-right:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
+          <div class="ext-fin-field" style="text-align:right">
             <label>Залишок боргу</label>
             <div class="ext-remaining-display" id="bm-ext-remaining">0 $</div>
           </div>
@@ -4416,6 +4417,7 @@ function openBookingModal(vid=null,start=null,end=null){
   clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   document.getElementById('bm-ext-active').checked=false;
   document.getElementById('bm-ext-fields').style.display='none';
+  document.getElementById('bm-ext-gen-act-btn').style.display='none';
   moveReturnRow(false);
   extDaysOverridden=false; extTotalOverridden=false;
   currentExtHistory = [];
@@ -4569,6 +4571,7 @@ function editBooking(bid){
     extDaysOverridden=false;
     document.getElementById('bm-ext-active').checked=true;
     document.getElementById('bm-ext-fields').style.display='';
+    document.getElementById('bm-ext-gen-act-btn').style.display='';
     setExtDateField('bm-ext-from', b.extension.fromDate||'');
     setExtDateField('bm-ext-to', b.extension.toDate||'');
     document.getElementById('bm-ext-days').value=b.extension.days||Math.max(1,Math.round((new Date(b.extension.toDate)-new Date(b.extension.fromDate))/86400000));
@@ -4590,6 +4593,7 @@ function editBooking(bid){
   } else {
     document.getElementById('bm-ext-active').checked=false;
     document.getElementById('bm-ext-fields').style.display='none';
+    document.getElementById('bm-ext-gen-act-btn').style.display='none';
   }
   moveReturnRow(!!(b.extension && b.extension.active));
   currentExtHistory = (b.extensionHistory||[]).slice();
@@ -5019,6 +5023,35 @@ async function generateDocument(type){
     alert('Не вдалося сформувати документ. Спробуйте ще раз.');
   } finally {
     btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+async function generateExtensionAct(){
+  if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
+  const extFrom = getExtDateField('bm-ext-from');
+  const extTo = getExtDateField('bm-ext-to');
+  if(!extFrom || !extTo){ alert('Вкажіть дати продовження'); return; }
+  if(!confirm('Переконайтесь, що замовлення збережено з поточними датами продовження — інакше акт сформується зі старими даними. Продовжити?')) return;
+  const btn = document.getElementById('bm-ext-gen-act-btn');
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '⏳';
+  btn.disabled = true;
+  try{
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?useExtension=1', { headers: apiHeaders() });
+    if(!res.ok){ throw new Error('Помилка сервера'); }
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const fileName = match ? decodeURIComponent(match[1]) : 'Акт.docx';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Не вдалося сформувати акт продовження. Спробуйте ще раз.');
+  } finally {
+    btn.innerHTML = origHtml;
     btn.disabled = false;
   }
 }
@@ -7182,6 +7215,8 @@ function toggleExtensionSection(){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
   block.style.display = active ? '' : 'none';
+  const actBtn = document.getElementById('bm-ext-gen-act-btn');
+  if(actBtn) actBtn.style.display = active ? '' : 'none';
   renderExtTimeline();
   moveReturnRow(active);
   if(active){
@@ -7671,6 +7706,7 @@ function editExtHistoryEntry(index){
   editingExtHistoryIndex = index;
   document.getElementById('bm-ext-active').checked = true;
   document.getElementById('bm-ext-fields').style.display = '';
+  document.getElementById('bm-ext-gen-act-btn').style.display = '';
   setExtDateField('bm-ext-from', h.fromDate);
   setExtDateField('bm-ext-to', h.toDate);
   document.getElementById('bm-ext-days').value = h.days || '';
