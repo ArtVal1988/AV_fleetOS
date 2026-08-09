@@ -2303,7 +2303,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <label id="bm-name-label">ПІБ замовника</label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
-              oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+              oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();updateBmExtraContactsInfo(null);" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
             <button type="button" id="bm-goto-client-btn" onclick="gotoClientCard()" title="Відкрити картку клієнта" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;align-items:center;justify-content:center;font-size:13px;padding:0">👤</button>
           </div>
           <input type="hidden" id="bm-client-id" value="">
@@ -2323,6 +2323,7 @@ input.dm-pf-val.tel{font-size:14px;}
               <!-- Popup card with contact field, appears on icon click -->
               <div id="msg-popup" class="msg-popup" style="display:none"></div>
             </div>
+            <div id="bm-extra-contacts-info" style="display:none;font-size:10px;color:#6b7280;margin-top:4px"></div>
           </div>
         </div>
       <input type="hidden" id="bm-client-type" value="individual">
@@ -4507,6 +4508,7 @@ function openBookingModal(vid=null,start=null,end=null){
   renderEquipmentList();
   resetDeductions();
   loadFines([]);
+  updateBmExtraContactsInfo(null);
   // Pre-fill start km from the most recent previous booking's end km for
   // this vehicle — NOT from service.lastKm (that's the odometer reading at
   // last maintenance, an unrelated figure that could be wildly out of date
@@ -4542,6 +4544,7 @@ function editBooking(bid){
   renderOrderCompanyToggle();
   document.getElementById('bm-phone').value=b.customer?.phone||'';
   if(document.getElementById('bm-client-id')) document.getElementById('bm-client-id').value = b.customer?.clientId || '';
+  updateBmExtraContactsInfo(b.customer?.clientId || null);
   updateClientLinkButton();
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
@@ -9451,7 +9454,17 @@ function selectClientSuggestion(name, phone, clientId){
     if(client) loadMessengers(client.messengers || {});
   }
   updateClientLinkButton();
+  updateBmExtraContactsInfo(clientId);
   closeClientSuggest();
+}
+function updateBmExtraContactsInfo(clientId){
+  const el = document.getElementById('bm-extra-contacts-info');
+  if(!el) return;
+  const client = clientId ? (CLIENTS||[]).find(c=>c.id===clientId) : null;
+  const extras = client?.extraContacts || [];
+  if(!extras.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = '☎ ' + extras.map(c => `<b>${c.description}:</b> ${c.phone}`).join(' · ');
 }
 function updateClientLinkButton(){
   const btn = document.getElementById('bm-goto-client-btn');
