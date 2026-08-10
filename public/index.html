@@ -1733,12 +1733,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="extras-panel" id="cf-extra-contacts-panel" style="display:none;margin-top:10px;padding:0">
           <div id="cf-extra-contacts-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
           <div id="cf-extra-contacts-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
-            <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-              <div style="flex:1;min-width:140px">
-                <label class="vf-lbl">Опис / чий контакт</label>
-                <input type="text" id="cf-extra-contact-desc" class="vf-inp" style="width:100%;height:36px" placeholder="Контакт дружини, робочий...">
-              </div>
-              <div style="width:170px;position:relative">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="width:100%;position:relative">
                 <label class="vf-lbl">Номер телефону</label>
                 <div style="display:flex;align-items:center;gap:4px">
                   <input type="text" id="cf-extra-contact-phone" class="vf-inp" style="flex:1;min-width:0;height:36px" placeholder="+38 067 000 00 00" oninput="onPhoneInput(this)">
@@ -1752,9 +1748,9 @@ input.dm-pf-val.tel{font-size:14px;}
                 </div>
                 <div id="cf-ec-msg-popup" class="msg-popup" style="display:none"></div>
               </div>
-              <div style="width:150px">
-                <label class="vf-lbl">Коментар</label>
-                <input type="text" id="cf-extra-contact-comment" class="vf-inp" style="width:100%;height:36px" placeholder="Дзвонити ввечері...">
+              <div style="width:100%">
+                <label class="vf-lbl">Опис / чий контакт</label>
+                <input type="text" id="cf-extra-contact-desc" class="vf-inp" style="width:100%;height:36px" placeholder="Контакт дружини, робочий...">
               </div>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -7114,7 +7110,6 @@ function hideExtraContactsForm(){
   editingExtraContactIndex = null;
   document.getElementById('cf-extra-contact-desc').value = '';
   document.getElementById('cf-extra-contact-phone').value = '';
-  document.getElementById('cf-extra-contact-comment').value = '';
   loadEcMessengers({});
 }
 function openExtraContactsForNewEntry(){
@@ -7126,10 +7121,9 @@ function openExtraContactsForNewEntry(){
 function saveExtraContactEntry(){
   const desc = document.getElementById('cf-extra-contact-desc').value.trim();
   const phone = document.getElementById('cf-extra-contact-phone').value.trim();
-  const comment = document.getElementById('cf-extra-contact-comment').value.trim();
   if(!desc){ alert('Вкажіть опис контакту'); return; }
   if(!phone){ alert('Вкажіть номер телефону'); return; }
-  const entry = { description: desc, phone, comment, messengers: readMessengersFromEc() };
+  const entry = { description: desc, phone, messengers: readMessengersFromEc() };
   if(editingExtraContactIndex !== null) currentExtraContacts[editingExtraContactIndex] = entry;
   else currentExtraContacts.push(entry);
   hideExtraContactsForm();
@@ -7141,7 +7135,6 @@ function editExtraContactEntry(i){
   editingExtraContactIndex = i;
   document.getElementById('cf-extra-contact-desc').value = c.description || '';
   document.getElementById('cf-extra-contact-phone').value = c.phone || '';
-  document.getElementById('cf-extra-contact-comment').value = c.comment || '';
   loadEcMessengers(c.messengers || {});
   showExtraContactsForm();
 }
@@ -7168,7 +7161,6 @@ function renderExtraContactsList(){
           <button type="button" onclick="deleteExtraContactEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
         </span>
       </div>
-      ${c.comment?`<div style="font-size:10px;color:#9ca3af;text-align:left"><i>${c.comment}</i></div>`:''}
     </div>`;
   }).join('') || '<div style="font-size:10.5px;color:#9ca3af;font-style:italic;padding:6px 2px">Додаткових контактів ще не додано</div>';
   const countEl = document.getElementById('cf-extra-contacts-count');
@@ -9974,7 +9966,6 @@ function toggleBmExtraContactsPopup(e){
     return `<div style="padding:5px 6px;border-bottom:1px solid #f3f4f6;font-size:11px">
       <div style="color:#6b7280">${c.description}</div>
       <div style="display:flex;align-items:center;gap:6px"><span style="font-weight:600;font-family:var(--font-mono)">${c.phone}</span>${msgIcons?`<span>${msgIcons}</span>`:''}</div>
-      ${c.comment?`<div style="color:#9ca3af;font-style:italic">${c.comment}</div>`:''}
     </div>`;
   }).join('');
   popup.style.display = 'block';
