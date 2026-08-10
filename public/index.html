@@ -6749,7 +6749,7 @@ function generateProfitabilityReport(){
     });
   });
 
-  const rows = [...perVehicle.values()].sort((a,b) => b.revenueUSD - a.revenueUSD);
+  const rows = [...perVehicle.values()];
   lastReportData = {rows, fromStr, toStr};
   renderReportResults(rows);
 }
@@ -6766,6 +6766,11 @@ function renderReportResults(rows){
     document.getElementById('rep-xlsx-btn').style.display = 'none';
     return;
   }
+  // Category color per vehicle, matching the calendar's own class coloring
+  // (and the same cat.colorHex already used for the styled Excel export).
+  const catByVehicleId = new Map();
+  CATEGORIES.forEach(cat => cat.vehicles.forEach(v => catByVehicleId.set(v.id, cat)));
+
   const totalDays = rows.reduce((s,r)=>s+r.days,0);
   const totalBookings = rows.reduce((s,r)=>s+r.bookingsCount,0);
   wrap.innerHTML = `
@@ -6782,9 +6787,12 @@ function renderReportResults(rows){
         ${rows.map(r => {
           const isIdle = r.bookingsCount===0 && !r.statusNote;
           const rowStyle = isIdle ? 'opacity:.55' : '';
+          const cat = catByVehicleId.get(r.v.id);
+          const catColor = cat?.colorHex || '#d1d5db';
           return `
-          <tr style="border-bottom:1px solid #f3f4f6;${rowStyle}">
+          <tr style="border-bottom:1px solid #f3f4f6;border-left:4px solid ${catColor};${rowStyle}">
             <td style="padding:8px 6px">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle" title="${cat?.name||''}"></span>
               <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:2px 6px;margin-right:6px">${r.v.plate}</span>
               <span style="color:#6b7280">${r.v.name}</span>
               ${r.statusNote?`<div style="font-size:10px;color:#9a4d0a;margin-top:1px">${r.statusNote}</div>`:''}
