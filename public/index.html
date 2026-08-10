@@ -6500,7 +6500,7 @@ function dashActivityCol(title, list, color, locField){
       const loc = locField ? b[locField]?.loc : null;
       const time = locField ? b[locField]?.time : null;
       const isCustomLoc = loc && loc !== BM_DEFAULT_ADDRESS;
-      return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
+      return `<div onclick="editBooking(${b.id})" style="cursor:pointer;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
         <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
         ${time ? `<span style="font-family:var(--font-mono);color:${color};font-weight:600"> · ${time}</span>` : ''}
         <span style="color:#6b7280"> — ${displayName}</span>
