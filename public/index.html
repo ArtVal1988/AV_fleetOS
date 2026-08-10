@@ -3146,6 +3146,42 @@ function getEffectiveEnd(b){
   if(b.extension && b.extension.active && b.extension.toDate > maxEnd) maxEnd = b.extension.toDate;
   return maxEnd;
 }
+// Resolve which "segment" (base period, or a specific extension) a given
+// calendar day belongs to, with everything needed to prorate it correctly
+// within that segment's own date range — daysOverride only ever covers the
+// base period, and each extension carries its own separate days/rate, so a
+// booking with extensions must be treated as several independent periods
+// chained end-to-end, not as one single span. Mirrors getDayExtension()'s
+// own chain-building (base end, then each history entry in fromDate order,
+// then the active extension) so both stay consistent with each other.
+function getBookingSegmentForDate(b, dateStr){
+  const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
+  let prevEnd = b.end;
+  const chain = [{ isBase:true, fromDate: b.start, toDate: b.end, rate: b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
+  const history = (b.extensionHistory || []).slice().sort((a,c)=>(a.fromDate||'').localeCompare(c.fromDate||''));
+  for(const h of history){
+    const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: h.rate, currency: h.currency, exchangeRate: h.exchangeRate, days: h.days>0 ? h.days : null });
+    prevEnd = h.toDate;
+  }
+  if(b.extension && b.extension.active){
+    const ext = b.extension;
+    const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: ext.rate, currency: ext.currency, exchangeRate: ext.exchangeRate, days: ext.days>0 ? ext.days : null });
+  }
+  // Base period is exclusive-start/inclusive-end (start itself is pickup
+  // day, not a billed night). Extensions are inclusive on BOTH ends —
+  // their fromDate is already the adjusted "effective from" (the actual
+  // first billed night of that extension), not a boundary to skip past again.
+  const seg = chain.find(s => s.isBase ? (dateStr > s.fromDate && dateStr <= s.toDate) : (dateStr >= s.fromDate && dateStr <= s.toDate));
+  if(!seg) return null;
+  const calendarDays = seg.isBase ? nightsBetween(seg.fromDate, seg.toDate) : (nightsBetween(seg.fromDate, seg.toDate) + 1);
+  const totalDays = seg.days || calendarDays;
+  const lastDayShare = totalDays - (calendarDays - 1);
+  const dayIndex = seg.isBase ? nightsBetween(seg.fromDate, dateStr) : (nightsBetween(seg.fromDate, dateStr) + 1);
+  const dayShare = (dayIndex === calendarDays) ? lastDayShare : 1;
+  return { rate: seg.rate, currency: seg.currency, exchangeRate: seg.exchangeRate, dayShare };
+}
 function getDayRepairPause(b, dateStr){
   if(!b.repairPause || !b.repairPause.fromDate || !b.repairPause.toDate) return null;
   return (dateStr >= b.repairPause.fromDate && dateStr < b.repairPause.toDate) ? b.repairPause : null;
@@ -6914,27 +6950,15 @@ async function exportProfitabilityStyledXLSX(){
       const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
       if(isSubstitutedOut) return;
 
-      // The last calendar day in the booking's range absorbs whatever
-      // remainder is left after every OTHER day gets a full share — this
-      // correctly handles BOTH an under-shoot (e.g. 2.5 діб across 3
-      // calendar days: two full days + a 0.5 last day) AND an over-shoot
-      // (e.g. a 5-hour-late return manually billed as 3.5 діб across only
-      // 3 calendar days, since the return didn't cross into a 4th calendar
-      // date: two full days + a 1.5 last day) — a fixed fraction-only
-      // formula silently loses that extra amount when totalDays EXCEEDS
-      // the calendar span, since there's no day left for the excess to
-      // land on. Uses the app's standard "nights" day-counting (end-start,
-      // no +1), matching daysOverride/extension/substitute calculations
-      // elsewhere — NOT countDays(), which is inclusive (+1) and would be
-      // off by one here.
-      const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
-      const calendarDays = nightsBetween(b.start, getEffectiveEnd(b));
-      const totalDays = b.daysOverride>0 ? b.daysOverride : calendarDays;
-      const lastDayShare = totalDays - (calendarDays - 1);
-      const dayIndex = nightsBetween(b.start, dStr); // 1-indexed position within this booking's range
-      const dayShare = (dayIndex === calendarDays) ? lastDayShare : 1;
+      // Resolve which segment (base period, or a specific extension) this
+      // day belongs to, and prorate within THAT segment's own date range —
+      // daysOverride only ever covers the base period, each extension
+      // carries its own separate days/rate, so a booking with extensions
+      // is several independent chained periods, not one single span.
+      const segInfo = getBookingSegmentForDate(b, dStr);
+      if(!segInfo) return;
 
-      cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * dayShare * 100) / 100;
+      cell.value = Math.round(toUSD(segInfo.rate, segInfo.currency, segInfo.exchangeRate) * segInfo.dayShare * 100) / 100;
       cell.alignment = {horizontal:'center'};
     });
   });
