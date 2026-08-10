@@ -6881,6 +6881,15 @@ async function exportProfitabilityStyledXLSX(){
   });
   if(!activeVehicles.length){ alert('Немає авто для стилізованого звіту.'); return; }
 
+  // Fallback exchange rate for entries missing their own (e.g.
+  // exchangeRate:0 on file) — matching the main report table exactly, so
+  // ₴ amounts don't silently pass through unconverted and show up mixed in
+  // among $ values.
+  const bookingsWithRate = bookings.filter(bk => bk.currency==='₴' && parseFloat(bk.exchangeRate)>0);
+  const fallbackRate = bookingsWithRate.length
+    ? bookingsWithRate.reduce((latest,bk) => bk.start > latest.start ? bk : latest).exchangeRate
+    : 0;
+
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Дохідність');
 
@@ -6948,7 +6957,7 @@ async function exportProfitabilityStyledXLSX(){
         const rate = subForThisDay.rate>0 ? subForThisDay.rate : subOwnerBooking.rate;
         const cur = subForThisDay.rate>0 ? (subForThisDay.currency||'$') : subOwnerBooking.currency;
         const exRate = subForThisDay.rate>0 ? subForThisDay.exchangeRate : subOwnerBooking.exchangeRate;
-        cell.value = Math.round(toUSD(rate, cur, exRate) * 100) / 100;
+        cell.value = Math.round(toUSD(rate, cur, exRate, fallbackRate) * 100) / 100;
         cell.alignment = {horizontal:'center'};
         return;
       }
@@ -6970,7 +6979,7 @@ async function exportProfitabilityStyledXLSX(){
       const segInfo = getBookingSegmentForDate(b, dStr);
       if(!segInfo) return;
 
-      cell.value = Math.round(toUSD(segInfo.rate, segInfo.currency, segInfo.exchangeRate) * segInfo.dayShare * 100) / 100;
+      cell.value = Math.round(toUSD(segInfo.rate, segInfo.currency, segInfo.exchangeRate, fallbackRate) * segInfo.dayShare * 100) / 100;
       cell.alignment = {horizontal:'center'};
     });
   });
