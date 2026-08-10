@@ -12762,7 +12762,7 @@ window.restoreVehicleFromArchive = function(id){
 };
 
 // ── Close modals on Escape or overlay background click ──────────
-let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0;
+let _customDpInput = null, _customDpViewYear = 0, _customDpViewMonth = 0, _customDpYearMode = false, _customDpYearDecadeStart = 0;
 function extShortFmt(iso){
   if(!iso) return '';
   const [y,m,d] = iso.split('-');
@@ -12778,6 +12778,7 @@ function openCustomDatePicker(inputEl){
   const base = curVal ? new Date(curVal+'T00:00:00') : new Date();
   _customDpViewYear = base.getFullYear();
   _customDpViewMonth = base.getMonth();
+  _customDpYearMode = false;
   const dp = document.createElement('div');
   dp.className = 'custom-dp';
   dp.id = 'custom-dp';
@@ -12840,6 +12841,7 @@ function customDpClear(){
 function renderCustomDatePicker(){
   const dp = document.getElementById('custom-dp');
   if(!dp) return;
+  if(_customDpYearMode){ renderCustomDatePickerYearGrid(dp); return; }
   const MONTHS_UK=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
   const y = _customDpViewYear, m = _customDpViewMonth;
   const todayStr = dStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
@@ -12867,7 +12869,7 @@ function renderCustomDatePicker(){
   dp.innerHTML = `
     <div class="custom-dp-head">
       <button type="button" onclick="customDpChangeMonth(-1)">‹</button>
-      <span>${MONTHS_UK[m]} ${y}</span>
+      <span class="custom-dp-yearlink" onclick="customDpEnterYearMode()" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted">${MONTHS_UK[m]} ${y}</span>
       <button type="button" onclick="customDpChangeMonth(1)">›</button>
     </div>
     <div class="custom-dp-grid">
@@ -12877,6 +12879,40 @@ function renderCustomDatePicker(){
     <div class="custom-dp-foot">
       <button type="button" onclick="customDpClear()">Очистити</button>
       <button type="button" onclick="customDpPick('${todayStr}')">Сьогодні</button>
+    </div>`;
+}
+function customDpEnterYearMode(){
+  _customDpYearMode = true;
+  _customDpYearDecadeStart = _customDpViewYear - (_customDpViewYear % 12);
+  renderCustomDatePicker();
+}
+function customDpChangeDecade(delta){
+  _customDpYearDecadeStart += delta*12;
+  renderCustomDatePicker();
+}
+function customDpPickYear(y){
+  _customDpViewYear = y;
+  _customDpYearMode = false;
+  renderCustomDatePicker();
+}
+function renderCustomDatePickerYearGrid(dp){
+  const startY = _customDpYearDecadeStart;
+  let cells = '';
+  for(let i=0;i<12;i++){
+    const y = startY + i;
+    const cls = ['custom-dp-day'];
+    if(y === _customDpViewYear) cls.push('selected');
+    if(y === new Date().getFullYear()) cls.push('today');
+    cells += `<button type="button" class="${cls.join(' ')}" onclick="customDpPickYear(${y})">${y}</button>`;
+  }
+  dp.innerHTML = `
+    <div class="custom-dp-head">
+      <button type="button" onclick="customDpChangeDecade(-1)">‹</button>
+      <span>${startY} – ${startY+11}</span>
+      <button type="button" onclick="customDpChangeDecade(1)">›</button>
+    </div>
+    <div class="custom-dp-grid" style="grid-template-columns:repeat(3,1fr)">
+      ${cells}
     </div>`;
 }
 document.addEventListener('mousedown', e => {
