@@ -2564,19 +2564,19 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec" style="margin-top:14px">
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')">
-          <span style="font-size:15px">↷</span><span>Продовження</span><span class="bm-sec-badge" id="bm-sec-badge-ext"></span>
+          <span style="font-size:15px">↷</span><span>Продовження</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')">
-          <span style="font-size:15px">🔄</span><span>Підмінне</span><span class="bm-sec-badge" id="bm-sec-badge-sub"></span>
+          <span style="font-size:15px">🔄</span><span>Підмінне</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-fine" onclick="activateBmSection('fine')">
-          <span style="font-size:15px">🚔</span><span>Штрафи</span><span class="bm-sec-badge" id="bm-sec-badge-fine"></span>
+          <span style="font-size:15px">🚔</span><span>Штрафи</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-rep" onclick="activateBmSection('rep')">
-          <span style="font-size:15px">🔧</span><span>Ремонт</span><span class="bm-sec-badge" id="bm-sec-badge-rep"></span>
+          <span style="font-size:15px">🔧</span><span>Ремонт</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-ded" onclick="activateBmSection('ded')">
-          <span style="font-size:15px">💰</span><span>Утримання</span><span class="bm-sec-badge" id="bm-sec-badge-ded"></span>
+          <span style="font-size:15px">💰</span><span>Утримання</span>
         </button>
       </div>
     </div>
@@ -2695,9 +2695,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div class="msec msec-sub" id="bm-substitute-section" style="margin-top:14px">
       <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:0;padding:0">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button type="button" onclick="openSubstituteForNewEntry()" style="background:#ede9fe;border:1px solid #ddd6fe;color:#6d28d9;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати підмінне авто</button>
-        </div>
+        <button type="button" id="bm-substitute-add-btn" onclick="openSubstituteForNewEntry()" style="width:100%;background:#ede9fe;border:1px dashed #ddd6fe;color:#6d28d9;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px">+ Додати підмінне авто</button>
         <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <div id="bm-substitute-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -2740,9 +2738,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div class="msec msec-sub" id="bm-fines-section" style="margin-top:14px">
       <div class="extras-panel" id="bm-fines-panel" style="display:none;margin-top:0;padding:0">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-          <button type="button" onclick="openFinesForNewEntry()" style="background:#fee2e2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати штраф</button>
-        </div>
+        <button type="button" id="bm-fines-add-btn" onclick="openFinesForNewEntry()" style="width:100%;background:#fee2e2;border:1px dashed #fecaca;color:#dc2626;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px">+ Додати штраф</button>
         <div id="bm-fines-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <div id="bm-fines-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -7228,17 +7224,24 @@ function activateBmSection(id){
       document.getElementById('bm-block-ext-section').scrollIntoView({behavior:'smooth', block:'nearest'});
     }
   } else if(id === 'sub'){
+    // Clicking the same button again: close it if it's still empty
+    // (an accidental click shouldn't trap an empty panel open), but leave
+    // a section with real data alone — just scroll to confirm it's there.
     if(document.getElementById('bm-substitute-panel').style.display === 'none') toggleSubstituteSection();
+    else if(!bmSubHasData()) toggleSubstituteSection();
     else document.getElementById('bm-substitute-section').scrollIntoView({behavior:'smooth', block:'nearest'});
   } else if(id === 'fine'){
     if(document.getElementById('bm-fines-panel').style.display === 'none') toggleFinesSection();
+    else if(!bmFineHasData()) toggleFinesSection();
     else document.getElementById('bm-fines-section').scrollIntoView({behavior:'smooth', block:'nearest'});
   } else if(id === 'rep'){
     if(document.getElementById('bm-repair-panel').style.display === 'none') toggleRepairSection();
+    else if(!bmRepHasData()) toggleRepairSection();
     else document.getElementById('bm-repair-section').scrollIntoView({behavior:'smooth', block:'nearest'});
   } else if(id === 'ded'){
     if(document.getElementById('ded-panel').style.display === 'none') toggleDedPanel();
-    document.getElementById('bm-block-5').scrollIntoView({behavior:'smooth', block:'nearest'});
+    else if(!bmDedHasData()) toggleDedPanel();
+    else document.getElementById('bm-block-5').scrollIntoView({behavior:'smooth', block:'nearest'});
   }
   updateBmSectionButtons();
 }
