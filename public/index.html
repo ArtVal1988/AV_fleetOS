@@ -2582,13 +2582,7 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
-      <div id="bm-ext-toggle-wrap" style="display:flex;align-items:center;justify-content:space-between">
-      <label class="ext-toggle-label" style="font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;cursor:pointer;display:flex;align-items:center;gap:0">
-        <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()" style="position:absolute;opacity:0;width:0;height:0;margin:0">
-        ↷ Продовження оренди
-      </label>
-      <button type="button" onclick="openExtensionForNewEntry()" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ Додати продовження</button>
-      </div>
+      <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()" style="display:none">
 
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
 
@@ -2700,14 +2694,10 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-sub" id="bm-substitute-section" style="margin-top:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <button type="button" onclick="toggleSubstituteSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#6d28d9;letter-spacing:.3px;text-align:left">
-          <span id="bm-substitute-toggle-icon">⊕</span>
-          <span>🔄 Підмінне авто</span>
-        </button>
-        <button type="button" onclick="openSubstituteForNewEntry()" style="background:#ede9fe;border:1px solid #ddd6fe;color:#6d28d9;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати підмінне авто</button>
-      </div>
-      <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:10px;padding:0">
+      <div class="extras-panel" id="bm-substitute-panel" style="display:none;margin-top:0;padding:0">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button type="button" onclick="openSubstituteForNewEntry()" style="background:#ede9fe;border:1px solid #ddd6fe;color:#6d28d9;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати підмінне авто</button>
+        </div>
         <div id="bm-substitute-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <div id="bm-substitute-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -2749,15 +2739,10 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-sub" id="bm-fines-section" style="margin-top:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <button type="button" onclick="toggleFinesSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#dc2626;letter-spacing:.3px;text-align:left;min-width:0">
-          <span id="bm-fines-toggle-icon">⊕</span>
-          <span style="flex-shrink:0">🚔 Штрафи</span>
-          <span id="bm-fines-summary" style="font-weight:400;letter-spacing:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-        </button>
-        <button type="button" onclick="openFinesForNewEntry()" style="background:#fee2e2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати штраф</button>
-      </div>
-      <div class="extras-panel" id="bm-fines-panel" style="display:none;margin-top:10px;padding:0">
+      <div class="extras-panel" id="bm-fines-panel" style="display:none;margin-top:0;padding:0">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+          <button type="button" onclick="openFinesForNewEntry()" style="background:#fee2e2;border:1px solid #fecaca;color:#dc2626;border-radius:5px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">+ Додати штраф</button>
+        </div>
         <div id="bm-fines-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px"></div>
         <div id="bm-fines-form-wrap" style="display:none;flex-direction:column;gap:8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -2787,14 +2772,7 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
 
     <div class="msec msec-sub" id="bm-repair-section" style="margin-top:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <button type="button" onclick="toggleRepairSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#b45309;letter-spacing:.3px;text-align:left;min-width:0">
-          <span id="bm-repair-toggle-icon">⊕</span>
-          <span style="flex-shrink:0">🔧 Ремонт в оренді</span>
-          <span id="bm-repair-summary" style="font-weight:400;letter-spacing:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-        </button>
-      </div>
-      <div class="extras-panel" id="bm-repair-panel" style="display:none;margin-top:10px;padding:0">
+      <div class="extras-panel" id="bm-repair-panel" style="display:none;margin-top:0;padding:0">
         <div id="bm-repair-active-view" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:8px">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:16px">🔧</span>
@@ -2853,13 +2831,8 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <!-- POST-RENTAL DEDUCTIONS -->
     <div class="msec msec-b5" id="bm-block-5">
-      <button type="button" class="extras-toggle" id="ded-toggle-btn" onclick="toggleDedPanel()" style="background:#fff0f0;border-color:#fca5a5;color:#dc2626">
-        <span>⊖</span>
-        <span>Утримання після повернення</span>
-        <span id="ded-active-count" style="display:none;background:#dc2626;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700"></span>
-        <span style="margin-left:auto">▾</span>
-      </button>
-      <div id="ded-panel" style="display:none;margin-top:8px">
+      <div id="ded-toggle-btn" style="display:none"><span id="ded-active-count"></span></div>
+      <div id="ded-panel" style="display:none;margin-top:0">
         <div class="ded-list" id="bm-ded-standard">
           <div class="ded-row">
             <button type="button" class="extra-toggle-btn" onclick="toggleDed('wash')"><span class="extra-radio" id="ded-radio-wash">○</span></button>
@@ -4776,6 +4749,7 @@ function editBooking(bid){
   bookingWasClosedOnOpen = !!b.closed;
   applyOrderLockState();
   updateAllMsgIconStates();
+  autoOpenBmSectionsWithData();
   updateBmSectionButtons();
   document.getElementById('booking-modal').classList.add('open');
 }
@@ -7214,25 +7188,38 @@ function setFineCurrency(cur){
   if(amtField) amtField.style.color = curColor(cur);
 }
 // ── Unified nav row for the 5 sections above (Продовження/Підмінне/
-// Штрафи/Ремонт/Утримання) — clicking a button opens that section and
-// closes the others (accordion), except Продовження: once it has actual
-// data (active extension or history), it stays permanently open and its
-// button no longer toggles closed — matching how a genuinely committed
-// extension shouldn't be hideable by an accidental click.
+// Штрафи/Ремонт/Утримання) — clicking a button opens that section; per
+// request, once ANY section has actual data entered, it stays open and no
+// longer collapses when a different button is clicked — matching how a
+// genuinely committed extension shouldn't be hideable by an accidental
+// click, generalized to every section rather than just Продовження.
 function bmExtHasData(){
   const active = document.getElementById('bm-ext-active')?.checked;
   return active || currentExtHistory.length > 0;
 }
+function bmSubHasData(){ return (currentSubstitutes||[]).length > 0; }
+function bmFineHasData(){ return (currentFines||[]).length > 0; }
+function bmRepHasData(){ return !!currentRepairPause; }
+function bmDedHasData(){
+  const countEl = document.getElementById('ded-active-count');
+  return !!(countEl && countEl.style.display !== 'none');
+}
+// Auto-open any section that already has data when a booking is loaded,
+// so it's visible right away rather than needing a click every time —
+// matching how a genuinely committed extension already auto-shows.
+function autoOpenBmSectionsWithData(){
+  if(bmSubHasData() && document.getElementById('bm-substitute-panel')?.style.display === 'none') toggleSubstituteSection();
+  if(bmFineHasData() && document.getElementById('bm-fines-panel')?.style.display === 'none') toggleFinesSection();
+  if(bmRepHasData() && document.getElementById('bm-repair-panel')?.style.display === 'none') toggleRepairSection();
+  if(bmDedHasData() && document.getElementById('ded-panel')?.style.display === 'none') toggleDedPanel();
+}
 function activateBmSection(id){
-  const isExtLocked = bmExtHasData();
-  // Close every OTHER section first (accordion) — but never force-close a
-  // locked-active/checked Продовження just because a different button was
-  // clicked (isExtLocked already covers "checkbox is checked", so an
-  // in-progress not-yet-saved extension form isn't lost either).
-  if(id !== 'sub' && document.getElementById('bm-substitute-panel')?.style.display !== 'none') toggleSubstituteSection();
-  if(id !== 'fine' && document.getElementById('bm-fines-panel')?.style.display !== 'none') toggleFinesSection();
-  if(id !== 'rep' && document.getElementById('bm-repair-panel')?.style.display !== 'none') toggleRepairSection();
-  if(id !== 'ded' && document.getElementById('ded-panel')?.style.display !== 'none') toggleDedPanel();
+  // Close every OTHER section — but never force-close one that already has
+  // data in it, only ones that are still empty.
+  if(id !== 'sub' && !bmSubHasData() && document.getElementById('bm-substitute-panel')?.style.display !== 'none') toggleSubstituteSection();
+  if(id !== 'fine' && !bmFineHasData() && document.getElementById('bm-fines-panel')?.style.display !== 'none') toggleFinesSection();
+  if(id !== 'rep' && !bmRepHasData() && document.getElementById('bm-repair-panel')?.style.display !== 'none') toggleRepairSection();
+  if(id !== 'ded' && !bmDedHasData() && document.getElementById('ded-panel')?.style.display !== 'none') toggleDedPanel();
 
   if(id === 'ext'){
     if(!document.getElementById('bm-ext-active').checked){
@@ -7264,13 +7251,21 @@ function updateBmSectionButtons(){
     btnExt.classList.toggle('active', !!extOpen && !isExtLocked);
   }
   const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
-  document.getElementById('bm-sec-btn-sub')?.classList.toggle('active', subOpen);
+  const subLocked = bmSubHasData();
+  const btnSub = document.getElementById('bm-sec-btn-sub');
+  if(btnSub){ btnSub.classList.toggle('locked-active', subLocked); btnSub.classList.toggle('active', subOpen && !subLocked); }
   const fineOpen = document.getElementById('bm-fines-panel')?.style.display !== 'none';
-  document.getElementById('bm-sec-btn-fine')?.classList.toggle('active', fineOpen);
+  const fineLocked = bmFineHasData();
+  const btnFine = document.getElementById('bm-sec-btn-fine');
+  if(btnFine){ btnFine.classList.toggle('locked-active', fineLocked); btnFine.classList.toggle('active', fineOpen && !fineLocked); }
   const repOpen = document.getElementById('bm-repair-panel')?.style.display !== 'none';
-  document.getElementById('bm-sec-btn-rep')?.classList.toggle('active', repOpen);
+  const repLocked = bmRepHasData();
+  const btnRep = document.getElementById('bm-sec-btn-rep');
+  if(btnRep){ btnRep.classList.toggle('locked-active', repLocked); btnRep.classList.toggle('active', repOpen && !repLocked); }
   const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
-  document.getElementById('bm-sec-btn-ded')?.classList.toggle('active', dedOpen);
+  const dedLocked = bmDedHasData();
+  const btnDed = document.getElementById('bm-sec-btn-ded');
+  if(btnDed){ btnDed.classList.toggle('locked-active', dedLocked); btnDed.classList.toggle('active', dedOpen && !dedLocked); }
 
   // Badges — quick summary visible even while the section itself is closed
   const badgeExt = document.getElementById('bm-sec-badge-ext');
