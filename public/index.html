@@ -6905,7 +6905,7 @@ async function exportProfitabilityStyledXLSX(){
         return;
       }
 
-      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr >= bk.start && dStr <= getEffectiveEnd(bk));
+      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr > bk.start && dStr <= getEffectiveEnd(bk));
       if(!b) return;
 
       // This vehicle as the MAIN vehicle, but substituted out on this
@@ -6914,7 +6914,21 @@ async function exportProfitabilityStyledXLSX(){
       const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
       if(isSubstitutedOut) return;
 
-      cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * 100) / 100;
+      // Fractional day counts (e.g. 2.5 діб) prorate onto the LAST calendar
+      // day in the booking's range: full days get the full rate, and the
+      // final day gets only the fractional remainder — e.g. 2.5 діб at $30
+      // starting the 15th means 16th=$30, 17th=$30, 18th=$15 (half rate).
+      // Uses the app's standard "nights" day-counting (end-start, no +1),
+      // matching daysOverride/extension/substitute calculations elsewhere —
+      // NOT countDays(), which is inclusive (+1) and would be off by one here.
+      const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
+      const totalDays = b.daysOverride>0 ? b.daysOverride : nightsBetween(b.start, getEffectiveEnd(b));
+      const fullDays = Math.floor(totalDays + 1e-9); // tiny epsilon guards against floating-point noise on whole numbers
+      const fraction = totalDays - fullDays;
+      const dayIndex = nightsBetween(b.start, dStr); // 1-indexed position within this booking's range
+      const dayShare = (fraction > 1e-9 && dayIndex > fullDays) ? fraction : 1;
+
+      cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * dayShare * 100) / 100;
       cell.alignment = {horizontal:'center'};
     });
   });
