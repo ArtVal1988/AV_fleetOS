@@ -3154,7 +3154,7 @@ function getEffectiveEnd(b){
 // chained end-to-end, not as one single span. Mirrors getDayExtension()'s
 // own chain-building (base end, then each history entry in fromDate order,
 // then the active extension) so both stay consistent with each other.
-function getBookingSegmentForDate(b, dateStr){
+function resolveBookingDaySegments(b, nextVehicleBookingStart){
   const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
   let prevEnd = b.end;
   const chain = [{ isBase:true, fromDate: b.start, toDate: b.end, rate: b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
@@ -3169,18 +3169,67 @@ function getBookingSegmentForDate(b, dateStr){
     const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
     chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: ext.rate, currency: ext.currency, exchangeRate: ext.exchangeRate, days: ext.days>0 ? ext.days : null });
   }
-  // Base period is exclusive-start/inclusive-end (start itself is pickup
-  // day, not a billed night). Extensions are inclusive on BOTH ends —
-  // their fromDate is already the adjusted "effective from" (the actual
-  // first billed night of that extension), not a boundary to skip past again.
-  const seg = chain.find(s => s.isBase ? (dateStr > s.fromDate && dateStr <= s.toDate) : (dateStr >= s.fromDate && dateStr <= s.toDate));
-  if(!seg) return null;
-  const calendarDays = seg.isBase ? nightsBetween(seg.fromDate, seg.toDate) : (nightsBetween(seg.fromDate, seg.toDate) + 1);
-  const totalDays = seg.days || calendarDays;
-  const lastDayShare = totalDays - (calendarDays - 1);
-  const dayIndex = seg.isBase ? nightsBetween(seg.fromDate, dateStr) : (nightsBetween(seg.fromDate, dateStr) + 1);
-  const dayShare = (dayIndex === calendarDays) ? lastDayShare : 1;
-  return { rate: seg.rate, currency: seg.currency, exchangeRate: seg.exchangeRate, dayShare };
+
+  const map = new Map();
+  chain.forEach((seg, i) => {
+    // Base period is exclusive-start (start itself is pickup day, not a
+    // billed night). Extensions are inclusive on both ends — fromDate is
+    // already the adjusted "effective from" (the first billed night).
+    const firstNight = seg.isBase ? addOneDayStr(seg.fromDate) : seg.fromDate;
+    const recordedNights = seg.isBase ? nightsBetween(seg.fromDate, seg.toDate) : (nightsBetween(seg.fromDate, seg.toDate) + 1);
+    const totalDays = seg.days || recordedNights;
+    // Whichever comes first bounds how far this segment's days can extend
+    // past its own recorded toDate: the next segment in THIS booking's own
+    // chain (an extension already claims its own dates), or the next
+    // separate booking entirely on the same vehicle (only relevant for the
+    // chain's last segment, since only it can ever have "open" territory
+    // ahead of it).
+    const chainNextSeg = chain[i+1];
+    const chainNextFirstNight = chainNextSeg ? (chainNextSeg.isBase ? addOneDayStr(chainNextSeg.fromDate) : chainNextSeg.fromDate) : null;
+    const isLastInChain = i === chain.length - 1;
+    const hardCap = chainNextFirstNight || (isLastInChain ? nextVehicleBookingStart : null);
+
+    const daysNeeded = Math.ceil(totalDays - 1e-9);
+    const availableDays = [];
+    let cur = firstNight;
+    for(let k=0;k<daysNeeded;k++){
+      if(hardCap && cur >= hardCap) break;
+      availableDays.push(cur);
+      cur = addOneDayStr(cur);
+    }
+    if(availableDays.length === 0) return; // fully capped out — nothing left to show for this segment
+    const fullDaysCount = availableDays.length - 1;
+    const lastShare = totalDays - fullDaysCount; // <1 if capped/undershoot, ==1 if it fits exactly, >1 only in the rare case a cap forced fewer days than daysNeeded
+    availableDays.forEach((d, idx) => {
+      map.set(d, { rate: seg.rate, currency: seg.currency, exchangeRate: seg.exchangeRate, dayShare: idx === availableDays.length-1 ? lastShare : 1 });
+    });
+  });
+  return map;
+}
+// Combines every revenue-generating booking for a single vehicle into one
+// Map<dateStr, {booking, rate, currency, exchangeRate, dayShare}>, so
+// reports can look up "which booking (if any) claims this date" in one
+// place — including a booking's overflow days beyond its own recorded end,
+// which resolveBookingDaySegments() already caps against the next booking
+// on this same vehicle, so genuine conflicts shouldn't occur.
+function buildVehicleDayRevenueMap(vehicleId, bookingsList){
+  const vehicleBookings = bookingsList
+    .filter(bk => bk.vehicleId===vehicleId && SM[bk.status]?.isBooking !== false)
+    .slice().sort((a,c) => (a.start||'').localeCompare(c.start||''));
+  const combined = new Map();
+  vehicleBookings.forEach((bk, i) => {
+    const next = vehicleBookings[i+1];
+    // The next booking's own base period is exclusive-start (its start
+    // date itself is its pickup day, not a billed night) — so the actual
+    // boundary this booking's overflow must respect is start+1, not start
+    // itself, or overflow gets blocked from using a day that's genuinely free.
+    const nextFirstNight = next ? addOneDayStr(next.start) : null;
+    const segMap = resolveBookingDaySegments(bk, nextFirstNight);
+    segMap.forEach((info, dateStr) => {
+      if(!combined.has(dateStr)) combined.set(dateStr, {booking: bk, ...info});
+    });
+  });
+  return combined;
 }
 function getDayRepairPause(b, dateStr){
   if(!b.repairPause || !b.repairPause.fromDate || !b.repairPause.toDate) return null;
@@ -6679,75 +6728,64 @@ function generateProfitabilityReport(){
   // rental activity in the period — the report should reflect the whole
   // fleet, not just vehicles that happened to generate revenue.
   ALL_VEHICLES.forEach(v => {
-    perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
+    perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:'', countedBookingIds:new Set()});
   });
+  // Substitute vehicles can receive revenue that isn't in ALL_VEHICLES'
+  // own fleet listing in edge cases — ensure an entry exists on demand too.
+  function ensureEntry(vehicleId){
+    if(perVehicle.has(vehicleId)) return perVehicle.get(vehicleId);
+    const v = getVehicle(vehicleId);
+    if(!v) return null;
+    const entry = {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:'', countedBookingIds:new Set()};
+    perVehicle.set(vehicleId, entry);
+    return entry;
+  }
 
+  // Status notes (repair/investor/storage/personal etc — non-revenue,
+  // don't go through day-resolution) still need a simple overlap check.
   bookings.forEach(b => {
+    if(SM[b.status]?.isBooking !== false) return;
     const bStart = new Date(b.start);
     const bEnd = new Date(getEffectiveEnd(b));
     const overlapStart = bStart > periodStart ? bStart : periodStart;
     const overlapEnd = bEnd < periodEnd ? bEnd : periodEnd;
-    if(overlapEnd < overlapStart) return; // no overlap with the report period
+    if(overlapEnd < overlapStart) return;
+    const entry = ensureEntry(b.vehicleId);
+    if(!entry) return;
+    const label = SM[b.status]?.label || b.status;
+    if(!entry.statusNote.includes(label)) entry.statusNote = entry.statusNote ? entry.statusNote+', '+label : label;
+  });
 
-    const v = getVehicle(b.vehicleId);
-    if(!v) return;
-    if(!perVehicle.has(v.id)) perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
-    const entry = perVehicle.get(v.id);
-
-    if(SM[b.status]?.isBooking === false){
-      // Non-revenue status (storage/investor/repair/personal etc) — note it
-      // for context but don't count toward bookings/days/revenue.
-      const label = SM[b.status]?.label || b.status;
-      if(!entry.statusNote.includes(label)) entry.statusNote = entry.statusNote ? entry.statusNote+', '+label : label;
-      return;
-    }
-
-    // Walk day-by-day through the overlap, using the same segment-aware
-    // proration as the styled Excel export (getBookingSegmentForDate) —
-    // NOT a raw calendar day count, since that ignores daysOverride
-    // entirely and any extension's own separate rate/days, and NOT
-    // inclusive (+1) counting, which overcounts by one per booking.
-    let mainDaysAmount = 0, mainRevenueUSD = 0;
-    const subDaysMap = new Map(); // substituteVehicleId -> {days, revenueUSD}
-    const cur = new Date(Date.UTC(overlapStart.getUTCFullYear(), overlapStart.getUTCMonth(), overlapStart.getUTCDate()));
-    const endUTC = new Date(Date.UTC(overlapEnd.getUTCFullYear(), overlapEnd.getUTCMonth(), overlapEnd.getUTCDate()));
+  // Revenue: walk day-by-day through the report period for each vehicle,
+  // using the combined day-map (resolveBookingDaySegments via
+  // buildVehicleDayRevenueMap) so daysOverride/extensions/overflow days are
+  // all correctly accounted for — NOT a raw calendar day count (which
+  // ignores daysOverride entirely) and NOT inclusive (+1) counting (which
+  // overcounts by one per booking).
+  ALL_VEHICLES.forEach(v => {
+    const dayMap = buildVehicleDayRevenueMap(v.id, bookings);
+    const cur = new Date(Date.UTC(periodStart.getUTCFullYear(), periodStart.getUTCMonth(), periodStart.getUTCDate()));
+    const endUTC = new Date(Date.UTC(periodEnd.getUTCFullYear(), periodEnd.getUTCMonth(), periodEnd.getUTCDate()));
     while(cur <= endUTC){
       const dateStr = dStr(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate());
       cur.setUTCDate(cur.getUTCDate()+1);
-      const segInfo = getBookingSegmentForDate(b, dateStr);
-      if(!segInfo) continue; // dateStr is the pickup day itself (start, exclusive) — not a billed night
+      const info = dayMap.get(dateStr);
+      if(!info) continue;
+      const b = info.booking;
 
-      // The handover day (fromDate) itself still belongs to the main
-      // vehicle — the substitute vehicle's revenue starts the day after,
-      // matching the same boundary convention used for extension history.
+      // This vehicle's booking, but substituted out on this specific day —
+      // revenue belongs to the substitute instead.
       const sub = (b.substituteVehicles||[]).find(s => dateStr > s.fromDate && dateStr <= s.toDate);
-      const dayRevenue = toUSD(segInfo.rate * segInfo.dayShare, segInfo.currency, segInfo.exchangeRate, fallbackRate);
-      if(sub){
-        if(!subDaysMap.has(sub.vehicleId)) subDaysMap.set(sub.vehicleId, {days:0, revenueUSD:0});
-        const e = subDaysMap.get(sub.vehicleId);
-        e.days += segInfo.dayShare;
-        e.revenueUSD += dayRevenue;
-      } else {
-        mainDaysAmount += segInfo.dayShare;
-        mainRevenueUSD += dayRevenue;
-      }
+      const dayRevenue = toUSD(info.rate * info.dayShare, info.currency, info.exchangeRate, fallbackRate);
+      const targetVehicleId = sub ? sub.vehicleId : v.id;
+      const entry = ensureEntry(targetVehicleId);
+      if(!entry) continue;
+      entry.days += info.dayShare;
+      entry.revenueUSD += dayRevenue;
+      entry.countedBookingIds.add(b.id);
     }
-
-    entry.bookingsCount++;
-    if(mainDaysAmount > 0){
-      entry.days += mainDaysAmount;
-      entry.revenueUSD += mainRevenueUSD;
-    }
-    subDaysMap.forEach(({days:subDays, revenueUSD:subRevenue}, subVehicleId) => {
-      const subV = getVehicle(subVehicleId);
-      if(!subV) return;
-      if(!perVehicle.has(subVehicleId)) perVehicle.set(subVehicleId, {v:subV, bookingsCount:0, days:0, revenueUSD:0, statusNote:''});
-      const subEntry = perVehicle.get(subVehicleId);
-      subEntry.bookingsCount++;
-      subEntry.days += subDays;
-      subEntry.revenueUSD += subRevenue;
-    });
   });
+  perVehicle.forEach(entry => { entry.bookingsCount = entry.countedBookingIds.size; });
 
   const rows = [...perVehicle.values()];
   lastReportData = {rows, fromStr, toStr};
@@ -6931,6 +6969,12 @@ async function exportProfitabilityStyledXLSX(){
     cell.alignment = {horizontal:'center'};
   });
 
+  // Pre-resolve each vehicle's full day-revenue map once (combines all its
+  // bookings, including overflow days beyond a booking's own recorded end)
+  // — same shared logic as the main report table, so both stay consistent.
+  const vehicleDayMaps = new Map();
+  activeVehicles.forEach(({v}) => { vehicleDayMaps.set(v.id, buildVehicleDayRevenueMap(v.id, bookings)); });
+
   // Data rows: one per day
   dayList.forEach((d, i) => {
     const row = ws.getRow(3+i);
@@ -6944,42 +6988,36 @@ async function exportProfitabilityStyledXLSX(){
       const col = 3+vi;
       const cell = row.getCell(col);
 
-      // This vehicle as a SUBSTITUTE on this day: find any booking (on any
-      // other vehicle) whose substituteVehicles cover this date with this
-      // vehicle as the substitute — show that period's own rate here
-      // instead of whatever the main booking's own vehicle would show.
+      const info = vehicleDayMaps.get(v.id).get(dStr);
+      if(!info) return;
+      const b = info.booking;
+
+      // This vehicle's booking, but substituted out on this specific day —
+      // revenue belongs to the substitute vehicle instead, leave this cell
+      // empty (that vehicle's own column will show it via the substitute
+      // lookup below).
+      const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
+      if(isSubstitutedOut) return;
+
+      cell.value = Math.round(toUSD(info.rate, info.currency, info.exchangeRate, fallbackRate) * info.dayShare * 100) / 100;
+      cell.alignment = {horizontal:'center'};
+    });
+    // This vehicle as a SUBSTITUTE on this day: find any booking (on any
+    // other vehicle) whose substituteVehicles cover this date with this
+    // vehicle as the substitute — show that period's own rate here instead.
+    activeVehicles.forEach(({v}, vi) => {
+      const col = 3+vi;
+      const cell = row.getCell(col);
       let subForThisDay = null, subOwnerBooking = null;
       for(const bk of bookings){
         const sub = (bk.substituteVehicles||[]).find(s => s.vehicleId===v.id && dStr > s.fromDate && dStr <= s.toDate);
         if(sub){ subForThisDay = sub; subOwnerBooking = bk; break; }
       }
-      if(subForThisDay){
-        const rate = subForThisDay.rate>0 ? subForThisDay.rate : subOwnerBooking.rate;
-        const cur = subForThisDay.rate>0 ? (subForThisDay.currency||'$') : subOwnerBooking.currency;
-        const exRate = subForThisDay.rate>0 ? subForThisDay.exchangeRate : subOwnerBooking.exchangeRate;
-        cell.value = Math.round(toUSD(rate, cur, exRate, fallbackRate) * 100) / 100;
-        cell.alignment = {horizontal:'center'};
-        return;
-      }
-
-      const b = bookings.find(bk => bk.vehicleId===v.id && SM[bk.status]?.isBooking !== false && dStr > bk.start && dStr <= getEffectiveEnd(bk));
-      if(!b) return;
-
-      // This vehicle as the MAIN vehicle, but substituted out on this
-      // specific day — revenue belongs to the substitute instead, leave
-      // this cell empty.
-      const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
-      if(isSubstitutedOut) return;
-
-      // Resolve which segment (base period, or a specific extension) this
-      // day belongs to, and prorate within THAT segment's own date range —
-      // daysOverride only ever covers the base period, each extension
-      // carries its own separate days/rate, so a booking with extensions
-      // is several independent chained periods, not one single span.
-      const segInfo = getBookingSegmentForDate(b, dStr);
-      if(!segInfo) return;
-
-      cell.value = Math.round(toUSD(segInfo.rate, segInfo.currency, segInfo.exchangeRate, fallbackRate) * segInfo.dayShare * 100) / 100;
+      if(!subForThisDay) return;
+      const rate = subForThisDay.rate>0 ? subForThisDay.rate : subOwnerBooking.rate;
+      const cur = subForThisDay.rate>0 ? (subForThisDay.currency||'$') : subOwnerBooking.currency;
+      const exRate = subForThisDay.rate>0 ? subForThisDay.exchangeRate : subOwnerBooking.exchangeRate;
+      cell.value = Math.round(toUSD(rate, cur, exRate, fallbackRate) * 100) / 100;
       cell.alignment = {horizontal:'center'};
     });
   });
