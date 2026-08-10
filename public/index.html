@@ -3627,7 +3627,7 @@ function showTooltip(e,bid,subContext){
   nameRow = `<div style="margin-bottom:2px">
     <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${primaryName}</span>
   </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${secondaryName}</div>`:'')
-  + (b.customer?.phone?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
+  + (b.customer?.phone?`<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:6px">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
 
   // 2: date+time on one line, address on the line below
   const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
