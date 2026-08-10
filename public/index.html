@@ -3624,10 +3624,10 @@ function showTooltip(e,bid,subContext){
   const secondaryName = hasCompany && hasCustomer ? b.customer.name : '';
   const ttClient = b.customer?.clientId ? (CLIENTS||[]).find(c=>c.id===b.customer.clientId) : null;
   const ttExtraContactsCount = ttClient?.extraContacts?.length || 0;
-  nameRow = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px">
+  nameRow = `<div style="margin-bottom:2px">
     <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${primaryName}</span>
-    ${b.customer?.phone?`<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</span>`:''}
-  </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${secondaryName}</div>`:'<div style="margin-bottom:6px"></div>');
+  </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${secondaryName}</div>`:'')
+  + (b.customer?.phone?`<div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
 
   // 2: date+time on one line, address on the line below
   const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
@@ -3648,11 +3648,29 @@ function showTooltip(e,bid,subContext){
   const extrasList = Object.values(b.extras||{}).filter(x=>x.active);
   const equipList = b.equipment||[];
   const hasServices = extrasList.length || equipList.length;
+  // mode 'orig' means the price is always fixed in $, 'uah' always in ₴ —
+  // regardless of the booking's own currency (matching getExtrasTotalsSplit(),
+  // the logic that actually drives the visible extras total in the booking
+  // form) — convert into the booking's own currency for display here,
+  // instead of relabeling the raw number with whatever symbol.
+  const exRate = parseFloat(b.exchangeRate) || 0;
+  const convertItemAmount = (item) => {
+    if(!item.price) return '';
+    const rawCurrency = item.cur === 'uah' ? '₴' : '$';
+    let amount = item.price * (item.qty || 1);
+    let displayCur = rawCurrency;
+    if(rawCurrency !== cur){
+      if(cur === '₴'){ amount = exRate > 0 ? amount * exRate : amount; }
+      else { amount = exRate > 0 ? amount / exRate : amount; }
+      displayCur = cur;
+    }
+    return `<span style="color:${curColor(displayCur)}">${fmtSmart(Math.round(amount*100)/100)} ${displayCur}</span>`;
+  };
   const servicesBlock = hasServices ? `
     <div class="tt-divider"></div>
     <div class="tt-label" style="margin-bottom:4px">Додаткові послуги</div>
-    ${extrasList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">${x.icon||''} ${x.label}${x.qty>1?' ×'+x.qty:''}</span><span class="tt-val">${x.price?`<span style="color:${curColor(x.cur==='uah'?'₴':cur)}">${x.price}${x.cur==='uah'?'₴':cur}</span>`:''}</span></div>`).join('')}
-    ${equipList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">🔧 ${x.name}</span><span class="tt-val">${x.price?`<span style="color:${curColor(x.cur==='uah'?'₴':cur)}">${x.price}${x.cur==='uah'?'₴':cur}</span>`:''}</span></div>`).join('')}
+    ${extrasList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">${x.icon||''} ${x.label}${x.qty>1?' ×'+x.qty:''}</span><span class="tt-val">${convertItemAmount(x)}</span></div>`).join('')}
+    ${equipList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">🔧 ${x.name}</span><span class="tt-val">${convertItemAmount(x)}</span></div>`).join('')}
   ` : '';
 
   // extension info
