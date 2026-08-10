@@ -7267,6 +7267,22 @@ function updateBmSectionButtons(){
   const btnDed = document.getElementById('bm-sec-btn-ded');
   if(btnDed){ btnDed.classList.toggle('locked-active', dedLocked); btnDed.classList.toggle('active', dedOpen && !dedLocked); }
 
+  // The outer msec wrapper for each section has its own padding/border/
+  // background (for the colored side-strip look) that renders regardless
+  // of whether the inner panel itself is display:none — without this,
+  // every closed/empty section still shows as a blank colored bar. Hide
+  // the whole wrapper when there's nothing open or committed to show.
+  const secExt = document.getElementById('bm-block-ext-section');
+  if(secExt) secExt.style.display = (extOpen || isExtLocked) ? '' : 'none';
+  const secSub = document.getElementById('bm-substitute-section');
+  if(secSub) secSub.style.display = (subOpen || subLocked) ? '' : 'none';
+  const secFine = document.getElementById('bm-fines-section');
+  if(secFine) secFine.style.display = (fineOpen || fineLocked) ? '' : 'none';
+  const secRep = document.getElementById('bm-repair-section');
+  if(secRep) secRep.style.display = (repOpen || repLocked) ? '' : 'none';
+  const secDed = document.getElementById('bm-block-5');
+  if(secDed) secDed.style.display = (dedOpen || dedLocked) ? '' : 'none';
+
   // Badges — quick summary visible even while the section itself is closed
   const badgeExt = document.getElementById('bm-sec-badge-ext');
   if(badgeExt){
