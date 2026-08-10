@@ -963,6 +963,11 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b4{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-ext{background:#fffbeb;border-left-color:#fbbf24;}
 .msec-sub{background:#f5f3ff;border-left-color:#a78bfa;}
+.bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:8px 4px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;cursor:pointer;font-family:inherit;color:#374151;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,border-color .15s}
+.bm-sec-btn:hover{background:#eef1f6}
+.bm-sec-btn.active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+.bm-sec-btn.locked-active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;cursor:default}
+.bm-sec-badge{position:absolute;top:-5px;right:-3px;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;background:#dc2626;color:#fff;display:none}
 #bm-return-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 #bm-pickup-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 .fin-label-style label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af!important;}
@@ -2554,6 +2559,26 @@ input.dm-pf-val.tel{font-size:14px;}
 
 
     </div>
+    </div>
+
+    <div class="msec" style="margin-top:14px">
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')">
+          <span style="font-size:15px">↷</span><span>Продовження</span><span class="bm-sec-badge" id="bm-sec-badge-ext"></span>
+        </button>
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')">
+          <span style="font-size:15px">🔄</span><span>Підмінне</span><span class="bm-sec-badge" id="bm-sec-badge-sub"></span>
+        </button>
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-fine" onclick="activateBmSection('fine')">
+          <span style="font-size:15px">🚔</span><span>Штрафи</span><span class="bm-sec-badge" id="bm-sec-badge-fine"></span>
+        </button>
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-rep" onclick="activateBmSection('rep')">
+          <span style="font-size:15px">🔧</span><span>Ремонт</span><span class="bm-sec-badge" id="bm-sec-badge-rep"></span>
+        </button>
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ded" onclick="activateBmSection('ded')">
+          <span style="font-size:15px">💰</span><span>Утримання</span><span class="bm-sec-badge" id="bm-sec-badge-ded"></span>
+        </button>
+      </div>
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
@@ -4604,6 +4629,7 @@ function openBookingModal(vid=null,start=null,end=null){
   bookingWasClosedOnOpen = false;
   applyOrderLockState();
   updateAllMsgIconStates();
+  updateBmSectionButtons();
   document.getElementById('booking-modal').classList.add('open');
 }
 function editBooking(bid){
@@ -4750,6 +4776,7 @@ function editBooking(bid){
   bookingWasClosedOnOpen = !!b.closed;
   applyOrderLockState();
   updateAllMsgIconStates();
+  updateBmSectionButtons();
   document.getElementById('booking-modal').classList.add('open');
 }
 function closeBookingModal(){
@@ -6229,6 +6256,7 @@ function updateDeductionsTotal(){
     countEl.style.display = total ? '' : 'none';
     countEl.textContent = total;
   }
+  updateBmSectionButtons();
 }
 
 function resetDeductions(){
@@ -7185,6 +7213,100 @@ function setFineCurrency(cur){
   const amtField = document.getElementById('bm-fine-amount');
   if(amtField) amtField.style.color = curColor(cur);
 }
+// ── Unified nav row for the 5 sections above (Продовження/Підмінне/
+// Штрафи/Ремонт/Утримання) — clicking a button opens that section and
+// closes the others (accordion), except Продовження: once it has actual
+// data (active extension or history), it stays permanently open and its
+// button no longer toggles closed — matching how a genuinely committed
+// extension shouldn't be hideable by an accidental click.
+function bmExtHasData(){
+  const active = document.getElementById('bm-ext-active')?.checked;
+  return active || currentExtHistory.length > 0;
+}
+function activateBmSection(id){
+  const isExtLocked = bmExtHasData();
+  // Close every OTHER section first (accordion) — but never force-close a
+  // locked-active/checked Продовження just because a different button was
+  // clicked (isExtLocked already covers "checkbox is checked", so an
+  // in-progress not-yet-saved extension form isn't lost either).
+  if(id !== 'sub' && document.getElementById('bm-substitute-panel')?.style.display !== 'none') toggleSubstituteSection();
+  if(id !== 'fine' && document.getElementById('bm-fines-panel')?.style.display !== 'none') toggleFinesSection();
+  if(id !== 'rep' && document.getElementById('bm-repair-panel')?.style.display !== 'none') toggleRepairSection();
+  if(id !== 'ded' && document.getElementById('ded-panel')?.style.display !== 'none') toggleDedPanel();
+
+  if(id === 'ext'){
+    if(!document.getElementById('bm-ext-active').checked){
+      openExtensionForNewEntry();
+    } else {
+      document.getElementById('bm-block-ext-section').scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+  } else if(id === 'sub'){
+    if(document.getElementById('bm-substitute-panel').style.display === 'none') toggleSubstituteSection();
+    else document.getElementById('bm-substitute-section').scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else if(id === 'fine'){
+    if(document.getElementById('bm-fines-panel').style.display === 'none') toggleFinesSection();
+    else document.getElementById('bm-fines-section').scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else if(id === 'rep'){
+    if(document.getElementById('bm-repair-panel').style.display === 'none') toggleRepairSection();
+    else document.getElementById('bm-repair-section').scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else if(id === 'ded'){
+    if(document.getElementById('ded-panel').style.display === 'none') toggleDedPanel();
+    document.getElementById('bm-block-5').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  updateBmSectionButtons();
+}
+function updateBmSectionButtons(){
+  const isExtLocked = bmExtHasData();
+  const extOpen = document.getElementById('bm-ext-active')?.checked;
+  const btnExt = document.getElementById('bm-sec-btn-ext');
+  if(btnExt){
+    btnExt.classList.toggle('locked-active', !!isExtLocked);
+    btnExt.classList.toggle('active', !!extOpen && !isExtLocked);
+  }
+  const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
+  document.getElementById('bm-sec-btn-sub')?.classList.toggle('active', subOpen);
+  const fineOpen = document.getElementById('bm-fines-panel')?.style.display !== 'none';
+  document.getElementById('bm-sec-btn-fine')?.classList.toggle('active', fineOpen);
+  const repOpen = document.getElementById('bm-repair-panel')?.style.display !== 'none';
+  document.getElementById('bm-sec-btn-rep')?.classList.toggle('active', repOpen);
+  const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
+  document.getElementById('bm-sec-btn-ded')?.classList.toggle('active', dedOpen);
+
+  // Badges — quick summary visible even while the section itself is closed
+  const badgeExt = document.getElementById('bm-sec-badge-ext');
+  if(badgeExt){
+    if(extOpen){
+      const d = parseInt(document.getElementById('bm-ext-days')?.value) || 0;
+      badgeExt.textContent = d ? d+'дн' : '';
+      badgeExt.style.display = d ? 'block' : 'none';
+    } else { badgeExt.style.display = 'none'; }
+  }
+  const badgeSub = document.getElementById('bm-sec-badge-sub');
+  if(badgeSub){
+    const n = (currentSubstitutes||[]).length;
+    badgeSub.textContent = n || '';
+    badgeSub.style.display = n ? 'block' : 'none';
+  }
+  const badgeFine = document.getElementById('bm-sec-badge-fine');
+  if(badgeFine){
+    const n = (currentFines||[]).filter(f=>!f.paid).length;
+    badgeFine.textContent = n || '';
+    badgeFine.style.display = n ? 'block' : 'none';
+  }
+  const badgeRep = document.getElementById('bm-sec-badge-rep');
+  if(badgeRep){
+    const has = !!currentRepairPause;
+    badgeRep.textContent = has ? repairPauseDays(currentRepairPause)+'дн' : '';
+    badgeRep.style.display = has ? 'block' : 'none';
+  }
+  const badgeDed = document.getElementById('bm-sec-badge-ded');
+  if(badgeDed){
+    const countEl = document.getElementById('ded-active-count');
+    const n = countEl && countEl.style.display !== 'none' ? countEl.textContent : '';
+    badgeDed.textContent = n || '';
+    badgeDed.style.display = n ? 'block' : 'none';
+  }
+}
 function toggleFinesSection(){
   const panel = document.getElementById('bm-fines-panel');
   const icon = document.getElementById('bm-fines-toggle-icon');
@@ -7286,6 +7408,7 @@ function renderFinesList(){
     </div>`;
   }).join('') || '<div style="font-size:10.5px;color:#9ca3af;font-style:italic;padding:6px 2px">Штрафів ще не додано</div>';
   updateFinesSummary();
+  updateBmSectionButtons();
 }
 function loadFines(fines){
   currentFines = (fines||[]).map(f=>({...f}));
@@ -7384,6 +7507,7 @@ function renderRepairView(){
     if(view) view.style.display = 'none';
     if(addBtn) addBtn.style.display = 'block';
     if(summaryEl) summaryEl.textContent = '';
+    updateBmSectionButtons();
     return;
   }
   const days = repairPauseDays(currentRepairPause);
@@ -7395,6 +7519,7 @@ function renderRepairView(){
   }
   if(addBtn) addBtn.style.display = 'none';
   if(summaryEl) summaryEl.textContent = `— ${fmt(currentRepairPause.fromDate)}–${fmt(currentRepairPause.toDate)}`;
+  updateBmSectionButtons();
 }
 function loadRepairPause(pause){
   currentRepairPause = pause ? {...pause} : null;
@@ -7428,6 +7553,7 @@ function renderSubstituteList(){
       ${isEditing?'<div style="font-size:10px;color:#a16207;font-weight:700">редагується…</div>':''}
     </div>`;
   }).join('');
+  updateBmSectionButtons();
 }
 function editSubstitutePeriod(i){
   const s = currentSubstitutes[i];
@@ -7488,6 +7614,7 @@ function toggleExtensionSection(){
     if(widget) widget.style.display = 'none';
   }
   updatePartialPaymentAvailability();
+  updateBmSectionButtons();
 }
 
 function setExtDateField(id, iso){
