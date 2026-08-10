@@ -2638,7 +2638,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <label>Загалом</label>
               <div class="ext-calc-input-cur">
-                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:76px" oninput="onExtTotalInput(this)">
+                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:100px" oninput="onExtTotalInput(this)">
               </div>
             </div>
             <div class="ext-fin-field" style="width:auto">
@@ -3652,7 +3652,14 @@ function showTooltip(e,bid,subContext){
 
   const v=getVehicle(b.vehicleId);
   const st=SM[b.status];
-  const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
+  // "Оренда" should show just the first/base period, not combined with any
+  // already-committed extension — b.end gets pushed forward once an
+  // extension is committed to history, so countDays(b.start,b.end) alone
+  // would silently include it. When history exists, the true original end
+  // is the first extension's own fromDate (that's where the base period
+  // actually stopped and the extension began).
+  const firstPeriodEnd = (b.extensionHistory && b.extensionHistory.length) ? b.extensionHistory[0].fromDate : b.end;
+  const days=b.daysOverride>0?b.daysOverride:countDays(b.start,firstPeriodEnd);
   const extrasTotal=calcExtrasTotal(b)||0;
   const total=calcTotal(b);
   const hasCustomer=b.customer?.name;
