@@ -2807,24 +2807,6 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div id="bm-return-anchor-ext"></div>
 
-    <div class="msec msec-b4" id="bm-block-4">
-      <div class="km-row-compact">
-        <div class="km-compact-field">
-          <span class="km-compact-label">Пробіг на початку оренди</span>
-          <input type="text" inputmode="numeric" id="bm-start-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
-          <span class="km-compact-unit">км</span>
-        </div>
-        <div class="km-compact-field">
-          <span class="km-compact-label">Пробіг в кінці оренди:</span>
-          <input type="text" inputmode="numeric" id="bm-end-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
-          <span class="km-compact-unit">км</span>
-        </div>
-        <div class="km-diff-badge" id="bm-km-diff" style="display:none">
-          🚙 <span>За оренду:</span> <span id="bm-km-diff-val">0</span> <span>км</span>
-        </div>
-        <div class="km-diff-badge" id="bm-km-avg" style="display:none"></div>
-      </div>
-    </div>
     <!-- POST-RENTAL DEDUCTIONS -->
     <div class="msec msec-b5" id="bm-block-5">
       <div id="ded-toggle-btn" style="display:none"><span id="ded-active-count"></span></div>
@@ -2874,6 +2856,24 @@ input.dm-pf-val.tel{font-size:14px;}
           <span style="font-size:11px;font-weight:600;color:#991b1b">Загальне утримання</span>
           <span id="bm-ded-total-val" style="font-family:var(--font-head);font-weight:700;color:#991b1b;font-size:14px"></span>
         </div>
+      </div>
+    </div>
+    <div class="msec msec-b4" id="bm-block-4">
+      <div class="km-row-compact">
+        <div class="km-compact-field">
+          <span class="km-compact-label">Пробіг на початку оренди</span>
+          <input type="text" inputmode="numeric" id="bm-start-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
+          <span class="km-compact-unit">км</span>
+        </div>
+        <div class="km-compact-field">
+          <span class="km-compact-label">Пробіг в кінці оренди:</span>
+          <input type="text" inputmode="numeric" id="bm-end-km" placeholder="0" oninput="formatKmInput(this);updateKmDiff()">
+          <span class="km-compact-unit">км</span>
+        </div>
+        <div class="km-diff-badge" id="bm-km-diff" style="display:none">
+          🚙 <span>За оренду:</span> <span id="bm-km-diff-val">0</span> <span>км</span>
+        </div>
+        <div class="km-diff-badge" id="bm-km-avg" style="display:none"></div>
       </div>
     </div>
     </div>
