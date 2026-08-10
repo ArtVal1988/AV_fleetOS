@@ -12978,6 +12978,25 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
   else if(document.getElementById('to-modal')?.classList.contains('open')) closeToModal();
   else if(document.getElementById('ins-modal')?.classList.contains('open')) closeInsuranceModal();
+  // Client card is checked BEFORE booking-modal — when opened from within a
+  // booking (client is "on top"), Escape must close the client card first,
+  // not skip straight through to the booking modal underneath it. Any
+  // unsaved contact being entered gets its own warning before closing.
+  else if(document.getElementById('clients-panel-overlay')?.style.display==='flex'){
+    if(document.getElementById('cf-ec-msg-popup')?.style.display==='block'){ closeMsgPopup('ec'); return; }
+    const ecFormOpen = document.getElementById('cf-extra-contacts-form-wrap')?.style.display !== 'none';
+    const ecHasUnsavedInput = ecFormOpen && (
+      document.getElementById('cf-extra-contact-desc')?.value.trim() ||
+      document.getElementById('cf-extra-contact-phone')?.value.trim() ||
+      Object.values(msgState.ec||{}).some(m=>m?.contact)
+    );
+    if(ecHasUnsavedInput){
+      if(!confirm('Незбережені дані контакту будуть втрачені. Закрити?')) return;
+      hideExtraContactsForm();
+      return;
+    }
+    closeClientsPanel();
+  }
   else if(document.getElementById('booking-modal')?.classList.contains('open')) closeBookingModal();
   else if(document.getElementById('add-work-modal')?.classList.contains('open')) document.getElementById('add-work-modal').classList.remove('open');
   else if(document.getElementById('users-panel-overlay')?.style.display==='flex') closeUsersPanel();
@@ -12995,7 +13014,6 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('representatives-panel-overlay')?.style.display==='flex') closeRepresentativesPanel();
   else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();
   else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
-  else if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
   else if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
   else if(document.getElementById('activitylog-panel-overlay')?.style.display==='flex') closeActivityLogPanel();
 });
