@@ -2323,8 +2323,9 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
               <!-- Popup card with contact field, appears on icon click -->
               <div id="msg-popup" class="msg-popup" style="display:none"></div>
+              <button type="button" id="bm-extra-contacts-btn" onclick="toggleBmExtraContactsPopup(event)" title="Додаткові контакти" style="display:none;flex-shrink:0;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap">☎<span id="bm-extra-contacts-count"></span></button>
+              <div id="bm-extra-contacts-popup" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;min-width:180px;padding:6px"></div>
             </div>
-            <div id="bm-extra-contacts-info" style="display:none;font-size:10px;color:#6b7280;margin-top:4px"></div>
           </div>
         </div>
       <input type="hidden" id="bm-client-type" value="individual">
@@ -3621,9 +3622,11 @@ function showTooltip(e,bid,subContext){
   let nameRow;
   const primaryName = hasCompany ? b.customer.company : (hasCustomer ? b.customer.name : (v?.name||''));
   const secondaryName = hasCompany && hasCustomer ? b.customer.name : '';
+  const ttClient = b.customer?.clientId ? (CLIENTS||[]).find(c=>c.id===b.customer.clientId) : null;
+  const ttExtraContactsCount = ttClient?.extraContacts?.length || 0;
   nameRow = `<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px">
     <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${primaryName}</span>
-    ${b.customer?.phone?`<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span></span>`:''}
+    ${b.customer?.phone?`<span style="display:flex;align-items:center;gap:4px;flex-shrink:0">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</span>`:''}
   </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${secondaryName}</div>`:'<div style="margin-bottom:6px"></div>');
 
   // 2: date+time on one line, address on the line below
@@ -9573,14 +9576,39 @@ function selectClientSuggestion(name, phone, clientId){
   updateBmExtraContactsInfo(clientId);
   closeClientSuggest();
 }
+let bmCurrentExtraContacts = [];
 function updateBmExtraContactsInfo(clientId){
-  const el = document.getElementById('bm-extra-contacts-info');
-  if(!el) return;
+  const btn = document.getElementById('bm-extra-contacts-btn');
+  const countEl = document.getElementById('bm-extra-contacts-count');
+  if(!btn) return;
   const client = clientId ? (CLIENTS||[]).find(c=>c.id===clientId) : null;
-  const extras = client?.extraContacts || [];
-  if(!extras.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
-  el.style.display = 'block';
-  el.innerHTML = '☎ ' + extras.map(c => `<b>${c.description}:</b> ${c.phone}`).join(' · ');
+  bmCurrentExtraContacts = client?.extraContacts || [];
+  document.getElementById('bm-extra-contacts-popup').style.display = 'none';
+  if(!bmCurrentExtraContacts.length){ btn.style.display = 'none'; return; }
+  btn.style.display = 'inline-block';
+  if(countEl) countEl.textContent = bmCurrentExtraContacts.length;
+}
+function toggleBmExtraContactsPopup(e){
+  e.stopPropagation();
+  const popup = document.getElementById('bm-extra-contacts-popup');
+  const isOpen = popup.style.display !== 'none';
+  if(isOpen){ popup.style.display = 'none'; return; }
+  popup.innerHTML = bmCurrentExtraContacts.map(c =>
+    `<div style="padding:5px 6px;border-bottom:1px solid #f3f4f6;font-size:11px">
+      <div style="color:#6b7280">${c.description}</div>
+      <div style="font-weight:600;font-family:var(--font-mono)">${c.phone}</div>
+    </div>`
+  ).join('');
+  popup.style.display = 'block';
+  // Close on any outside click, same pattern as the messenger popup
+  setTimeout(() => {
+    document.addEventListener('click', function closeIt(ev){
+      if(!popup.contains(ev.target)){
+        popup.style.display = 'none';
+        document.removeEventListener('click', closeIt);
+      }
+    });
+  }, 0);
 }
 function updateClientLinkButton(){
   const btn = document.getElementById('bm-goto-client-btn');
