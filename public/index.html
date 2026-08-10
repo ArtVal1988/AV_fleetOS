@@ -3877,11 +3877,10 @@ function showTooltip(e,bid,subContext){
     if(servicesOnly && isCompanyClient){
       return `<span class="tt-pm-icons"><span class="tt-pm-icon" title="Банк" style="border:1px solid #dbeafe;background:#eff6ff;border-radius:5px">${ttBankSvg}</span></span>`;
     }
-    const secondSvg = isCompanyClient ? ttBankSvg : ttCardSvg;
-    const secondActive = method==='card';
+    const isCard = method==='card';
+    const svg = isCard ? (isCompanyClient ? ttBankSvg : ttCardSvg) : ttCashSvg;
     return `<span class="tt-pm-icons">
-    <span class="tt-pm-icon cash${secondActive?' dim':''}">${ttCashSvg}</span>
-    <span class="tt-pm-icon card${!secondActive?' dim':''}">${secondSvg}</span>
+    <span class="tt-pm-icon ${isCard?'card':'cash'}">${svg}</span>
   </span>`;
   };
 
