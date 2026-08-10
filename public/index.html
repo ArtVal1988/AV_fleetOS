@@ -6498,9 +6498,11 @@ function dashActivityCol(title, list, color, locField){
       const v = getVehicle(b.vehicleId);
       const displayName = b.customer?.company || b.customer?.name || '';
       const loc = locField ? b[locField]?.loc : null;
+      const time = locField ? b[locField]?.time : null;
       const isCustomLoc = loc && loc !== BM_DEFAULT_ADDRESS;
       return `<div style="font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
         <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
+        ${time ? `<span style="font-family:var(--font-mono);color:${color};font-weight:600"> · ${time}</span>` : ''}
         <span style="color:#6b7280"> — ${displayName}</span>
         ${b._isSubReturn ? `<span style="color:#6d28d9;font-size:9.5px;font-weight:700"> 🔄 підмінне</span>` : ''}
         ${isCustomLoc ? `<div style="font-size:9.5px;color:#9a4d0a;margin-top:1px">📍 ${loc}</div>` : ''}
