@@ -6914,19 +6914,25 @@ async function exportProfitabilityStyledXLSX(){
       const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
       if(isSubstitutedOut) return;
 
-      // Fractional day counts (e.g. 2.5 діб) prorate onto the LAST calendar
-      // day in the booking's range: full days get the full rate, and the
-      // final day gets only the fractional remainder — e.g. 2.5 діб at $30
-      // starting the 15th means 16th=$30, 17th=$30, 18th=$15 (half rate).
-      // Uses the app's standard "nights" day-counting (end-start, no +1),
-      // matching daysOverride/extension/substitute calculations elsewhere —
-      // NOT countDays(), which is inclusive (+1) and would be off by one here.
+      // The last calendar day in the booking's range absorbs whatever
+      // remainder is left after every OTHER day gets a full share — this
+      // correctly handles BOTH an under-shoot (e.g. 2.5 діб across 3
+      // calendar days: two full days + a 0.5 last day) AND an over-shoot
+      // (e.g. a 5-hour-late return manually billed as 3.5 діб across only
+      // 3 calendar days, since the return didn't cross into a 4th calendar
+      // date: two full days + a 1.5 last day) — a fixed fraction-only
+      // formula silently loses that extra amount when totalDays EXCEEDS
+      // the calendar span, since there's no day left for the excess to
+      // land on. Uses the app's standard "nights" day-counting (end-start,
+      // no +1), matching daysOverride/extension/substitute calculations
+      // elsewhere — NOT countDays(), which is inclusive (+1) and would be
+      // off by one here.
       const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
-      const totalDays = b.daysOverride>0 ? b.daysOverride : nightsBetween(b.start, getEffectiveEnd(b));
-      const fullDays = Math.floor(totalDays + 1e-9); // tiny epsilon guards against floating-point noise on whole numbers
-      const fraction = totalDays - fullDays;
+      const calendarDays = nightsBetween(b.start, getEffectiveEnd(b));
+      const totalDays = b.daysOverride>0 ? b.daysOverride : calendarDays;
+      const lastDayShare = totalDays - (calendarDays - 1);
       const dayIndex = nightsBetween(b.start, dStr); // 1-indexed position within this booking's range
-      const dayShare = (fraction > 1e-9 && dayIndex > fullDays) ? fraction : 1;
+      const dayShare = (dayIndex === calendarDays) ? lastDayShare : 1;
 
       cell.value = Math.round(toUSD(b.rate, b.currency, b.exchangeRate) * dayShare * 100) / 100;
       cell.alignment = {horizontal:'center'};
