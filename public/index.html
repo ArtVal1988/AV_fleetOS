@@ -5263,7 +5263,7 @@ async function generateExtensionAct(){
     const b = bookings.find(x=>x.id===editBid);
     if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
 
-    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?useExtension=1', { headers: apiHeaders() });
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act_extension?useExtension=1', { headers: apiHeaders() });
     if(!res.ok){ throw new Error('Помилка сервера'); }
     const blob = await res.blob();
     const disposition = res.headers.get('Content-Disposition') || '';
@@ -8212,7 +8212,7 @@ async function generateExtHistoryAct(index){
     const b = bookings.find(x=>x.id===editBid);
     if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
 
-    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act?extHistoryIndex=' + index, { headers: apiHeaders() });
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act_extension?extHistoryIndex=' + index, { headers: apiHeaders() });
     if(!res.ok){ throw new Error('Помилка сервера'); }
     const blob = await res.blob();
     const disposition = res.headers.get('Content-Disposition') || '';
@@ -11925,7 +11925,7 @@ function renderDocArchiveList(){
 
   list.innerHTML = sortedGroups.map(group => {
     const contract = group.find(d=>d.doc_type==='contract') || group[0];
-    const acts = group.filter(d=>d.doc_type==='act');
+    const acts = group.filter(d=>d.doc_type==='act' || d.doc_type==='act_extension');
     const dt = new Date(contract.created_at);
     const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     const groupId = 'dag-' + contract.id;

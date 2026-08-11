@@ -21,10 +21,12 @@ const DOCUMENT_TYPES = {
   individual: [
     { key: 'contract', label: 'Договір' },
     { key: 'act', label: 'Акт' },
+    { key: 'act_extension', label: 'Акт_продовження' },
   ],
   business_no_vat: [
     { key: 'contract', label: 'Договір' },
     { key: 'act', label: 'Акт_приймання-передачі' },
+    { key: 'act_extension', label: 'Акт_продовження' },
     { key: 'invoice_rent', label: 'Рахунок_оренда' },
     { key: 'invoice_deposit', label: 'Рахунок_застава' },
     { key: 'deposit_letter', label: 'Лист_про_зарахування_застави' },
@@ -33,13 +35,14 @@ const DOCUMENT_TYPES = {
   business_vat: [
     { key: 'contract', label: 'ПДВ - Договір' },
     { key: 'act', label: 'ПДВ - Акт_приймання-передачі' },
+    { key: 'act_extension', label: 'ПДВ - Акт_продовження' },
     { key: 'invoice_rent', label: 'ПДВ - Рахунок_оренда' },
     { key: 'invoice_deposit', label: 'ПДВ - Рахунок_застава' },
     { key: 'deposit_letter', label: 'ПДВ - Лист_про_зарахування_застави' },
     { key: 'service_act', label: 'ПДВ - Акт_надання_послуг' },
   ],
 };
-const ALL_DOC_TYPE_KEYS = ['contract', 'act', 'invoice_rent', 'invoice_deposit', 'deposit_letter', 'service_act'];
+const ALL_DOC_TYPE_KEYS = ['contract', 'act', 'act_extension', 'invoice_rent', 'invoice_deposit', 'deposit_letter', 'service_act'];
 function docTypeLabel(repKey, type) {
   const entry = (DOCUMENT_TYPES[repKey] || DOCUMENT_TYPES.business_no_vat).find(t => t.key === type);
   return entry ? entry.label : type;
