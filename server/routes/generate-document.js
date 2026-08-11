@@ -658,17 +658,23 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   if (!ctx) return res.status(404).json({ error: 'Замовлення не знайдено' });
 
   // Extension act: same booking/contract, but the rental_start/rental_end/
-  // rental_days fields should reflect the extension period, not the
-  // original booking's — the resulting document is archived under the
-  // same stable contract number either way (that's derived from the
-  // bookingId, independent of which period this specific generation used).
+  // rental_days/rate/currency fields should all reflect the extension
+  // period specifically, not the original booking's — the resulting
+  // document is archived under the same stable contract number either way
+  // (that's derived from the bookingId, independent of which period this
+  // specific generation used).
   // ?useExtension=1 uses the currently active (not yet committed) extension;
   // ?extHistoryIndex=N uses a specific already-saved past extension instead.
   let periodLabel = 'Основний'; // default: the document covers the booking's own original period
   if (req.query.useExtension === '1' && ctx.booking.extension?.fromDate && ctx.booking.extension?.toDate) {
-    periodLabel = `Продовження (${fmtDateUk(ctx.booking.extension.fromDate)}–${fmtDateUk(ctx.booking.extension.toDate)})`;
-    ctx.booking.start = ctx.booking.extension.fromDate;
-    ctx.booking.end = ctx.booking.extension.toDate;
+    const ext = ctx.booking.extension;
+    periodLabel = `Продовження (${fmtDateUk(ext.fromDate)}–${fmtDateUk(ext.toDate)})`;
+    ctx.booking.start = ext.fromDate;
+    ctx.booking.end = ext.toDate;
+    ctx.booking.daysOverride = ext.days > 0 ? ext.days : 0;
+    if (ext.rate > 0) ctx.booking.rate = ext.rate;
+    if (ext.currency) ctx.booking.currency = ext.currency;
+    if (ext.exchangeRate > 0) ctx.booking.exchangeRate = ext.exchangeRate;
   } else if (req.query.extHistoryIndex !== undefined) {
     const idx = parseInt(req.query.extHistoryIndex);
     const entry = ctx.booking.extensionHistory?.[idx];
@@ -676,6 +682,10 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
       periodLabel = `Продовження (${fmtDateUk(entry.fromDate)}–${fmtDateUk(entry.toDate)})`;
       ctx.booking.start = entry.fromDate;
       ctx.booking.end = entry.toDate;
+      ctx.booking.daysOverride = entry.days > 0 ? entry.days : 0;
+      if (entry.rate > 0) ctx.booking.rate = entry.rate;
+      if (entry.currency) ctx.booking.currency = entry.currency;
+      if (entry.exchangeRate > 0) ctx.booking.exchangeRate = entry.exchangeRate;
     }
   }
 
