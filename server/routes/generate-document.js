@@ -58,7 +58,7 @@ function fmtDateUkFull(iso) {
 }
 function fmtMoney(n) {
   if (n === null || n === undefined || n === '') return '';
-  return Number(n).toLocaleString('uk-UA');
+  return Number(n).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 // Extra services (pickup/return address delivery, off-hours) store their
 // price alongside a cur mode: 'orig' means the price is always entered in
