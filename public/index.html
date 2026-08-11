@@ -2280,14 +2280,14 @@ input.dm-pf-val.tel{font-size:14px;}
 <div class="modal-overlay" id="booking-modal">
 <div class="modal">
   <div class="modal-head">
-    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="if(!editBid){prefillStartKmFromPrevBooking(this.value);updateKmDiff();}"></select>
+    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="updateKmDiff()"></select>
     <div style="display:flex;align-items:center;gap:8px">
       <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">TopRent</button>
       <div class="modal-title" id="bm-title">Замовлення</div>
       <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af">RentPlus</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor();updateCompanyToggleVisibility()"></select>
+      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor(true);updateCompanyToggleVisibility()"></select>
       <button class="modal-x" onclick="closeBookingModal()">✕</button>
     </div>
   </div>
@@ -4584,14 +4584,6 @@ function clearHighlight(){
 }
 
 /* ── BOOKING MODAL ── */
-function prefillStartKmFromPrevBooking(vid){
-  document.getElementById('bm-start-km').value = '';
-  if(!vid) return;
-  const prevBookings = bookings
-    .filter(x => x.vehicleId === parseInt(vid) && x.endKm > 0)
-    .sort((a,b) => getEffectiveEnd(b).localeCompare(getEffectiveEnd(a)));
-  if(prevBookings[0]) document.getElementById('bm-start-km').value = Number(prevBookings[0].endKm).toLocaleString('uk-UA');
-}
 function openBookingModal(vid=null,start=null,end=null){
   closeMiniPicker();
   clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
@@ -4699,7 +4691,10 @@ function openBookingModal(vid=null,start=null,end=null){
   // last maintenance, an unrelated figure that could be wildly out of date
   // compared to the actual mileage after the last rental). Leave the field
   // empty if no prior booking recorded an end km at all.
-  prefillStartKmFromPrevBooking(vid);
+  // Пробіг на початку оренди is left blank for the operator to enter
+  // manually — auto-prefilling from a previous booking's end km was
+  // unreliable and got removed per request.
+  document.getElementById('bm-start-km').value = '';
   document.getElementById('bm-closed').checked = false;
   bookingWasClosedOnOpen = false;
   applyOrderLockState();
@@ -9594,9 +9589,24 @@ function renderOrderCompanyToggle(){
   trBtn.style.cssText = currentOrderCompany==='toprent' ? trActive : (currentOrderCompany==='rentplus' ? dimStyle : inactiveStyle);
   rpBtn.style.cssText = currentOrderCompany==='rentplus' ? rpActive : (currentOrderCompany==='toprent' ? dimStyle : inactiveStyle);
 }
-function updateStatusSelectColor(){
+function updateStatusSelectColor(isUserChange){
   const sel=document.getElementById('bm-status');
   if(!sel) return;
+  // Require Пробіг на початку оренди before allowing the status to become
+  // "В оренді" — but only when the OPERATOR actively changes it (not when
+  // the form is just loading/displaying an existing booking's status),
+  // otherwise every already-rented booking without a recorded start km
+  // would have its status silently reset every time it's reopened.
+  if(isUserChange && sel.value === 'rented'){
+    const startKm = document.getElementById('bm-start-km')?.value.trim();
+    if(!startKm){
+      alert('Спочатку вкажіть пробіг на початку оренди — без нього статус "В оренді" встановити не можна.');
+      sel.value = sel.dataset.lastValue || '';
+      document.getElementById('bm-start-km')?.focus();
+      return;
+    }
+  }
+  sel.dataset.lastValue = sel.value;
   const s=SM[sel.value];
   sel.style.color = s ? s.color : '';
   sel.style.fontWeight = '600';
