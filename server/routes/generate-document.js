@@ -97,7 +97,7 @@ function buildClientLegalDescription(client, fallbackName) {
 }
 function countDays(start, end) {
   const s = new Date(start), e = new Date(end);
-  return Math.max(1, Math.round((e - s) / 86400000) + 1);
+  return Math.max(1, Math.round((e - s) / 86400000));
 }
 
 // ── FIELD CATALOG ────────────────────────────────────────────────
@@ -126,7 +126,7 @@ const FIELD_CATALOG = [
   { key: 'company_name', label: 'Компанія-наймач (юрособа), якщо є', get: ctx => ctx.booking.customer?.company || '' },
   { key: 'rental_start', label: 'Дата отримання авто', get: ctx => fmtDateUk(ctx.booking.start) },
   { key: 'rental_end', label: 'Дата повернення авто', get: ctx => fmtDateUk(ctx.booking.end) },
-  { key: 'rental_days', label: 'Кількість діб оренди', get: ctx => String(countDays(ctx.booking.start, ctx.booking.end)) },
+  { key: 'rental_days', label: 'Кількість діб оренди', get: ctx => String(ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end)) },
   { key: 'pickup_time', label: 'Час отримання', get: ctx => ctx.booking.pickup?.time || '' },
   { key: 'pickup_address', label: 'Адреса отримання', get: ctx => ctx.booking.pickup?.loc || 'Офіс, вул. Антоновича, 112' },
   { key: 'return_time', label: 'Час повернення', get: ctx => ctx.booking.ret?.time || '' },
@@ -183,7 +183,8 @@ const FIELD_CATALOG = [
   } },
   { key: 'currency', label: 'Валюта замовлення', get: ctx => ctx.booking.currency || '' },
   { key: 'total_amount', label: 'Загальна вартість оренди (з валютою і еквівалентом в $)', get: ctx => {
-    const total = (ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end);
+    const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
+    const total = (ctx.booking.rate||0) * days;
     const cur = ctx.booking.currency || '$';
     if (cur === '$') return `${fmtMoney(total)} $`;
     const exRate = Number(ctx.booking.exchangeRate) || 0;
@@ -191,7 +192,8 @@ const FIELD_CATALOG = [
     return `${fmtMoney(total)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
   } },
   { key: 'total_amount_uah', label: 'Загальна вартість оренди в грн (конвертовано за курсом замовлення)', get: ctx => {
-    const total = (ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end);
+    const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
+    const total = (ctx.booking.rate||0) * days;
     const isUsd = ctx.booking.currency === '$';
     const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
     return fmtMoney(Math.round(uah * 100) / 100);
