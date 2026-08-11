@@ -882,7 +882,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-fin-period{flex:0 0 auto;}
 .ext-period-inputs{display:flex;align-items:center;gap:5px;}
 .ext-period-prefix{font-size:10px;color:#854f0b;flex-shrink:0;}
-.ext-period-inputs.ext-period-invalid input[type=date]{border-color:#dc2626!important;background:#fee2e2!important;}
+.ext-date-short.ext-period-invalid{border-color:#dc2626!important;background:#fee2e2!important;}
 .ext-period-inputs input[type=date]{width:96px;}
 .no-spinner::-webkit-outer-spin-button,.no-spinner::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .no-spinner{-moz-appearance:textfield;}
@@ -2603,25 +2603,24 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none;position:relative">
         <button type="button" onclick="clearActiveExtension()" title="Прибрати це продовження" style="position:absolute;top:-6px;right:-6px;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:50%;width:22px;height:22px;cursor:pointer;color:#dc2626;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.15)">✕</button>
-        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;overflow-x:auto">
-          <div class="ext-compact-box">
-            <span class="ext-compact-label">Період</span>
-            <div class="ext-period-inputs" id="bm-ext-period-inputs">
-              <span class="ext-period-prefix">з</span>
-              <input type="text" readonly id="bm-ext-from" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
-              <span class="ext-period-prefix">до</span>
-              <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
-            </div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px">
+          <div class="ext-compact-box" style="flex:0 0 auto">
+            <span class="ext-compact-label">З</span>
+            <input type="text" readonly id="bm-ext-from" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 6px;width:90px;text-align:center">
+          </div>
+          <div class="ext-compact-box" style="flex:0 0 auto">
+            <span class="ext-compact-label">До</span>
+            <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 6px;width:90px;text-align:center">
             <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
           <div class="ext-compact-box" style="width:36px">
             <span class="ext-compact-label">Діб</span>
             <input type="number" id="bm-ext-days" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
           </div>
-          <div class="ext-compact-box" style="width:110px">
+          <div class="ext-compact-box" style="width:120px">
             <span class="ext-compact-label">Ціна</span>
             <div class="ext-cur-inline-wrap">
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
+              <input type="text" inputmode="decimal" id="bm-ext-rate" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
               <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
                 <option value="$">$</option>
                 <option value="₴">₴</option>
@@ -2636,26 +2635,28 @@ input.dm-pf-val.tel{font-size:14px;}
             <span class="ext-compact-label">Курс</span>
             <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 6px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,0" step="0.1" oninput="onExtRateInput()">
           </div>
-          <div class="ext-compact-box" style="width:118px">
+        </div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
+          <div class="ext-compact-box" style="flex:1;min-width:0">
             <span class="ext-compact-label">Загалом</span>
             <div class="ext-cur-inline-wrap">
-              <input type="text" inputmode="numeric" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="onExtTotalInput(this)">
+              <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);onExtTotalInput(this)">
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
             </div>
           </div>
-          <div class="ext-compact-box" style="width:118px">
+          <div class="ext-compact-box" style="flex:1;min-width:0">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
-              <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="updateExtensionPaidUI()" onfocus="this.select()">
+              <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);updateExtensionPaidUI()" onfocus="this.select()">
               <span class="ext-cur-suffix" id="ext-paid-cur-display">$</span>
             </div>
           </div>
-          <div class="ext-compact-box" style="width:104px">
+          <div class="ext-compact-box" style="flex:1;min-width:0">
             <span class="ext-compact-label">Дата оплати</span>
             <input type="date" readonly id="bm-ext-paid-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%;height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px">
           </div>
           <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;margin-bottom:1px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
-          <div class="ext-compact-box" style="margin-left:auto;text-align:right;flex-shrink:0">
+          <div class="ext-compact-box" style="flex:1;min-width:0;text-align:right">
             <span class="ext-compact-label" style="right:0;left:auto">Залишок боргу</span>
             <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;align-items:center;justify-content:flex-end">0 $</div>
           </div>
@@ -7777,15 +7778,15 @@ function onExtDatesChanged(){
   const from = getExtDateField('bm-ext-from');
   const to = getExtDateField('bm-ext-to');
   const errEl = document.getElementById('bm-ext-period-error');
-  const wrapEl = document.getElementById('bm-ext-period-inputs');
+  const toEl = document.getElementById('bm-ext-to');
   if(from && to && to <= from){
     // "До" must be strictly after "з" — same-day or backwards is not a valid period.
     if(errEl) errEl.style.display = '';
-    if(wrapEl) wrapEl.classList.add('ext-period-invalid');
+    if(toEl) toEl.classList.add('ext-period-invalid');
     return;
   }
   if(errEl) errEl.style.display = 'none';
-  if(wrapEl) wrapEl.classList.remove('ext-period-invalid');
+  if(toEl) toEl.classList.remove('ext-period-invalid');
   if(to){
     document.getElementById('bm-return-date').value = to;
     // NOTE: bm-end intentionally stays at the ORIGINAL booking end date —
@@ -10276,6 +10277,20 @@ function formatRateInput(el){
   let [intPart, decPart] = v.split(',');
   intPart = (intPart||'').slice(0, 6); // max 6 digits — truncate typing instead of jumping to a max value
   if(decPart !== undefined) decPart = decPart.slice(0, 2); // max 2 decimal digits
+  const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
+  el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
+}
+// Same as formatRateInput() but capped at 5 integer digits (max 99 999,99)
+// — used for the extension's Ціна/Загалом/Оплачено fields, which need
+// decimal (копійки) support unlike formatThousandsInput() (whole numbers
+// only, strips any comma the user types).
+function formatExtAmountInput(el){
+  let v = el.value.replace(/[^\d,.]/g, '').replace(/\./g, ',');
+  const firstComma = v.indexOf(',');
+  if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
+  let [intPart, decPart] = v.split(',');
+  intPart = (intPart||'').slice(0, 5);
+  if(decPart !== undefined) decPart = decPart.slice(0, 2);
   const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
   el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
 }
