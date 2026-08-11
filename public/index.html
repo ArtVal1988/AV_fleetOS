@@ -2484,10 +2484,10 @@ input.dm-pf-val.tel{font-size:14px;}
             <span id="bm-vat-status-label" style="display:none;font-size:10px;font-weight:700;color:#0891b2;padding:0 6px;white-space:nowrap">без ПДВ</span>
           </div>
         </div>
-        <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="flex:0 0 48px;min-width:48px">
+        <div class="fin-field fin-rate2 fin-label-style" id="bm-rate-row" style="flex:0 0 56px;min-width:56px">
           <label id="bm-rate-label2" style="white-space:nowrap;text-align:center;width:100%">Курс</label>
-          <input type="number" id="bm-exchange-rate" placeholder="00,0" step="0.1" style="width:48px;text-align:center;font-size:14px"
-            oninput="updateVatPreview()">
+          <input type="text" inputmode="decimal" id="bm-exchange-rate" placeholder="00,00" style="width:56px;text-align:center;font-size:14px"
+            oninput="formatExchangeRateInput(this);updateVatPreview()">
         </div>
         <div class="fin-field fin-vat fin-label-style" id="bm-vat-field" style="display:none;flex:0 0 40px;min-width:40px">
           <label style="white-space:nowrap;text-align:center;width:100%">ПДВ %</label>
@@ -2613,7 +2613,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 6px;width:90px;text-align:center">
             <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
-          <div class="ext-compact-box" style="width:36px">
+          <div class="ext-compact-box" style="width:36px;margin-left:10px">
             <span class="ext-compact-label">Діб</span>
             <input type="number" id="bm-ext-days" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
           </div>
@@ -2631,19 +2631,19 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
           </div>
-          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:56px;display:none">
+          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:64px;display:none">
             <span class="ext-compact-label">Курс</span>
-            <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 6px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,0" step="0.1" oninput="onExtRateInput()">
+            <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
           </div>
-        </div>
-        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
-          <div class="ext-compact-box" style="flex:1;min-width:0">
+          <div class="ext-compact-box" style="flex:1;min-width:110px;margin-left:10px">
             <span class="ext-compact-label">Загалом</span>
             <div class="ext-cur-inline-wrap">
-              <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);onExtTotalInput(this)">
+              <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);onExtTotalInput(this);updateExtTotalColor()">
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
             </div>
           </div>
+        </div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
           <div class="ext-compact-box" style="flex:1;min-width:0">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
@@ -2728,7 +2728,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div id="bm-sub-rate2-field">
               <label class="vf-lbl">Курс</label>
-              <input type="number" id="bm-sub-rate2" class="no-spinner vf-inp" style="width:56px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="00,0" step="0.1">
+              <input type="text" inputmode="decimal" id="bm-sub-rate2" class="no-spinner vf-inp" style="width:64px;height:36px;text-align:center;box-sizing:border-box;padding:0 4px" placeholder="00,00" oninput="formatExchangeRateInput(this)">
             </div>
           </div>
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
@@ -4996,7 +4996,7 @@ function saveBooking(){
   // tracking) and ₴ bookings (USD conversion) to extract accurately. Not
   // required for plain 'Лише статус' entries (repair/storage/etc), since
   // those aren't rental income at all.
-  if(currentStatusIsBooking && !(parseFloat(document.getElementById('bm-exchange-rate').value)>0)){
+  if(currentStatusIsBooking && !(parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.'))>0)){
     errors.push({fields:'bm-exchange-rate', message:'Курс обміну є обов\'язковим полем'});
   }
 
@@ -5102,7 +5102,7 @@ function saveBooking(){
     },
     vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?parseFloat(document.getElementById('bm-vat').value)||20:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
-    exchangeRate: parseFloat(document.getElementById('bm-exchange-rate').value)||0,
+    exchangeRate: parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.'))||0,
     pickup:{date:document.getElementById('bm-pickup-date').value,time:document.getElementById('bm-pickup-time').value,loc:document.getElementById('bm-pickup-loc').value.trim()},
     ret:{date:document.getElementById('bm-return-date').value,time:document.getElementById('bm-return-time').value,loc:document.getElementById('bm-return-loc').value.trim()},
     extension: document.getElementById('bm-ext-active').checked ? {
@@ -5113,13 +5113,13 @@ function saveBooking(){
       rate: parseThousands(document.getElementById('bm-ext-rate').value),
       cost: parseThousands(document.getElementById('bm-ext-total').value),
       currency: document.getElementById('bm-ext-currency').value,
-      exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
+      exchangeRate: parseFloat((document.getElementById('bm-ext-rate2').value||'').replace(',','.'))||0,
       amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
       totalCurrency: document.getElementById('bm-ext-currency').value,
-      totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      totalExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
       paidCurrency: document.getElementById('bm-ext-currency').value,
-      paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      paidExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
     } : null,
     extensionHistory: currentExtHistory.slice(),
     substituteVehicles: currentSubstitutes.slice(),
@@ -7081,9 +7081,9 @@ function clearActiveExtension(){
       amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
       totalCurrency: cur,
-      totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      totalExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
       paidCurrency: cur,
-      paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+      paidExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
       closedDate: new Date().toISOString().split('T')[0],
     };
     currentExtHistory.splice(editingExtHistoryIndex, 0, restored);
@@ -7859,6 +7859,7 @@ function onExtCurrencyChange(){
   });
   const extRateField = document.getElementById('bm-ext-rate');
   if(extRateField) extRateField.style.color = curColor(cur);
+  updateExtTotalColor();
   // Курс (bm-ext-rate2) is purely informational for extensions, for every
   // client type — a long-running rental can span many extensions, each
   // potentially at a different real-world rate, so it's just recorded as a
@@ -8077,9 +8078,9 @@ function saveExtensionEntry(){
     amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
     totalCurrency: document.getElementById('bm-ext-currency').value,
-    totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+    totalExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
-    paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+    paidExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   const vid = parseInt(document.getElementById('bm-vehicle').value);
@@ -8125,9 +8126,9 @@ function closeAndStartNewExtension(){
     amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
       paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
     totalCurrency: document.getElementById('bm-ext-currency').value,
-    totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+    totalExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
-    paidExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
+    paidExchangeRate: parseFloat((document.getElementById('bm-ext-rate2')?.value||'').replace(',','.'))||0,
     closedDate: new Date().toISOString().split('T')[0],
   };
   currentExtHistory.push(closed);
@@ -10294,6 +10295,25 @@ function formatExtAmountInput(el){
   const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
   el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
 }
+// For "Курс" (exchange rate) fields specifically — no thousands grouping
+// (rates are small), comma decimal separator, fits '99,99' comfortably
+// (up to 3 integer digits in case a rate ever needs 3, e.g. '100,00').
+function formatExchangeRateInput(el){
+  let v = el.value.replace(/[^\d,.]/g, '').replace(/\./g, ',');
+  const firstComma = v.indexOf(',');
+  if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
+  let [intPart, decPart] = v.split(',');
+  intPart = (intPart||'').slice(0, 3);
+  if(decPart !== undefined) decPart = decPart.slice(0, 2);
+  el.value = (intPart||'') + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
+}
+// Color-codes the Загалом value by the extension's own currency, matching
+// curColor() used throughout the app ($ blue, ₴ green).
+function updateExtTotalColor(){
+  const el = document.getElementById('bm-ext-total');
+  const cur = document.getElementById('bm-ext-currency')?.value;
+  if(el && cur) el.style.color = curColor(cur);
+}
 function fmt2(n){
   return (Math.round((n||0)*100)/100).toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
@@ -10311,7 +10331,7 @@ function updateVatPreview(){
   const rate    = parseThousands(document.getElementById('bm-rate').value);
   const vatPct  = isVat ? (parseFloat(document.getElementById('bm-vat').value) || 0) : 0;
   const cur     = document.getElementById('bm-currency').value;
-  const exRate  = parseFloat(document.getElementById('bm-exchange-rate').value) || 0;
+  const exRate  = parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.')) || 0;
   // The typed number always belongs to whichever currency is currently
   // selected — switching the dropdown relabels it to the new currency
   // without converting the digits (no multiplying/dividing by the rate).
@@ -10612,7 +10632,7 @@ function toggleExtra(key){
 
 function getExtrasTotalAmount(){
   const cur = document.getElementById('bm-currency')?.value || '$';
-  const exRate = parseFloat(document.getElementById('bm-exchange-rate')?.value) || 0;
+  const exRate = parseFloat((document.getElementById('bm-exchange-rate')?.value||'').replace(',','.')) || 0;
   let total = 0;
   EXTRAS_CONFIG.forEach(e => {
     if(!extrasActive[e.key]) return;
@@ -10638,7 +10658,7 @@ function getExtrasTotalAmount(){
 }
 function getExtrasTotalsSplit(){
   const cur = document.getElementById('bm-currency')?.value || '$';
-  const exRate = parseFloat(document.getElementById('bm-exchange-rate')?.value) || 0;
+  const exRate = parseFloat((document.getElementById('bm-exchange-rate')?.value||'').replace(',','.')) || 0;
   let origSum = 0, uahSum = 0;
   EXTRAS_CONFIG.forEach(e => {
     if(!extrasActive[e.key]) return;
