@@ -9627,10 +9627,23 @@ function updateBookingDetailsVisibility(){
   const hide = st ? (st.isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(sel.value);
 
   wrap.style.display = 'flex'; // block 2 (dates) always stays visible
-  ['bm-block-1','bm-block-extras','bm-block-3','bm-sections-nav-row','bm-block-ext-section','bm-substitute-section','bm-fines-section','bm-repair-section','bm-block-4','bm-block-5'].forEach(id=>{
+  ['bm-block-1','bm-block-extras','bm-block-3','bm-sections-nav-row','bm-block-4'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = hide ? 'none' : '';
   });
+  // The 4 collapsible sections (Продовження/Підмінне/Штрафи/Ремонт) and
+  // Утримання (bm-block-5) have their own visibility rules based on
+  // whether they're open or have data — never force them visible here,
+  // that would undo updateBmSectionButtons()'s hiding of empty ones. When
+  // hide is true (special status), explicitly hide them all outright.
+  if(hide){
+    ['bm-block-ext-section','bm-substitute-section','bm-fines-section','bm-repair-section','bm-block-5'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.style.display = 'none';
+    });
+  } else {
+    updateBmSectionButtons();
+  }
 
   // Special statuses: show one compact "Період: від ... до ..." row instead
   // of the normal Отримання/Повернення+продовження block.
