@@ -85,6 +85,18 @@ function getExtraFee(booking, key) {
   // bookingCurrency is $, rawCurrency is ₴ — convert to $ by dividing
   return { amount: exRate > 0 ? Math.round(rawAmount / exRate * 100) / 100 : rawAmount, currency: bookingCurrency };
 }
+// Extra services (Отримання/Повернення за адресою, неробочі години) — sum
+// every active one, already converted into the booking's own currency by
+// getExtraFee(), so this can be added on top of the base rental cost.
+function getExtrasTotal(booking) {
+  const keys = ['pickup_address', 'pickup_offhours', 'return_address', 'return_offhours'];
+  let total = 0;
+  keys.forEach(k => {
+    const f = getExtraFee(booking, k);
+    if (f) total += f.amount;
+  });
+  return total;
+}
 function buildClientLegalDescription(client, fallbackName) {
   if (!client) return fallbackName || '';
   const parts = [client.name || fallbackName || ''];
@@ -182,18 +194,18 @@ const FIELD_CATALOG = [
     return fmtMoney(Math.round(usd * 100) / 100);
   } },
   { key: 'currency', label: 'Валюта замовлення', get: ctx => ctx.booking.currency || '' },
-  { key: 'total_amount', label: 'Загальна вартість оренди (з валютою і еквівалентом в $)', get: ctx => {
+  { key: 'total_amount', label: 'Загальна вартість оренди + додаткові послуги (з валютою і еквівалентом в $)', get: ctx => {
     const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
-    const total = (ctx.booking.rate||0) * days;
+    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
     const cur = ctx.booking.currency || '$';
     if (cur === '$') return `${fmtMoney(total)} $`;
     const exRate = Number(ctx.booking.exchangeRate) || 0;
     const usd = exRate > 0 ? Math.round(total / exRate * 100) / 100 : null;
     return `${fmtMoney(total)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
   } },
-  { key: 'total_amount_uah', label: 'Загальна вартість оренди в грн (конвертовано за курсом замовлення)', get: ctx => {
+  { key: 'total_amount_uah', label: 'Загальна вартість оренди + додаткові послуги в грн (конвертовано за курсом замовлення)', get: ctx => {
     const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
-    const total = (ctx.booking.rate||0) * days;
+    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
     const isUsd = ctx.booking.currency === '$';
     const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
     return fmtMoney(Math.round(uah * 100) / 100);
