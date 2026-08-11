@@ -2576,9 +2576,9 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     </div>
 
-    <div class="msec" id="bm-sections-nav-row" style="margin-top:14px">
+    <div class="msec" id="bm-sections-nav-row" style="margin-top:14px;position:relative">
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')" onmouseenter="showExtHoverDetails(this)" onmouseleave="hideExtHoverDetails()">
           <span style="font-size:15px">↷</span><span>Продовження</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')">
@@ -2594,6 +2594,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span style="font-size:15px">💰</span><span>Утримання</span>
         </button>
       </div>
+      <div id="bm-ext-hover-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:40;min-width:260px;padding:10px;font-size:11.5px"></div>
     </div>
 
     <div class="msec msec-ext" id="bm-block-ext-section">
@@ -7333,6 +7334,49 @@ function bmExtHasData(){
   return active || currentExtHistory.length > 0;
 }
 function bmSubHasData(){ return (currentSubstitutes||[]).length > 0; }
+// Hover preview for the Продовження nav button — shows each extension's
+// period/rate/total/paid/remaining without opening the section for editing.
+function showExtHoverDetails(btn){
+  const popup = document.getElementById('bm-ext-hover-popup');
+  if(!popup) return;
+  const entries = [];
+  (currentExtHistory||[]).forEach(h => entries.push({...h, isActive:false}));
+  if(document.getElementById('bm-ext-active')?.checked){
+    const from = getExtDateField('bm-ext-from');
+    const to = getExtDateField('bm-ext-to');
+    if(from && to){
+      entries.push({
+        fromDate: from, toDate: to,
+        rate: parseThousands(document.getElementById('bm-ext-rate').value),
+        currency: document.getElementById('bm-ext-currency').value,
+        cost: parseThousands(document.getElementById('bm-ext-total').value),
+        amountPaid: parseThousands(document.getElementById('bm-ext-paid').value),
+        paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
+        isActive: true,
+      });
+    }
+  }
+  if(!entries.length){
+    popup.innerHTML = '<div style="color:#9ca3af;font-style:italic">Продовжень ще немає</div>';
+  } else {
+    popup.innerHTML = entries.map(e => {
+      const total = e.cost || 0;
+      const paid = e.amountPaid || 0;
+      const remaining = Math.max(0, Math.round((total-paid)*100)/100);
+      return `<div style="padding:6px 0;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:700;color:${e.isActive?'#1d4ed8':'#374151'}">${fmt(e.fromDate)} – ${fmt(e.toDate)}${e.isActive?' <span style="font-size:9px;color:#1d4ed8;font-weight:700">(активне)</span>':''}</div>
+        <div style="color:#6b7280;margin-top:2px">Тариф: <b>${fmtSmart(e.rate||0)} ${e.currency||'$'}</b> · Загалом: <b>${fmtSmart(total)} ${e.currency||'$'}</b></div>
+        <div style="color:#6b7280">Оплачено: <b style="color:#16a34a">${fmtSmart(paid)} ${e.currency||'$'}</b>${e.paidDate?` (${fmt(e.paidDate)})`:''}</div>
+        ${remaining>0?`<div style="color:#dc2626">Залишок боргу: <b>${fmtSmart(remaining)} ${e.currency||'$'}</b></div>`:'<div style="color:#16a34a;font-weight:600">Оплачено повністю</div>'}
+      </div>`;
+    }).join('');
+  }
+  popup.style.display = 'block';
+}
+function hideExtHoverDetails(){
+  const popup = document.getElementById('bm-ext-hover-popup');
+  if(popup) popup.style.display = 'none';
+}
 function bmFineHasData(){ return (currentFines||[]).length > 0; }
 function bmRepHasData(){ return !!currentRepairPause; }
 function bmDedHasData(){
