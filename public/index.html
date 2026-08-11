@@ -2635,7 +2635,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <span class="ext-compact-label">Курс</span>
             <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
           </div>
-          <div class="ext-compact-box" style="flex:1;min-width:110px;margin-left:10px">
+          <div class="ext-compact-box" style="width:140px;margin-left:10px">
             <span class="ext-compact-label">Загалом</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);onExtTotalInput(this);updateExtTotalColor()">
@@ -2644,7 +2644,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
         <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
-          <div class="ext-compact-box" style="flex:1;min-width:110px">
+          <div class="ext-compact-box" style="width:140px">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="formatExtAmountInput(this);updateExtensionPaidUI()" onfocus="this.select()">
