@@ -3156,9 +3156,16 @@ function getEffectiveEnd(b){
 // then the active extension) so both stay consistent with each other.
 function resolveBookingDaySegments(b, nextVehicleBookingStart){
   const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
-  let prevEnd = b.end;
-  const chain = [{ isBase:true, fromDate: b.start, toDate: b.end, rate: b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
   const history = (b.extensionHistory || []).slice().sort((a,c)=>(a.fromDate||'').localeCompare(c.fromDate||''));
+  // b.end doesn't reliably represent the base period's own (pre-extension)
+  // end — depending on how/when a booking was extended, it may have
+  // already been updated to match the first extension's own toDate
+  // instead of staying at the original end. When the first extension's
+  // fromDate falls BEFORE b.end, that's the signal this happened — the
+  // base's true end is that extension's own fromDate, not b.end itself.
+  const baseToDate = (history.length && history[0].fromDate < b.end) ? history[0].fromDate : b.end;
+  let prevEnd = baseToDate;
+  const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
   for(const h of history){
     const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
     chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: h.rate, currency: h.currency, exchangeRate: h.exchangeRate, days: h.days>0 ? h.days : null });

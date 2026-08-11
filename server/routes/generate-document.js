@@ -152,7 +152,15 @@ const FIELD_CATALOG = [
     const parts = [pickup, ret].filter(Boolean).map(f => `${fmtMoney(f.amount)} ${f.currency}`);
     return parts.join(' + ');
   } },
-  { key: 'rate_per_day', label: 'Тариф за добу', get: ctx => fmtMoney(ctx.booking.rate) },
+  { key: 'rate_per_day', label: 'Тариф за добу (з валютою і еквівалентом в $)', get: ctx => {
+    const rate = ctx.booking.rate;
+    if (rate === null || rate === undefined || rate === '') return '';
+    const cur = ctx.booking.currency || '$';
+    if (cur === '$') return `${fmtMoney(rate)} $`;
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = exRate > 0 ? Math.round(rate / exRate * 100) / 100 : null;
+    return `${fmtMoney(rate)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
+  } },
   { key: 'rate_per_day_uah', label: 'Тариф за добу в грн (конвертовано за курсом замовлення)', get: ctx => {
     const rate = ctx.booking.rate;
     if (rate === null || rate === undefined || rate === '') return '';
@@ -174,14 +182,29 @@ const FIELD_CATALOG = [
     return fmtMoney(Math.round(usd * 100) / 100);
   } },
   { key: 'currency', label: 'Валюта замовлення', get: ctx => ctx.booking.currency || '' },
-  { key: 'total_amount', label: 'Загальна вартість оренди', get: ctx => fmtMoney((ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end)) },
+  { key: 'total_amount', label: 'Загальна вартість оренди (з валютою і еквівалентом в $)', get: ctx => {
+    const total = (ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end);
+    const cur = ctx.booking.currency || '$';
+    if (cur === '$') return `${fmtMoney(total)} $`;
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = exRate > 0 ? Math.round(total / exRate * 100) / 100 : null;
+    return `${fmtMoney(total)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
+  } },
   { key: 'total_amount_uah', label: 'Загальна вартість оренди в грн (конвертовано за курсом замовлення)', get: ctx => {
     const total = (ctx.booking.rate||0) * countDays(ctx.booking.start, ctx.booking.end);
     const isUsd = ctx.booking.currency === '$';
     const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
     return fmtMoney(Math.round(uah * 100) / 100);
   } },
-  { key: 'deposit', label: 'Сума застави (депозиту)', get: ctx => fmtMoney(ctx.booking.deposit) },
+  { key: 'deposit', label: 'Сума застави (депозиту) (з валютою і еквівалентом в $)', get: ctx => {
+    const deposit = ctx.booking.deposit;
+    if (!deposit) return '';
+    const cur = ctx.booking.depositCur || ctx.booking.currency || '$';
+    if (cur === '$') return `${fmtMoney(deposit)} $`;
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = exRate > 0 ? Math.round(deposit / exRate * 100) / 100 : null;
+    return `${fmtMoney(deposit)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
+  } },
   { key: 'deposit_uah', label: 'Сума застави в грн (конвертовано за курсом замовлення)', get: ctx => {
     const deposit = ctx.booking.deposit;
     if (!deposit) return '';
