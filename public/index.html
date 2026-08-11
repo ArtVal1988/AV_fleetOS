@@ -2655,6 +2655,10 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-fin-field" style="width:auto">
               <span class="ext-cur-display" id="ext-paid-cur-display">$</span>
             </div>
+            <div class="ext-fin-field" style="width:auto">
+              <label>Дата оплати</label>
+              <input type="date" readonly id="bm-ext-paid-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100px;height:36px;box-sizing:border-box">
+            </div>
           </div>
           <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;align-self:center;margin-left:auto;margin-right:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
           <div class="ext-fin-field" style="text-align:right">
@@ -4760,6 +4764,7 @@ function editBooking(bid){
     document.getElementById('bm-ext-rate').value=b.extension.rate?Number(b.extension.rate).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-total').value=b.extension.cost?Number(b.extension.cost).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-paid').value=b.extension.amountPaid||0;
+    if(document.getElementById('bm-ext-paid-date')) document.getElementById('bm-ext-paid-date').value=b.extension.paidDate||'';
     extTotalOverridden=true;
     const extCur=b.extension.currency||b.currency||'$';
     document.getElementById('bm-ext-currency').value=extCur;
@@ -5115,6 +5120,7 @@ function saveBooking(){
       currency: document.getElementById('bm-ext-currency').value,
       exchangeRate: parseFloat(document.getElementById('bm-ext-rate2').value)||0,
       amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
+      paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
       totalCurrency: document.getElementById('bm-ext-currency').value,
       totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
       paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -7078,6 +7084,7 @@ function clearActiveExtension(){
       cost: parseThousands(document.getElementById('bm-ext-total').value),
       currency: cur,
       amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
+      paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
       totalCurrency: cur,
       totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
       paidCurrency: cur,
@@ -7737,6 +7744,7 @@ function toggleExtensionSection(){
     }
     document.getElementById('bm-ext-rate').value = lastHistory ? lastHistory.rate : (document.getElementById('bm-rate').value || '');
     document.getElementById('bm-ext-paid').value = 0;
+    if(document.getElementById('bm-ext-paid-date')) document.getElementById('bm-ext-paid-date').value = '';
     const cur = lastHistory ? lastHistory.currency : (document.getElementById('bm-currency').value || '$');
     document.getElementById('bm-ext-currency').value = cur;
     extRateCurrencyAnchor = cur;
@@ -7925,6 +7933,10 @@ function updateExtensionPaidUI(){
   let paid = parseFloat((paidEl.value||'').replace(',','.'))||0;
   if(paid < 0){ paid = 0; paidEl.value = paid; }
   else if(paid > total){ paid = total; paidEl.value = paid; }
+  const paidDateEl = document.getElementById('bm-ext-paid-date');
+  if(paidDateEl && paid > 0 && !paidDateEl.value){
+    paidDateEl.value = new Date().toISOString().slice(0,10);
+  }
   const remaining = Math.max(0, Math.round((total - paid)*100)/100);
   const cur = document.getElementById('bm-ext-currency').value;
   const remainingEl = document.getElementById('bm-ext-remaining');
@@ -8068,6 +8080,7 @@ function saveExtensionEntry(){
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
     amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
+      paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
     totalCurrency: document.getElementById('bm-ext-currency').value,
     totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -8115,6 +8128,7 @@ function closeAndStartNewExtension(){
     cost: parseThousands(document.getElementById('bm-ext-total').value),
     currency: cur,
     amountPaid: parseFloat((document.getElementById('bm-ext-paid').value||'').replace(',','.'))||0,
+      paidDate: document.getElementById('bm-ext-paid-date')?.value || '',
     totalCurrency: document.getElementById('bm-ext-currency').value,
     totalExchangeRate: parseFloat(document.getElementById('bm-ext-rate2')?.value)||0,
     paidCurrency: document.getElementById('bm-ext-currency').value,
@@ -8133,6 +8147,7 @@ function closeAndStartNewExtension(){
   setExtDateField('bm-ext-to', fromD ? addOneDayStr(fromD) : '');
   document.getElementById('bm-ext-rate').value = closed.rate ? Number(closed.rate).toLocaleString('uk-UA') : '';
   document.getElementById('bm-ext-paid').value = 0;
+  if(document.getElementById('bm-ext-paid-date')) document.getElementById('bm-ext-paid-date').value = '';
   document.getElementById('bm-ext-days').value = '';
   onExtCurrencyChange();
   onExtDatesChanged();
