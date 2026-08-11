@@ -732,6 +732,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .dep-cur-btn{background:#f8f9fb;border:none;padding:2px 7px;font-size:10px;font-family:var(--font-mono);cursor:pointer;transition:all .15s;}
 .dep-cur-btn.active{background:#2563eb;color:#fff;}
 .dep-inline-wrap{display:flex;align-items:center;gap:4px;background:#fffbeb;border:1px solid #f0d060;border-radius:6px;padding:0 6px 0 0;}
+.ext-compact-box{position:relative;padding-top:13px;flex-shrink:0;}
+.ext-compact-label{position:absolute;top:0;left:1px;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;}
+.ext-cur-inline-wrap{display:flex;align-items:center;background:#fff;border:1px solid #d8dbe2;border-radius:6px;height:36px;box-sizing:border-box;overflow:hidden;}
+.ext-cur-inline-wrap input{border:none;background:transparent;outline:none;height:100%;padding:0 4px 0 8px;font-family:var(--font-mono);font-weight:600;}
+.ext-cur-suffix{font-family:var(--font-mono);font-size:12px;font-weight:600;color:#6b7280;padding-right:8px;flex-shrink:0;}
 .dep-amount-input{flex:1;border:none;background:transparent;padding:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;min-width:0;}
 .dep-cur-pill{border:none;background:none;font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;padding:4px 5px;border-radius:4px;color:#9ca3af;transition:all .15s;flex-shrink:0;}
 #pm-btn-cash,#dep-pm-btn-cash{background:#66dbe3!important;color:#0a4548!important;opacity:.25;}
@@ -2598,72 +2603,61 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none;position:relative">
         <button type="button" onclick="clearActiveExtension()" title="Прибрати це продовження" style="position:absolute;top:-6px;right:-6px;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:50%;width:22px;height:22px;cursor:pointer;color:#dc2626;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.15)">✕</button>
-        <div class="ext-fin-row">
-          <div class="ext-box ext-box-blue" style="margin-right:8px">
-            <div class="ext-fin-field ext-fin-period">
-              <div class="ext-period-inputs" id="bm-ext-period-inputs">
-                <span class="ext-period-prefix">з</span>
-                <input type="text" readonly id="bm-ext-from" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
-                <span class="ext-period-prefix">до</span>
-                <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
-              </div>
-              <div id="bm-ext-period-error" style="display:none;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;overflow-x:auto">
+          <div class="ext-compact-box">
+            <span class="ext-compact-label">Період</span>
+            <div class="ext-period-inputs" id="bm-ext-period-inputs">
+              <span class="ext-period-prefix">з</span>
+              <input type="text" readonly id="bm-ext-from" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
+              <span class="ext-period-prefix">до</span>
+              <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()">
             </div>
+            <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
-          <div class="ext-box ext-box-blue" style="flex:1">
-            <div class="ext-fin-field" style="width:auto">
-              <label>Діб</label>
-              <input type="number" id="bm-ext-days" class="no-spinner" style="width:32px;height:36px;text-align:center;box-sizing:border-box;padding:0 4px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
-            </div>
-            <div class="ext-fin-field" style="width:auto">
-              <label>Ціна</label>
-              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="width:64px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
-            </div>
-            <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
-              <option value="$">$</option>
-              <option value="₴">₴</option>
-            </select>
-            <div class="dep-inline-wrap" style="background:none;border:none;padding:0;align-self:center">
-              <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')">$</button>
-              <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')">₴</button>
-            </div>
-            <div class="ext-fin-field" id="bm-ext-rate2-field" style="width:auto;display:none">
-              <label>Курс</label>
-              <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:48px;height:36px;text-align:center;box-sizing:border-box;padding:0 6px" placeholder="00,0" step="0.1" oninput="onExtRateInput()">
-            </div>
+          <div class="ext-compact-box" style="width:36px">
+            <span class="ext-compact-label">Діб</span>
+            <input type="number" id="bm-ext-days" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
           </div>
-        </div>
-        <div class="ext-fin-row" style="margin-top:8px">
-          <div class="ext-box ext-box-blue">
-            <div class="ext-fin-field" style="width:auto">
-              <label>Загалом</label>
-              <div class="ext-calc-input-cur">
-                <input type="text" inputmode="numeric" id="bm-ext-total" style="width:100px" oninput="onExtTotalInput(this)">
+          <div class="ext-compact-box" style="width:110px">
+            <span class="ext-compact-label">Ціна</span>
+            <div class="ext-cur-inline-wrap">
+              <input type="text" inputmode="numeric" id="bm-ext-rate" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="formatThousandsInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
+              <select id="bm-ext-currency" onchange="onExtCurrencyChange()" style="display:none">
+                <option value="$">$</option>
+                <option value="₴">₴</option>
+              </select>
+              <div class="dep-inline-wrap" style="background:none;border:none;padding:0 4px 0 0">
+                <button type="button" id="ext-cur-btn-usd" class="dep-cur-pill active" onclick="setExtCurrency('$')" style="padding:4px 3px">$</button>
+                <button type="button" id="ext-cur-btn-uah" class="dep-cur-pill" onclick="setExtCurrency('₴')" style="padding:4px 3px">₴</button>
               </div>
             </div>
-            <div class="ext-fin-field" style="width:auto">
-              <span class="ext-cur-display" id="ext-total-cur-display">$</span>
+          </div>
+          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:56px;display:none">
+            <span class="ext-compact-label">Курс</span>
+            <input type="number" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 6px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,0" step="0.1" oninput="onExtRateInput()">
+          </div>
+          <div class="ext-compact-box" style="width:118px">
+            <span class="ext-compact-label">Загалом</span>
+            <div class="ext-cur-inline-wrap">
+              <input type="text" inputmode="numeric" id="bm-ext-total" style="flex:1;min-width:0;text-align:right" oninput="onExtTotalInput(this)">
+              <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
             </div>
           </div>
-          <div class="ext-box ext-box-blue">
-            <div class="ext-fin-field" style="width:auto">
-              <label>Оплачено</label>
-              <div class="ext-calc-input-cur">
-                <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="width:76px" oninput="updateExtensionPaidUI()" onfocus="this.select()">
-              </div>
-            </div>
-            <div class="ext-fin-field" style="width:auto">
-              <span class="ext-cur-display" id="ext-paid-cur-display">$</span>
-            </div>
-            <div class="ext-fin-field" style="width:auto">
-              <label>Дата оплати</label>
-              <input type="date" readonly id="bm-ext-paid-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100px;height:36px;box-sizing:border-box">
+          <div class="ext-compact-box" style="width:118px">
+            <span class="ext-compact-label">Оплачено</span>
+            <div class="ext-cur-inline-wrap">
+              <input type="text" inputmode="decimal" id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right" oninput="updateExtensionPaidUI()" onfocus="this.select()">
+              <span class="ext-cur-suffix" id="ext-paid-cur-display">$</span>
             </div>
           </div>
-          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;align-self:center;margin-left:auto;margin-right:6px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
-          <div class="ext-fin-field" style="text-align:right">
-            <label>Залишок боргу</label>
-            <div class="ext-remaining-display" id="bm-ext-remaining">0 $</div>
+          <div class="ext-compact-box" style="width:104px">
+            <span class="ext-compact-label">Дата оплати</span>
+            <input type="date" readonly id="bm-ext-paid-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%;height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px">
+          </div>
+          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;margin-bottom:1px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
+          <div class="ext-compact-box" style="margin-left:auto;text-align:right;flex-shrink:0">
+            <span class="ext-compact-label" style="right:0;left:auto">Залишок боргу</span>
+            <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;align-items:center;justify-content:flex-end">0 $</div>
           </div>
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
