@@ -97,6 +97,17 @@ function getExtrasTotal(booking) {
   });
   return total;
 }
+// Convert a {amount, currency} pair into ₴ using the booking's own
+// exchange rate, regardless of which currency it's already in — for
+// document templates (like acts) that need every amount consistently in
+// UAH no matter what currency the booking itself was priced in. Returns
+// null if a conversion is genuinely needed but no exchange rate exists.
+function toUahAlways(feeInfo, booking) {
+  if (feeInfo.currency === '₴') return Math.round(feeInfo.amount * 100) / 100;
+  const exRate = Number(booking.exchangeRate) || 0;
+  if (exRate <= 0) return null;
+  return Math.round(feeInfo.amount * exRate * 100) / 100;
+}
 function buildClientLegalDescription(client, fallbackName) {
   if (!client) return fallbackName || '';
   const parts = [client.name || fallbackName || ''];
@@ -147,9 +158,21 @@ const FIELD_CATALOG = [
     const f = getExtraFee(ctx.booking, 'pickup_address');
     return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
   } },
+  { key: 'pickup_address_fee_uah', label: 'Тариф «Отримання за адресою» в грн (завжди конвертовано в грн)', get: ctx => {
+    const f = getExtraFee(ctx.booking, 'pickup_address');
+    if (!f) return '';
+    const uah = toUahAlways(f, ctx.booking);
+    return uah !== null ? fmtMoney(uah) : '';
+  } },
   { key: 'return_address_fee', label: 'Тариф «Повернення за адресою»', get: ctx => {
     const f = getExtraFee(ctx.booking, 'return_address');
     return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
+  } },
+  { key: 'return_address_fee_uah', label: 'Тариф «Повернення за адресою» в грн (завжди конвертовано в грн)', get: ctx => {
+    const f = getExtraFee(ctx.booking, 'return_address');
+    if (!f) return '';
+    const uah = toUahAlways(f, ctx.booking);
+    return uah !== null ? fmtMoney(uah) : '';
   } },
   { key: 'offhours_total_fee', label: 'Тариф «Загальний за неробочі години» (отримання + повернення)', get: ctx => {
     const pickup = getExtraFee(ctx.booking, 'pickup_offhours');
@@ -163,6 +186,15 @@ const FIELD_CATALOG = [
     }
     const parts = [pickup, ret].filter(Boolean).map(f => `${fmtMoney(f.amount)} ${f.currency}`);
     return parts.join(' + ');
+  } },
+  { key: 'offhours_total_fee_uah', label: 'Тариф «Загальний за неробочі години» в грн (завжди конвертовано в грн)', get: ctx => {
+    const pickup = getExtraFee(ctx.booking, 'pickup_offhours');
+    const ret = getExtraFee(ctx.booking, 'return_offhours');
+    if (!pickup && !ret) return '';
+    const pickupUah = pickup ? toUahAlways(pickup, ctx.booking) : 0;
+    const retUah = ret ? toUahAlways(ret, ctx.booking) : 0;
+    if (pickupUah === null || retUah === null) return '';
+    return fmtMoney(pickupUah + retUah);
   } },
   { key: 'rate_per_day', label: 'Тариф за добу (з валютою і еквівалентом в $)', get: ctx => {
     const rate = ctx.booking.rate;
