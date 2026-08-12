@@ -2644,16 +2644,15 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
         </div>
-        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px;position:relative">
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
           <div class="ext-compact-box" style="width:120px">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
-              <input type="text" readonly id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right;cursor:pointer" onclick="toggleExtPaymentsPopup()">
+              <input type="text" readonly id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right">
               <span class="ext-cur-suffix" id="ext-paid-cur-display">$</span>
             </div>
           </div>
-          <button type="button" id="bm-ext-payments-btn" onclick="toggleExtPaymentsPopup()" title="Платежі за це продовження" style="flex:0 0 auto;height:36px;padding:0 10px;background:#f7f8fb;border:1px solid #d8dbe2;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:#374151;white-space:nowrap">+ Платіж <span id="ext-payments-count" style="color:#9ca3af;font-weight:400"></span></button>
-          <div id="bm-ext-payments-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:41;width:320px;padding:10px"></div>
+          <span style="flex:0 0 auto;font-size:11px;color:#9ca3af" id="ext-payments-count"></span>
 
           <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
             <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
@@ -2661,6 +2660,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;margin-bottom:1px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
         </div>
+        <div id="bm-ext-payments-column" style="margin-top:10px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px"></div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:25;pointer-events:auto">💾 Зберегти продовження</button>
         </div>
@@ -7999,40 +7999,25 @@ function updateExtPaidSum(){
   const paidEl = document.getElementById('bm-ext-paid');
   if(paidEl) paidEl.value = sum ? sum.toLocaleString('uk-UA') : '0';
   const countEl = document.getElementById('ext-payments-count');
-  if(countEl) countEl.textContent = currentExtPayments.length ? `(${currentExtPayments.length})` : '';
+  if(countEl) countEl.textContent = currentExtPayments.length ? `${currentExtPayments.length} плат.` : '';
   updateExtensionPaidUI();
+  renderExtPaymentsColumn();
 }
-function toggleExtPaymentsPopup(){
-  const popup = document.getElementById('bm-ext-payments-popup');
-  if(!popup) return;
-  const isOpen = popup.style.display !== 'none';
-  if(isOpen){ popup.style.display = 'none'; return; }
-  renderExtPaymentsPopup();
-  popup.style.display = 'block';
-  setTimeout(() => {
-    document.addEventListener('click', function closeIt(ev){
-      const inDatePicker = ev.target.closest('#custom-dp') || ev.target.closest('#custom-tp');
-      if(!popup.contains(ev.target) && !inDatePicker && ev.target.id !== 'bm-ext-payments-btn' && ev.target.id !== 'bm-ext-paid'){
-        popup.style.display = 'none';
-        document.removeEventListener('click', closeIt);
-      }
-    });
-  }, 0);
-}
-function renderExtPaymentsPopup(){
-  const popup = document.getElementById('bm-ext-payments-popup');
-  if(!popup) return;
+function renderExtPaymentsColumn(){
+  const col = document.getElementById('bm-ext-payments-column');
+  if(!col) return;
   const cur = document.getElementById('bm-ext-currency')?.value || '$';
   const list = currentExtPayments.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:11.5px">
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px">
       <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>
       <span style="color:#9ca3af;flex:1">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`).join('') || '<div style="color:#9ca3af;font-style:italic;font-size:11px;padding:4px 0">Платежів ще не додано</div>';
-  popup.innerHTML = `
+  col.innerHTML = `
+    <div style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;margin-bottom:6px">Платежі за це продовження</div>
     <div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>
-    <div style="display:flex;gap:6px;align-items:end">
-      <div style="flex:1">
+    <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
+      <div style="flex:1;min-width:100px">
         <label class="vf-lbl">Сума</label>
         <input type="text" inputmode="decimal" id="ext-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this)">
       </div>
@@ -8046,7 +8031,8 @@ function renderExtPaymentsPopup(){
       </div>
       <button type="button" onclick="addExtPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Додати</button>
     </div>`;
-  document.getElementById('ext-new-payment-date').value = new Date().toISOString().slice(0,10);
+  const dateEl = document.getElementById('ext-new-payment-date');
+  if(dateEl) dateEl.value = new Date().toISOString().slice(0,10);
 }
 let extNewPaymentMethod = 'cash';
 function setExtNewPaymentMethod(m){
@@ -8067,12 +8053,10 @@ function addExtPayment(){
   currentExtPayments.push({ amount, date: dateEl.value || '', method: extNewPaymentMethod });
   extNewPaymentMethod = 'cash';
   updateExtPaidSum();
-  renderExtPaymentsPopup();
 }
 function deleteExtPayment(i){
   currentExtPayments.splice(i,1);
   updateExtPaidSum();
-  renderExtPaymentsPopup();
 }
 function loadExtPayments(payments){
   currentExtPayments = (payments||[]).map(p=>({...p}));
