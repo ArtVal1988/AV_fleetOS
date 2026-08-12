@@ -23,6 +23,11 @@ const DOCUMENT_TYPES = {
     { key: 'act', label: 'Акт' },
     { key: 'act_extension', label: 'Акт_продовження' },
   ],
+  nonresident: [
+    { key: 'contract', label: 'Нерезидент - Договір' },
+    { key: 'act', label: 'Нерезидент - Акт' },
+    { key: 'act_extension', label: 'Нерезидент - Акт_продовження' },
+  ],
   business_no_vat: [
     { key: 'contract', label: 'Договір' },
     { key: 'act', label: 'Акт_приймання-передачі' },
@@ -345,7 +350,8 @@ function getRepresentatives() {
 // The 3 legal-form representative slots are fixed (not a free list the user
 // picks from per-booking) — the slot is derived automatically from the
 // booking's own client type, matching what's configured once in Налаштування.
-function repSlotForClientType(clientType) {
+function repSlotForClientType(clientType, residency) {
+  if (residency === 'nonresident') return 'nonresident';
   if (clientType === 'individual' || !clientType) return 'individual';
   if (clientType === 'fop_no_vat') return 'business_no_vat';
   return 'business_vat'; // 'fop' or 'tov'
@@ -507,7 +513,7 @@ function getBookingContext(bookingId) {
     if (cRow) client = { ...JSON.parse(cRow.data), id: cRow.id };
   }
 
-  const repSlot = repSlotForClientType(b.clientType);
+  const repSlot = repSlotForClientType(b.clientType, client?.residency);
   const reps = getRepresentatives();
   const rep = reps[repSlot] || null;
 
