@@ -2651,15 +2651,15 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
         </div>
-        <div id="bm-ext-payments-column" style="margin-top:6px;width:50%;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
-          <div id="bm-ext-payments-list-area"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb">
-            <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Залишок боргу</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="ext-remaining-display" id="bm-ext-remaining">0 $</div>
-              <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;flex-shrink:0">🖨️</button>
-            </div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:4px;margin-top:6px">
+          <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
+            <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
+            <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">0 $</div>
           </div>
+          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;margin-bottom:1px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
+        </div>
+        <div id="bm-ext-payments-column" style="margin-top:6px;width:377px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+          <div id="bm-ext-payments-list-area"></div>
         </div>
         <div id="bm-ext-close-row" style="display:none;margin-top:8px">
           <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:25;pointer-events:auto">💾 Зберегти продовження</button>
