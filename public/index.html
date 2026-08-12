@@ -2614,11 +2614,11 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 6px;width:85px!important;text-align:center">
             <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
-          <div class="ext-compact-box" style="width:36px;margin-left:8px">
+          <div class="ext-compact-box" style="width:36px;margin-left:0">
             <span class="ext-compact-label">Діб</span>
             <input type="number" id="bm-ext-days" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 3px!important;border:1px solid #d8dbe2;border-radius:6px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
           </div>
-          <div class="ext-compact-box" style="width:120px">
+          <div class="ext-compact-box" style="width:115px">
             <span class="ext-compact-label">Ціна</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-rate" class="no-spinner" style="flex:1;min-width:0;text-align:right;padding:0 3px!important" oninput="formatExtAmountInput(this);extRateCurrencyAnchor=document.getElementById('bm-ext-currency').value;extTotalOverridden=false;recalcExtensionCost()">
@@ -2636,14 +2636,14 @@ input.dm-pf-val.tel{font-size:14px;}
             <span class="ext-compact-label">Курс</span>
             <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 3px!important;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
           </div>
-          <div class="ext-compact-box" style="width:120px;margin-left:auto">
+          <div class="ext-compact-box" style="width:100px;margin-left:auto">
             <span class="ext-compact-label">Загалом</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right;padding:0 3px!important" oninput="formatExtAmountInput(this);onExtTotalInput(this);updateExtTotalColor()">
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
             </div>
           </div>
-          <div class="ext-compact-box" style="width:120px">
+          <div class="ext-compact-box" style="width:100px">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" readonly id="bm-ext-paid" class="no-spinner" style="flex:1;min-width:0;text-align:right;padding:0 3px!important">
