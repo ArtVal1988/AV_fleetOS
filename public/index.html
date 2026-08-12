@@ -735,7 +735,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .ext-compact-box{position:relative;padding-top:13px;flex-shrink:0;}
 .ext-compact-label{position:absolute;top:0;left:1px;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;}
 .ext-cur-inline-wrap{display:flex;align-items:center;background:#fff;border:1px solid #d8dbe2;border-radius:6px;height:36px;box-sizing:border-box;overflow:hidden;}
-.ext-cur-inline-wrap input{border:none;background:transparent;outline:none;height:100%;padding:0 4px 0 8px;font-family:var(--font-mono);font-weight:600;}
+.ext-cur-inline-wrap input{border:none;background:transparent;outline:none;height:100%;padding:0 2px;font-family:var(--font-mono);font-weight:600;}
 .ext-cur-suffix{font-family:var(--font-mono);font-size:12px;font-weight:600;color:#6b7280;padding-right:8px;flex-shrink:0;}
 .dep-amount-input{flex:1;border:none;background:transparent;padding:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;min-width:0;}
 .dep-cur-pill{border:none;background:none;font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;padding:4px 5px;border-radius:4px;color:#9ca3af;transition:all .15s;flex-shrink:0;}
@@ -2632,7 +2632,7 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
           </div>
-          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:64px;display:none">
+          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:50px;display:none">
             <span class="ext-compact-label">Курс</span>
             <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 4px;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
           </div>
@@ -2643,8 +2643,6 @@ input.dm-pf-val.tel{font-size:14px;}
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
             </div>
           </div>
-        </div>
-        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
           <div class="ext-compact-box" style="width:120px">
             <span class="ext-compact-label">Оплачено</span>
             <div class="ext-cur-inline-wrap">
@@ -2652,6 +2650,8 @@ input.dm-pf-val.tel{font-size:14px;}
               <span class="ext-cur-suffix" id="ext-paid-cur-display">$</span>
             </div>
           </div>
+        </div>
+        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:6px;margin-top:10px">
           <span style="flex:0 0 auto;font-size:11px;color:#9ca3af" id="ext-payments-count"></span>
 
           <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
