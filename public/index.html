@@ -8013,7 +8013,6 @@ function renderExtPaymentsColumn(){
   const total = parseThousands(document.getElementById('bm-ext-total')?.value);
   const paid = currentExtPayments.reduce((s,p)=>s+(p.amount||0), 0);
   const isFullyPaid = total > 0 && paid >= total;
-  const isEmpty = currentExtPayments.length === 0;
   const list = currentExtPayments.map((p,i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px">
       <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>
@@ -8025,7 +8024,6 @@ function renderExtPaymentsColumn(){
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі за це продовження</span>
       <span style="display:flex;align-items:center;gap:8px">
-        ${isEmpty?'<span style="color:#9ca3af;font-style:italic;font-size:11px">Платежів ще не додано</span>':''}
         ${isFullyPaid?'':`<button type="button" onclick="toggleExtPaymentForm()" title="${showForm?'Сховати форму':'Додати платіж'}" style="background:${showForm?'#374151':'#f7f8fb'};color:${showForm?'#fff':'#374151'};border:1px solid #d8dbe2;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:13px;font-weight:700;line-height:1;flex-shrink:0">+</button>`}
       </span>
     </div>
