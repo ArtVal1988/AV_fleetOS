@@ -8045,7 +8045,7 @@ function renderExtPaymentsColumn(){
     ${list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:''}
     ${showForm?`
     <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
-      <div style="flex:1;min-width:100px">
+      <div style="width:90px">
         <label class="vf-lbl">Сума</label>
         <input type="text" inputmode="decimal" id="ext-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this)">
       </div>
