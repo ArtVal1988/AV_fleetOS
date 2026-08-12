@@ -6620,10 +6620,10 @@ function renderDashboard(){
     <div class="msec-b5">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; })}</div>
+        <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end))}
-          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(getKaskoNextDue(v)))}
+          ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}
+          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(getKaskoNextDue(v)), v => `openInsuranceModal(${v.id})`)}
         </div>
       </div>
     </div>`;
@@ -6672,11 +6672,11 @@ function dashStatCard(value, label, color){
     <div style="font-size:10px;color:#6b7280;margin-top:2px">${label}</div>
   </div>`;
 }
-function dashAlertList(title, list, detailFn){
+function dashAlertList(title, list, detailFn, onClickFn){
   return `<div>
     <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(v => `
-      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
         <span><span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span> <span style="color:#6b7280">${stripYear(v.name)}</span></span>
         <span style="color:#dc2626;font-weight:600">${detailFn(v)}</span>
       </div>
