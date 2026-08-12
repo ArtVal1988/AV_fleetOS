@@ -8011,7 +8011,8 @@ function toggleExtPaymentsPopup(){
   popup.style.display = 'block';
   setTimeout(() => {
     document.addEventListener('click', function closeIt(ev){
-      if(!popup.contains(ev.target) && ev.target.id !== 'bm-ext-payments-btn' && ev.target.id !== 'bm-ext-paid'){
+      const inDatePicker = ev.target.closest('#custom-dp') || ev.target.closest('#custom-tp');
+      if(!popup.contains(ev.target) && !inDatePicker && ev.target.id !== 'bm-ext-payments-btn' && ev.target.id !== 'bm-ext-paid'){
         popup.style.display = 'none';
         document.removeEventListener('click', closeIt);
       }
