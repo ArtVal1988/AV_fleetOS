@@ -8001,6 +8001,11 @@ function updateExtPaidSum(){
   updateExtensionPaidUI();
   renderExtPaymentsColumn();
 }
+let extPaymentFormOpen = false;
+function toggleExtPaymentForm(){
+  extPaymentFormOpen = !extPaymentFormOpen;
+  renderExtPaymentsColumn();
+}
 function renderExtPaymentsColumn(){
   const col = document.getElementById('bm-ext-payments-list-area');
   if(!col) return;
@@ -8015,13 +8020,17 @@ function renderExtPaymentsColumn(){
       <span style="color:#9ca3af;flex:1">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`).join('');
+  const showForm = extPaymentFormOpen && !isFullyPaid;
   col.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі за це продовження</span>
-      ${isEmpty?'<span style="color:#9ca3af;font-style:italic;font-size:11px">Платежів ще не додано</span>':''}
+      <span style="display:flex;align-items:center;gap:8px">
+        ${isEmpty?'<span style="color:#9ca3af;font-style:italic;font-size:11px">Платежів ще не додано</span>':''}
+        ${isFullyPaid?'':`<button type="button" onclick="toggleExtPaymentForm()" title="${showForm?'Сховати форму':'Додати платіж'}" style="background:${showForm?'#374151':'#f7f8fb'};color:${showForm?'#fff':'#374151'};border:1px solid #d8dbe2;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:13px;font-weight:700;line-height:1;flex-shrink:0">+</button>`}
+      </span>
     </div>
     ${list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:''}
-    ${isFullyPaid?'':`
+    ${showForm?`
     <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
       <div style="flex:1;min-width:100px">
         <label class="vf-lbl">Сума</label>
@@ -8036,7 +8045,7 @@ function renderExtPaymentsColumn(){
         <button type="button" id="ext-pm-btn-card" class="dep-cur-pill" onclick="setExtNewPaymentMethod('card')" title="Картка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
       </div>
       <button type="button" onclick="addExtPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">Додати</button>
-    </div>`}
+    </div>`:''}
   `;
   const dateEl = document.getElementById('ext-new-payment-date');
   if(dateEl) dateEl.value = new Date().toISOString().slice(0,10);
@@ -8067,6 +8076,7 @@ function deleteExtPayment(i){
 }
 function loadExtPayments(payments){
   currentExtPayments = (payments||[]).map(p=>({...p}));
+  extPaymentFormOpen = false;
   updateExtPaidSum();
 }
 
