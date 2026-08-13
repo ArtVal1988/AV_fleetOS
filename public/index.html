@@ -2054,10 +2054,8 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Номерний знак</label><input id="vf-plate" type="text" class="vf-inp" placeholder="AA 1234 BC" style="text-transform:uppercase"></div>
-        <div style="position:relative"><label class="vf-lbl">Категорія</label>
-          <input id="vf-category" type="text" class="vf-inp" placeholder="Легкові седани" autocomplete="off"
-            onfocus="showVfCategoryDropdown(this)" oninput="showVfCategoryDropdown(this)">
-          <div id="vf-category-dropdown" style="display:none;position:fixed;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:2000;max-height:220px;overflow-y:auto"></div>
+        <div><label class="vf-lbl">Категорія</label>
+          <select id="vf-category" class="vf-inp"></select>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
@@ -11190,33 +11188,6 @@ function onMatPartNumInput(input){
   showMatSuggest(input, matches);
 }
 let matSuggestTargetRow = null;
-function showVfCategoryDropdown(input){
-  const dd = document.getElementById('vf-category-dropdown');
-  if(!dd) return;
-  const q = input.value.trim().toLowerCase();
-  const matches = CATEGORIES.filter(c => !q || c.name.toLowerCase().includes(q));
-  if(!matches.length){ closeVfCategoryDropdown(); return; }
-  const rect = input.getBoundingClientRect();
-  dd.style.left = rect.left + 'px';
-  dd.style.top = (rect.bottom + 3) + 'px';
-  dd.style.width = rect.width + 'px';
-  dd.innerHTML = matches.map((c,i) => `<div onmousedown="event.preventDefault();selectVfCategory(${i})" style="padding:8px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">${c.name}</div>`).join('');
-  dd._matches = matches;
-  dd.style.display = 'block';
-}
-function selectVfCategory(i){
-  const dd = document.getElementById('vf-category-dropdown');
-  const cat = dd?._matches?.[i];
-  if(cat) document.getElementById('vf-category').value = cat.name;
-  closeVfCategoryDropdown();
-}
-function closeVfCategoryDropdown(){
-  const dd = document.getElementById('vf-category-dropdown');
-  if(dd) dd.style.display = 'none';
-}
-document.addEventListener('click', e => {
-  if(!e.target.closest('#vf-category-dropdown') && e.target.id !== 'vf-category') closeVfCategoryDropdown();
-});
 function showMatSuggest(input, matches){
   const dd = document.getElementById('mat-suggest-dropdown');
   if(!dd) return;
@@ -12592,7 +12563,7 @@ let vfOptions = [];
 function openVehicleForm(vehicleId){
   document.getElementById('vf-error').style.display='none';
   document.getElementById('vf-id').value = vehicleId || '';
-  // (Category options are now built on-demand by showVfCategoryDropdown() below.)
+  document.getElementById('vf-category').innerHTML = '<option value="">—</option>' + CATEGORIES.map(c=>`<option>${c.name}</option>`).join('');
 
   const v = vehicleId ? ALL_VEHICLES.find(x=>x.id===vehicleId) : null;
   document.getElementById('vf-title').textContent = v ? '✎ Редагувати авто' : '+ Нове авто';
