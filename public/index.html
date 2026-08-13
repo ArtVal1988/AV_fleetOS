@@ -8870,6 +8870,7 @@ function renderInsuranceModal(v){
         '<div class="im-field"><div class="imf-lbl">Франшиза</div><div class="imf-val blue" style="display:flex;align-items:center">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span>':'')+'<span style="flex:1;text-align:center;font-weight:700;font-size:13px">'+fmtMn(v.kasko.deductible)+'</span></div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
+      ((v.kasko.reqRecipient||v.kasko.reqAccount) ? buildKaskoReqDisplay(v.kasko) : '') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
       filesRow +
       '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalKasko('+v.id+')">↻ Поновити</div></div>'+
@@ -9205,6 +9206,33 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-ptb-quarterly').classList.toggle('active',calKPayType==='quarterly');
   buildCalKaskoPayments();
   document.getElementById('cal-kasko-modal').classList.add('open');
+}
+function buildKaskoReqDisplay(k){
+  const fmtN = n => n ? Number(n).toLocaleString('uk-UA') : '';
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const row = (label, rawValue) => {
+    if(!rawValue) return '';
+    return '<div class="im-field full" style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+      '<div style="min-width:0"><div class="imf-lbl">'+label+'</div><div class="imf-val" style="font-size:12px;word-break:break-all">'+esc(rawValue)+'</div></div>' +
+      '<button type="button" onclick="copyKaskoReqValue(this)" data-copy-value="'+esc(rawValue)+'" title="Скопіювати" style="flex-shrink:0;width:28px;height:28px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;cursor:pointer;font-size:12px">📋</button>' +
+    '</div>';
+  };
+  return '<div class="im-fields" style="margin-bottom:8px;display:flex;flex-direction:column;gap:6px">' +
+    row('Отримувач', k.reqRecipient) +
+    row('Код отримувача', k.reqCode) +
+    row('Рахунок отримувача', k.reqAccount) +
+    row('Призначення платежу', k.reqPurpose) +
+    row('Сума платежу', k.reqAmount ? fmtN(k.reqAmount)+' ₴' : '') +
+  '</div>';
+}
+function copyKaskoReqValue(btn){
+  const value = btn.dataset.copyValue;
+  if(!value) return;
+  navigator.clipboard.writeText(value).then(()=>{
+    const original = btn.innerHTML;
+    btn.innerHTML = '✅';
+    setTimeout(()=>{ btn.innerHTML = original; }, 1200);
+  }).catch(()=>alert('Не вдалося скопіювати'));
 }
 function copyCkReqField(fieldId){
   const el = document.getElementById(fieldId);
