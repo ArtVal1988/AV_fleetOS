@@ -2573,7 +2573,6 @@ input.dm-pf-val.tel{font-size:14px;}
                 <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
                 <div class="ext-remaining-display" id="bm-partial-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">—</div>
               </div>
-              <button type="button" id="bm-main-gen-act-btn" onclick="generateMainOverallAct()" title="Сформувати акт продовження" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
             </div>
           </div>
         </div>
@@ -8025,10 +8024,6 @@ function updateMainPaymentsUI(){
     else { remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur; remEl.style.color = '#dc2626'; }
   }
   renderMainPaymentsList();
-}
-function generateMainOverallAct(){
-  const i = currentMainPayments.length > 1 ? currentMainPayments.length - 1 : 0;
-  generateMainPaymentAct(i, document.getElementById('bm-main-gen-act-btn'));
 }
 function toggleMainPaymentForm(){
   mainPaymentFormOpen = !mainPaymentFormOpen;
