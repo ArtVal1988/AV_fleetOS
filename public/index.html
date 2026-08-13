@@ -3102,14 +3102,22 @@ function calcTotal(b){
 // and the currently active extension — all assumed to share the booking's
 // primary currency (b.currency), since mixed-currency debt on one booking
 // is rare and would need its own UI to present meaningfully.
-function calcBookingDebt(b){
+function calcBookingDebtInfo(b){
   const today = new Date(); today.setHours(0,0,0,0);
-  let debt = 0;
+  const toUsdAmt = (amount, currency, exchangeRate) => {
+    if(!amount) return 0;
+    if(!currency || currency === '$') return amount;
+    const rate = parseFloat(exchangeRate) || 0;
+    return rate > 0 ? amount / rate : amount;
+  };
+  const parts = []; // {amount, currency, exchangeRate} — one per debt-contributing source
   if(b.partialPaymentActive){
-    debt += Math.max(0, calcTotal(b) - (b.amountPaid||0));
+    const amt = Math.max(0, calcTotal(b) - (b.amountPaid||0));
+    if(amt > 0) parts.push({amount:amt, currency:b.currency||'$', exchangeRate:b.exchangeRate});
   }
   (b.extensionHistory||[]).forEach(h => {
-    debt += Math.max(0, (h.cost||0) - (h.amountPaid||0));
+    const amt = Math.max(0, (h.cost||0) - (h.amountPaid||0));
+    if(amt > 0) parts.push({amount:amt, currency:h.currency||'$', exchangeRate:h.totalExchangeRate||h.exchangeRate});
   });
   const ext = b.extension;
   if(ext && ext.active && ext.fromDate){
@@ -3123,9 +3131,28 @@ function calcBookingDebt(b){
     // owed, and one that hasn't started yet (elapsedDays=0) owes nothing
     // yet regardless of payment status.
     const proratedCost = totalDays>0 ? (ext.cost||0) * (elapsedDays/totalDays) : 0;
-    debt += Math.max(0, proratedCost - (ext.amountPaid||0));
+    const amt = Math.max(0, proratedCost - (ext.amountPaid||0));
+    if(amt > 0) parts.push({amount:amt, currency:ext.currency||'$', exchangeRate:ext.totalExchangeRate||ext.exchangeRate});
   }
-  return Math.round(debt*100)/100;
+  const debtUSD = Math.round(parts.reduce((s,p)=>s+toUsdAmt(p.amount,p.currency,p.exchangeRate), 0)*100)/100;
+  if(!parts.length) return {debt:0, currency:b.currency||'$', debtUSD:0};
+  const currencies = new Set(parts.map(p=>p.currency));
+  if(currencies.size === 1){
+    // All debt is in one currency — show it natively (matches how the
+    // booking tooltip displays debt), not forced into the base booking's
+    // own currency (which may differ, e.g. a $ booking with a ₴ extension).
+    const total = parts.reduce((s,p)=>s+p.amount,0);
+    return {debt: Math.round(total*100)/100, currency: parts[0].currency, debtUSD};
+  }
+  // Mixed currencies across sources — can't add ₴ and $ raw numbers
+  // together meaningfully, so show the $-converted combined total instead.
+  return {debt: debtUSD, currency:'$', debtUSD};
+}
+// Backward-compatible wrapper: returns just the $-normalized debt amount,
+// for sorting/filtering — comparing raw native-currency numbers directly
+// would distort ordering (₴ amounts are ~45x larger than equivalent $ ones).
+function calcBookingDebt(b){
+  return calcBookingDebtInfo(b).debtUSD;
 }
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
@@ -6635,8 +6662,7 @@ function dashDebtList(title, list, color){
     <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(b => {
       const v = getVehicle(b.vehicleId);
-      const debt = calcBookingDebt(b);
-      const cur = b.currency||'$';
+      const { debt, currency: cur } = calcBookingDebtInfo(b);
       const debtColor = cur==='₴' ? '#166534' : color;
       const displayName = b.customer?.company || b.customer?.name || '';
       return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" onclick="expandBooking(${b.id})">
