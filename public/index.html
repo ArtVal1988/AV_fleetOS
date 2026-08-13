@@ -2565,18 +2565,16 @@ input.dm-pf-val.tel{font-size:14px;}
             <span style="vertical-align:middle;font-size:11px;color:#6b7280;cursor:pointer" onclick="document.getElementById('bm-partial-active').click()">Часткова оплата</span>
           </div>
           <div id="bm-main-payments-wrap" style="display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Оплачено</span>
-                <span id="bm-main-paid-display" style="font-weight:700;font-size:13px;color:#166534">0</span>
+            <div style="display:flex;align-items:flex-end;gap:10px">
+              <div id="bm-main-payments-column" style="width:377px;flex-shrink:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+                <div id="bm-main-payments-list"></div>
               </div>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Борг</span>
-                <span id="bm-partial-remaining" style="color:#dc2626;font-weight:700;font-size:13px;white-space:nowrap">—</span>
+              <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
+                <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
+                <div class="ext-remaining-display" id="bm-partial-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">—</div>
               </div>
-              <button type="button" onclick="toggleMainPaymentForm()" title="Додати платіж" style="height:26px;padding:0 10px;background:#f7f8fb;border:1px solid #d8dbe2;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:#374151">+ Платіж</button>
+              <button type="button" id="bm-main-gen-act-btn" onclick="generateMainOverallAct()" title="Сформувати акт продовження" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
             </div>
-            <div id="bm-main-payments-list"></div>
           </div>
         </div>
       </div>
@@ -8018,9 +8016,7 @@ function getMainBookingTotal(){
 }
 function updateMainPaymentsUI(){
   const sum = currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0);
-  const paidDisplay = document.getElementById('bm-main-paid-display');
   const cur = document.getElementById('bm-currency')?.value || '$';
-  if(paidDisplay) paidDisplay.textContent = sum.toLocaleString('uk-UA') + ' ' + cur;
   const total = getMainBookingTotal();
   const remaining = Math.max(0, total - sum);
   const remEl = document.getElementById('bm-partial-remaining');
@@ -8029,6 +8025,10 @@ function updateMainPaymentsUI(){
     else { remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur; remEl.style.color = '#dc2626'; }
   }
   renderMainPaymentsList();
+}
+function generateMainOverallAct(){
+  const i = currentMainPayments.length > 1 ? currentMainPayments.length - 1 : 0;
+  generateMainPaymentAct(i, document.getElementById('bm-main-gen-act-btn'));
 }
 function toggleMainPaymentForm(){
   mainPaymentFormOpen = !mainPaymentFormOpen;
@@ -8098,8 +8098,13 @@ function renderMainPaymentsList(){
   const isFullyPaid = total > 0 && sum >= total;
   const isEditing = mainEditingPaymentIndex !== null;
   const showForm = mainPaymentFormOpen && (isEditing || !isFullyPaid);
-  col.innerHTML = (list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:'') +
-    (showForm?`
+  col.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду оренди</span>
+      ${isFullyPaid?'':`<button type="button" onclick="toggleMainPaymentForm()" title="${showForm?'Сховати форму':'Додати платіж'}" style="background:${showForm?'#374151':'#f7f8fb'};color:${showForm?'#fff':'#374151'};border:1px solid #d8dbe2;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:13px;font-weight:700;line-height:1;flex-shrink:0">+</button>`}
+    </div>
+    ${list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:''}
+    ${showForm?`
     <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
       <div style="flex:1;min-width:100px">
         <label class="vf-lbl">Сума</label>
@@ -8114,7 +8119,8 @@ function renderMainPaymentsList(){
         <button type="button" id="main-pm-btn-card" class="dep-cur-pill" onclick="setMainNewPaymentMethod('card')" title="Картка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
       </div>
       <button type="button" onclick="addMainPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${isEditing?'Зберегти':'Додати'}</button>
-    </div>`:'');
+    </div>`:''}
+  `;
   const dateEl = document.getElementById('main-new-payment-date');
   if(dateEl && !isEditing) dateEl.value = new Date().toISOString().slice(0,10);
 }
