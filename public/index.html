@@ -6584,10 +6584,10 @@ function renderDashboard(){
 
   const activityHtml = `
     <div class="msec-b2" style="margin-bottom:18px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-        ${dashActivityCol('↑ Видача', pickupsToday, '#2563eb', 'pickup')}
-        ${dashActivityCol('↓ Повернення', returnsToday, '#166534', 'ret')}
-        ${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626')}
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <div style="padding-right:12px">${dashActivityCol('↑ Видача', pickupsToday, '#2563eb', 'pickup')}</div>
+        <div style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashActivityCol('↓ Повернення', returnsToday, '#166534', 'ret')}</div>
+        <div style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626')}</div>
       </div>
     </div>`;
 
