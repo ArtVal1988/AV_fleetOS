@@ -9223,7 +9223,8 @@ function buildKaskoReqDisplay(k){
   };
   const codeVal = rowInner('Код отримувача', k.reqCode);
   const accountVal = rowInner('Рахунок отримувача', k.reqAccount);
-  const codeAccountRow = (codeVal||accountVal) ? '<div class="im-field full" style="display:flex;gap:12px">'+codeVal+accountVal+'</div>' : '';
+  const wrapBox = html => html ? '<div style="flex:1;min-width:0;border:1px solid #fed7aa;border-radius:6px;padding:6px 8px;background:#fff">'+html+'</div>' : '';
+  const codeAccountRow = (codeVal||accountVal) ? '<div class="im-field full" style="display:flex;gap:8px">'+wrapBox(codeVal)+wrapBox(accountVal)+'</div>' : '';
   const content = row('Отримувач', k.reqRecipient) + codeAccountRow + row('Призначення платежу', k.reqPurpose) + row('Сума платежу', k.reqAmount ? fmtN(k.reqAmount)+' ₴' : '');
   if(!content) return '';
   return '<div class="im-fields" style="margin-bottom:8px;display:flex;flex-direction:column;gap:6px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px">' + content + '</div>';
