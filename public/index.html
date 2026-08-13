@@ -553,7 +553,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .ins-modal-x:hover{color:#374151;}
 .ins-modal-body{padding:20px 24px;background:#f4f6fa;}
 
-.im-section{background:#fff;border:1px solid #e8eaef;border-radius:10px;padding:16px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(20,25,40,.05);}
+.im-section{background:#fff;border:1px solid #e8eaef;border-left:3px solid transparent;border-radius:10px;padding:16px 18px;margin-bottom:16px;box-shadow:0 2px 10px rgba(20,25,40,.05);}
+.im-section.osago{border-left-color:#2F6364;}
+.im-section.kasko{border-left-color:#0891b2;}
+.im-section.cases{border-left-color:#7c3aed;}
 .im-sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .im-sec-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
 .im-sec-label.osago{color:#2F6364;}
@@ -8878,8 +8881,8 @@ function renderInsuranceModal(v){
   }
 
   document.getElementById('im-body').innerHTML =
-    '<div class="im-section"><div class="im-sec-head"><div class="im-sec-label osago">ОСЦПВ — Обов’язкове</div><span class="im-type-badge">обов’язкове</span></div>'+osagoHtml+'</div>' +
-    '<div class="im-section"><div class="im-sec-head"><div class="im-sec-label kasko">КАСКО — Добровільне</div><span class="im-type-badge">добровільне</span></div>'+kaskoHtml+'</div>' +
+    '<div class="im-section osago"><div class="im-sec-head"><div class="im-sec-label osago">ОСЦПВ — Обов’язкове</div><span class="im-type-badge">обов’язкове</span></div>'+osagoHtml+'</div>' +
+    '<div class="im-section kasko"><div class="im-sec-head"><div class="im-sec-label kasko">КАСКО — Добровільне</div><span class="im-type-badge">добровільне</span></div>'+kaskoHtml+'</div>' +
     buildInsuranceCasesSection(v);
 }
 
@@ -8918,7 +8921,7 @@ function buildInsuranceCasesSection(v){
       '</div>';
     }).join('');
   }
-  return '<div class="im-section">'+
+  return '<div class="im-section cases">'+
     '<div class="im-sec-head"><div class="im-sec-label" style="color:#7c3aed">Страхові випадки</div>'+
     (summaryBadge?'<span class="im-type-badge">'+summaryBadge+'</span>':'')+
     '</div>'+
