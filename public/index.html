@@ -9210,20 +9210,23 @@ function openCalKaskoEdit(vid){
 function buildKaskoReqDisplay(k){
   const fmtN = n => n ? Number(n).toLocaleString('uk-UA') : '';
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-  const row = (label, rawValue) => {
+  const rowInner = (label, rawValue) => {
     if(!rawValue) return '';
-    return '<div class="im-field full" style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1;min-width:0">' +
       '<div style="min-width:0"><div class="imf-lbl">'+label+'</div><div class="imf-val" style="font-size:12px;word-break:break-all">'+esc(rawValue)+'</div></div>' +
-      '<button type="button" onclick="copyKaskoReqValue(this)" data-copy-value="'+esc(rawValue)+'" title="Скопіювати" style="flex-shrink:0;width:28px;height:28px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;cursor:pointer;font-size:12px">📋</button>' +
+      '<button type="button" onclick="copyKaskoReqValue(this)" data-copy-value="'+esc(rawValue)+'" title="Скопіювати" style="flex-shrink:0;width:28px;height:28px;border:1px solid #fdba74;border-radius:5px;background:#fff;cursor:pointer;font-size:12px">📋</button>' +
     '</div>';
   };
-  return '<div class="im-fields" style="margin-bottom:8px;display:flex;flex-direction:column;gap:6px">' +
-    row('Отримувач', k.reqRecipient) +
-    row('Код отримувача', k.reqCode) +
-    row('Рахунок отримувача', k.reqAccount) +
-    row('Призначення платежу', k.reqPurpose) +
-    row('Сума платежу', k.reqAmount ? fmtN(k.reqAmount)+' ₴' : '') +
-  '</div>';
+  const row = (label, rawValue) => {
+    const inner = rowInner(label, rawValue);
+    return inner ? '<div class="im-field full">'+inner+'</div>' : '';
+  };
+  const codeVal = rowInner('Код отримувача', k.reqCode);
+  const accountVal = rowInner('Рахунок отримувача', k.reqAccount);
+  const codeAccountRow = (codeVal||accountVal) ? '<div class="im-field full" style="display:flex;gap:12px">'+codeVal+accountVal+'</div>' : '';
+  const content = row('Отримувач', k.reqRecipient) + codeAccountRow + row('Призначення платежу', k.reqPurpose) + row('Сума платежу', k.reqAmount ? fmtN(k.reqAmount)+' ₴' : '');
+  if(!content) return '';
+  return '<div class="im-fields" style="margin-bottom:8px;display:flex;flex-direction:column;gap:6px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px">' + content + '</div>';
 }
 function copyKaskoReqValue(btn){
   const value = btn.dataset.copyValue;
