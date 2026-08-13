@@ -7862,6 +7862,11 @@ function addOneDayStr(dateStr){
   d.setDate(d.getDate()+1);
   return dStr(d.getFullYear(), d.getMonth(), d.getDate());
 }
+function addDaysStr(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return dStr(d.getFullYear(), d.getMonth(), d.getDate());
+}
 function onExtDatesChanged(){
   const from = getExtDateField('bm-ext-from');
   const to = getExtDateField('bm-ext-to');
@@ -8050,23 +8055,64 @@ function setMainNewPaymentMethod(m){
 function addMainPayment(){
   const amountEl = document.getElementById('main-new-payment-amount');
   const dateEl = document.getElementById('main-new-payment-date');
-  const amount = parseThousands(amountEl.value);
+  let amount = parseThousands(amountEl.value);
   if(!amount || amount <= 0){ alert('Вкажіть суму платежу'); return; }
   const total = getMainBookingTotal();
   const isEditing = mainEditingPaymentIndex !== null;
   const otherPaymentsTotal = currentMainPayments.reduce((s,p,i)=>i===mainEditingPaymentIndex?s:s+(p.amount||0), 0);
-  if(total > 0 && otherPaymentsTotal + amount > total + 0.01){
+  const hasExtensionAlready = (currentExtHistory && currentExtHistory.length > 0) || document.getElementById('bm-ext-active')?.checked;
+  const wouldExceed = total > 0 && (otherPaymentsTotal + amount) > total + 0.01;
+
+  // A NEW payment (not an edit) that overshoots the main period's own debt,
+  // with no extension already in play, auto-splits: this payment gets
+  // capped to exactly close the main debt, and the excess automatically
+  // becomes the first payment of a newly-created extension covering
+  // however many whole days that excess amount is worth.
+  let excess = 0;
+  if(wouldExceed && !isEditing && !hasExtensionAlready){
+    excess = Math.round((otherPaymentsTotal + amount - total) * 100) / 100;
+    amount = Math.round((amount - excess) * 100) / 100;
+  } else if(wouldExceed){
     if(!confirm(`Сума перевищить загальну вартість замовлення (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
   }
+
+  const paymentDate = dateEl.value || '';
+  const paymentMethod = mainNewPaymentMethod;
   if(isEditing){
-    currentMainPayments[mainEditingPaymentIndex] = { amount, date: dateEl.value || '', method: mainNewPaymentMethod };
+    currentMainPayments[mainEditingPaymentIndex] = { amount, date: paymentDate, method: paymentMethod };
     mainEditingPaymentIndex = null;
   } else {
-    currentMainPayments.push({ amount, date: dateEl.value || '', method: mainNewPaymentMethod });
+    currentMainPayments.push({ amount, date: paymentDate, method: paymentMethod });
   }
   mainNewPaymentMethod = 'cash';
   mainPaymentFormOpen = false;
   updateMainPaymentsUI();
+
+  if(excess > 0) handleMainPaymentOverflowToExtension(excess, paymentDate, paymentMethod);
+}
+// Auto-creates an extension covering however many whole days the excess
+// payment is worth (at the main booking's own rate), starting right where
+// the main period ends, and records the excess as that extension's first
+// payment — the extension's own Залишок боргу naturally shows whatever's
+// left over if the excess didn't divide evenly into whole days.
+function handleMainPaymentOverflowToExtension(excess, date, method){
+  const rate = parseThousands(document.getElementById('bm-rate').value);
+  const mainEnd = document.getElementById('bm-return-date').value || document.getElementById('bm-end').value;
+  if(!rate || rate <= 0 || !mainEnd) return; // can't compute an extension without these — the payment itself was already correctly capped above regardless
+  const days = Math.max(1, Math.ceil(excess / rate - 1e-9));
+  const toDate = addDaysStr(mainEnd, days);
+  if(!confirm(`Сума платежу перевищує залишок боргу на ${fmtSmart(excess)}. Автоматично створити продовження на ${days} ${pluralDoba(days)} (${fmtCaseDate(mainEnd)} – ${fmtCaseDate(toDate)}), відповідно тарифу основного замовлення?`)) return;
+
+  document.getElementById('bm-ext-active').checked = true;
+  toggleExtensionSection(); // standard setup: from=mainEnd, to=mainEnd+1 day, rate/currency mirrored from the main booking
+  setExtDateField('bm-ext-to', toDate); // override the default +1 day to the correct +N days for this excess amount
+  document.getElementById('bm-ext-days').value = days;
+  extDaysOverridden = true;
+  recalcExtensionCost();
+  onExtDatesChanged();
+
+  currentExtPayments.push({ amount: excess, date, method });
+  updateExtPaidSum();
 }
 function deleteMainPayment(i){
   currentMainPayments.splice(i,1);
