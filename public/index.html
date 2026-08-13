@@ -2055,7 +2055,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Номерний знак</label><input id="vf-plate" type="text" class="vf-inp" placeholder="AA 1234 BC" style="text-transform:uppercase"></div>
         <div><label class="vf-lbl">Категорія</label>
-          <input id="vf-category" list="vf-category-options" type="text" class="vf-inp" placeholder="Легкові седани">
+          <input id="vf-category" list="vf-category-options" type="text" class="vf-inp" placeholder="Легкові седани" onfocus="this.select()">
           <datalist id="vf-category-options"></datalist>
         </div>
       </div>
@@ -12090,6 +12090,66 @@ function dtRowDragEnd(e){
   e.currentTarget.style.opacity = '';
   dtDragSrcIdx = null;
 }
+let vehDragSrcIdx = null, vehDragSrcCat = null;
+function vehRowDragStart(e){
+  vehDragSrcIdx = parseInt(e.currentTarget.dataset.idx);
+  vehDragSrcCat = e.currentTarget.dataset.cat;
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+function vehRowDragOver(e){
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+}
+function vehRowDrop(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const targetCat = e.currentTarget.dataset.cat;
+  const targetIdx = parseInt(e.currentTarget.dataset.idx);
+  if(vehDragSrcIdx === null || vehDragSrcCat !== targetCat || vehDragSrcIdx === targetIdx) return;
+  const cat = CATEGORIES.find(c => c.name === vehDragSrcCat);
+  if(!cat) return;
+  const [moved] = cat.vehicles.splice(vehDragSrcIdx, 1);
+  cat.vehicles.splice(targetIdx, 0, moved);
+  // Persist the new order so it survives a reload — stamped on each
+  // vehicle in this category since there's no dedicated categories table.
+  cat.vehicles.forEach((v,i) => { v.sortOrder = i; persistVehicle(v); });
+  renderVehiclesPanelList();
+  render();
+}
+function vehRowDragEnd(e){
+  e.currentTarget.style.opacity = '';
+  vehDragSrcIdx = null;
+  vehDragSrcCat = null;
+}
+let catDragSrcIdx = null;
+function catRowDragStart(e){
+  catDragSrcIdx = parseInt(e.currentTarget.closest('[data-cat-idx]').dataset.catIdx);
+  e.dataTransfer.effectAllowed = 'move';
+}
+function catRowDragOver(e){
+  if(catDragSrcIdx === null) return; // a vehicle-row drag is in progress, not a category one — ignore
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+function catRowDrop(e){
+  if(catDragSrcIdx === null) return; // ignore drops that bubbled up from a vehicle-row drag
+  e.preventDefault();
+  const targetIdx = parseInt(e.currentTarget.dataset.catIdx);
+  if(catDragSrcIdx === targetIdx) return;
+  const [moved] = CATEGORIES.splice(catDragSrcIdx, 1);
+  CATEGORIES.splice(targetIdx, 0, moved);
+  // Persist the new category order — stamped on every vehicle in every
+  // category (same "no dedicated categories table" pattern already used
+  // for category color).
+  CATEGORIES.forEach((cat,i) => { cat.vehicles.forEach(v => { v.categoryOrder = i; persistVehicle(v); }); });
+  renderVehiclesPanelList();
+  render();
+}
+function catRowDragEnd(e){
+  catDragSrcIdx = null;
+}
 function onDocFieldSelectChange(sel){
   const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
   const showExtra = sel.value === '__static__' || sel.value === '__path__';
@@ -12336,8 +12396,13 @@ function renderVehiclesPanelList(){
     if(!cat.colorHex) cat.colorHex = defaultPalette[colorIdx % defaultPalette.length]; // stable once assigned
     colorIdx++;
     const tint = hexToRgba(cat.colorHex, .09);
-    return `<div style="margin-bottom:16px;padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
+    return `<div id="veh-cat-block-${CATEGORIES.indexOf(cat)}" data-cat-idx="${CATEGORIES.indexOf(cat)}"
+        ondragover="catRowDragOver(event)" ondrop="catRowDrop(event)" ondragend="catRowDragEnd(event)"
+        style="margin-bottom:16px;padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span draggable="true" ondragstart="catRowDragStart(event)"
+          onmousedown="this.closest('[data-cat-idx]').draggable=true" onmouseup="this.closest('[data-cat-idx]').draggable=false"
+          style="cursor:grab;color:#9ca3af;font-size:14px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок розділів">⠿</span>
         <input type="color" value="${cat.colorHex}" onchange="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}',this.value)"
           title="Обрати колір розділу" style="width:22px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;flex-shrink:0">
         <input type="text" value="${cat.name}" onchange="renameVehicleCategory('${cat.name.replace(/'/g,"\\'")}',this.value)"
@@ -12346,8 +12411,11 @@ function renderVehiclesPanelList(){
         <button onclick="deleteVehicleCategory('${cat.name.replace(/'/g,"\\'")}')" title="Видалити розділ"
           style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:12px;padding:2px 4px;flex-shrink:0">🗑</button>
       </div>
-      ${vehicles.length ? vehicles.map(v => `
-        <div class="veh-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      ${vehicles.length ? vehicles.map((v,idx) => `
+        <div class="veh-row" ${q?'':'draggable="true"'} data-cat="${cat.name.replace(/"/g,'&quot;')}" data-idx="${idx}"
+          ${q?'':'ondragstart="vehRowDragStart(event)" ondragover="vehRowDragOver(event)" ondrop="vehRowDrop(event)" ondragend="vehRowDragEnd(event)"'}
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+          <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
@@ -12908,6 +12976,31 @@ async function syncFromServer(){
     CATEGORIES.forEach(cat=>{
       const withColor = cat.vehicles.find(v=>v.categoryColor);
       if(withColor) cat.colorHex = withColor.categoryColor;
+    });
+    // Apply any manually-set category order (drag-and-drop in the
+    // Автомобілі panel) — categories never explicitly reordered fall back
+    // to the end, keeping their existing relative order (stable sort).
+    CATEGORIES.forEach(cat=>{
+      const withOrder = cat.vehicles.find(v=>v.categoryOrder!=null);
+      cat._categoryOrder = withOrder ? withOrder.categoryOrder : Infinity;
+    });
+    CATEGORIES.sort((a,b) => a._categoryOrder - b._categoryOrder);
+    // Requested one-time move: Інше right after 4х4, for accounts that
+    // haven't manually reordered categories yet (no categoryOrder stamped).
+    if(CATEGORIES.every(cat => cat._categoryOrder === Infinity)){
+      const otherCat = CATEGORIES.find(c => c.name === 'Інше');
+      const hasFourByFour = CATEGORIES.some(c => c.name === '4х4');
+      if(otherCat && hasFourByFour){
+        CATEGORIES.splice(CATEGORIES.indexOf(otherCat), 1);
+        const fourByFourIdx = CATEGORIES.indexOf(CATEGORIES.find(c => c.name === '4х4')); // re-find AFTER removal, indices shifted
+        CATEGORIES.splice(fourByFourIdx + 1, 0, otherCat);
+      }
+    }
+    // Apply any manually-set vehicle order (drag-and-drop in the
+    // Автомобілі panel) — vehicles never explicitly reordered fall back to
+    // the end, keeping their existing relative order (stable sort).
+    CATEGORIES.forEach(cat=>{
+      cat.vehicles.sort((a,b) => (a.sortOrder ?? Infinity) - (b.sortOrder ?? Infinity));
     });
     // Vehicles tombstoned via deleteVehicleCategory()/removeVehicle() should
     // stay gone — the hardcoded seed would otherwise bring them back on

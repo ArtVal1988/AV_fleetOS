@@ -100,8 +100,14 @@ function extractTiers(text) {
   return { tiers, deposit };
 }
 
+const BODY_TYPE_WORDS = 'хетчбек|hatchback|седан|sedan|позашляховик|suv|кросовер|crossover|мінівен|minivan|кабріолет|cabrio|універсал|wagon|купе|coupe|пікап|pickup';
+// Labeled pattern first (e.g. "Тип кузова: Седан", "Кузов - SUV") — far more
+// reliable than a blind whole-page search, which can match an unrelated
+// occurrence of the word anywhere on the page (nav menu, filter sidebar,
+// "similar vehicles" section, etc.) before it ever reaches the actual
+// vehicle's own spec section.
+const BODY_TYPE_LABELED_RE = new RegExp(`(?:тип\\s*кузова|кузов|body\\s*type)\\s*[:\\-–]?\\s*(${BODY_TYPE_WORDS})`, 'i');
 const SPEC_PATTERNS = {
-  bodyType: /(хетчбек|hatchback|седан|sedan|позашляховик|suv|кросовер|crossover|мінівен|minivan|кабріолет|cabrio|універсал|wagon|купе|coupe)/i,
   engine: /(\d[.,]\d)\s*l\b/i,
   power: /\((\d{2,3})\s*(?:h\.?\s*p\.?|к\.?\s*с\.?)\)/i,
   transmission: /(автомат|automatic|механік|manual)/i,
@@ -113,6 +119,8 @@ const SPEC_PATTERNS = {
 
 function extractSpecs(text) {
   const specs = {};
+  const bodyTypeLabeled = BODY_TYPE_LABELED_RE.exec(text);
+  if (bodyTypeLabeled) specs.bodyType = bodyTypeLabeled[1].trim();
   for (const [key, re] of Object.entries(SPEC_PATTERNS)) {
     const m = re.exec(text);
     if (!m) continue;
