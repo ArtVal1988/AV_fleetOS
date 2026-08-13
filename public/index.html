@@ -8107,9 +8107,10 @@ function handleMainPaymentOverflowToExtension(excess, date, method){
   toggleExtensionSection(); // standard setup: from=mainEnd, to=mainEnd+1 day, rate/currency mirrored from the main booking
   setExtDateField('bm-ext-to', toDate); // override the default +1 day to the correct +N days for this excess amount
   document.getElementById('bm-ext-days').value = days;
-  extDaysOverridden = true;
+  extDaysOverridden = true; // protects this value while onExtDatesChanged() runs below
   recalcExtensionCost();
   onExtDatesChanged();
+  extDaysOverridden = false; // ...but let it go afterward, so the user can still freely edit dates later and have days auto-recalculate normally, like any other extension
 
   currentExtPayments.push({ amount: excess, date, method });
   updateExtPaidSum();
