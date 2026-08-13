@@ -6600,14 +6600,22 @@ function renderDashboard(){
   if(dateInputEl && dateInputEl.value !== selDate) dateInputEl.value = selDate;
 
   // ── 2. Fleet status ───────────────────────────────────────────────
-  const totalVehicles = ALL_VEHICLES.length;
+  // 'Інше' is a catch-all bucket, not a real fleet class — excluded from
+  // every count in this section so the numbers reflect the actual managed fleet.
+  const otherCatVehicleIds = new Set((CATEGORIES.find(c=>c.name==='Інше')?.vehicles||[]).map(v=>v.id));
+  const countedVehicles = ALL_VEHICLES.filter(v => !otherCatVehicleIds.has(v.id));
+  const totalVehicles = countedVehicles.length;
   const activeToday = new Set();
-  bookings.forEach(b => { if(b.start<=todayStr && getEffectiveEnd(b)>=todayStr) activeToday.add(b.vehicleId+'|'+b.status); });
+  bookings.forEach(b => { if(!otherCatVehicleIds.has(b.vehicleId) && b.start<=todayStr && getEffectiveEnd(b)>=todayStr) activeToday.add(b.vehicleId+'|'+b.status); });
   const countByStatus = {};
   activeToday.forEach(key => { const st = key.split('|')[1]; countByStatus[st] = (countByStatus[st]||0)+1; });
-  const inRental = countByStatus['rented']||0;
+  const inRental = countByStatus['rented']||0; // only the exact 'В оренді' status counts here, nothing else
   const reserved = (countByStatus['reserved']||0) + (countByStatus['res-docs']||0);
   const inRepair = countByStatus['repair']||0;
+  // На Ямській is a user-created custom status (not hardcoded) — look up
+  // its key by label match rather than assuming a fixed key string.
+  const yamskaKey = STATUSES.find(s => s.label === 'На Ямській')?.key;
+  const onYamska = yamskaKey ? (countByStatus[yamskaKey]||0) : 0;
   const busyTotal = Object.values(countByStatus).reduce((a,b)=>a+b,0);
   const available = Math.max(0, totalVehicles - busyTotal);
   const utilization = totalVehicles ? Math.round(inRental/totalVehicles*100) : 0;
@@ -6615,11 +6623,12 @@ function renderDashboard(){
   const fleetHtml = `
     <div class="msec-b3" style="margin-bottom:18px">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🚗 Стан парку зараз</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+      <div style="display:grid;grid-template-columns:repeat(${yamskaKey?6:5},1fr);gap:10px">
         ${dashStatCard(totalVehicles, 'Всього авто', '#374151')}
         ${dashStatCard(inRental, 'В оренді', '#dc2626')}
         ${dashStatCard(reserved, 'Резерв', '#16a34a')}
         ${dashStatCard(inRepair, 'В ремонті', '#ea580c')}
+        ${yamskaKey ? dashStatCard(onYamska, 'На Ямській', '#7c3aed') : ''}
         ${dashStatCard(available, 'Вільні', '#2563eb')}
       </div>
       <div style="margin-top:12px;background:#f3f4f6;border-radius:8px;height:10px;overflow:hidden">
@@ -6705,11 +6714,8 @@ function dashAlertList(title, list, detailFn, onClickFn){
   return `<div>
     <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(v => `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
-        <span>
-          <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
-          <div style="color:#6b7280">${stripYear(v.name)}</div>
-        </span>
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
+        <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
         <span style="color:#dc2626;font-weight:600;flex-shrink:0;margin-left:8px">${detailFn(v)}</span>
       </div>
     `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
