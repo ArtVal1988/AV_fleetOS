@@ -2559,12 +2559,12 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
-        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;cursor:pointer;margin-bottom:8px">
+        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px;display:block;width:100%;box-sizing:border-box">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px!important;letter-spacing:normal!important;text-transform:none!important;color:#6b7280;cursor:pointer;margin-bottom:8px;width:auto">
             <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()">Часткова оплата
           </label>
           <div id="bm-main-payments-wrap" style="display:none">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Оплачено</span>
                 <span id="bm-main-paid-display" style="font-weight:700;font-size:13px;color:#166534">0</span>
