@@ -6656,10 +6656,10 @@ function renderDashboard(){
   const attentionHtml = `
     <div class="msec-b5">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-        <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Пора на ТО'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
-        <div>${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
-        <div>${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? fmtMon(p.amount)+' · ' : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <div style="padding-right:12px">${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Пора на ТО'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
+        <div style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
+        <div style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? `<span style="color:#166534">${fmtMon(p.amount)}</span> · ` : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}</div>
       </div>
     </div>`;
 
