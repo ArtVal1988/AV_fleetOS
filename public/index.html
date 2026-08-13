@@ -6631,10 +6631,11 @@ function renderDashboard(){
   // ── 3. Needs attention ────────────────────────────────────────────
   const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
   const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
-  const getKaskoNextDue = v => {
+  const getKaskoNextPayment = v => {
     const unpaid = (v.kasko?.payments||[]).filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
-    return unpaid[0]?.date || v.kasko?.end;
+    return unpaid[0] || (v.kasko?.end ? {date: v.kasko.end, amount: null} : null);
   };
+  const getKaskoNextDue = v => getKaskoNextPayment(v)?.date;
   const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
   const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)))
     .sort((a,b) => {
@@ -6646,12 +6647,10 @@ function renderDashboard(){
   const attentionHtml = `
     <div class="msec-b5">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км залишилось':'Пора на ТО'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          ${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}
-          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => fmtD(getKaskoNextDue(v)), v => `openInsuranceModal(${v.id})`)}
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div>${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Пора на ТО'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
+        <div>${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
+        <div>${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? fmtMon(p.amount)+' · ' : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}</div>
       </div>
     </div>`;
 
@@ -6706,9 +6705,12 @@ function dashAlertList(title, list, detailFn, onClickFn){
   return `<div>
     <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(v => `
-      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
-        <span><span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span> <span style="color:#6b7280">${stripYear(v.name)}</span></span>
-        <span style="color:#dc2626;font-weight:600">${detailFn(v)}</span>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
+        <span>
+          <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
+          <div style="color:#6b7280">${stripYear(v.name)}</div>
+        </span>
+        <span style="color:#dc2626;font-weight:600;flex-shrink:0;margin-left:8px">${detailFn(v)}</span>
       </div>
     `).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
   </div>`;
