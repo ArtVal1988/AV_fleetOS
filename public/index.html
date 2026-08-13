@@ -12997,7 +12997,8 @@ async function syncFromServer(){
     // manual drag-and-drop reorder).
     {
       const otherCat = CATEGORIES.find(c => c.name === 'Інше');
-      const fourByFourCat = CATEGORIES.find(c => c.name === '4х4');
+      const normalizeX = s => s.replace(/х/g, 'x'); // Cyrillic х and Latin x look identical but are different characters — normalize before comparing
+      const fourByFourCat = CATEGORIES.find(c => normalizeX(c.name) === '4x4');
       if(otherCat && fourByFourCat && CATEGORIES.indexOf(otherCat) !== CATEGORIES.indexOf(fourByFourCat) + 1){
         CATEGORIES.splice(CATEGORIES.indexOf(otherCat), 1);
         CATEGORIES.splice(CATEGORIES.indexOf(fourByFourCat) + 1, 0, otherCat);
