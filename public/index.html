@@ -2559,17 +2559,23 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
-        <div style="display:grid;grid-template-columns:0.7fr 1.3fr 1.3fr;align-items:center;margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;gap:8px">
-          <label style="display:flex;align-items:center;gap:3px;font-size:11px;color:#6b7280;cursor:pointer;flex-shrink:0;justify-self:start;white-space:nowrap">
+        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b7280;cursor:pointer;margin-bottom:8px">
             <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()">Часткова оплата
           </label>
-          <div id="bm-partial-fields" style="display:none;align-items:center;gap:6px;justify-self:center">
-            <label style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e;flex-shrink:0">Оплачено</label>
-            <input type="text" inputmode="decimal" id="bm-partial-paid" placeholder="0" style="width:110px;text-align:center" oninput="formatDecimalInput(this);updatePartialPaymentUI()">
-          </div>
-          <div id="bm-partial-remaining-wrap" style="display:none;align-items:center;gap:6px;justify-self:end">
-            <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Залишок боргу</span>
-            <span id="bm-partial-remaining" style="color:#dc2626;font-weight:700;font-size:12px;white-space:nowrap">—</span>
+          <div id="bm-main-payments-wrap" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Оплачено</span>
+                <span id="bm-main-paid-display" style="font-weight:700;font-size:13px;color:#166534">0</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#92400e">Борг</span>
+                <span id="bm-partial-remaining" style="color:#dc2626;font-weight:700;font-size:13px;white-space:nowrap">—</span>
+              </div>
+              <button type="button" onclick="toggleMainPaymentForm()" title="Додати платіж" style="height:26px;padding:0 10px;background:#f7f8fb;border:1px solid #d8dbe2;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:#374151">+ Платіж</button>
+            </div>
+            <div id="bm-main-payments-list"></div>
           </div>
         </div>
       </div>
@@ -4675,9 +4681,8 @@ function openBookingModal(vid=null,start=null,end=null){
   setDepositPayMethod('cash');
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = '';
   document.getElementById('bm-partial-active').checked = false;
-  document.getElementById('bm-partial-fields').style.display = 'none';
-  document.getElementById('bm-partial-remaining-wrap').style.display = 'none';
-  document.getElementById('bm-partial-paid').value = '';
+  document.getElementById('bm-main-payments-wrap').style.display = 'none';
+  loadMainPayments([]);
   updatePartialPaymentAvailability();
   document.getElementById('bm-days-override').value='';
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
@@ -4839,10 +4844,9 @@ function editBooking(bid){
   setDepositPayMethod(b.depositPayMethod || 'cash');
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = b.depositMixedNote || '';
   document.getElementById('bm-partial-active').checked = !!b.partialPaymentActive;
-  document.getElementById('bm-partial-fields').style.display = b.partialPaymentActive ? 'flex' : 'none';
-  document.getElementById('bm-partial-remaining-wrap').style.display = b.partialPaymentActive ? 'flex' : 'none';
-  document.getElementById('bm-partial-paid').value = b.amountPaid ? Number(b.amountPaid).toLocaleString('uk-UA') : '';
-  if(b.partialPaymentActive) setTimeout(updatePartialPaymentUI, 0);
+  document.getElementById('bm-main-payments-wrap').style.display = b.partialPaymentActive ? 'block' : 'none';
+  loadMainPayments(b.payments || (b.amountPaid ? [{amount:b.amountPaid, date:b.paidDate||'', method:b.payMethod||'cash'}] : []));
+  if(b.partialPaymentActive) setTimeout(updateMainPaymentsUI, 0);
   updatePartialPaymentAvailability();
   const liveCur = document.getElementById('bm-currency').value||'$';
   document.getElementById('bm-days-override').value=b.daysOverride||'';
@@ -5160,7 +5164,8 @@ function saveBooking(){
     depositCur:(['$','₴','€'].find(c => document.getElementById(c==='$'?'dep-cur-btn-usd':c==='₴'?'dep-cur-btn-uah':'dep-cur-btn-eur')?.classList.contains('active')) || '$'),
     payMethod: bmPayMethod,
     partialPaymentActive: document.getElementById('bm-partial-active')?.checked || false,
-    amountPaid: parseThousands(document.getElementById('bm-partial-paid')?.value),
+    amountPaid: currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0),
+    payments: currentMainPayments,
     depositPayMethod: bmDepositPayMethod,
     depositMixedNote: document.getElementById('bm-deposit-mixed-note')?.value.trim() || '',
     daysOverride:parseFloat(document.getElementById('bm-days-override')?.value)||0,
@@ -7990,20 +7995,150 @@ function togglePartialPayment(){
     return;
   }
   const active = document.getElementById('bm-partial-active').checked;
-  document.getElementById('bm-partial-fields').style.display = active ? 'flex' : 'none';
-  document.getElementById('bm-partial-remaining-wrap').style.display = active ? 'flex' : 'none';
-  if(active) updatePartialPaymentUI();
+  document.getElementById('bm-main-payments-wrap').style.display = active ? 'block' : 'none';
+  if(active) updateMainPaymentsUI();
 }
-function updatePartialPaymentUI(){
+// ── Main booking's own partial-payment list — same architecture as the
+// extension's currentExtPayments (see updateExtPaidSum/renderExtPaymentsColumn).
+let currentMainPayments = [];
+let mainPaymentFormOpen = false;
+let mainEditingPaymentIndex = null;
+function loadMainPayments(payments){
+  currentMainPayments = (payments||[]).map(p=>({...p}));
+  mainPaymentFormOpen = false;
+  mainEditingPaymentIndex = null;
+  updateMainPaymentsUI();
+}
+function getMainBookingTotal(){
   const cur = document.getElementById('bm-currency')?.value || '$';
   const sourceId = cur === '₴' ? 'dp-total-uah' : 'dp-total';
   const totalEl = document.getElementById(sourceId);
-  const total = parseThousands((totalEl?.textContent||'').replace(/[^\d\s,.]/g,''));
-  const paid = parseThousands(document.getElementById('bm-partial-paid')?.value);
-  const remaining = Math.max(0, total - paid);
+  return parseThousands((totalEl?.textContent||'').replace(/[^\d\s,.]/g,''));
+}
+function updateMainPaymentsUI(){
+  const sum = currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0);
+  const paidDisplay = document.getElementById('bm-main-paid-display');
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  if(paidDisplay) paidDisplay.textContent = sum.toLocaleString('uk-UA') + ' ' + cur;
+  const total = getMainBookingTotal();
+  const remaining = Math.max(0, total - sum);
   const remEl = document.getElementById('bm-partial-remaining');
-  if(!remEl) return;
-  remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
+  if(remEl){
+    if(remaining <= 0 && total > 0){ remEl.textContent = 'Оплачено'; remEl.style.color = '#16a34a'; }
+    else { remEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur; remEl.style.color = '#dc2626'; }
+  }
+  renderMainPaymentsList();
+}
+function toggleMainPaymentForm(){
+  mainPaymentFormOpen = !mainPaymentFormOpen;
+  mainEditingPaymentIndex = null;
+  renderMainPaymentsList();
+}
+function editMainPayment(i){
+  mainEditingPaymentIndex = i;
+  mainPaymentFormOpen = true;
+  renderMainPaymentsList();
+  const p = currentMainPayments[i];
+  const amountEl = document.getElementById('main-new-payment-amount');
+  if(amountEl) amountEl.value = p.amount ? p.amount.toLocaleString('uk-UA') : '';
+  const dateEl = document.getElementById('main-new-payment-date');
+  if(dateEl) dateEl.value = p.date || '';
+  setMainNewPaymentMethod(p.method || 'cash');
+}
+let mainNewPaymentMethod = 'cash';
+function setMainNewPaymentMethod(m){
+  mainNewPaymentMethod = m;
+  document.getElementById('main-pm-btn-cash')?.classList.toggle('active', m==='cash');
+  document.getElementById('main-pm-btn-card')?.classList.toggle('active', m==='card');
+}
+function addMainPayment(){
+  const amountEl = document.getElementById('main-new-payment-amount');
+  const dateEl = document.getElementById('main-new-payment-date');
+  const amount = parseThousands(amountEl.value);
+  if(!amount || amount <= 0){ alert('Вкажіть суму платежу'); return; }
+  const total = getMainBookingTotal();
+  const isEditing = mainEditingPaymentIndex !== null;
+  const otherPaymentsTotal = currentMainPayments.reduce((s,p,i)=>i===mainEditingPaymentIndex?s:s+(p.amount||0), 0);
+  if(total > 0 && otherPaymentsTotal + amount > total + 0.01){
+    if(!confirm(`Сума перевищить загальну вартість замовлення (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
+  }
+  if(isEditing){
+    currentMainPayments[mainEditingPaymentIndex] = { amount, date: dateEl.value || '', method: mainNewPaymentMethod };
+    mainEditingPaymentIndex = null;
+  } else {
+    currentMainPayments.push({ amount, date: dateEl.value || '', method: mainNewPaymentMethod });
+  }
+  mainNewPaymentMethod = 'cash';
+  mainPaymentFormOpen = false;
+  updateMainPaymentsUI();
+}
+function deleteMainPayment(i){
+  currentMainPayments.splice(i,1);
+  if(mainEditingPaymentIndex === i) mainEditingPaymentIndex = null;
+  updateMainPaymentsUI();
+}
+function renderMainPaymentsList(){
+  const col = document.getElementById('bm-main-payments-list');
+  if(!col) return;
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  const list = currentMainPayments.map((p,i) => {
+    const isFirst = i === 0;
+    return `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px${i===mainEditingPaymentIndex?';background:#eff6ff':''}">
+      <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>
+      <span style="color:#9ca3af;flex:1">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
+      <button type="button" onclick="generateMainPaymentAct(${i}, this)" title="${isFirst?'Сформувати основний акт':'Сформувати акт продовження'}" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
+      <button type="button" onclick="editMainPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
+      <button type="button" onclick="deleteMainPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
+    </div>`;
+  }).join('');
+  const total = getMainBookingTotal();
+  const sum = currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0);
+  const isFullyPaid = total > 0 && sum >= total;
+  const isEditing = mainEditingPaymentIndex !== null;
+  const showForm = mainPaymentFormOpen && (isEditing || !isFullyPaid);
+  col.innerHTML = (list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:'') +
+    (showForm?`
+    <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
+      <div style="flex:1;min-width:100px">
+        <label class="vf-lbl">Сума</label>
+        <input type="text" inputmode="decimal" id="main-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this)">
+      </div>
+      <div style="width:100px">
+        <label class="vf-lbl">Дата</label>
+        <input type="date" readonly id="main-new-payment-date" class="custom-dp-trigger vf-inp" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%;height:32px;box-sizing:border-box">
+      </div>
+      <div class="dep-inline-wrap" style="background:none;border:none;padding:0;height:32px">
+        <button type="button" id="main-pm-btn-cash" class="dep-cur-pill active" onclick="setMainNewPaymentMethod('cash')" title="Готівка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
+        <button type="button" id="main-pm-btn-card" class="dep-cur-pill" onclick="setMainNewPaymentMethod('card')" title="Картка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
+      </div>
+      <button type="button" onclick="addMainPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${isEditing?'Зберегти':'Додати'}</button>
+    </div>`:'');
+  const dateEl = document.getElementById('main-new-payment-date');
+  if(dateEl && !isEditing) dateEl.value = new Date().toISOString().slice(0,10);
+}
+async function generateMainPaymentAct(i, btn){
+  if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
+  const type = i === 0 ? 'act' : 'act_extension';
+  const origHtml = btn ? btn.innerHTML : null;
+  if(btn){ btn.innerHTML = '⏳'; btn.disabled = true; }
+  try{
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/' + type, { headers: apiHeaders() });
+    if(!res.ok) throw new Error('Помилка сервера');
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const fileName = match ? decodeURIComponent(match[1]) : (type==='act' ? 'Акт.docx' : 'Акт_продовження.docx');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Не вдалося сформувати документ. Спробуйте ще раз.');
+  } finally {
+    if(btn){ btn.innerHTML = origHtml; btn.disabled = false; }
+  }
 }
 function updateExtensionPaidUI(){
   const totalEl = document.getElementById('bm-ext-total');
@@ -10722,7 +10857,7 @@ function updateVatPreview(){
   const grandTotalForeignColumn = anchorNonUah ? grandTotal : null;
   document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : (exRate>0 && grandTotalUahColumn>0 ? '≈ '+fmt2(grandTotalUahColumn/exRate)+' $' : '—');
   document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmt2(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
-  if(document.getElementById('bm-partial-active')?.checked) updatePartialPaymentUI();
+  if(document.getElementById('bm-partial-active')?.checked) updateMainPaymentsUI();
 }
 
 /* ── EXTRAS ── */

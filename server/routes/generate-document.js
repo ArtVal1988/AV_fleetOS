@@ -250,6 +250,25 @@ const FIELD_CATALOG = [
     const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
     return fmtMoney(Math.round(uah * 100) / 100);
   } },
+  { key: 'amount_paid', label: 'Оплачено — сума всіх внесених платежів (з валютою і еквівалентом в $)', get: ctx => {
+    const paid = Number(ctx.booking.amountPaid) || 0;
+    const cur = ctx.booking.currency || '$';
+    if (cur === '$') return `${fmtMoney(paid)} $`;
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = exRate > 0 ? Math.round(paid / exRate * 100) / 100 : null;
+    return `${fmtMoney(paid)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
+  } },
+  { key: 'debt_amount', label: 'Борг — залишок несплаченої суми по першочерговому періоду (з валютою і еквівалентом в $)', get: ctx => {
+    const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
+    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
+    const paid = Number(ctx.booking.amountPaid) || 0;
+    const debt = Math.max(0, Math.round((total - paid) * 100) / 100);
+    const cur = ctx.booking.currency || '$';
+    if (cur === '$') return `${fmtMoney(debt)} $`;
+    const exRate = Number(ctx.booking.exchangeRate) || 0;
+    const usd = exRate > 0 ? Math.round(debt / exRate * 100) / 100 : null;
+    return `${fmtMoney(debt)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
+  } },
   { key: 'deposit', label: 'Сума застави (депозиту) (з валютою і еквівалентом в $)', get: ctx => {
     const deposit = ctx.booking.deposit;
     if (!deposit) return '';
