@@ -12992,15 +12992,16 @@ async function syncFromServer(){
       cat._categoryOrder = withOrder ? withOrder.categoryOrder : Infinity;
     });
     CATEGORIES.sort((a,b) => a._categoryOrder - b._categoryOrder);
-    // Requested one-time move: Інше right after 4х4, for accounts that
-    // haven't manually reordered categories yet (no categoryOrder stamped).
-    if(CATEGORIES.every(cat => cat._categoryOrder === Infinity)){
+    // Move Інше right after 4х4, per request — persisted immediately so it
+    // takes effect for certain and stays that way (same mechanism as a
+    // manual drag-and-drop reorder).
+    {
       const otherCat = CATEGORIES.find(c => c.name === 'Інше');
-      const hasFourByFour = CATEGORIES.some(c => c.name === '4х4');
-      if(otherCat && hasFourByFour){
+      const fourByFourCat = CATEGORIES.find(c => c.name === '4х4');
+      if(otherCat && fourByFourCat && CATEGORIES.indexOf(otherCat) !== CATEGORIES.indexOf(fourByFourCat) + 1){
         CATEGORIES.splice(CATEGORIES.indexOf(otherCat), 1);
-        const fourByFourIdx = CATEGORIES.indexOf(CATEGORIES.find(c => c.name === '4х4')); // re-find AFTER removal, indices shifted
-        CATEGORIES.splice(fourByFourIdx + 1, 0, otherCat);
+        CATEGORIES.splice(CATEGORIES.indexOf(fourByFourCat) + 1, 0, otherCat);
+        CATEGORIES.forEach((cat,i) => { cat.vehicles.forEach(v => { v.categoryOrder = i; persistVehicle(v); }); });
       }
     }
     // Apply any manually-set vehicle order (drag-and-drop in the
