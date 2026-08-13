@@ -4786,11 +4786,11 @@ function editBooking(bid){
     document.getElementById('bm-ext-days').value=b.extension.days||Math.max(1,Math.round((new Date(b.extension.toDate)-new Date(b.extension.fromDate))/86400000));
     document.getElementById('bm-ext-rate').value=b.extension.rate?Number(b.extension.rate).toLocaleString('uk-UA'):'';
     document.getElementById('bm-ext-total').value=b.extension.cost?Number(b.extension.cost).toLocaleString('uk-UA'):'';
-    loadExtPayments(b.extension.payments || (b.extension.amountPaid ? [{amount:b.extension.amountPaid, date:b.extension.paidDate||'', method:b.extension.payMethod||'cash'}] : []));
     extTotalOverridden=true;
     const extCur=b.extension.currency||b.currency||'$';
     document.getElementById('bm-ext-currency').value=extCur;
     extRateCurrencyAnchor = extCur;
+    loadExtPayments(b.extension.payments || (b.extension.amountPaid ? [{amount:b.extension.amountPaid, date:b.extension.paidDate||'', method:b.extension.payMethod||'cash'}] : []));
     document.getElementById('bm-ext-rate2').value=b.extension.exchangeRate||'';
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
