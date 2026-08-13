@@ -9185,6 +9185,11 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-deductible-pct').value=k.deductiblePct?String(k.deductiblePct).replace('.',','):'';
   document.getElementById('ck-deductible').value=k.deductible?Number(k.deductible).toLocaleString('uk-UA'):'';
   document.getElementById('ck-notes').value=k.notes||'';
+  document.getElementById('ck-req-recipient').value=k.reqRecipient||'';
+  document.getElementById('ck-req-code').value=k.reqCode||'';
+  document.getElementById('ck-req-account').value=k.reqAccount||'';
+  document.getElementById('ck-req-purpose').value=k.reqPurpose || (k.policyNum ? `Страховий платіж, поліс №${k.policyNum}` : '');
+  document.getElementById('ck-req-amount').value=(k.reqAmount || k.totalPremium) ? Number(k.reqAmount || k.totalPremium).toLocaleString('uk-UA') : '';
   const hasNotes = !!k.notes;
   document.getElementById('ck-notes-panel').style.display = hasNotes ? 'block' : 'none';
   document.getElementById('ck-notes-toggle-icon').textContent = hasNotes ? '⊖' : '⊕';
@@ -9200,6 +9205,17 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-ptb-quarterly').classList.toggle('active',calKPayType==='quarterly');
   buildCalKaskoPayments();
   document.getElementById('cal-kasko-modal').classList.add('open');
+}
+function copyCkReqField(fieldId){
+  const el = document.getElementById(fieldId);
+  if(!el || !el.value.trim()) return;
+  navigator.clipboard.writeText(el.value.trim()).then(()=>{
+    const btn = el.parentElement.querySelector('button');
+    if(!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = '✅';
+    setTimeout(()=>{ btn.innerHTML = original; }, 1200);
+  }).catch(()=>alert('Не вдалося скопіювати'));
 }
 function toggleCkNotesPanel(){
   const panel = document.getElementById('ck-notes-panel');
@@ -9248,7 +9264,7 @@ function saveCalKasko(){
   } else {
     payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:calKPaid[q]||false}));
   }
-  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,insuredSum:parseThousands(document.getElementById('ck-sum').value)||0,tariff:parseFloat((document.getElementById('ck-tariff').value||'').replace(',','.'))||0,paymentType:calKPayType,totalPremium:parseThousands(document.getElementById('ck-total').value)||0,deductiblePct:parseFloat((document.getElementById('ck-deductible-pct').value||'').replace(',','.'))||0,deductible:parseThousands(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),payments};
+  v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),start:document.getElementById('ck-start').value,end,insuredSum:parseThousands(document.getElementById('ck-sum').value)||0,tariff:parseFloat((document.getElementById('ck-tariff').value||'').replace(',','.'))||0,paymentType:calKPayType,totalPremium:parseThousands(document.getElementById('ck-total').value)||0,deductiblePct:parseFloat((document.getElementById('ck-deductible-pct').value||'').replace(',','.'))||0,deductible:parseThousands(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),reqRecipient:document.getElementById('ck-req-recipient').value.trim(),reqCode:document.getElementById('ck-req-code').value.trim(),reqAccount:document.getElementById('ck-req-account').value.trim(),reqPurpose:document.getElementById('ck-req-purpose').value.trim(),reqAmount:parseThousands(document.getElementById('ck-req-amount').value)||0,payments};
   persistVehicle(v);
   document.getElementById('cal-kasko-modal').classList.remove('open');
   renderInsuranceModal(v); render();
@@ -13724,6 +13740,43 @@ function startAutoRefresh(){
           <div class="pay-type-btns" style="margin-top:5px">
             <button class="ptb active" id="ck-ptb-single" onclick="setCalPayType('single')">Один платіж</button>
             <button class="ptb" id="ck-ptb-quarterly" onclick="setCalPayType('quarterly')">Щоквартально</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px">Реквізити для оплати</div>
+        <div class="fgrid" style="grid-template-columns:1.3fr 1fr 1.3fr;gap:8px">
+          <div class="fg"><label>Отримувач</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" id="ck-req-recipient" placeholder="ТОВ Страхова компанія" style="flex:1;min-width:0">
+              <button type="button" onclick="copyCkReqField('ck-req-recipient')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
+            </div>
+          </div>
+          <div class="fg"><label>Код отримувача</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" id="ck-req-code" placeholder="12345678" style="flex:1;min-width:0">
+              <button type="button" onclick="copyCkReqField('ck-req-code')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
+            </div>
+          </div>
+          <div class="fg"><label>Рахунок отримувача</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" id="ck-req-account" placeholder="UA123052990000026001234567890" style="flex:1;min-width:0;font-family:var(--font-mono);font-size:11px">
+              <button type="button" onclick="copyCkReqField('ck-req-account')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
+            </div>
+          </div>
+        </div>
+        <div class="fgrid" style="grid-template-columns:1.6fr 1fr;gap:8px;margin-top:8px">
+          <div class="fg"><label>Призначення платежу</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" id="ck-req-purpose" placeholder="Страховий платіж, поліс №..." style="flex:1;min-width:0">
+              <button type="button" onclick="copyCkReqField('ck-req-purpose')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
+            </div>
+          </div>
+          <div class="fg"><label>Сума платежу</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" inputmode="numeric" id="ck-req-amount" placeholder="24 000" style="flex:1;min-width:0" oninput="formatThousandsInput(this)">
+              <button type="button" onclick="copyCkReqField('ck-req-amount')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
+            </div>
           </div>
         </div>
       </div>
