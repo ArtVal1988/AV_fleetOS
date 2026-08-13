@@ -2559,10 +2559,10 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
-        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px;box-sizing:border-box">
-          <div style="margin-bottom:8px;text-align:right">
-            <span style="vertical-align:middle;font-size:11px;color:#6b7280;cursor:pointer;margin-right:6px" onclick="document.getElementById('bm-partial-active').click()">Часткова оплата</span>
-            <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()" style="vertical-align:middle">
+        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:34px 10px 10px;box-sizing:border-box;position:relative">
+          <div style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:#6b7280;cursor:pointer" onclick="document.getElementById('bm-partial-active').click()">Часткова оплата</span>
+            <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()">
           </div>
           <div id="bm-main-payments-wrap" style="display:none">
             <div style="display:flex;align-items:flex-end;gap:10px">
