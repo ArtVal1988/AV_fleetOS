@@ -8681,7 +8681,6 @@ function openToModal(vid){
   if(!v) return;
   toVehicleId = vid;
   document.getElementById('tom-plate').textContent = v.plate;
-  document.getElementById('tom-vehname').textContent = stripYear(v.name);
   document.getElementById('tom-vin').textContent = v.vin || '—';
   renderToKmBar(v);
   renderToTabs(v);
@@ -8757,8 +8756,8 @@ function renderToKmBar(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   document.getElementById('tom-km-bar').innerHTML =
     '<div class="to-km-row">' +
+      '<button type="button" onclick="showKmEditForm('+v.id+')" title="Скоригувати пробіг" style="width:36px;height:36px;padding:0;border:1px solid '+purple+'44;border-radius:6px;background:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+purple+'">✎</button>' +
       '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
-        '<button type="button" class="to-km-due-icon" onclick="showKmEditForm('+v.id+')" title="Оновити пробіг" style="width:22px;height:22px;padding:0;border:1px solid '+purple+'44;border-radius:5px;background:#fff;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">🚗</button>' +
         '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
         '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
         (v.currentKmDate?'<span style="font-size:10px;color:#9ca3af;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
@@ -13821,14 +13820,9 @@ function startAutoRefresh(){
       <div class="to-modal-top">
         <div class="ins-head-vehicle">
           <span class="veh-plate-badge" id="tom-plate"></span>
-          <span class="ins-veh-name" id="tom-vehname"></span>
         </div>
-        <div class="to-modal-title">Ремонти</div>
+        <div class="to-modal-title">Ремонти <span class="veh-plate-badge" id="tom-vin" style="margin-left:8px;width:auto">—</span></div>
         <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
-          <div style="text-align:right">
-            <div class="to-km-meta-lbl">VIN</div>
-            <div class="to-km-meta-val mono" id="tom-vin" style="font-size:12px;letter-spacing:1px">—</div>
-          </div>
           <button class="to-modal-x" onclick="closeToModal()">✕</button>
         </div>
       </div>
