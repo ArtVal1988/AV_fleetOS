@@ -269,6 +269,21 @@ const FIELD_CATALOG = [
     const usd = exRate > 0 ? Math.round(debt / exRate * 100) / 100 : null;
     return `${fmtMoney(debt)} ${cur}${usd !== null ? ` (${fmtMoney(usd)} $)` : ''}`;
   } },
+  { key: 'amount_paid_uah', label: 'Оплачено в грн (конвертовано за курсом замовлення)', get: ctx => {
+    const paid = Number(ctx.booking.amountPaid) || 0;
+    const isUsd = ctx.booking.currency === '$';
+    const uah = isUsd ? paid * (Number(ctx.booking.exchangeRate) || 0) : paid;
+    return fmtMoney(Math.round(uah * 100) / 100);
+  } },
+  { key: 'debt_amount_uah', label: 'Борг в грн (конвертовано за курсом замовлення)', get: ctx => {
+    const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
+    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
+    const paid = Number(ctx.booking.amountPaid) || 0;
+    const debt = Math.max(0, Math.round((total - paid) * 100) / 100);
+    const isUsd = ctx.booking.currency === '$';
+    const uah = isUsd ? debt * (Number(ctx.booking.exchangeRate) || 0) : debt;
+    return fmtMoney(Math.round(uah * 100) / 100);
+  } },
   { key: 'deposit', label: 'Сума застави (депозиту) (з валютою і еквівалентом в $)', get: ctx => {
     const deposit = ctx.booking.deposit;
     if (!deposit) return '';
