@@ -6450,6 +6450,12 @@ function updateKmDiff(){
   const valEl = document.getElementById('bm-km-diff-val');
   const avgBadge = document.getElementById('bm-km-avg');
   const avgValEl = document.getElementById('bm-km-avg-val');
+  // Special (non-booking) statuses — В ремонті, У Інвестора, На ямській,
+  // Особисте використання, Важливо, etc — aren't client rentals, so the
+  // mileage-overage billing calc and its auto-activated Утримання deduction
+  // don't apply to them at all.
+  const statusVal = document.getElementById('bm-status')?.value;
+  const isSpecial = statusVal ? (SM[statusVal]?.isBooking === false) : false;
   if(badge){
     if(s>0&&e>0&&e>=s){
       const diff = e-s;
@@ -6487,7 +6493,7 @@ function updateKmDiff(){
             // not to charge the client), in which case we respect that and
             // leave it off, or has manually typed their own amount in, in
             // which case we don't want to silently overwrite it.
-            if(!mileageDeductionDismissed){
+            if(!mileageDeductionDismissed && !isSpecial){
               const dedPanel = document.getElementById('ded-panel');
               if(dedPanel && dedPanel.style.display==='none') toggleDedPanel();
               if(!isDedActive('mileage')) toggleDed('mileage');
@@ -10117,13 +10123,17 @@ function updateBookingDetailsVisibility(){
   if(hide){
     const contractBtn = document.getElementById('bm-gen-contract-btn');
     const actBtn = document.getElementById('bm-gen-act-btn');
+    const docHistBtn = document.getElementById('bm-doc-history-btn');
     if(contractBtn) contractBtn.style.display = 'none';
     if(actBtn) actBtn.style.display = 'none';
+    if(docHistBtn) docHistBtn.style.display = 'none';
   } else if(editBid){
     const contractBtn = document.getElementById('bm-gen-contract-btn');
     const actBtn = document.getElementById('bm-gen-act-btn');
+    const docHistBtn = document.getElementById('bm-doc-history-btn');
     if(contractBtn) contractBtn.style.display = '';
     if(actBtn) actBtn.style.display = '';
+    if(docHistBtn) docHistBtn.style.display = '';
   }
 }
 // Client type can always be changed now - this used to lock a saved
