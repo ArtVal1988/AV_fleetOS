@@ -6395,7 +6395,7 @@ function readDeductions(){
     currency: document.getElementById('ded-cust-cur-'+id+'-uah')?.classList.contains('active')?'₴':'$',
   })).filter(x=>x.name||x.amount>0);
   const hasDamage = document.getElementById('ded-radio-damage')?.textContent==='●';
-  return {std, damage: hasDamage?damage:[], custom};
+  return {std, damage: hasDamage?damage:[], custom, mileageDismissed: mileageDeductionDismissed};
 }
 
 function loadDeductions(ded){
@@ -6410,13 +6410,15 @@ function loadDeductions(ded){
       if(k==='mileage') mileageOverageAmtTouched = true;
     }
   });
-  // This booking was already saved once before — if it doesn't have the
-  // mileage deduction active in the saved data, that's a deliberate choice
-  // (there was excess km but the user decided not to charge for it, or
-  // there simply wasn't any excess at save time) that should be respected
-  // on every subsequent re-open, not silently overridden by the
-  // auto-detection logic re-forcing it back on.
-  if(!ded.std?.mileage) mileageDeductionDismissed = true;
+  // This booking was already saved once before — if the user explicitly
+  // dismissed the mileage deduction back then (recorded via the
+  // mileageDismissed flag), respect that on every subsequent re-open, not
+  // silently overridden by the auto-detection logic re-forcing it back on.
+  // Bookings saved before this flag existed (undefined) correctly default
+  // to 'not dismissed' here, rather than assuming dismissal just because
+  // std.mileage happens to be absent (which could equally mean the
+  // deduction was simply never triggered, e.g. by an earlier bug).
+  if(ded.mileageDismissed) mileageDeductionDismissed = true;
   if(ded.damage?.length){
     toggleDedDamage();
     // first row was auto-added by toggleDedDamage
