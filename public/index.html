@@ -8756,11 +8756,11 @@ function renderToKmBar(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   document.getElementById('tom-km-bar').innerHTML =
     '<div class="to-km-row">' +
-      '<button type="button" onclick="showKmEditForm('+v.id+')" title="Скоригувати пробіг" style="width:36px;height:36px;padding:0;border:1px solid '+purple+'44;border-radius:6px;background:#fff;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+purple+'">✎</button>' +
+      '<button type="button" onclick="showKmEditForm('+v.id+')" title="Скоригувати пробіг" style="width:28px;height:28px;padding:0;border:1px solid '+purple+'44;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+purple+'">✎</button>' +
       '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
         '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
         '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
-        (v.currentKmDate?'<span style="font-size:10px;color:#9ca3af;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
+        (v.currentKmDate?'<span style="font-size:10px;color:#011942;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
       '</div>' +
       '<div class="to-km-due-badge" style="background:'+bg+';border-color:'+bdr+';color:'+col+'">' +
         '<span class="to-km-due-icon">'+(kmLeft<=0?'⚠':'⏱')+'</span>' +
@@ -13820,8 +13820,9 @@ function startAutoRefresh(){
       <div class="to-modal-top">
         <div class="ins-head-vehicle">
           <span class="veh-plate-badge" id="tom-plate"></span>
+          <span class="to-modal-title" style="margin:0 8px">Ремонти</span>
+          <span class="veh-plate-badge" id="tom-vin" style="width:auto">—</span>
         </div>
-        <div class="to-modal-title">Ремонти <span class="veh-plate-badge" id="tom-vin" style="margin-left:8px;width:auto">—</span></div>
         <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
           <button class="to-modal-x" onclick="closeToModal()">✕</button>
         </div>
