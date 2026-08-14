@@ -626,6 +626,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-btn.hi{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
 .im-btn.hi:hover{background:#dbeafe;}
 .im-btn.teal{background:#f0fdfa;border-color:#99f6e4;color:#0f766e;}
+.im-btn.danger{background:#fef2f2;border-color:#fecaca;color:#dc2626;}
+.im-btn.danger:hover{background:#fee2e2;}
 
 .im-expired-banner{background:#fee2e2;border:1px solid #fca5a5;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#991b1b;display:flex;align-items:center;gap:8px;}
 .im-warn-banner{background:#fff8e6;border:1px solid #f0d060;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#92400e;display:flex;align-items:center;gap:8px;}
@@ -9083,7 +9085,7 @@ function renderInsuranceModal(v){
       ((v.kasko.reqRecipient||v.kasko.reqAccount) ? buildKaskoReqDisplay(v.kasko) : '') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
       filesRow +
-      '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalKasko('+v.id+')">↻ Поновити</div></div>'+
+      '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn teal" onclick="renewCalKasko('+v.id+')">↻ Поновити</div><div class="im-btn danger" onclick="deleteCalKasko('+v.id+')">🗑 Видалити</div></div>'+
       buildKaskoPhotoSection(v);
   }
 
@@ -9505,6 +9507,13 @@ function renewCalKasko(vid){
   document.getElementById('ck-contract-date').value='';
   updateCkReqPurposeAuto();
   calKPaid={}; calKSavedPayments={}; buildCalKaskoPayments();
+}
+function deleteCalKasko(vid){
+  if(!confirm('Видалити поліс КАСКО для цього авто? Цю дію не можна скасувати.')) return;
+  const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
+  v.kasko = null;
+  persistVehicle(v);
+  renderInsuranceModal(v);
 }
 function saveCalKasko(){
   const v=ALL_VEHICLES.find(x=>x.id===insVehicleId); if(!v)return;
