@@ -8187,7 +8187,7 @@ async function generateMainPaymentAct(i, btn){
     const b = bookings.find(x=>x.id===editBid);
     if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
 
-    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/' + type, { headers: apiHeaders() });
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/' + type + '?paymentIndex=' + i, { headers: apiHeaders() });
     if(!res.ok) throw new Error('Помилка сервера');
     const blob = await res.blob();
     const disposition = res.headers.get('Content-Disposition') || '';

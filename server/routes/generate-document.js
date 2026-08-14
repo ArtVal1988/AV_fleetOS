@@ -714,6 +714,20 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     }
   }
 
+  // Main-period payment-row acts (Платежі основного періоду оренди) need
+  // Оплачено/Борг to reflect the state as of THIS SPECIFIC payment, not the
+  // booking's current overall amountPaid — which by the time of printing
+  // may already include later payments too, since payments are typically
+  // all entered before any of their acts get (re)printed.
+  if (req.query.paymentIndex !== undefined) {
+    const pIdx = parseInt(req.query.paymentIndex);
+    const payments = ctx.booking.payments || [];
+    if (!isNaN(pIdx) && pIdx >= 0 && pIdx < payments.length) {
+      const cumulativePaid = payments.slice(0, pIdx + 1).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      ctx.booking.amountPaid = Math.round(cumulativePaid * 100) / 100;
+    }
+  }
+
   const repKey = ctx.repSlot;
   const templateFile = templateFileName(type, repKey);
   const templatePath = path.join(TEMPLATES_DIR, templateFile);
