@@ -8756,11 +8756,13 @@ function renderToKmBar(v){
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
   document.getElementById('tom-km-bar').innerHTML =
     '<div class="to-km-row">' +
-      '<button type="button" onclick="showKmEditForm('+v.id+')" title="Скоригувати пробіг" style="width:28px;height:28px;padding:0;border:1px solid '+purple+'44;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+purple+'">✎</button>' +
-      '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
-        '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
-        '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
-        (v.currentKmDate?'<span style="font-size:10px;color:#011942;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
+      '<div style="display:flex;align-items:center;gap:5px">' +
+        '<button type="button" onclick="showKmEditForm('+v.id+')" title="Скоригувати пробіг" style="width:28px;height:28px;padding:0;border:1px solid '+purple+'44;border-radius:6px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:'+purple+'">✎</button>' +
+        '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
+          '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
+          '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
+          (v.currentKmDate?'<span style="font-size:10px;color:#011942;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
+        '</div>' +
       '</div>' +
       '<div class="to-km-due-badge" style="background:'+bg+';border-color:'+bdr+';color:'+col+'">' +
         '<span class="to-km-due-icon">'+(kmLeft<=0?'⚠':'⏱')+'</span>' +
