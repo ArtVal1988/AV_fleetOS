@@ -3273,7 +3273,7 @@ function buildVehicleDayRevenueMap(vehicleId, bookingsList){
 }
 function getDayRepairPause(b, dateStr){
   if(!b.repairPause || !b.repairPause.fromDate || !b.repairPause.toDate) return null;
-  return (dateStr >= b.repairPause.fromDate && dateStr < b.repairPause.toDate) ? b.repairPause : null;
+  return (dateStr >= b.repairPause.fromDate && dateStr <= b.repairPause.toDate) ? b.repairPause : null;
 }
 function getDayExtension(b, dateStr){
   // Build the full chain: original booking end, then each history entry in
@@ -7656,7 +7656,7 @@ function loadFines(fines){
 let currentRepairPause = null; // {fromDate, toDate, reason} or null
 function repairPauseDays(p){
   if(!p || !p.fromDate || !p.toDate) return 0;
-  return Math.max(0, Math.round((new Date(p.toDate) - new Date(p.fromDate)) / 86400000));
+  return Math.max(1, Math.round((new Date(p.toDate) - new Date(p.fromDate)) / 86400000) + 1);
 }
 function toggleRepairSection(){
   const panel = document.getElementById('bm-repair-panel');
