@@ -8682,6 +8682,7 @@ function openToModal(vid){
   toVehicleId = vid;
   document.getElementById('tom-plate').textContent = v.plate;
   document.getElementById('tom-vehname').textContent = stripYear(v.name);
+  document.getElementById('tom-vin').textContent = v.vin || '—';
   renderToKmBar(v);
   renderToTabs(v);
   // reset to first tab
@@ -8757,7 +8758,7 @@ function renderToKmBar(v){
   document.getElementById('tom-km-bar').innerHTML =
     '<div class="to-km-row">' +
       '<div class="to-km-due-badge" style="background:#ede9fe;border-color:#c4b5fd;color:'+purple+'">' +
-        '<span class="to-km-due-icon">🚗</span>' +
+        '<button type="button" class="to-km-due-icon" onclick="showKmEditForm('+v.id+')" title="Оновити пробіг" style="width:22px;height:22px;padding:0;border:1px solid '+purple+'44;border-radius:5px;background:#fff;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">🚗</button>' +
         '<span class="to-km-due-lbl" style="color:'+purple+'">Пробіг:</span>' +
         '<span class="to-km-due-val">'+cur.toLocaleString('uk-UA')+' км</span>' +
         (v.currentKmDate?'<span style="font-size:10px;color:#9ca3af;margin-left:6px">('+fmtD(v.currentKmDate)+')</span>':'') +
@@ -13823,9 +13824,11 @@ function startAutoRefresh(){
           <span class="ins-veh-name" id="tom-vehname"></span>
         </div>
         <div class="to-modal-title">Ремонти</div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
-          <button class="btn" id="tom-km-edit-trigger" style="font-size:10px;padding:7px 12px" onclick="showKmEditForm(toVehicleId)">✏ Оновити пробіг</button>
-          <button class="btn btn-primary" style="font-size:10px;padding:7px 12px" onclick="openAddWorkModal('planned')">+ Робота</button>
+        <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+          <div style="text-align:right">
+            <div class="to-km-meta-lbl">VIN</div>
+            <div class="to-km-meta-val mono" id="tom-vin" style="font-size:12px;letter-spacing:1px">—</div>
+          </div>
           <button class="to-modal-x" onclick="closeToModal()">✕</button>
         </div>
       </div>
