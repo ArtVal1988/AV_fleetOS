@@ -8132,12 +8132,11 @@ function renderMainPaymentsList(){
   if(!col) return;
   const cur = document.getElementById('bm-currency')?.value || '$';
   const list = currentMainPayments.map((p,i) => {
-    const isFirst = i === 0;
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px${i===mainEditingPaymentIndex?';background:#eff6ff':''}">
       <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>
       <span style="color:#9ca3af;flex:1">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
-      <button type="button" onclick="generateMainPaymentAct(${i}, this)" title="${isFirst?'Сформувати основний акт':'Сформувати акт продовження'}" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
+      <button type="button" onclick="generateMainPaymentAct(${i}, this)" title="Сформувати акт продовження" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
       <button type="button" onclick="editMainPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
       <button type="button" onclick="deleteMainPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`;
@@ -8175,16 +8174,25 @@ function renderMainPaymentsList(){
 }
 async function generateMainPaymentAct(i, btn){
   if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
-  const type = i === 0 ? 'act' : 'act_extension';
+  const type = 'act_extension'; // every payment-row act is always Акт продовження — the one canonical Акт is generated separately, via the main Акт button
   const origHtml = btn ? btn.innerHTML : null;
   if(btn){ btn.innerHTML = '⏳'; btn.disabled = true; }
   try{
+    // Same reasoning as generateExtensionAct() — explicitly save+await
+    // before generating, so the server is guaranteed to have this payment
+    // already, rather than risking a stale generate if the PUT triggered
+    // by the user's own earlier save is still in flight.
+    _skipCloseOnSave = true;
+    saveBooking();
+    const b = bookings.find(x=>x.id===editBid);
+    if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
+
     const res = await fetch(API_BASE + '/generate-document/' + editBid + '/' + type, { headers: apiHeaders() });
     if(!res.ok) throw new Error('Помилка сервера');
     const blob = await res.blob();
     const disposition = res.headers.get('Content-Disposition') || '';
     const match = disposition.match(/filename="?([^"]+)"?/);
-    const fileName = match ? decodeURIComponent(match[1]) : (type==='act' ? 'Акт.docx' : 'Акт_продовження.docx');
+    const fileName = match ? decodeURIComponent(match[1]) : 'Акт_продовження.docx';
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = fileName;
