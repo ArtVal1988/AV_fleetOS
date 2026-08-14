@@ -6619,7 +6619,11 @@ function renderDashboard(){
   const countedVehicles = ALL_VEHICLES.filter(v => !otherCatVehicleIds.has(v.id));
   const totalVehicles = countedVehicles.length;
   const activeToday = new Set();
-  bookings.forEach(b => { if(!otherCatVehicleIds.has(b.vehicleId) && b.start<=todayStr && getEffectiveEnd(b)>=todayStr) activeToday.add(b.vehicleId+'|'+b.status); });
+  bookings.forEach(b => {
+    if(otherCatVehicleIds.has(b.vehicleId) || !(b.start<=todayStr && getEffectiveEnd(b)>=todayStr)) return;
+    const effectiveStatus = getDayRepairPause(b, todayStr) ? 'repair' : b.status;
+    activeToday.add(b.vehicleId+'|'+effectiveStatus);
+  });
   const countByStatus = {};
   activeToday.forEach(key => { const st = key.split('|')[1]; countByStatus[st] = (countByStatus[st]||0)+1; });
   const inRental = countByStatus['rented']||0; // only the exact 'В оренді' status counts here, nothing else
@@ -6659,6 +6663,7 @@ function renderDashboard(){
   };
   const getKaskoNextDue = v => getKaskoNextPayment(v)?.date;
   const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
+  const kaskoRenewalSoon = ALL_VEHICLES.filter(v => v.kasko?.end && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
   const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)))
     .sort((a,b) => {
       const leftA = a.service.nextKm-(a.currentKm??a.service.lastKm??0);
@@ -6672,7 +6677,10 @@ function renderDashboard(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr">
         <div style="padding-right:12px">${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Перепробіг ТО - '+Math.abs(left).toLocaleString('uk-UA')+' км'; }, v => `openVehiclePanel(${v.id},'data')`)}</div>
         <div style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
-        <div style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? `<span style="color:#166534">${fmtMon(p.amount)}</span> · ` : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}</div>
+        <div style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">
+          ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? `<span style="color:#166534">${fmtMon(p.amount)}</span> · ` : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}
+          <div style="margin-top:14px">${dashAlertList('🛡 КАСКО пролонгація договору (≤30 днів)', kaskoRenewalSoon, v => fmtD(v.kasko.end), v => `openInsuranceModal(${v.id})`)}</div>
+        </div>
       </div>
     </div>`;
 
