@@ -13818,10 +13818,10 @@ function startAutoRefresh(){
   <div class="to-modal">
     <div class="to-modal-head">
       <div class="to-modal-top">
-        <div class="ins-head-vehicle">
-          <span class="veh-plate-badge" id="tom-plate"></span>
-          <span class="to-modal-title" style="margin:0 8px">Ремонти</span>
-          <span class="veh-plate-badge" id="tom-vin" style="width:auto">—</span>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;flex:1;min-width:0">
+          <span class="veh-plate-badge" id="tom-plate" style="justify-self:start"></span>
+          <span class="to-modal-title">Ремонти</span>
+          <span class="veh-plate-badge" id="tom-vin" style="width:auto;justify-self:end">—</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
           <button class="to-modal-x" onclick="closeToModal()">✕</button>
