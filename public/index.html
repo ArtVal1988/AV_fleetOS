@@ -6166,13 +6166,11 @@ function addStickerComment(id){
 
 /* ── MILEAGE UPDATE ── */
 function showKmEditForm(vid){
-  document.getElementById('tom-km-edit-trigger').style.display='none';
   document.getElementById('to-km-form-'+vid).style.display='flex';
   document.getElementById('to-km-input-'+vid).focus();
   document.getElementById('to-km-input-'+vid).select();
 }
 function hideKmEditForm(vid){
-  document.getElementById('tom-km-edit-trigger').style.display='';
   document.getElementById('to-km-form-'+vid).style.display='none';
 }
 function saveCurrentKm(vid){
