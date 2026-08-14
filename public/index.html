@@ -4768,7 +4768,6 @@ function editBooking(bid){
   document.getElementById('bm-exchange-rate').value=b.exchangeRate||'';
   document.getElementById('bm-start-km').value=b.startKm?Number(b.startKm).toLocaleString('uk-UA'):'';
   document.getElementById('bm-end-km').value=b.endKm?Number(b.endKm).toLocaleString('uk-UA'):'';
-  updateKmDiff();
   loadDeductions(b.deductions||null);
   loadFines(b.fines||[]);
   loadRepairPause(b.repairPause||null);
@@ -4815,7 +4814,6 @@ function editBooking(bid){
   currentExtHistory = (b.extensionHistory||[]).slice();
   editingExtHistoryIndex = null;
   renderExtTimeline();
-  updateKmDiff();
 
   currentSubstitutes = (b.substituteVehicles||[]).slice();
   editingSubstituteIndex = null;
@@ -4850,6 +4848,7 @@ function editBooking(bid){
   document.getElementById('bm-days-override').value=b.daysOverride||'';
   daysOverrideTouched = !!(b.daysOverride>0);
   updateVatPreview();
+  updateKmDiff();
   document.getElementById('bm-discount').value=b.discount||0;
   document.getElementById('bm-notes-hidden').value=b.notes||'';
   document.getElementById('bm-new-note').value='';
