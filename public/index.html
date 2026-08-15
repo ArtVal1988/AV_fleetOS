@@ -3606,7 +3606,7 @@ function renderCalendar(){
           if(subInfo && subInfo.type==='active'){
             return`<td class="td-day substitute-covered${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
               data-vid="${v.id}" data-day="${d}"
-              onmouseenter="showTooltip(event,${subInfo.booking.id},{fromDate:'${subInfo.sub.fromDate}',toDate:'${subInfo.sub.toDate}'})"
+              onmouseenter="if(!isMobileViewport())showTooltip(event,${subInfo.booking.id},{fromDate:'${subInfo.sub.fromDate}',toDate:'${subInfo.sub.toDate}'})"
               onmouseleave="hideTooltip()"
               onclick="event.stopPropagation();expandBooking(${subInfo.booking.id})">
               <div class="day-cell booked" style="background:${SM['substitute']?.color||'#a78bfa'};color:#fff">
@@ -3698,7 +3698,7 @@ function renderCalendar(){
         const cellBg = isHalfLastDay ? 'transparent' : cellColor;
         return`<td class="td-day${dayRepair?' repair-pause-day':''}${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
-          onmouseenter="showTooltip(event,${booking.id})"
+          onmouseenter="if(!isMobileViewport())showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
           onclick="selectBooking(${booking.id},event)">
           <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${isHalfLastDay?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
