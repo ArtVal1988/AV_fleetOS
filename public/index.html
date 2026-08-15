@@ -5590,6 +5590,9 @@ function fitAttachViewerImage(img){
 function renderAttachViewerCurrent(){
   const items = _attachGalleries[_attachGalleryId];
   const item = items[_attachGalleryIndex];
+  _attachZoomScale = 1;
+  _attachCurrentDocId = item.docId || null;
+  _attachRefreshCallback = item.refreshCallback || null;
   const media = document.getElementById('attach-viewer-media');
   const isImg = (item.type && item.type.startsWith('image/')) || (item.src||'').startsWith('data:image');
   media.innerHTML = isImg
@@ -5607,6 +5610,11 @@ function renderAttachViewerCurrent(){
   const showNav = items.length > 1;
   if(prevBtn) prevBtn.style.display = showNav ? 'flex' : 'none';
   if(nextBtn) nextBtn.style.display = showNav ? 'flex' : 'none';
+  const rotL = document.getElementById('attach-viewer-rotate-left');
+  const rotR = document.getElementById('attach-viewer-rotate-right');
+  const showRotate = isImg && item.docId;
+  if(rotL) rotL.style.display = showRotate ? '' : 'none';
+  if(rotR) rotR.style.display = showRotate ? '' : 'none';
 }
 document.addEventListener('keydown', e => {
   if(!document.getElementById('attach-viewer')?.classList.contains('open')) return;
@@ -12183,12 +12191,16 @@ function renderClientDocsList(){
     wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає завантажених фото</div>';
     return;
   }
-  wrap.innerHTML = CLIENT_DOCS.map(d => {
+  registerAttachGallery('client-docs', CLIENT_DOCS.map(d => ({
+    src: d.url, name: labels[d.doc_type]||d.doc_type, type: d.mime_type,
+    docId: d.id, refreshCallback: renderClientDocsList
+  })));
+  wrap.innerHTML = CLIENT_DOCS.map((d,i) => {
     const thumb = d.thumbUrl || (d.mime_type && d.mime_type.startsWith('image/') ? d.url : null);
     const cacheBustThumb = thumb ? thumb + (thumb.includes('?')?'&':'?') + 't=' + (d._rotatedAt||0) : thumb;
     const preview = thumb ? `<img src="${cacheBustThumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
     return `<div style="position:relative;width:76px">
-      <a href="javascript:void(0)" onclick="viewAttachment('${(d.url||'').replace(/'/g,"\\'")}','${(labels[d.doc_type]||d.doc_type||'').replace(/'/g,"\\'")}','${d.mime_type||''}',${d.id},renderClientDocsList)" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
+      <a href="javascript:void(0)" onclick="viewAttachmentGallery('client-docs',${i})" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
       <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labels[d.doc_type]||d.doc_type}</div>
       <button type="button" onclick="deleteClientDoc(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
     </div>`;
