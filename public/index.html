@@ -327,6 +327,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* Custom (non-.modal) overlay panels — vehicle form, docs, insurance, ТО —
      all use this same inline padding convention; shrink it uniformly. */
   [style*="padding:22px 28px"],[style*="padding:20px 28px"]{padding:14px 14px 12px!important;}
+
+  /* Платежі основного періоду / Платежі за це продовження — the 377px
+     fixed-width payments column would overflow a mobile viewport; let it
+     fill the available width instead, and stack the row (payments box /
+     Залишок боргу / printer) vertically so nothing gets squeezed. */
+  #bm-main-payments-column,#bm-ext-payments-column{width:100%!important;}
+  #bm-main-payments-wrap>div[style*="align-items:flex-end"],
+  #bm-ext-fields>div[style*="align-items:flex-end"]{flex-direction:column!important;align-items:stretch!important;}
+  #bm-main-payments-block{padding-top:40px!important;}
+
+  /* КАСКО: Страхова компанія / Номер договору / від — inline 3-column grid,
+     not caught by the shared .fgrid rule below (different column count). */
+  div[style*="grid-template-columns:1fr 1fr 0.8fr"]{grid-template-columns:1fr!important;}
+  /* Реквізити для оплати: Код отримувача + Рахунок отримувача combined row. */
+  div[style*="grid-template-columns:1fr 1.4fr"]{grid-template-columns:1fr!important;}
 }
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
