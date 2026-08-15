@@ -5614,8 +5614,12 @@ document.addEventListener('keydown', e => {
   if(e.key === 'ArrowRight') attachViewerNav(1);
   if(e.key === 'Escape') closeAttachViewer();
 });
-function viewAttachment(data, name, mimeType){
+let _attachCurrentDocId = null;
+let _attachRefreshCallback = null;
+function viewAttachment(data, name, mimeType, docId, refreshCallback){
   _attachZoomScale = 1;
+  _attachCurrentDocId = docId || null;
+  _attachRefreshCallback = refreshCallback || null;
   const media = document.getElementById('attach-viewer-media');
   const isImg = (mimeType && mimeType.startsWith('image/')) || data.startsWith('data:image');
   media.innerHTML = isImg
@@ -5632,6 +5636,39 @@ function viewAttachment(data, name, mimeType){
   _attachGalleryId = null;
   if(prevBtn) prevBtn.style.display = 'none';
   if(nextBtn) nextBtn.style.display = 'none';
+  const rotL = document.getElementById('attach-viewer-rotate-left');
+  const rotR = document.getElementById('attach-viewer-rotate-right');
+  const showRotate = isImg && docId;
+  if(rotL) rotL.style.display = showRotate ? '' : 'none';
+  if(rotR) rotR.style.display = showRotate ? '' : 'none';
+}
+async function rotateCurrentAttachment(degrees){
+  if(!_attachCurrentDocId) return;
+  const btn = document.getElementById(degrees>0 ? 'attach-viewer-rotate-right' : 'attach-viewer-rotate-left');
+  const origHtml = btn ? btn.innerHTML : null;
+  if(btn){ btn.innerHTML = '⏳'; btn.disabled = true; }
+  try{
+    const res = await apiFetch('POST', '/client-documents/'+_attachCurrentDocId+'/rotate', { degrees });
+    if(!res){ alert('Не вдалося повернути файл'); return; }
+    // The file changed but the URL didn't — cache-bust so the browser
+    // actually re-fetches the newly-rotated image instead of showing the
+    // stale cached version.
+    const img = document.querySelector('#attach-viewer-media img');
+    if(img){
+      const base = img.src.split('?')[0];
+      img.src = base + '?t=' + Date.now();
+      fitAttachViewerImage(img);
+    }
+    if(_attachRefreshCallback){
+      const doc = (typeof CLIENT_DOCS !== 'undefined' ? CLIENT_DOCS : []).find(d => d.id === _attachCurrentDocId);
+      if(doc) doc._rotatedAt = Date.now();
+      _attachRefreshCallback();
+    }
+  } catch(e){
+    alert('Не вдалося повернути файл. Спробуйте ще раз.');
+  } finally {
+    if(btn){ btn.innerHTML = origHtml; btn.disabled = false; }
+  }
 }
 async function shareCurrentAttachment(){
   const dl = document.getElementById('attach-viewer-download');
@@ -12148,9 +12185,10 @@ function renderClientDocsList(){
   }
   wrap.innerHTML = CLIENT_DOCS.map(d => {
     const thumb = d.thumbUrl || (d.mime_type && d.mime_type.startsWith('image/') ? d.url : null);
-    const preview = thumb ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
+    const cacheBustThumb = thumb ? thumb + (thumb.includes('?')?'&':'?') + 't=' + (d._rotatedAt||0) : thumb;
+    const preview = thumb ? `<img src="${cacheBustThumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
     return `<div style="position:relative;width:76px">
-      <a href="javascript:void(0)" onclick="viewAttachment('${(d.url||'').replace(/'/g,"\\'")}','${(labels[d.doc_type]||d.doc_type||'').replace(/'/g,"\\'")}','${d.mime_type||''}')" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
+      <a href="javascript:void(0)" onclick="viewAttachment('${(d.url||'').replace(/'/g,"\\'")}','${(labels[d.doc_type]||d.doc_type||'').replace(/'/g,"\\'")}','${d.mime_type||''}',${d.id},renderClientDocsList)" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
       <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labels[d.doc_type]||d.doc_type}</div>
       <button type="button" onclick="deleteClientDoc(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
     </div>`;
@@ -14155,6 +14193,8 @@ function startAutoRefresh(){
     <button class="attach-viewer-nav attach-viewer-next" id="attach-viewer-next" onclick="attachViewerNav(1)">›</button>
     <div class="attach-viewer-bar">
       <span class="attach-viewer-name" id="attach-viewer-name"></span>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-left" onclick="rotateCurrentAttachment(-90)" style="display:none">⟲</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-right" onclick="rotateCurrentAttachment(90)" style="display:none">⟳</button>
       <a class="attach-viewer-btn" id="attach-viewer-download" download>⬇ Завантажити</a>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-share" onclick="shareCurrentAttachment()">📤 Надіслати</button>
     </div>

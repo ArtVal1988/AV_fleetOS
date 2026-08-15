@@ -137,4 +137,30 @@ router.delete('/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/client-documents/:id/rotate — body: { degrees: 90 | -90 | 180 }
+// Physically rotates and overwrites the file (and its thumbnail, if any) —
+// not just a view-only CSS rotation — so downloads/shares are correctly
+// oriented too, matching what the user sees.
+router.post('/:id/rotate', auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const degrees = Number(req.body?.degrees);
+  if (![90, -90, 180].includes(degrees)) return res.status(400).json({ error: 'Некоректний кут повороту' });
+  const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'Не знайдено' });
+  if (!THUMBNAIL_MIME.has(row.mime_type)) return res.status(400).json({ error: 'Цей тип файлу не можна повернути' });
+  try {
+    const fullPath = path.join(UPLOAD_DIR, row.filename);
+    const rotated = await sharp(fullPath).rotate(degrees).toBuffer();
+    await sharp(rotated).toFile(fullPath);
+    if (row.thumb_filename) {
+      const thumbPath = path.join(UPLOAD_DIR, row.thumb_filename);
+      const rotatedThumb = await sharp(thumbPath).rotate(degrees).toBuffer();
+      await sharp(rotatedThumb).toFile(thumbPath);
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Не вдалося повернути файл' });
+  }
+});
+
 module.exports = router;
