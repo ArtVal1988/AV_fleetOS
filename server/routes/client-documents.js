@@ -77,6 +77,46 @@ async function makeThumbnail(originalPath, dir) {
   return thumbName;
 }
 
+// POST /api/client-documents/:id/rotate — body: { degrees: 90 | -90 | 180 }
+// Physically rotates and overwrites the file (and its thumbnail, if any) —
+// not just a view-only CSS rotation — so downloads/shares are correctly
+// oriented too, matching what the user sees. Registered BEFORE the
+// /:cid/:key upload route below — both are POST with a 2-segment shape,
+// and Express matches whichever is registered first, so this MUST come
+// first or every rotate request gets silently swallowed by the upload
+// handler instead (cid='id', key='rotate').
+router.post('/:id/rotate', auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const degrees = Number(req.body?.degrees);
+  if (![90, -90, 180].includes(degrees)) {
+    console.error('[rotate] Invalid degrees for document', id, ':', req.body);
+    return res.status(400).json({ error: 'Некоректний кут повороту' });
+  }
+  const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
+  if (!row) {
+    console.error('[rotate] Document not found:', id);
+    return res.status(404).json({ error: 'Не знайдено' });
+  }
+  if (!THUMBNAIL_MIME.has(row.mime_type)) {
+    console.error('[rotate] Unsupported mime type for document', id, ':', row.mime_type);
+    return res.status(400).json({ error: 'Цей тип файлу не можна повернути' });
+  }
+  try {
+    const fullPath = path.join(UPLOAD_DIR, row.filename);
+    const rotated = await sharp(fullPath).rotate(degrees).toBuffer();
+    await sharp(rotated).toFile(fullPath);
+    if (row.thumb_filename) {
+      const thumbPath = path.join(UPLOAD_DIR, row.thumb_filename);
+      const rotatedThumb = await sharp(thumbPath).rotate(degrees).toBuffer();
+      await sharp(rotatedThumb).toFile(thumbPath);
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('[rotate] Failed for document', id, ':', e);
+    res.status(500).json({ error: 'Не вдалося повернути файл' });
+  }
+});
+
 // POST /api/client-documents/:cid/:key — upload one file (key = passport | license | other)
 router.post('/:cid/:key', auth, (req, res) => {
   upload.single('file')(req, res, async (err) => {
@@ -137,40 +177,5 @@ router.delete('/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
-// POST /api/client-documents/:id/rotate — body: { degrees: 90 | -90 | 180 }
-// Physically rotates and overwrites the file (and its thumbnail, if any) —
-// not just a view-only CSS rotation — so downloads/shares are correctly
-// oriented too, matching what the user sees.
-router.post('/:id/rotate', auth, async (req, res) => {
-  const id = Number(req.params.id);
-  const degrees = Number(req.body?.degrees);
-  if (![90, -90, 180].includes(degrees)) {
-    console.error('[rotate] Invalid degrees for document', id, ':', req.body);
-    return res.status(400).json({ error: 'Некоректний кут повороту' });
-  }
-  const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
-  if (!row) {
-    console.error('[rotate] Document not found:', id);
-    return res.status(404).json({ error: 'Не знайдено' });
-  }
-  if (!THUMBNAIL_MIME.has(row.mime_type)) {
-    console.error('[rotate] Unsupported mime type for document', id, ':', row.mime_type);
-    return res.status(400).json({ error: 'Цей тип файлу не можна повернути' });
-  }
-  try {
-    const fullPath = path.join(UPLOAD_DIR, row.filename);
-    const rotated = await sharp(fullPath).rotate(degrees).toBuffer();
-    await sharp(rotated).toFile(fullPath);
-    if (row.thumb_filename) {
-      const thumbPath = path.join(UPLOAD_DIR, row.thumb_filename);
-      const rotatedThumb = await sharp(thumbPath).rotate(degrees).toBuffer();
-      await sharp(rotatedThumb).toFile(thumbPath);
-    }
-    res.json({ ok: true });
-  } catch (e) {
-    console.error('[rotate] Failed for document', id, ':', e);
-    res.status(500).json({ error: 'Не вдалося повернути файл' });
-  }
-});
 
 module.exports = router;
