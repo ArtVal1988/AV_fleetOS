@@ -5569,6 +5569,24 @@ function attachViewerNav(delta){
   _attachGalleryIndex = (_attachGalleryIndex + delta + items.length) % items.length;
   renderAttachViewerCurrent();
 }
+// Guaranteed-correct sizing for the attachment viewer's <img> — bypasses
+// any CSS cascade/flexbox ambiguity entirely by computing and setting an
+// explicit pixel width/height once the image's real dimensions are known,
+// rather than relying on max-width/max-height (which repeatedly proved
+// unreliable here across several attempted CSS-only fixes).
+function fitAttachViewerImage(img){
+  const fit = () => {
+    const maxW = window.innerWidth * 0.9;
+    const maxH = window.innerHeight * 0.9;
+    const nw = img.naturalWidth || maxW;
+    const nh = img.naturalHeight || maxH;
+    const scale = Math.min(1, maxW / nw, maxH / nh); // never upscale past natural size
+    img.style.width = Math.round(nw * scale) + 'px';
+    img.style.height = Math.round(nh * scale) + 'px';
+  };
+  if(img.complete && img.naturalWidth) fit();
+  else img.addEventListener('load', fit, { once: true });
+}
 function renderAttachViewerCurrent(){
   const items = _attachGalleries[_attachGalleryId];
   const item = items[_attachGalleryIndex];
@@ -5577,6 +5595,7 @@ function renderAttachViewerCurrent(){
   media.innerHTML = isImg
     ? '<img src="'+item.src+'" alt="'+item.name+'">'
     : '<embed src="'+item.src+'" type="application/pdf">';
+  if(isImg) fitAttachViewerImage(media.querySelector('img'));
   const label = items.length > 1 ? item.name+' ('+(_attachGalleryIndex+1)+'/'+items.length+')' : item.name;
   document.getElementById('attach-viewer-name').textContent = label;
   const dl = document.getElementById('attach-viewer-download');
@@ -5602,6 +5621,7 @@ function viewAttachment(data, name, mimeType){
   media.innerHTML = isImg
     ? '<img src="'+data+'" alt="'+name+'">'
     : '<embed src="'+data+'" type="application/pdf">';
+  if(isImg) fitAttachViewerImage(media.querySelector('img'));
   document.getElementById('attach-viewer-name').textContent = name;
   const dl = document.getElementById('attach-viewer-download');
   dl.href = data;
