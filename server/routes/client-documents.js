@@ -118,6 +118,25 @@ router.post('/:id/rotate', auth, async (req, res) => {
 });
 
 // POST /api/client-documents/:cid/:key — upload one file (key = passport | license | other)
+// Resizes (only if larger than the cap, never upscales) and re-encodes at a
+// quality setting that's visually indistinguishable for document photos,
+// preserving the original format so the file extension still matches its
+// actual content. Returns the new file size in bytes, or null if this
+// format isn't handled here (left untouched).
+const COMPRESSIBLE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_DIMENSION = 2400;
+async function compressImageInPlace(filePath, mimeType) {
+  if (!COMPRESSIBLE_MIME.has(mimeType)) return null;
+  const pipeline = sharp(filePath).rotate() // auto-orient from EXIF before resizing, so the saved file doesn't rely on EXIF orientation anymore
+    .resize(MAX_DIMENSION, MAX_DIMENSION, { fit: 'inside', withoutEnlargement: true });
+  const encoded = mimeType === 'image/jpeg' ? pipeline.jpeg({ quality: 85, mozjpeg: true })
+    : mimeType === 'image/png' ? pipeline.png({ compressionLevel: 9, palette: true })
+    : pipeline.webp({ quality: 85 });
+  const buffer = await encoded.toBuffer();
+  await sharp(buffer).toFile(filePath);
+  return buffer.length;
+}
+
 router.post('/:cid/:key', auth, (req, res) => {
   upload.single('file')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message || 'Не вдалося завантажити файл' });
@@ -128,6 +147,12 @@ router.post('/:cid/:key', auth, (req, res) => {
 
     const relPath = path.relative(UPLOAD_DIR, req.file.path);
     const fixedOriginalName = fixEncoding(req.file.originalname);
+
+    let finalSize = req.file.size;
+    try {
+      const compressedSize = await compressImageInPlace(req.file.path, req.file.mimetype);
+      if (compressedSize) finalSize = compressedSize;
+    } catch (e) { /* compression failed — keep the original file as uploaded */ }
 
     let thumbRelPath = null;
     if (THUMBNAIL_MIME.has(req.file.mimetype)) {
@@ -140,14 +165,14 @@ router.post('/:cid/:key', auth, (req, res) => {
     const info = db.prepare(
       `INSERT INTO client_documents (client_id, doc_type, filename, thumb_filename, original_name, mime_type, size, uploaded_by, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-    ).run(cid, key, relPath, thumbRelPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
+    ).run(cid, key, relPath, thumbRelPath, fixedOriginalName, req.file.mimetype, finalSize, req.user?.id || null);
 
     res.json({
       id: info.lastInsertRowid,
       doc_type: key,
       name: fixedOriginalName,
       type: req.file.mimetype,
-      size: req.file.size,
+      size: finalSize,
       url: relPathToUrl(relPath),
       thumbUrl: thumbRelPath ? relPathToUrl(thumbRelPath) : null,
     });
