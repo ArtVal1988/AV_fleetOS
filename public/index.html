@@ -1741,6 +1741,14 @@ input.dm-pf-val.tel{font-size:14px;}
           <input id="cf-name" type="text" class="vf-inp" placeholder="Іваненко Олена Петрівна" style="width:100%">
         </div>
         <div style="flex:1">
+          <label class="vf-lbl">Тип клієнта</label>
+          <select id="cf-tier" class="vf-inp" style="width:100%">
+            <option value="new">🆕 Новий</option>
+            <option value="regular">🔁 Постійний</option>
+            <option value="vip">⭐ VIP</option>
+          </select>
+        </div>
+        <div style="flex:1">
           <label class="vf-lbl">Дата народження</label>
           <input id="cf-birthdate" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
         </div>
@@ -2372,7 +2380,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       <div class="fg-pair" style="grid-template-columns:1.05fr 0.95fr">
         <div class="fg fin-label-style" style="position:relative">
-          <label id="bm-name-label">ПІБ замовника</label>
+          <label id="bm-name-label">ПІБ замовника <span id="bm-client-tier-icon"></span></label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
               oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();updateBmExtraContactsInfo(null);" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
@@ -3864,7 +3872,7 @@ function showTooltip(e,bid,subContext){
   const ttClient = b.customer?.clientId ? (CLIENTS||[]).find(c=>c.id===b.customer.clientId) : null;
   const ttExtraContactsCount = ttClient?.extraContacts?.length || 0;
   nameRow = `<div style="margin-bottom:2px">
-    <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${primaryName}</span>
+    <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${clientTierIconHtml(b.customer?.clientId)}${primaryName}</span>
   </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${secondaryName}</div>`:'')
   + (b.customer?.phone?`<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:6px">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
 
@@ -9351,6 +9359,15 @@ function renderInsuranceModal(v){
 }
 
 function fmtCaseDate(s){ return s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—'; }
+const CLIENT_TIER_ICONS = { new:'🆕', regular:'🔁', vip:'⭐' };
+const CLIENT_TIER_LABELS = { new:'Новий клієнт', regular:'Постійний клієнт', vip:'VIP клієнт' };
+function clientTierIconHtml(clientId){
+  if(!clientId) return '';
+  const c = (CLIENTS||[]).find(x=>x.id===clientId);
+  if(!c) return '';
+  const tier = c.tier || 'new';
+  return `<span title="${CLIENT_TIER_LABELS[tier]}" style="margin-right:4px">${CLIENT_TIER_ICONS[tier]}</span>`;
+}
 function fmtCaseMn(n){ return n ? Number(n).toLocaleString('uk-UA')+' ₴' : '—'; }
 
 function buildInsuranceCasesSection(v){
@@ -10852,8 +10869,10 @@ function toggleBmExtraContactsPopup(e){
 function updateClientLinkButton(){
   const btn = document.getElementById('bm-goto-client-btn');
   if(!btn) return;
-  const hasClient = !!document.getElementById('bm-client-id')?.value;
-  btn.style.display = hasClient ? 'flex' : 'none';
+  const clientId = parseInt(document.getElementById('bm-client-id')?.value) || null;
+  btn.style.display = clientId ? 'flex' : 'none';
+  const tierIcon = document.getElementById('bm-client-tier-icon');
+  if(tierIcon) tierIcon.innerHTML = clientTierIconHtml(clientId);
 }
 function gotoClientCard(){
   const clientId = parseInt(document.getElementById('bm-client-id')?.value);
@@ -12135,6 +12154,7 @@ function openClientForm(id){
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
   document.getElementById('cf-name').value = c?.name || '';
+  document.getElementById('cf-tier').value = c?.tier || 'new';
   document.getElementById('cf-phone').value = c?.phone || '';
   loadExtraContacts(c?.extraContacts || []);
   document.getElementById('cf-birthdate').value = c?.birthdate || '';
@@ -12296,6 +12316,7 @@ async function saveClientForm(){
   const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
   const data = {
     name,
+    tier: document.getElementById('cf-tier').value,
     residency,
     phone: document.getElementById('cf-phone').value.trim(),
     extraContacts: currentExtraContacts,
