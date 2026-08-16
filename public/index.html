@@ -2934,20 +2934,22 @@ input.dm-pf-val.tel{font-size:14px;}
   <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
   <div class="modal-footer" id="bm-footer">
     <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none">✕ Видалити</button>
-    <label id="bm-closed-label" style="display:none;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
-      <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
-      ✅ Авто повернено. Замовлення закрито.
-    </label>
-    <div style="position:relative">
-      <button class="btn" id="bm-doc-history-btn" onclick="toggleBmDocHistory()" style="display:none;color:#6b7280;border-color:#e5e7eb">📋 Документи</button>
-      <div id="bm-doc-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:340px;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
-    </div>
     <div style="position:relative">
       <button class="btn" id="bm-edit-history-btn" onclick="toggleBmEditHistory()" style="display:none;color:#6b7280;border-color:#e5e7eb">🕐 Історія</button>
       <div id="bm-edit-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:380px;max-height:400px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
     </div>
-    <button class="btn" id="bm-gen-contract-btn" onclick="generateDocument('contract')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Договір</button>
-    <button class="btn" id="bm-gen-act-btn" onclick="generateDocument('act')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Акт</button>
+    <label id="bm-closed-label" style="display:none;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-size:11px;color:#166534;font-weight:600;white-space:nowrap">
+      <input type="checkbox" id="bm-closed" onchange="onOrderClosedToggle()" style="width:15px;height:15px;cursor:pointer">
+      ✅ Авто повернено. Замовлення закрито.
+    </label>
+    <div style="display:flex;gap:2px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:3px">
+      <div style="position:relative">
+        <button class="btn" id="bm-doc-history-btn" onclick="toggleBmDocHistory()" style="display:none;color:#6b7280;border:none;background:none">📋 Документи</button>
+        <div id="bm-doc-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:340px;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
+      </div>
+      <button class="btn" id="bm-gen-contract-btn" onclick="generateDocument('contract')" style="display:none;color:#2563eb;border:none;background:none">📄 Договір</button>
+      <button class="btn" id="bm-gen-act-btn" onclick="generateDocument('act')" style="display:none;color:#2563eb;border:none;background:none">📄 Акт</button>
+    </div>
     <button class="btn btn-primary" onclick="saveBooking()" style="margin-left:auto">Зберегти замовлення</button>
   </div>
 </div>
