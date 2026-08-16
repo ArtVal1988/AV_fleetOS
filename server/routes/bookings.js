@@ -92,4 +92,16 @@ router.delete('/:id', auth, (req, res) => {
   res.json({ ok: true });
 });
 
+// GET /api/bookings/:id/history — this booking's own change history
+// (create/update/delete entries), most recent first. Available to any
+// authenticated user (not admin-only, unlike the global activity feed),
+// since viewing the history of a booking you're already viewing/editing
+// is reasonable for any staff member managing it.
+router.get('/:id/history', auth, (req, res) => {
+  const rows = db.prepare(
+    'SELECT * FROM activity_log WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC'
+  ).all('booking', Number(req.params.id));
+  res.json(rows.map(r => ({ ...r, snapshot: r.snapshot ? JSON.parse(r.snapshot) : null })));
+});
+
 module.exports = router;

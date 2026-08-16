@@ -2942,6 +2942,10 @@ input.dm-pf-val.tel{font-size:14px;}
       <button class="btn" id="bm-doc-history-btn" onclick="toggleBmDocHistory()" style="display:none;color:#6b7280;border-color:#e5e7eb">📋 Документи</button>
       <div id="bm-doc-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:340px;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
     </div>
+    <div style="position:relative">
+      <button class="btn" id="bm-edit-history-btn" onclick="toggleBmEditHistory()" style="display:none;color:#6b7280;border-color:#e5e7eb">🕐 Історія</button>
+      <div id="bm-edit-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:380px;max-height:400px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
+    </div>
     <button class="btn" id="bm-gen-contract-btn" onclick="generateDocument('contract')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Договір</button>
     <button class="btn" id="bm-gen-act-btn" onclick="generateDocument('act')" style="display:none;color:#2563eb;border-color:#bfdbfe">📄 Акт</button>
     <button class="btn btn-primary" onclick="saveBooking()" style="margin-left:auto">Зберегти замовлення</button>
@@ -4667,6 +4671,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-gen-contract-btn').style.display='none';
   document.getElementById('bm-gen-act-btn').style.display='none';
   document.getElementById('bm-doc-history-btn').style.display='none';
+  document.getElementById('bm-edit-history-btn').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=(vid?'':'<option value="" selected disabled>Авто</option>')+ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>Статус</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
@@ -4766,6 +4771,8 @@ function editBooking(bid){
   document.getElementById('bm-gen-act-btn').style.display='';
   document.getElementById('bm-doc-history-btn').style.display='';
   document.getElementById('bm-doc-history-panel').style.display='none'; // reset from any previous booking's open panel
+  document.getElementById('bm-edit-history-btn').style.display='';
+  document.getElementById('bm-edit-history-panel').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===b.vehicleId?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}"${s.key===b.status?'selected':''} style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateCompanyToggleVisibility();
@@ -5259,6 +5266,61 @@ function renderBmDocHistory(docs){
       <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${color}15;color:${color};flex-shrink:0;white-space:nowrap">${d.doc_type === 'contract' ? '📄' : '📄'} ${typeLabel}</span>
       <div style="flex:1;min-width:0;font-size:10.5px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dateStr}${d.generated_by?' · '+d.generated_by:''}</div>
       <button onclick="downloadArchivedDoc(${d.id})" style="font-size:10px;padding:4px 9px;border-radius:5px;cursor:pointer;border:1px solid ${color}40;background:#fff;color:${color};font-family:inherit;font-weight:600;flex-shrink:0">⬇</button>
+    </div>`;
+  }).join('');
+}
+async function toggleBmEditHistory(){
+  const panel = document.getElementById('bm-edit-history-panel');
+  if(!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  if(isOpen){ panel.style.display = 'none'; return; }
+  panel.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:10px;text-align:center">Завантаження…</div>';
+  panel.style.display = 'block';
+  if(!editBid) return;
+  const entries = await apiFetch('GET', '/bookings/'+editBid+'/history');
+  renderBmEditHistory(Array.isArray(entries) ? entries : []);
+}
+const EDIT_HISTORY_FIELD_LABELS = {
+  status:'Статус', rate:'Ставка', currency:'Валюта', exchangeRate:'Курс', start:'Дата початку', end:'Дата завершення',
+  daysOverride:'Кількість днів', amountPaid:'Оплачено', partialPaymentActive:'Часткова оплата',
+  deposit:'Депозит', depositCur:'Валюта депозиту', pickupLocation:'Місце видачі', returnLocation:'Місце повернення',
+  startKm:'Пробіг на початку', endKm:'Пробіг в кінці', notes:'Примітки',
+};
+const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','vehicleId']); // never meaningfully change, or already implied by context
+function renderBmEditHistory(entries){
+  const panel = document.getElementById('bm-edit-history-panel');
+  if(!panel) return;
+  if(!entries.length){
+    panel.innerHTML = '<div style="font-size:11px;color:#9ca3af;padding:10px;text-align:center">Історія змін ще порожня.</div>';
+    return;
+  }
+  const actionMeta = { create:{label:'Створено', color:'#166534'}, update:{label:'Змінено', color:'#1d4ed8'}, delete:{label:'Видалено', color:'#dc2626'} };
+  panel.innerHTML = entries.map(e => {
+    const dt = new Date(e.created_at);
+    const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    const meta = actionMeta[e.action] || {label:e.action, color:'#6b7280'};
+    let diffHtml = '';
+    if(e.action === 'update' && e.snapshot?.before && e.snapshot?.after){
+      const before = e.snapshot.before, after = e.snapshot.after;
+      const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+      const changes = [];
+      keys.forEach(k => {
+        if(EDIT_HISTORY_SKIP_FIELDS.has(k)) return;
+        const bv = before[k], av = after[k];
+        if(JSON.stringify(bv) === JSON.stringify(av)) return;
+        const label = EDIT_HISTORY_FIELD_LABELS[k] || k;
+        const isObj = v => v !== null && typeof v === 'object';
+        const fmt = v => v===undefined?'—':v===null?'—':isObj(v)?'(змінено)':String(v);
+        changes.push(`<div style="font-size:10.5px;padding:2px 0"><span style="color:#6b7280">${label}:</span> <span style="color:#991b1b;text-decoration:line-through">${fmt(bv)}</span> → <span style="color:#166534;font-weight:600">${fmt(av)}</span></div>`);
+      });
+      diffHtml = changes.length ? changes.join('') : '<div style="font-size:10.5px;color:#9ca3af;font-style:italic">Без видимих змін</div>';
+    }
+    return `<div style="padding:8px 4px;border-bottom:1px solid #f0f2f5">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${meta.color}15;color:${meta.color};flex-shrink:0">${meta.label}</span>
+        <div style="flex:1;min-width:0;font-size:10.5px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dateStr}${e.user_name?' · '+e.user_name:''}</div>
+      </div>
+      ${diffHtml}
     </div>`;
   }).join('');
 }

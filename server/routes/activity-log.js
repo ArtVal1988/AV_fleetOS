@@ -4,10 +4,11 @@ const { auth, adminOnly } = require('./auth');
 
 // GET /api/activity-log — list recent entries (most recent first), optional filters
 router.get('/', auth, adminOnly, (req, res) => {
-  const { entityType, action, limit } = req.query;
+  const { entityType, entityId, action, limit } = req.query;
   let sql = 'SELECT * FROM activity_log WHERE 1=1';
   const params = [];
   if (entityType) { sql += ' AND entity_type = ?'; params.push(entityType); }
+  if (entityId) { sql += ' AND entity_id = ?'; params.push(Number(entityId)); }
   if (action) { sql += ' AND action = ?'; params.push(action); }
   sql += ' ORDER BY created_at DESC LIMIT ?';
   params.push(Math.min(Number(limit) || 200, 500));
