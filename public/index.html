@@ -5302,10 +5302,71 @@ async function toggleBmEditHistory(){
 const EDIT_HISTORY_FIELD_LABELS = {
   status:'Статус', rate:'Ставка', currency:'Валюта', exchangeRate:'Курс', start:'Дата початку', end:'Дата завершення',
   daysOverride:'Кількість днів', amountPaid:'Оплачено', partialPaymentActive:'Часткова оплата',
-  deposit:'Депозит', depositCur:'Валюта депозиту', pickupLocation:'Місце видачі', returnLocation:'Місце повернення',
-  startKm:'Пробіг на початку', endKm:'Пробіг в кінці', notes:'Примітки',
+  deposit:'Депозит', depositCur:'Валюта депозиту', depositPayMethod:'Спосіб оплати депозиту',
+  startKm:'Пробіг на початку', endKm:'Пробіг в кінці', notes:'Примітки', payMethod:'Спосіб оплати',
+  clientType:'Тип клієнта', vatRate:'Ставка ПДВ', discount:'Знижка', closed:'Закрито',
+  orderCompany:'Компанія замовлення', vehicleId:'Авто',
+  // Nested (dot-path) fields within common object-type fields:
+  'customer.name':'Клієнт', 'customer.phone':'Телефон клієнта', 'customer.company':'Компанія клієнта',
+  'customer.edrpou':'ЄДРПОУ', 'customer.clientId':'Прив\'язаний клієнт',
+  'pickup.date':'Дата видачі', 'pickup.time':'Час видачі', 'pickup.loc':'Місце видачі',
+  'ret.date':'Дата повернення', 'ret.time':'Час повернення', 'ret.loc':'Місце повернення',
+  'extension.active':'Продовження активне', 'extension.fromDate':'Продовження від', 'extension.toDate':'Продовження до',
+  'extension.days':'Днів продовження', 'extension.rate':'Ставка продовження', 'extension.cost':'Сума продовження',
+  'extension.currency':'Валюта продовження',
+  'repairPause.fromDate':'Ремонт від', 'repairPause.toDate':'Ремонт до',
 };
-const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','vehicleId']); // never meaningfully change, or already implied by context
+// Internal/metadata fields — never meaningful to show as a "change" to the user.
+const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','_updatedAt','_createdAt','_createdBy','_rotatedAt','_id']);
+const EDIT_HISTORY_ARRAY_LABELS = {
+  fines:'Штрафи', substituteVehicles:'Підмінні авто', extensionHistory:'Історія продовжень',
+  messengers:'Месенджери', payments:'Платежі', equipment:'Обладнання',
+};
+function fmtHistVal(v){
+  if(v===undefined || v===null || v==='') return '—';
+  if(typeof v==='boolean') return v ? 'так' : 'ні';
+  if(Array.isArray(v)) return null; // handled separately
+  if(typeof v==='object') return null; // handled separately
+  return String(v);
+}
+// Compares two values for one field and returns an array of {label, before, after}
+// display rows — recurses one level into plain objects (dot-path labels),
+// and summarizes arrays by count/content rather than a blind '(змінено)'.
+function diffHistoryField(key, bv, av, labelOverride){
+  const label = labelOverride || EDIT_HISTORY_FIELD_LABELS[key] || key;
+  const bIsArr = Array.isArray(bv), aIsArr = Array.isArray(av);
+  if(bIsArr || aIsArr){
+    const bArr = bIsArr ? bv : [], aArr = aIsArr ? av : [];
+    if(JSON.stringify(bArr) === JSON.stringify(aArr)) return [];
+    const arrLabel = EDIT_HISTORY_ARRAY_LABELS[key] || label;
+    if(bArr.length !== aArr.length){
+      const delta = aArr.length - bArr.length;
+      return [{label:arrLabel, before:bArr.length+' шт.', after:aArr.length+' шт.'+(delta>0?' (+'+delta+')':' ('+delta+')')}];
+    }
+    return [{label:arrLabel, before:'вміст', after:'змінено ('+aArr.length+' шт.)'}];
+  }
+  const bIsObj = bv !== null && typeof bv === 'object';
+  const aIsObj = av !== null && typeof av === 'object';
+  if(bIsObj || aIsObj){
+    const bObj = bIsObj ? bv : {}, aObj = aIsObj ? av : {};
+    if(JSON.stringify(bObj) === JSON.stringify(aObj)) return [];
+    const subKeys = new Set([...Object.keys(bObj), ...Object.keys(aObj)]);
+    let rows = [];
+    subKeys.forEach(sk => {
+      if(EDIT_HISTORY_SKIP_FIELDS.has(sk)) return;
+      rows = rows.concat(diffHistoryField(key+'.'+sk, bObj[sk], aObj[sk], EDIT_HISTORY_FIELD_LABELS[key+'.'+sk]));
+    });
+    // Object had a real difference but none of its sub-fields individually
+    // resolved to a displayable row (e.g. all nested values are themselves
+    // objects/arrays) — fall back to a generic note rather than showing nothing.
+    if(!rows.length) rows = [{label, before:'', after:'змінено'}];
+    return rows;
+  }
+  const bFmt = key === 'vehicleId' ? (getVehicle(bv)?.plate || fmtHistVal(bv)) : fmtHistVal(bv);
+  const aFmt = key === 'vehicleId' ? (getVehicle(av)?.plate || fmtHistVal(av)) : fmtHistVal(av);
+  if(bFmt === aFmt) return []; // same displayed value (e.g. null vs undefined both showing '—') — not a real visible change
+  return [{label, before:bFmt, after:aFmt}];
+}
 function renderBmEditHistory(entries){
   const panel = document.getElementById('bm-edit-history-panel');
   if(!panel) return;
@@ -5322,17 +5383,14 @@ function renderBmEditHistory(entries){
     if(e.action === 'update' && e.snapshot?.before && e.snapshot?.after){
       const before = e.snapshot.before, after = e.snapshot.after;
       const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
-      const changes = [];
+      let rows = [];
       keys.forEach(k => {
         if(EDIT_HISTORY_SKIP_FIELDS.has(k)) return;
-        const bv = before[k], av = after[k];
-        if(JSON.stringify(bv) === JSON.stringify(av)) return;
-        const label = EDIT_HISTORY_FIELD_LABELS[k] || k;
-        const isObj = v => v !== null && typeof v === 'object';
-        const fmt = v => v===undefined?'—':v===null?'—':isObj(v)?'(змінено)':String(v);
-        changes.push(`<div style="font-size:10.5px;padding:2px 0"><span style="color:#6b7280">${label}:</span> <span style="color:#991b1b;text-decoration:line-through">${fmt(bv)}</span> → <span style="color:#166534;font-weight:600">${fmt(av)}</span></div>`);
+        rows = rows.concat(diffHistoryField(k, before[k], after[k]));
       });
-      diffHtml = changes.length ? changes.join('') : '<div style="font-size:10.5px;color:#9ca3af;font-style:italic">Без видимих змін</div>';
+      diffHtml = rows.length
+        ? rows.map(r => `<div style="font-size:10.5px;padding:2px 0"><span style="color:#6b7280">${r.label}:</span> ${r.before?`<span style="color:#991b1b;text-decoration:line-through">${r.before}</span> → `:''}<span style="color:#166534;font-weight:600">${r.after}</span></div>`).join('')
+        : '<div style="font-size:10.5px;color:#9ca3af;font-style:italic">Без видимих змін</div>';
     }
     return `<div style="padding:8px 4px;border-bottom:1px solid #f0f2f5">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
