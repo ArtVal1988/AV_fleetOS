@@ -2101,6 +2101,18 @@ input.dm-pf-val.tel{font-size:14px;}
         <div><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
         <div><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
       </div>
+      <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin:14px 0 8px">Власник та техпаспорт</div>
+      <div style="margin-bottom:10px">
+        <label class="vf-lbl">ПІБ власника</label><input id="vf-owner-name" type="text" class="vf-inp" placeholder="Прізвище Ім'я По-батькові">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Телефон власника</label><input id="vf-owner-phone" type="text" class="vf-inp" placeholder="+380..."></div>
+        <div><label class="vf-lbl">ІПН власника</label><input id="vf-owner-inn" type="text" class="vf-inp no-spinner" placeholder="1234567890"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="vf-lbl">Номер техпаспорта</label><input id="vf-sts-number" type="text" class="vf-inp" placeholder="СХА123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
+        <div><label class="vf-lbl">Дата видачі техпаспорта</label><input type="date" readonly id="vf-sts-date" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
+      </div>
       <div style="margin-bottom:10px">
         <label class="vf-lbl">Тарифікація «клас» для перепробігу</label>
         <select id="vf-tariff-class" class="vf-inp" style="width:100%">
@@ -12944,9 +12956,13 @@ function renderVehiclesPanelList(){
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+          ${v.vin ? `<span style="font-family:var(--font-mono);font-size:10px;color:#9ca3af;flex-shrink:0">${v.vin}</span>` : ''}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
             ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
+            ${v.owner?.name ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">👤 ${v.owner.name}</div>` : ''}
+            ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
+            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📄 Техпаспорт: ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
           </div>
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
@@ -13095,6 +13111,11 @@ function openVehicleForm(vehicleId){
   document.getElementById('vf-category').value = v ? (CATEGORIES.find(c=>c.vehicles.includes(v))?.name || '') : '';
   document.getElementById('vf-vin').value = v?.vin || '';
   document.getElementById('vf-year').value = s.year || '';
+  document.getElementById('vf-owner-name').value = v?.owner?.name || '';
+  document.getElementById('vf-owner-phone').value = v?.owner?.phone || '';
+  document.getElementById('vf-owner-inn').value = v?.owner?.inn || '';
+  document.getElementById('vf-sts-number').value = v?.sts?.number || '';
+  document.getElementById('vf-sts-date').value = v?.sts?.date || '';
   document.getElementById('vf-color').value = s.color || '';
   document.getElementById('vf-bodytype').value = s.bodyType || '';
   document.getElementById('vf-pricelink').value = s.priceLink || '';
@@ -13151,6 +13172,11 @@ function saveVehicleForm(){
   const categoryName = document.getElementById('vf-category').value.trim() || 'Інше';
   const vin = document.getElementById('vf-vin').value.trim().toUpperCase();
   const year = parseInt(document.getElementById('vf-year').value) || null;
+  const ownerName = document.getElementById('vf-owner-name').value.trim();
+  const ownerPhone = document.getElementById('vf-owner-phone').value.trim();
+  const ownerInn = document.getElementById('vf-owner-inn').value.trim();
+  const stsNumber = document.getElementById('vf-sts-number').value.trim().toUpperCase();
+  const stsDate = document.getElementById('vf-sts-date').value;
 
   if(!brand || !model || !plate){
     errEl.textContent = 'Заповніть принаймні марку, модель і номерний знак';
@@ -13184,6 +13210,13 @@ function saveVehicleForm(){
     v.name = displayName;
     v.plate = plate;
     v.vin = vin;
+    if(!v.owner) v.owner = {};
+    v.owner.name = ownerName;
+    v.owner.phone = ownerPhone;
+    v.owner.inn = ownerInn;
+    if(!v.sts) v.sts = {};
+    v.sts.number = stsNumber;
+    v.sts.date = stsDate;
     v.specs = specs;
     v.category = categoryName;
     v.tariffClass = tariffClass;
@@ -13202,8 +13235,8 @@ function saveVehicleForm(){
       tariffClass,
       service: {lastKm:0, nextKm:0, lastDate:'', status:'ok'},
       insurance: null, osago: null, kasko: null,
-      sts: {number:'', date:''}, poaExpiry: null,
-      owner: null, trusted: null,
+      sts: {number: stsNumber, date: stsDate}, poaExpiry: null,
+      owner: (ownerName || ownerPhone || ownerInn) ? {name: ownerName, phone: ownerPhone, inn: ownerInn} : null, trusted: null,
       docs: {tech_passport:false, owner_passport:false, trusted_passport:false, poa_owner:false, poa_company:false, agency_contract:false, missingCount:0},
       works: []
     };
