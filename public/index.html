@@ -342,6 +342,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   div[style*="grid-template-columns:1fr 1fr 0.8fr"]{grid-template-columns:1fr!important;}
   /* Реквізити для оплати: Код отримувача + Рахунок отримувача combined row. */
   div[style*="grid-template-columns:1fr 1.4fr"]{grid-template-columns:1fr!important;}
+
+  /* Both grew significantly with today's new buttons (Історія, grouped
+     Документи/Договір/Акт block, ⟲⟳ rotate) with no wrap handling at all —
+     risking horizontal overflow or unreadable squeezing on narrow screens. */
+  .modal-footer{flex-wrap:wrap!important;padding:10px 14px 14px!important;row-gap:8px!important;}
+  .modal-footer .btn{font-size:10.5px!important;padding:7px 9px!important;}
+  .modal-footer > .btn.btn-primary{flex:1 1 100%!important;margin-left:0!important;order:99;}
+  #bm-closed-label{flex:1 1 100%!important;order:98;justify-content:center!important;}
+  .attach-viewer-bar{flex-wrap:wrap!important;justify-content:center!important;row-gap:6px!important;}
+  .attach-viewer-name{flex:1 1 100%!important;text-align:center;order:-1;}
+
+  /* Історія / Документи footer panels — fixed 380px/340px would overflow a
+     narrow phone screen entirely (no max-width safeguard existed at all).
+     position:absolute;left:0 is relative to the trigger button, which
+     isn't necessarily near the viewport's own left edge — pin to the
+     viewport itself instead, so it can never run off either edge. */
+  #bm-edit-history-panel,#bm-doc-history-panel{position:fixed!important;left:12px!important;right:12px!important;width:auto!important;max-width:none!important;bottom:auto!important;top:50%!important;transform:translateY(-50%);max-height:70vh!important;}
 }
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
