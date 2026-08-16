@@ -12956,16 +12956,19 @@ function renderVehiclesPanelList(){
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
-          ${v.vin ? `<span style="font-family:var(--font-mono);font-size:10px;color:#9ca3af;flex-shrink:0">${v.vin}</span>` : ''}
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
             ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
           </div>
-          ${(v.owner?.name || v.owner?.phone || v.owner?.inn || v.sts?.number || v.sts?.date) ? `
+          ${(v.owner?.name || v.owner?.phone || v.owner?.inn) ? `
           <div style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
-            ${v.owner?.name ? `<div style="font-size:11px;color:#6b7280">👤 ${v.owner.name}</div>` : ''}
+            <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.owner?.name||'—'}</div>
             ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
-            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📄 Техпаспорт: ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
+          </div>` : ''}
+          ${(v.vin || v.sts?.number || v.sts?.date) ? `
+          <div style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
+            <div style="font-size:13px;font-weight:600;color:#1a1d26;font-family:var(--font-mono)">${v.vin||'—'}</div>
+            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📄 ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
           </div>` : ''}
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
