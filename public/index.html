@@ -12138,15 +12138,13 @@ function renderClientsPanelList(){
     return;
   }
   list.innerHTML = items.map(c => {
-    const hasDocs = c.passportNum || c.licenseNum;
     const activeMsg = Object.entries(c.messengers||{}).find(([,m])=>m.active&&m.contact);
     const msgIcon = activeMsg ? `<img src="${MSG_ICON_DATA[activeMsg[0]]}" width="13" height="13" style="display:inline-block;vertical-align:middle;border-radius:3px;margin-left:5px" title="${MSG_CONFIG[activeMsg[0]]?.label||activeMsg[0]}">` : '';
+    const tier = c.tier || 'new';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
-      <div style="width:34px;height:34px;border-radius:50%;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#1a1d26;display:flex;align-items:center;gap:6px">${clientTierIconHtml(c.id)}<span>${c.name||'—'}</span><span style="font-weight:400;color:#6b7280">${c.phone||''}</span>${msgIcon}</div>
-        ${hasDocs?'<div style="font-size:11px;color:#6b7280;margin-top:2px">документи внесені</div>':''}
-      </div>
+      <div title="${CLIENT_TIER_LABELS[tier]}" style="width:34px;height:34px;border-radius:50%;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CLIENT_TIER_ICONS[tier]}</div>
+      <div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
+      <div style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
       <button onclick="openClientForm(${c.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">✎ Редагувати</button>
     </div>`;
   }).join('');
