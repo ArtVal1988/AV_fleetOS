@@ -12960,10 +12960,13 @@ function renderVehiclesPanelList(){
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
             ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
-            ${v.owner?.name ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">👤 ${v.owner.name}</div>` : ''}
+          </div>
+          ${(v.owner?.name || v.owner?.phone || v.owner?.inn || v.sts?.number || v.sts?.date) ? `
+          <div style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
+            ${v.owner?.name ? `<div style="font-size:11px;color:#6b7280">👤 ${v.owner.name}</div>` : ''}
             ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
             ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📄 Техпаспорт: ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
-          </div>
+          </div>` : ''}
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">
