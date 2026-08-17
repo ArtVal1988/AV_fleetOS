@@ -9138,6 +9138,7 @@ function openAddWorkModal(type){
   const v = ALL_VEHICLES.find(x=>x.id===toVehicleId); if(!v)return;
   editingWorkId = null;
   document.getElementById('aw-delete-btn').style.display = 'none';
+  document.getElementById('aw-files-section').style.display = 'none';
   document.getElementById('awm-title').textContent='Нова робота · '+v.plate;
   document.getElementById('aw-type').value=type||'';
   document.getElementById('aw-name').value='';
@@ -9155,6 +9156,8 @@ function openWorkDetail(workId){
   const w = (v.works||[]).find(x=>x.id===workId); if(!w)return;
   editingWorkId = workId;
   document.getElementById('aw-delete-btn').style.display = '';
+  document.getElementById('aw-files-section').style.display = '';
+  loadWorkFiles(v.id, workId);
   document.getElementById('awm-title').textContent='Робота · '+v.plate;
   document.getElementById('aw-type').value = w.type||'planned';
   document.getElementById('aw-name').value = w.name||'';
@@ -9264,6 +9267,53 @@ function saveWork(){
   persistVehicle(v);
   renderToKmBar(v); renderToTabs(v); render();
   if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') renderMaintenancePanelList();
+}
+let _currentWorkFiles = [];
+async function loadWorkFiles(vid, workId){
+  const all = await apiFetch('GET', '/documents/'+vid);
+  _currentWorkFiles = (Array.isArray(all) ? all : []).filter(d => d.doc_type === 'work_'+workId);
+  renderWorkFilesList();
+}
+function renderWorkFilesList(){
+  const wrap = document.getElementById('aw-files-list');
+  if(!wrap) return;
+  if(!_currentWorkFiles.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає доданих файлів</div>';
+    return;
+  }
+  registerAttachGallery('work-files', _currentWorkFiles.map(d => ({
+    src: d.url, name: d.original_name || 'Файл', type: d.mime_type,
+    docId: d.id, refreshCallback: renderWorkFilesList
+  })));
+  wrap.innerHTML = _currentWorkFiles.map((d,i) => {
+    const isImg = (d.mime_type||'').startsWith('image/');
+    const preview = d.thumbUrl ? `<img src="${d.thumbUrl}" style="width:100%;height:100%;object-fit:cover">` : (isImg ? '<div style="font-size:22px">🖼️</div>' : '<div style="font-size:22px">📄</div>');
+    return `<div style="position:relative;width:64px">
+      <a href="javascript:void(0)" onclick="viewAttachmentGallery('work-files',${i})" style="display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
+      <button type="button" onclick="event.stopPropagation();deleteWorkFile(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`;
+  }).join('');
+}
+async function uploadWorkFiles(fileList){
+  if(!editingWorkId || !fileList?.length) return;
+  const v = ALL_VEHICLES.find(x=>x.id===toVehicleId); if(!v)return;
+  for(const file of fileList){
+    const fd = new FormData();
+    fd.append('file', file);
+    try{
+      const res = await fetch(API_BASE+'/documents/'+v.id+'/work_'+editingWorkId, { method:'POST', headers:{Authorization:'Bearer '+_token}, body:fd });
+      const doc = await res.json();
+      if(res.ok && doc) _currentWorkFiles.push(doc);
+    }catch(e){ /* one failed upload shouldn't block the rest */ }
+  }
+  document.getElementById('aw-file-input').value = '';
+  renderWorkFilesList();
+}
+async function deleteWorkFile(docId){
+  if(!confirm('Видалити цей файл?')) return;
+  await apiFetch('DELETE', '/documents/'+docId);
+  _currentWorkFiles = _currentWorkFiles.filter(d=>d.id!==docId);
+  renderWorkFilesList();
 }
 function deleteWork(){
   if(!editingWorkId) return;
@@ -14378,6 +14428,12 @@ function startAutoRefresh(){
           </div>
         </div>
         <button type="button" class="to-add-btn" style="margin-top:4px" onclick="addMatRow()">+ Додати матеріал</button>
+      </div>
+      <div id="aw-files-section" style="display:none;margin-top:16px">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#2563eb;margin-bottom:8px">Фото та документи</div>
+        <div id="aw-files-list" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px"></div>
+        <input type="file" id="aw-file-input" accept="image/jpeg,image/png,image/webp,image/heic,application/pdf" multiple style="display:none" onchange="uploadWorkFiles(this.files)">
+        <button type="button" class="to-add-btn" onclick="document.getElementById('aw-file-input').click()">+ Додати фото / PDF</button>
       </div>
     </div>
     <div class="modal-footer" style="padding:0 24px 20px;display:flex;gap:8px;align-items:center;justify-content:space-between">
