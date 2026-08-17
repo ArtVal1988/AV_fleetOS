@@ -6236,6 +6236,10 @@ async function showVehicleSpecs(e, vid){
   }
 }
 function repositionSpecsPopupDesktop(popup, rect){
+  // maxHeight from a PREVIOUS call would otherwise constrain offsetHeight
+  // here too, making this always measure the old, capped height instead of
+  // the popup's true current content height — reset it first.
+  popup.style.maxHeight = 'none';
   let left = rect.left;
   let top = rect.bottom + 6;
   const actualHeight = popup.offsetHeight || 320;
