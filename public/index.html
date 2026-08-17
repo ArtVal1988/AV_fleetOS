@@ -14201,18 +14201,18 @@ document.addEventListener('keydown', e => {
   // Priority chain: only the topmost/most specific thing that's actually
   // open should close on a single Escape press — checking each with a
   // plain if() (no else) would close EVERYTHING simultaneously whenever
-  // a modal is stacked on top of a panel (e.g. vehicle insurance modal
-  // opened from the Страхування overview panel behind it).
-  if(document.getElementById('cal-osago-modal')?.classList.contains('open')) document.getElementById('cal-osago-modal').classList.remove('open');
-  else if(document.getElementById('cal-kasko-modal')?.classList.contains('open')) document.getElementById('cal-kasko-modal').classList.remove('open');
-  else if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
-  else if(document.getElementById('to-modal')?.classList.contains('open')) closeToModal();
-  else if(document.getElementById('ins-modal')?.classList.contains('open')) closeInsuranceModal();
-  // Client card is checked BEFORE booking-modal — when opened from within a
-  // booking (client is "on top"), Escape must close the client card first,
-  // not skip straight through to the booking modal underneath it. Any
-  // unsaved contact being entered gets its own warning before closing.
-  else if(document.getElementById('clients-panel-overlay')?.style.display==='flex'){
+  // a modal is stacked on top of a panel. Ordered strictly by actual
+  // z-index (highest/topmost first) — a lower item must never be checked
+  // before something that can open on top of it, or Escape closes the
+  // wrong (background) window while the actual topmost one stays open.
+  // z-index 9998 — admin dialogs opened from within Користувачі (500)
+  if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
+  else if(document.getElementById('edituser-overlay')?.style.display==='flex') closeEditUser();
+  // z-index 620 — snapshot detail opened from within Журнал дій (500)
+  else if(document.getElementById('al-snapshot-overlay')?.style.display==='flex') closeAlSnapshot();
+  // z-index 610 — client card, opened standalone or from within a booking.
+  // Any unsaved contact being entered gets its own warning before closing.
+  else if(document.getElementById('client-form-overlay')?.style.display==='flex'){
     if(document.getElementById('cf-ec-msg-popup')?.style.display==='block'){ closeMsgPopup('ec'); return; }
     const ecFormOpen = document.getElementById('cf-extra-contacts-form-wrap')?.style.display !== 'none';
     const ecHasUnsavedInput = ecFormOpen && (
@@ -14225,28 +14225,47 @@ document.addEventListener('keydown', e => {
       hideExtraContactsForm();
       return;
     }
-    closeClientsPanel();
+    closeClientForm();
   }
-  else if(document.getElementById('booking-modal')?.classList.contains('open')) closeBookingModal();
+  // z-index 600 — vehicle edit form, opened from within Автомобілі (500)
+  else if(document.getElementById('vehicle-form-overlay')?.style.display==='flex') closeVehicleForm();
+  // z-index 550 — opened from within their respective parent panels/modals
+  else if(document.getElementById('cal-osago-modal')?.classList.contains('open')) document.getElementById('cal-osago-modal').classList.remove('open');
+  else if(document.getElementById('cal-kasko-modal')?.classList.contains('open')) document.getElementById('cal-kasko-modal').classList.remove('open');
+  else if(document.getElementById('docs-modal')?.classList.contains('open')) closeDocsModal();
   else if(document.getElementById('add-work-modal')?.classList.contains('open')) document.getElementById('add-work-modal').classList.remove('open');
+  // z-index 520 — part edit form, opened from within Склад запчастин (500)
+  else if(document.getElementById('spare-part-form-overlay')?.style.display==='flex') closeSparePartForm();
+  // z-index 500 — top-level panels (mutually exclusive in practice, order
+  // between them doesn't matter, but all must come before the 300-tier)
+  else if(document.getElementById('clients-panel-overlay')?.style.display==='flex') closeClientsPanel();
   else if(document.getElementById('users-panel-overlay')?.style.display==='flex') closeUsersPanel();
   else if(document.getElementById('statuses-panel-overlay')?.style.display==='flex') closeStatusesPanel();
-  else if(document.getElementById('chpwd-overlay')?.style.display==='flex') closeChangePassword();
-  else if(document.getElementById('edituser-overlay')?.style.display==='flex') closeEditUser();
-  else if(document.getElementById('dashboard-panel-overlay')?.style.display==='flex') closeDashboard();
+  else if(document.getElementById('client-tiers-panel-overlay')?.style.display==='flex') closeClientTiersPanel();
   else if(document.getElementById('report-panel-overlay')?.style.display==='flex') closeReportPanel();
-  else if(document.getElementById('vehicle-form-overlay')?.style.display==='flex') closeVehicleForm();
   else if(document.getElementById('vehicles-panel-overlay')?.style.display==='flex') closeVehiclesPanel();
   else if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
-  else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
-  else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
-  else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
   else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
-  else if(document.getElementById('representatives-panel-overlay')?.style.display==='flex') closeRepresentativesPanel();
-  else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();
-  else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
   else if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
   else if(document.getElementById('activitylog-panel-overlay')?.style.display==='flex') closeActivityLogPanel();
+  // z-index 480
+  else if(document.getElementById('representatives-panel-overlay')?.style.display==='flex') closeRepresentativesPanel();
+  // z-index 400 — split (substitute vehicle) picker
+  else if(document.getElementById('split-modal-overlay')?.classList.contains('open')) closePanel();
+  // z-index 300
+  else if(document.getElementById('to-modal')?.classList.contains('open')) closeToModal();
+  else if(document.getElementById('ins-modal')?.classList.contains('open')) closeInsuranceModal();
+  else if(document.getElementById('booking-modal')?.classList.contains('open')) closeBookingModal();
+  else if(document.getElementById('sticker-popup-overlay')?.classList.contains('open')) closeStickerForm();
+  // z-index 290
+  else if(document.getElementById('dashboard-panel-overlay')?.style.display==='flex') closeDashboard();
+  // z-index 250
+  else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
+  else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
+  else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
+  // z-index 200 — outermost, checked last
+  else if(document.getElementById('maintenance-panel-overlay')?.style.display==='flex') closeMaintenancePanel();
+  else if(document.getElementById('settings-hub-panel-overlay')?.style.display==='flex') closeSettingsHubPanel();
 });
 // (outside-click-to-close intentionally removed — modals close only via their ✕ button)
 
