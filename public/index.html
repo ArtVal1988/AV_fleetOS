@@ -8020,35 +8020,13 @@ function saveRepairPause(){
   const reason = document.getElementById('bm-repair-reason').value.trim();
   if(!fromDate || !toDate){ alert('Вкажіть обидві дати ремонту'); return; }
   if(new Date(toDate) <= new Date(fromDate)){ alert('Дата "По" має бути пізніше за "З"'); return; }
-  // Undo any previously-applied shift first (editing an existing pause),
-  // so re-saving with different dates doesn't compound the return-date push.
-  const oldDays = repairPauseDays(currentRepairPause);
-  if(oldDays > 0){
-    const cur = document.getElementById('bm-return-date').value;
-    if(cur) setReturnDateShifted(cur, -oldDays);
-  }
   currentRepairPause = { fromDate, toDate, reason };
-  const newDays = repairPauseDays(currentRepairPause);
-  const cur = document.getElementById('bm-return-date').value;
-  if(cur) setReturnDateShifted(cur, newDays);
   hideRepairForm();
   renderRepairView();
 }
-function setReturnDateShifted(dateStr, deltaDays){
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + deltaDays);
-  const newStr = d.toISOString().split('T')[0];
-  document.getElementById('bm-return-date').value = newStr;
-  document.getElementById('bm-end').value = newStr;
-  daysOverrideTouched = false;
-  updateVatPreview();
-}
 function deleteRepairPause(){
   if(!currentRepairPause) return;
-  if(!confirm('Прибрати період ремонту? Дата повернення повернеться назад.')) return;
-  const days = repairPauseDays(currentRepairPause);
-  const cur = document.getElementById('bm-return-date').value;
-  if(cur && days > 0) setReturnDateShifted(cur, -days);
+  if(!confirm('Прибрати період ремонту?')) return;
   currentRepairPause = null;
   renderRepairView();
 }
@@ -11264,14 +11242,10 @@ function updateVatPreview(){
   const dualTotal = document.getElementById('bm-dual-total');
 
   // Day count depends only on dates, not on price — compute it whenever we
-  // have dates, even before a rate has been entered. Repair-pause days are
-  // excluded — the return date already shifted forward specifically to
-  // compensate the client with free extra days for time lost to repair, so
-  // those days must not also be counted as billable.
+  // have dates, even before a rate has been entered.
   const daysInput = document.getElementById('bm-days-override');
-  const repairDaysToExclude = repairPauseDays(currentRepairPause);
   if(startVal && endVal){
-    const autoDaysAlways = Math.max(1, countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value) - repairDaysToExclude);
+    const autoDaysAlways = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
     if(daysInput && !daysOverrideTouched) daysInput.value = autoDaysAlways;
   }
 
@@ -11279,7 +11253,7 @@ function updateVatPreview(){
   // (days override, services, and surcharge must always be visible/editable).
   if(!startVal || !endVal || !rate){ if(dualTotal) dualTotal.style.display='none'; return; }
 
-  const autoDays = Math.max(1, countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value) - repairDaysToExclude);
+  const autoDays = countBillableDays(startVal, document.getElementById('bm-pickup-time')?.value, endVal, document.getElementById('bm-return-time')?.value);
   if(daysInput && !daysOverrideTouched) daysInput.value = autoDays;
   const days = daysOverrideTouched && parseFloat(daysInput?.value) > 0 ? parseFloat(daysInput.value) : autoDays;
 
