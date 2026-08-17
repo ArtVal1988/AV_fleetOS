@@ -1889,29 +1889,6 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
 
-        <div class="msec-inner-sep">
-          <button type="button" class="extras-toggle" id="cf-license-toggle-btn" onclick="toggleCfLicensePanel()">
-            <span id="cf-license-toggle-icon">⊕</span>
-            <span>Посвідчення водія</span>
-            <span class="extras-toggle-chevron" id="cf-license-chevron">▾</span>
-          </button>
-          <div class="extras-panel" id="cf-license-panel" style="display:none">
-            <div style="display:flex;gap:10px;margin:12px 0">
-              <div style="flex:1">
-                <label class="vf-lbl">Номер посвідчення</label>
-                <input id="cf-license-num" type="text" class="vf-inp" placeholder="СХА123456" style="width:100%">
-              </div>
-              <div style="flex:1">
-                <label class="vf-lbl">Категорія</label>
-                <input id="cf-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
-              </div>
-              <div style="flex:1">
-                <label class="vf-lbl">Дата видачі</label>
-                <input id="cf-license-date" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div id="cf-nonresident-fields" style="display:none">
@@ -12269,9 +12246,6 @@ function openClientForm(id){
   document.getElementById('cf-idcard-date').value = c?.idcardDate || '';
   document.getElementById('cf-idcard-issuer').value = c?.idcardIssuer || '';
   document.getElementById('cf-inn').value = c?.inn || '';
-  document.getElementById('cf-license-num').value = c?.licenseNum || '';
-  document.getElementById('cf-license-cat').value = c?.licenseCat || '';
-  document.getElementById('cf-license-date').value = c?.licenseDate || '';
   document.getElementById('cf-nr-citizenship').value = c?.nrCitizenship || '';
   document.getElementById('cf-nr-passport-num').value = c?.nrPassportNum || '';
   document.getElementById('cf-nr-passport-date').value = c?.nrPassportDate || '';
@@ -12288,9 +12262,8 @@ function openClientForm(id){
   loadCfMessengers(c?.messengers||{});
   const hasPassport = !!(c?.passportNum || c?.passportDate || c?.passportIssuer);
   const hasIdcard = !!(c?.idcardNum || c?.idcardRecord || c?.idcardDate || c?.idcardIssuer);
-  const hasLicense = !!(c?.licenseNum || c?.licenseCat || c?.licenseDate);
   const hasNotes = !!(c?.notes);
-  [['passport',hasPassport],['idcard',hasIdcard],['license',hasLicense],['notes',hasNotes]].forEach(([key,hasData])=>{
+  [['passport',hasPassport],['idcard',hasIdcard],['notes',hasNotes]].forEach(([key,hasData])=>{
     const panel = document.getElementById('cf-'+key+'-panel') || document.getElementById('cf-doc-'+key+'-fields');
     const icon = document.getElementById('cf-'+key+'-toggle-icon');
     const chevron = document.getElementById('cf-'+key+'-chevron');
@@ -12364,15 +12337,6 @@ function updateCfDocLock(){
 document.addEventListener('input', e => {
   if(e.target.closest('#cf-doc-passport-fields') || e.target.closest('#cf-doc-idcard-fields')) updateCfDocLock();
 });
-function toggleCfLicensePanel(){
-  const panel = document.getElementById('cf-license-panel');
-  const icon = document.getElementById('cf-license-toggle-icon');
-  const chevron = document.getElementById('cf-license-chevron');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  if(icon) icon.textContent = isOpen ? '⊕' : '⊖';
-  if(chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
-}
 function toggleCfNotesPanel(){
   const panel = document.getElementById('cf-notes-panel');
   const icon = document.getElementById('cf-notes-toggle-icon');
@@ -12432,9 +12396,6 @@ async function saveClientForm(){
     idcardDate: document.getElementById('cf-idcard-date').value,
     idcardIssuer: document.getElementById('cf-idcard-issuer').value.trim(),
     inn: document.getElementById('cf-inn').value.trim(),
-    licenseNum: document.getElementById('cf-license-num').value.trim(),
-    licenseCat: document.getElementById('cf-license-cat').value.trim(),
-    licenseDate: document.getElementById('cf-license-date').value,
     messengers: readMessengersFromCf(),
     nrCitizenship: document.getElementById('cf-nr-citizenship').value.trim(),
     nrPassportNum: document.getElementById('cf-nr-passport-num').value.trim(),
