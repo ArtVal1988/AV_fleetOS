@@ -1683,6 +1683,15 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <button onclick="saveTariffClasses()" style="margin-top:16px;width:100%;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+      <div style="margin-top:22px;padding-top:16px;border-top:1px solid #e5e7eb">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Ставка ПДВ</div>
+        <div style="font-size:10.5px;color:#9ca3af;margin-bottom:10px">Єдине значення для всіх замовлень типу «ФОП з ПДВ» — більше не редагується в кожному замовленні окремо.</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="number" id="tf-vat-rate" min="0" max="100" step="1" class="vf-inp" style="width:80px" value="20">
+          <span style="font-size:13px;color:#6b7280">%</span>
+          <button onclick="saveDefaultVatRate()" style="margin-left:auto;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2540,9 +2549,9 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" inputmode="decimal" id="bm-exchange-rate" placeholder="00,00" style="width:56px;text-align:center;font-size:14px"
             oninput="formatExchangeRateInput(this);updateVatPreview()">
         </div>
-        <div class="fin-field fin-vat fin-label-style" id="bm-vat-field" style="display:none;flex:0 0 40px;min-width:40px">
-          <label style="white-space:nowrap;text-align:center;width:100%">ПДВ %</label>
-          <input type="number" id="bm-vat" value="20" min="0" max="100" style="width:40px;text-align:center;background:#fff8e6;border-color:#f0d060;" oninput="updateVatPreview()">
+        <div class="fin-field fin-label-style" id="bm-base-rate-field" style="display:none;flex:0 0 100px;min-width:100px">
+          <label style="white-space:nowrap;text-align:center;width:100%" title="Внутрішнє значення для звіту Excel — не впливає на документи для клієнта. Якщо порожнє, у звіті використовується поле «Вартість».">Баз. ставка/добу</label>
+          <input type="text" inputmode="decimal" id="bm-base-rate-excel" placeholder="—" style="width:100px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
         </div>
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
@@ -2999,6 +3008,9 @@ let TARIFF_CLASSES = [
   {key:'rep_lo',        label:'Представницький клас до 3,09 літрів',       rate:25.00, kmPerDay:350},
   {key:'rep_hi',        label:'Представницький клас від 3,10 літрів',      rate:45.00, kmPerDay:350},
 ];
+// Single global VAT rate for all ФОП з ПДВ bookings — no longer editable
+// per-booking, set once here in Тарифи settings instead.
+let DEFAULT_VAT_RATE = 20;
 const STATUSES=[
   {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
   {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
@@ -3271,16 +3283,16 @@ function resolveBookingDaySegments(b, nextVehicleBookingStart){
   // base's true end is that extension's own fromDate, not b.end itself.
   const baseToDate = (history.length && history[0].fromDate < b.end) ? history[0].fromDate : b.end;
   let prevEnd = baseToDate;
-  const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
+  const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: b.baseRateExcel || b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
   for(const h of history){
     const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
-    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: h.rate, currency: h.currency, exchangeRate: h.exchangeRate, days: h.days>0 ? h.days : null });
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: b.baseRateExcel || h.rate, currency: h.currency, exchangeRate: h.exchangeRate, days: h.days>0 ? h.days : null });
     prevEnd = h.toDate;
   }
   if(b.extension && b.extension.active){
     const ext = b.extension;
     const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
-    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: ext.rate, currency: ext.currency, exchangeRate: ext.exchangeRate, days: ext.days>0 ? ext.days : null });
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: b.baseRateExcel || ext.rate, currency: ext.currency, exchangeRate: ext.exchangeRate, days: ext.days>0 ? ext.days : null });
   }
 
   const map = new Map();
@@ -4797,7 +4809,7 @@ function openBookingModal(vid=null,start=null,end=null){
   updateClientTypeLock(false); // new booking — all client types selectable
   document.getElementById('bm-company').value='';
   document.getElementById('bm-edrpou').value='';
-  document.getElementById('bm-vat').value='20';
+  document.getElementById('bm-base-rate-excel').value='';
   document.getElementById('bm-exchange-rate').value='';
   loadMessengers([]);
   document.getElementById('extras-panel').style.display='none';
@@ -4862,7 +4874,7 @@ function editBooking(bid){
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
-  document.getElementById('bm-vat').value=b.vatRate||20;
+  document.getElementById('bm-base-rate-excel').value=b.baseRateExcel||'';
   document.getElementById('bm-exchange-rate').value=b.exchangeRate||'';
   document.getElementById('bm-start-km').value=b.startKm?Number(b.startKm).toLocaleString('uk-UA'):'';
   document.getElementById('bm-end-km').value=b.endKm?Number(b.endKm).toLocaleString('uk-UA'):'';
@@ -5230,8 +5242,9 @@ function saveBooking(){
       edrpou:document.getElementById('bm-edrpou').value.trim(),
       clientId: document.getElementById('bm-client-id')?.value ? parseInt(document.getElementById('bm-client-id').value) : null,
     },
-    vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?parseFloat(document.getElementById('bm-vat').value)||20:0;})(),
+    vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?DEFAULT_VAT_RATE:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
+    baseRateExcel: parseThousands(document.getElementById('bm-base-rate-excel').value) || null,
     exchangeRate: parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.'))||0,
     pickup:{date:document.getElementById('bm-pickup-date').value,time:document.getElementById('bm-pickup-time').value,loc:document.getElementById('bm-pickup-loc').value.trim()},
     ret:{date:document.getElementById('bm-return-date').value,time:document.getElementById('bm-return-time').value,loc:document.getElementById('bm-return-loc').value.trim()},
@@ -5362,7 +5375,7 @@ const EDIT_HISTORY_FIELD_LABELS = {
   orderCompany:'Компанія замовлення', vehicleId:'Авто',
   // Nested (dot-path) fields within common object-type fields:
   'customer.name':'Клієнт', 'customer.phone':'Телефон клієнта', 'customer.company':'Компанія клієнта',
-  'customer.edrpou':'ЄДРПОУ', 'customer.clientId':'Прив\'язаний клієнт',
+  'customer.edrpou':'ЄДРПОУ', 'customer.clientId':'Прив\'язаний клієнт', baseRateExcel:'Базова ставка (Excel)',
   'pickup.date':'Дата видачі', 'pickup.time':'Час видачі', 'pickup.loc':'Місце видачі',
   'ret.date':'Дата повернення', 'ret.time':'Час повернення', 'ret.loc':'Місце повернення',
   'extension.active':'Продовження активне', 'extension.fromDate':'Продовження від', 'extension.toDate':'Продовження до',
@@ -10556,8 +10569,8 @@ function setClientType(type, isUserAction = true){
   const companyLabel = document.querySelector('#bm-company-row label');
   if(companyLabel) companyLabel.textContent = 'Назва компанії (ФОП/ТОВ)';
 
-  // VAT field in finances
-  document.getElementById('bm-vat-field').style.display   = isVat ? '' : 'none';
+  // Base rate for Excel reporting — internal field, all business types
+  document.getElementById('bm-base-rate-field').style.display   = isCompany ? '' : 'none';
 
   // Business types (ФОП без ПДВ / ФОП з ПДВ / ТОВ з ПДВ): Вартість is always
   // in ₴ for these — hide the $/₴ currency pills and show a "з ПДВ"/"без ПДВ"
@@ -11156,7 +11169,7 @@ function updateVatPreview(){
   const isVat = type === 'fop' || type === 'tov';
 
   const rate    = parseThousands(document.getElementById('bm-rate').value);
-  const vatPct  = isVat ? (parseFloat(document.getElementById('bm-vat').value) || 0) : 0;
+  const vatPct  = isVat ? DEFAULT_VAT_RATE : 0;
   const cur     = document.getElementById('bm-currency').value;
   const exRate  = parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.')) || 0;
   // The typed number always belongs to whichever currency is currently
@@ -11907,6 +11920,7 @@ function saveWorkingHours(){
 function openTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='flex';
   renderTariffClassList();
+  document.getElementById('tf-vat-rate').value = DEFAULT_VAT_RATE;
 }
 function closeTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='none';
@@ -11950,6 +11964,11 @@ function saveTariffClasses(){
   });
   apiFetch('PUT','/settings/tariffClasses',{value:TARIFF_CLASSES.map(c=>({key:c.key, label:c.label, rate:c.rate, kmPerDay:c.kmPerDay}))});
   closeTariffsPanel();
+}
+function saveDefaultVatRate(){
+  DEFAULT_VAT_RATE = parseFloat(document.getElementById('tf-vat-rate').value) || 0;
+  apiFetch('PUT','/settings/defaultVatRate',{value:DEFAULT_VAT_RATE});
+  alert('Ставку ПДВ збережено');
 }
 function openInsuranceOverviewPanel(){
   document.getElementById('insurance-overview-panel-overlay').style.display='flex';
@@ -13761,6 +13780,9 @@ async function syncFromServer(){
       if(cls){ cls.rate = saved.rate; cls.kmPerDay = saved.kmPerDay; if(saved.label) cls.label = saved.label; }
       else { TARIFF_CLASSES.push({key:saved.key, label:saved.label||saved.key, rate:saved.rate, kmPerDay:saved.kmPerDay}); }
     });
+  }
+  if(sSettings && typeof sSettings.defaultVatRate === 'number'){
+    DEFAULT_VAT_RATE = sSettings.defaultVatRate;
   }
   if(sSettings && sSettings.workingHours){
     Object.assign(WORKING_HOURS, sSettings.workingHours);
