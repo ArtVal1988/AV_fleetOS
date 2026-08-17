@@ -13573,9 +13573,9 @@ async function loadUsersList(){
   const list = document.getElementById('users-list');
   list.innerHTML = users.map(u => `
     <div style="display:flex;flex-direction:column;gap:8px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:${u.active?'#fff':'#f9fafb'}">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</div>
-        <div style="font-size:11px;color:#9ca3af;margin-top:2px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</div>
+      <div style="font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</span>
+        <span style="color:#9ca3af;font-size:11px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
       ${u.id !== _currentUser?.id ? `
