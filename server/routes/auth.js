@@ -13,6 +13,12 @@ function auth(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Не авторизовано' });
   try {
     req.user = jwt.verify(token, SECRET);
+    // The token itself stays valid for up to EXPIRES regardless of what
+    // happens to the account afterward — re-check the DB on every request
+    // so a deactivated user is immediately kicked out, not just blocked
+    // from a fresh login while their existing session keeps working.
+    const row = db.prepare('SELECT active FROM users WHERE id = ?').get(req.user.id);
+    if (!row || !row.active) return res.status(401).json({ error: 'Обліковий запис деактивовано' });
     next();
   } catch {
     res.status(401).json({ error: 'Токен недійсний або прострочений' });
