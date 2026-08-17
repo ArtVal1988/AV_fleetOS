@@ -6218,26 +6218,40 @@ async function showVehicleSpecs(e, vid){
   } else {
     popup.style.transform = '';
     popup.style.width = '260px';
-    const rect = e.currentTarget.getBoundingClientRect();
-    let left = rect.left;
-    let top = rect.bottom + 6;
-    const actualHeight = popup.offsetHeight || 320;
-    // Keep it on-screen
-    const popupWidth = 260;
-    if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
-    if(top + actualHeight > window.innerHeight) top = Math.max(8, rect.top - actualHeight);
-    if(top < 8) top = 8;
-    popup.style.left = left + 'px';
-    popup.style.top = top + 'px';
-    // Constrain height to whatever room is actually left below the chosen
-    // top position, with scrolling — otherwise tall content (especially
-    // with price-comparison links appended at the bottom) can overflow off
-    // the bottom of the screen with no way to reach/copy it.
-    popup.style.maxHeight = `calc(100vh - ${Math.round(top)}px - 16px)`;
-    popup.style.overflowY = 'auto';
+    var specsPopupRect = e.currentTarget.getBoundingClientRect();
+    repositionSpecsPopupDesktop(popup, specsPopupRect);
   }
 
-  if(s?.priceLink || s?.priceLink2) await loadPriceIntoSpecsPopup(vid, s.priceLink, s.priceLink2);
+  if(s?.priceLink || s?.priceLink2) {
+    await loadPriceIntoSpecsPopup(vid, s.priceLink, s.priceLink2);
+    // The price-comparison table just loaded and can significantly grow the
+    // popup's height — re-run the same positioning logic now that the
+    // popup's TRUE final height is known, so it flips upward if needed
+    // instead of just scrolling within an overflowing-off-screen box.
+    // Reuses the SAME captured rect from before the await, rather than
+    // re-accessing e.currentTarget (safer against any DOM changes meanwhile).
+    if(!isMobile && popup.dataset.vid == String(vid) && specsPopupRect){
+      repositionSpecsPopupDesktop(popup, specsPopupRect);
+    }
+  }
+}
+function repositionSpecsPopupDesktop(popup, rect){
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  const actualHeight = popup.offsetHeight || 320;
+  // Keep it on-screen
+  const popupWidth = 260;
+  if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
+  if(top + actualHeight > window.innerHeight) top = Math.max(8, rect.top - actualHeight);
+  if(top < 8) top = 8;
+  popup.style.left = left + 'px';
+  popup.style.top = top + 'px';
+  // Constrain height to whatever room is actually left below the chosen
+  // top position, with scrolling as a last-resort fallback only — in the
+  // normal case the flip-upward logic above already keeps everything
+  // visible without needing to scroll at all.
+  popup.style.maxHeight = `calc(100vh - ${Math.round(top)}px - 16px)`;
+  popup.style.overflowY = 'auto';
 }
 
 async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
