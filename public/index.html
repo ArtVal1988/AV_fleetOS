@@ -3903,8 +3903,8 @@ function showTooltip(e,bid,subContext){
   const retRow = isSpecialStatus
     ? ''
     : (!b.ret?.loc || b.ret.loc === BM_DEFAULT_ADDRESS)
-      ? `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''} · Офіс</span></div>`
-      : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
+      ? `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.end||b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''} · Офіс</span></div>`
+      : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(b.end||b.ret?.date)}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
         `<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.ret.loc}</div>`;
 
   // 4: extras + equipment
