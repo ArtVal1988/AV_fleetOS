@@ -1460,6 +1460,21 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
 </div>
 
+<!-- CLIENT TIERS PANEL -->
+<div id="client-tiers-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:560px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">🏷️ Статуси клієнтів</div>
+      <button onclick="closeClientTiersPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список статусів</div>
+      <div id="client-tiers-list"></div>
+      <button onclick="addNewClientTier()" style="width:100%;margin-top:8px;padding:10px;border:1px dashed #d1d5db;border-radius:8px;background:none;font-family:inherit;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer">+ Додати статус</button>
+    </div>
+  </div>
+</div>
+
 <!-- VEHICLES LIST PANEL -->
 <!-- DASHBOARD PANEL -->
 <div id="dashboard-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:290;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
@@ -1614,6 +1629,11 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="font-size:13px;font-weight:700;color:var(--text)">Статуси</div>
         <div style="font-size:10.5px;color:#9ca3af">Кольори, назви, рівні статусів</div>
       </div>
+      <div onclick="openClientTiersPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:22px">🎖️</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Статуси клієнтів</div>
+        <div style="font-size:10.5px;color:#9ca3af">Новий, постійний тощо — кольори, іконки</div>
+      </div>
       <div onclick="openRepresentativesPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
         <div style="font-size:22px">🖋</div>
         <div style="font-size:13px;font-weight:700;color:var(--text)">Дані ФОП та шаблони договорів/актів</div>
@@ -1742,11 +1762,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div style="flex:1">
           <label class="vf-lbl">Тип клієнта</label>
-          <select id="cf-tier" class="vf-inp" style="width:100%">
-            <option value="new">🆕 Новий</option>
-            <option value="regular">🔁 Постійний</option>
-            <option value="vip">⭐ VIP</option>
-          </select>
+          <select id="cf-tier" class="vf-inp" style="width:100%"></select>
         </div>
         <div style="flex:1">
           <label class="vf-lbl">Дата народження</label>
@@ -9359,14 +9375,32 @@ function renderInsuranceModal(v){
 }
 
 function fmtCaseDate(s){ return s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—'; }
-const CLIENT_TIER_ICONS = { new:'🆕', regular:'🔁', vip:'⭐' };
-const CLIENT_TIER_LABELS = { new:'Новий клієнт', regular:'Постійний клієнт', vip:'VIP клієнт' };
+let CLIENT_TIERS = [
+  {key:'new',      label:'Новий',              color:'#2563eb', icon:'🆕'},
+  {key:'regular',  label:'Постійний',          color:'#166534', icon:'🔁'},
+  {key:'negative', label:'Негативний досвід',  color:'#dc2626', icon:'⚠️'},
+];
+const CTM = Object.fromEntries(CLIENT_TIERS.map(t=>[t.key,t]));
+try{
+  const savedClientTiers = JSON.parse(localStorage.getItem('av_fleetos_client_tiers')||'null');
+  if(Array.isArray(savedClientTiers) && savedClientTiers.length){
+    CLIENT_TIERS.length = 0;
+    savedClientTiers.forEach(t=>CLIENT_TIERS.push(t));
+    Object.keys(CTM).forEach(k=>delete CTM[k]);
+    CLIENT_TIERS.forEach(t=>CTM[t.key]=t);
+  }
+}catch(e){}
+function saveClientTiersToStorage(){
+  try{ localStorage.setItem('av_fleetos_client_tiers', JSON.stringify(CLIENT_TIERS)); }catch(e){}
+  apiFetch('PUT','/settings/client-tiers',{value:CLIENT_TIERS});
+}
 function clientTierIconHtml(clientId){
   if(!clientId) return '';
   const c = (CLIENTS||[]).find(x=>x.id===clientId);
   if(!c) return '';
-  const tier = c.tier || 'new';
-  return `<span title="${CLIENT_TIER_LABELS[tier]}" style="margin-right:4px">${CLIENT_TIER_ICONS[tier]}</span>`;
+  const t = CTM[c.tier || 'new'];
+  if(!t) return '';
+  return `<span title="${t.label}" style="margin-right:4px">${t.icon}</span>`;
 }
 function fmtCaseMn(n){ return n ? Number(n).toLocaleString('uk-UA')+' ₴' : '—'; }
 
@@ -12140,9 +12174,9 @@ function renderClientsPanelList(){
   list.innerHTML = items.map(c => {
     const activeMsgs = Object.entries(c.messengers||{}).filter(([,m])=>m.active&&m.contact);
     const msgIcon = activeMsgs.map(([type])=>`<img src="${MSG_ICON_DATA[type]}" width="13" height="13" style="display:inline-block;vertical-align:middle;border-radius:3px;margin-left:5px" title="${MSG_CONFIG[type]?.label||type}">`).join('');
-    const tier = c.tier || 'new';
+    const tierInfo = CTM[c.tier || 'new'] || CTM.new;
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
-      <div title="${CLIENT_TIER_LABELS[tier]}" style="width:34px;height:34px;border-radius:50%;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CLIENT_TIER_ICONS[tier]}</div>
+      <div title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
       <div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
       <div style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
       <button onclick="openClientForm(${c.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">✎ Редагувати</button>
@@ -12154,6 +12188,7 @@ function openClientForm(id){
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
   document.getElementById('cf-name').value = c?.name || '';
+  document.getElementById('cf-tier').innerHTML = CLIENT_TIERS.map(t=>`<option value="${t.key}">${t.icon} ${t.label}</option>`).join('');
   document.getElementById('cf-tier').value = c?.tier || 'new';
   document.getElementById('cf-phone').value = c?.phone || '';
   loadExtraContacts(c?.extraContacts || []);
@@ -13378,6 +13413,80 @@ function updateStatusColor(key, value){
   render();
 }
 
+function openClientTiersPanel(){
+  document.getElementById('client-tiers-panel-overlay').style.display='flex';
+  renderClientTiersPanelList();
+}
+function closeClientTiersPanel(){
+  document.getElementById('client-tiers-panel-overlay').style.display='none';
+}
+function renderClientTiersPanelList(){
+  const list = document.getElementById('client-tiers-list');
+  list.innerHTML = CLIENT_TIERS.map(t => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
+      <input type="text" value="${t.icon}" maxlength="4" onchange="updateClientTierIcon('${t.key}',this.value)"
+        style="width:40px;height:32px;border:1px solid #e5e7eb;border-radius:6px;text-align:center;font-size:16px;flex-shrink:0" title="Іконка (emoji)">
+      <input type="color" value="${t.color}" onchange="updateClientTierColor('${t.key}',this.value)"
+        style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
+      <input type="text" value="${t.label}" onchange="updateClientTierLabel('${t.key}',this.value)"
+        style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${t.color};outline:none">
+      <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${t.key}</span>
+      <button onclick="deleteClientTier('${t.key}')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>
+    </div>
+  `).join('');
+}
+function addNewClientTier(){
+  let n = 1;
+  while(CTM['custom'+n]) n++;
+  const key = 'custom'+n;
+  const newTier = {key, label:'Новий статус', color:'#9ca3af', icon:'🏷️'};
+  CLIENT_TIERS.push(newTier);
+  CTM[key] = newTier;
+  saveClientTiersToStorage();
+  renderClientTiersPanelList();
+}
+function deleteClientTier(key){
+  const t = CTM[key];
+  if(!t) return;
+  const inUse = CLIENTS.filter(c=>c.tier===key).length;
+  const msg = inUse>0
+    ? `Статус "${t.label}" використовується у ${inUse} клієнт${inUse===1?'а':inUse<5?'ів':'ів'}. Видалити його все одно? Ці клієнти залишаться зі старим статусом у даних, але він більше не відображатиметься у списку.`
+    : `Видалити статус "${t.label}"?`;
+  if(!confirm(msg)) return;
+  const idx = CLIENT_TIERS.findIndex(x=>x.key===key);
+  if(idx!==-1) CLIENT_TIERS.splice(idx,1);
+  delete CTM[key];
+  saveClientTiersToStorage();
+  renderClientTiersPanelList();
+  renderClientsPanelList();
+}
+function updateClientTierLabel(key, value){
+  const t = CTM[key];
+  value = value.trim();
+  if(!t || !value) { renderClientTiersPanelList(); return; }
+  t.label = value;
+  saveClientTiersToStorage();
+  renderClientTiersPanelList();
+  renderClientsPanelList();
+}
+function updateClientTierColor(key, value){
+  const t = CTM[key];
+  if(!t) return;
+  t.color = value;
+  saveClientTiersToStorage();
+  renderClientTiersPanelList();
+  renderClientsPanelList();
+}
+function updateClientTierIcon(key, value){
+  const t = CTM[key];
+  value = value.trim();
+  if(!t || !value) { renderClientTiersPanelList(); return; }
+  t.icon = value;
+  saveClientTiersToStorage();
+  renderClientTiersPanelList();
+  renderClientsPanelList();
+}
+
 async function loadUsersList(){
   const users = await apiFetch('GET','/auth/users');
   if(!users) return;
@@ -13687,6 +13796,16 @@ async function syncFromServer(){
     // (its local STATUSES, e.g. loaded from its own localStorage), so this
     // becomes the shared baseline for every other device going forward.
     apiFetch('PUT','/settings/statuses',{value:STATUSES});
+  }
+  if(sSettings && Array.isArray(sSettings.clientTiers) && sSettings.clientTiers.length){
+    CLIENT_TIERS.length = 0;
+    sSettings.clientTiers.forEach(t=>CLIENT_TIERS.push(t));
+    Object.keys(CTM).forEach(k=>delete CTM[k]);
+    CLIENT_TIERS.forEach(t=>CTM[t.key]=t);
+    try{ localStorage.setItem('av_fleetos_client_tiers', JSON.stringify(CLIENT_TIERS)); }catch(e){}
+    if(document.getElementById('client-tiers-panel-overlay')?.style.display==='flex') renderClientTiersPanelList();
+  } else if(sSettings && !sSettings.clientTiers){
+    apiFetch('PUT','/settings/client-tiers',{value:CLIENT_TIERS});
   }
   ALL_VEHICLES.forEach(v => { if(v.service) v.service.status = computeServiceStatus(v); });
   renderStickers(); render();
