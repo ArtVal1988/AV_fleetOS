@@ -2396,10 +2396,11 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       <div class="fg-pair" style="grid-template-columns:1.05fr 0.95fr">
         <div class="fg fin-label-style" style="position:relative">
-          <label id="bm-name-label">ПІБ замовника <span id="bm-client-tier-icon"></span></label>
+          <label id="bm-name-label">ПІБ замовника</label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
               oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();updateBmExtraContactsInfo(null);" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
+            <span id="bm-client-tier-icon" style="font-size:16px;flex-shrink:0"></span>
             <button type="button" id="bm-goto-client-btn" onclick="gotoClientCard()" title="Відкрити картку клієнта" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;align-items:center;justify-content:center;font-size:13px;padding:0">👤</button>
           </div>
           <input type="hidden" id="bm-client-id" value="">
