@@ -1327,7 +1327,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <body>
 <div id="login-overlay" style="position:fixed;inset:0;background:#dde1e8;z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;padding:40px 44px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+  <div id="login-form-box" style="display:none;background:#fff;border-radius:16px;padding:40px 44px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.15)">
     <img src="/logo.png" alt="AV-FCS" style="width:100%;height:auto;display:block;margin-bottom:6px">
     <div style="text-align:center;margin:16px 0 28px;padding:10px 8px;background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:1px solid #dbeafe;border-radius:10px">
       <div style="font-weight:800;color:#2563eb;font-size:15px;letter-spacing:.3px">+38 098 333 66 99</div>
@@ -11784,6 +11784,7 @@ async function apiFetch(method, path, body){
 
 function showLoginOverlay(){
   document.getElementById('login-overlay').style.display='flex';
+  document.getElementById('login-form-box').style.display='block';
   document.getElementById('user-badge').style.display='none';
 }
 function hideLoginOverlay(){
