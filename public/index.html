@@ -4105,7 +4105,7 @@ function showTooltip(e,bid,subContext){
     <div class="tt-divider"></div>
     <div style="background:#f0906014;border-radius:6px;padding:8px 10px">
     <div class="tt-label" style="margin-bottom:4px">🔧 В ремонті</div>
-    <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Період</span><span class="tt-val">${fmt(b.repairPause.fromDate)}–${fmt(b.repairPause.toDate)}</span></div>
+    <div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">Період</span><span class="tt-val">${fmt(b.repairPause.fromDate)}–${fmt(b.repairPause.toDate)} (${repairPauseDays(b.repairPause)} д)</span></div>
     ${b.repairPause.reason ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">${b.repairPause.reason}</div>` : ''}
     </div>
   ` : '';
