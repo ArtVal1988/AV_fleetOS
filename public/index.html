@@ -1091,7 +1091,8 @@ textarea{resize:vertical;min-height:56px;}
 .docs-modal{background:#fff;border:1px solid #e5e7eb;border-radius:14px;width:600px;max-width:calc(100vw - 24px);max-height:92vh;overflow-y:auto;overflow-x:hidden;transform:translateY(20px);transition:transform .2s;box-shadow:0 20px 60px rgba(0,0,0,.2);-webkit-overflow-scrolling:touch;}
 .docs-modal-overlay.open .docs-modal{transform:translateY(0);}
 .docs-modal-body input, .docs-modal-body select, .docs-modal-body textarea{opacity:.7;background:#f9fafb;}
-#cal-kasko-modal .docs-modal-body input, #cal-kasko-modal .docs-modal-body select, #cal-kasko-modal .docs-modal-body textarea{opacity:1;background:#fff;}
+#cal-case-modal .docs-modal{border-color:#002f8d;}
+#cal-case-modal .docs-modal-body input, #cal-case-modal .docs-modal-body select, #cal-case-modal .docs-modal-body textarea{opacity:1;background:#fff;}
 .docs-modal-body.dm-edit-active input, .docs-modal-body.dm-edit-active select, .docs-modal-body.dm-edit-active textarea{pointer-events:auto;opacity:1;background:#fff;}
 .dm-edit-only{display:none;}
 .docs-modal-body.dm-edit-active .dm-edit-only{display:block;}
@@ -14626,9 +14627,11 @@ function startAutoRefresh(){
         <div class="fg"><label>Статус</label><select id="cm-status"></select></div>
         <div class="fg full"><label>Короткий заголовок</label><input type="text" id="cm-titlefield" placeholder="Зіткнення на парковці"></div>
         <div class="fg full"><label>Опис</label><textarea id="cm-desc" style="min-height:56px;width:100%" placeholder="Деталі випадку..."></textarea></div>
-        <div class="fg"><label>Сума збитку (₴)</label><input type="number" id="cm-damage" placeholder="0"></div>
-        <div class="fg"><label>Франшиза (₴)</label><input type="number" id="cm-deductible" placeholder="0"></div>
-        <div class="fg"><label>Сума виплати (₴)</label><input type="number" id="cm-payout" placeholder="0"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px">
+        <div class="fg" style="flex:1"><label>Сума збитку (₴)</label><input type="number" id="cm-damage" placeholder="0"></div>
+        <div class="fg" style="flex:1"><label>Франшиза (₴)</label><input type="number" id="cm-deductible" placeholder="0"></div>
+        <div class="fg" style="flex:1"><label>Сума виплати (₴)</label><input type="number" id="cm-payout" placeholder="0"></div>
       </div>
       <div style="margin-top:12px">
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7c3aed;margin-bottom:8px">Файли</div>
