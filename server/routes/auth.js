@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 
-const SECRET = process.env.JWT_SECRET || 'change_me';
+const SECRET = process.env.JWT_SECRET || 'av_fleetos_2026_08_17_force_relogin';
 const EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
 
 // ── Middleware: verify token ─────────────────────────────────────
