@@ -9130,7 +9130,7 @@ function renderToTabs(v){
 
   document.getElementById('to-tab-all').innerHTML =
     (allWorks.length ? allWorks.map(workRow).join('') : '<div class="to-empty">Проведених робіт ще немає</div>') +
-    '<button class="to-add-btn" onclick="openAddWorkModal(\'planned\')">+ Додати роботу</button>';
+    '<button class="to-add-btn" onclick="openAddWorkModal()">+ Додати роботу</button>';
 }
 
 let editingWorkId = null;
@@ -9139,7 +9139,7 @@ function openAddWorkModal(type){
   editingWorkId = null;
   document.getElementById('aw-delete-btn').style.display = 'none';
   document.getElementById('awm-title').textContent='Нова робота · '+v.plate;
-  document.getElementById('aw-type').value=type||'planned';
+  document.getElementById('aw-type').value=type||'';
   document.getElementById('aw-name').value='';
   document.getElementById('aw-desc').value='';
   document.getElementById('aw-date').value=new Date().toISOString().split('T')[0];
@@ -9168,7 +9168,7 @@ function openWorkDetail(workId){
   recalcPartsCost();
   document.getElementById('add-work-modal').classList.add('open');
 }
-function openAddWorkForm(){ openAddWorkModal('planned'); }
+function openAddWorkForm(){ openAddWorkModal(); }
 
 function addMatRow(){
   const row = document.createElement('div');
@@ -9181,6 +9181,7 @@ function saveWork(){
   const v = ALL_VEHICLES.find(x=>x.id===toVehicleId); if(!v)return;
   const name = document.getElementById('aw-name').value.trim();
   if(!name){alert('Введіть назву роботи');return;}
+  if(!document.getElementById('aw-type').value){alert('Оберіть тип роботи');return;}
   const mats = [];
   document.querySelectorAll('#aw-mat-list .to-mat-add-row').forEach(row=>{
     const inputs = row.querySelectorAll('input');
@@ -14330,7 +14331,7 @@ function startAutoRefresh(){
     <div class="docs-modal-body">
       <div class="to-af-grid">
         <div class="to-af-field"><label>Тип</label>
-          <select id="aw-type"><option value="planned">Планове ТО</option><option value="unplanned">Позапланове / Ремонт</option><option value="parts_purchase">Закупка запчастин</option></select>
+          <select id="aw-type"><option value="" disabled selected>Оберіть тип...</option><option value="planned">Планове ТО</option><option value="unplanned">Позапланове / Ремонт</option><option value="parts_purchase">Закупка запчастин</option></select>
         </div>
         <div class="to-af-field"><label>Дата</label><input type="date" readonly id="aw-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="to-af-field"><label>Коротка назва роботи</label><input type="text" id="aw-name" placeholder="Наприклад: Заміна масла та фільтрів"></div>
