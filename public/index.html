@@ -13572,11 +13572,12 @@ async function loadUsersList(){
   if(!users) return;
   const list = document.getElementById('users-list');
   list.innerHTML = users.map(u => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:${u.active?'#fff':'#f9fafb'}">
-      <div style="flex:1;min-width:0">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:${u.active?'#fff':'#f9fafb'}">
+      <div>
         <div style="font-size:13px;font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</div>
         <div style="font-size:11px;color:#9ca3af;margin-top:2px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</div>
       </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
       ${u.id !== _currentUser?.id ? `
         <button onclick="openEditUser(${u.id}, '${u.name.replace(/'/g,"\\'")}', '${u.username.replace(/'/g,"\\'")}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
@@ -13595,7 +13596,7 @@ async function loadUsersList(){
           🗑 Видалити
         </button>
       ` : `
-        <span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>
+        <span style="font-size:10px;color:#9ca3af;font-style:italic;align-self:center">Це ви</span>
         <button onclick="openEditUser(${u.id}, '${u.name.replace(/'/g,"\\'")}', '${u.username.replace(/'/g,"\\'")}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#f0fdf4;color:#166534;font-family:inherit;font-weight:600">
           ✎ Редагувати
@@ -13605,6 +13606,7 @@ async function loadUsersList(){
           🔑 Змінити пароль
         </button>
       `}
+      </div>
     </div>
   `).join('');
 }
