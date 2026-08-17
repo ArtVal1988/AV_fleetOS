@@ -5364,7 +5364,7 @@ function renderBmDocHistory(docs){
     return;
   }
   panel.innerHTML = docs.map(d => {
-    const dt = new Date(d.created_at);
+    const dt = parseUtcTimestamp(d.created_at);
     const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     const typeLabel = d.doc_type === 'contract' ? 'Договір' : (d.period_label || 'Акт');
     const color = d.doc_type === 'contract' ? '#1d4ed8' : '#7c3aed';
@@ -5463,7 +5463,7 @@ function renderBmEditHistory(entries){
   }
   const actionMeta = { create:{label:'Створено', color:'#166534'}, update:{label:'Змінено', color:'#1d4ed8'}, delete:{label:'Видалено', color:'#dc2626'} };
   panel.innerHTML = entries.map(e => {
-    const dt = new Date(e.created_at);
+    const dt = parseUtcTimestamp(e.created_at);
     const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     const meta = actionMeta[e.action] || {label:e.action, color:'#6b7280'};
     let diffHtml = '';
@@ -9455,6 +9455,10 @@ function renderInsuranceModal(v){
 }
 
 function fmtCaseDate(s){ return s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—'; }
+function parseUtcTimestamp(str){
+  if(!str) return new Date(NaN);
+  return new Date(str.replace(' ','T') + (/[Z+]|T.*[+-]\d\d:?\d\d$/.test(str) ? '' : 'Z'));
+}
 let CLIENT_TIERS = [
   {key:'new',      label:'Новий',              color:'#2563eb', icon:'🆕'},
   {key:'regular',  label:'Постійний',          color:'#166534', icon:'🔁'},
@@ -12907,12 +12911,12 @@ function renderDocArchiveList(){
     if(!groups.has(key)) groups.set(key, []);
     groups.get(key).push(d);
   });
-  const sortedGroups = [...groups.values()].sort((a,b) => new Date(b[0].created_at) - new Date(a[0].created_at));
+  const sortedGroups = [...groups.values()].sort((a,b) => parseUtcTimestamp(b[0].created_at) - parseUtcTimestamp(a[0].created_at));
 
   list.innerHTML = sortedGroups.map(group => {
     const contract = group.find(d=>d.doc_type==='contract') || group[0];
     const acts = group.filter(d=>d.doc_type==='act' || d.doc_type==='act_extension');
-    const dt = new Date(contract.created_at);
+    const dt = parseUtcTimestamp(contract.created_at);
     const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     const groupId = 'dag-' + contract.id;
     return `<div style="border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75);overflow:hidden">
@@ -12931,7 +12935,7 @@ function renderDocArchiveList(){
           <button onclick="downloadArchivedDoc(${contract.id})" style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">⬇</button>
         </div>
         ${acts.map(a => {
-          const adt = new Date(a.created_at);
+          const adt = parseUtcTimestamp(a.created_at);
           const aDateStr = adt.toLocaleDateString('uk-UA') + ' ' + adt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
           return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0">
             <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:#7c3aed15;color:#7c3aed;flex-shrink:0;white-space:nowrap">📄 Акт${a.period_label?' — '+a.period_label:''}</span>
@@ -13007,7 +13011,7 @@ function renderActivityLogList(){
   const entityLabels = {booking:'Замовлення', vehicle:'Авто', client:'Клієнт', sticker:'Стікер'};
   list.innerHTML = ACTIVITY_LOG.map((entry,i) => {
     const meta = actionMeta[entry.action] || {label:entry.action, color:'#6b7280', bg:'#f9fafb'};
-    const dt = new Date(entry.created_at);
+    const dt = parseUtcTimestamp(entry.created_at);
     const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
       <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${meta.bg};color:${meta.color};flex-shrink:0;white-space:nowrap">${meta.label}</span>
