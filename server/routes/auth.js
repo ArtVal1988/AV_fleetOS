@@ -103,7 +103,7 @@ router.put('/users/:id', auth, (req, res) => {
 router.delete('/users/:id', auth, adminOnly, (req, res) => {
   if (parseInt(req.params.id) === req.user.id)
     return res.status(400).json({ error: 'Не можна видалити власний акаунт' });
-  db.prepare('UPDATE users SET active = 0 WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
 

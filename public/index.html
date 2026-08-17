@@ -13590,6 +13590,10 @@ async function loadUsersList(){
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
           🔑 Змінити пароль
         </button>
+        <button onclick="deleteUserAccount(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #fecaca;background:#fef2f2;color:#dc2626;font-family:inherit;font-weight:600">
+          🗑 Видалити
+        </button>
       ` : `
         <span style="font-size:10px;color:#9ca3af;font-style:italic">Це ви</span>
         <button onclick="openEditUser(${u.id}, '${u.name.replace(/'/g,"\\'")}', '${u.username.replace(/'/g,"\\'")}')"
@@ -13629,6 +13633,11 @@ async function addNewUser(){
 
 async function toggleUserActive(id, isActive){
   await apiFetch('PUT','/auth/users/'+id, {active: !isActive});
+  await loadUsersList();
+}
+async function deleteUserAccount(id, name){
+  if(!confirm(`Видалити користувача "${name}"? Цю дію не можна скасувати — обліковий запис буде видалено повністю (не лише деактивовано).`)) return;
+  await apiFetch('DELETE','/auth/users/'+id);
   await loadUsersList();
 }
 
