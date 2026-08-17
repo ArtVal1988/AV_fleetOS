@@ -1838,11 +1838,18 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="border-top:1px solid #f0f2f5;padding-top:14px"></div>
 
         <div class="msec-inner-sep">
-          <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')">
-            <span id="cf-passport-toggle-icon">⊕</span>
-            <span>Паспорт</span>
-            <span class="extras-toggle-chevron" id="cf-passport-chevron">▾</span>
-          </button>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')" style="flex:1">
+              <span id="cf-passport-toggle-icon">⊕</span>
+              <span>Паспорт</span>
+              <span class="extras-toggle-chevron" id="cf-passport-chevron">▾</span>
+            </button>
+            <button type="button" class="extras-toggle" id="cf-idcard-toggle-btn" onclick="toggleCfDocPanel('idcard')" style="flex:1">
+              <span id="cf-idcard-toggle-icon">⊕</span>
+              <span>ID-картка</span>
+              <span class="extras-toggle-chevron" id="cf-idcard-chevron">▾</span>
+            </button>
+          </div>
           <div class="extras-panel" id="cf-doc-passport-fields" style="display:none">
             <div style="display:flex;gap:10px;margin:12px 0">
               <div style="flex:1">
@@ -1859,14 +1866,6 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="msec-inner-sep">
-          <button type="button" class="extras-toggle" id="cf-idcard-toggle-btn" onclick="toggleCfDocPanel('idcard')">
-            <span id="cf-idcard-toggle-icon">⊕</span>
-            <span>ID-картка</span>
-            <span class="extras-toggle-chevron" id="cf-idcard-chevron">▾</span>
-          </button>
           <div class="extras-panel" id="cf-doc-idcard-fields" style="display:none">
             <div style="display:flex;gap:10px;margin:12px 0">
               <div style="flex:1">
