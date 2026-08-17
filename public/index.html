@@ -3254,6 +3254,11 @@ function getEffectiveEnd(b){
   let maxEnd = b.end;
   (b.extensionHistory||[]).forEach(h => { if(h.toDate > maxEnd) maxEnd = h.toDate; });
   if(b.extension && b.extension.active && b.extension.toDate > maxEnd) maxEnd = b.extension.toDate;
+  // A repair pause can extend beyond the booking's own end date (e.g.
+  // scheduled to start right when the client returns the car) — the
+  // vehicle isn't actually available again until the repair itself ends,
+  // regardless of whether that falls within or after the rental period.
+  if(b.repairPause && b.repairPause.toDate > maxEnd) maxEnd = b.repairPause.toDate;
   return maxEnd;
 }
 // Resolve which "segment" (base period, or a specific extension) a given
