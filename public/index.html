@@ -12138,8 +12138,8 @@ function renderClientsPanelList(){
     return;
   }
   list.innerHTML = items.map(c => {
-    const activeMsg = Object.entries(c.messengers||{}).find(([,m])=>m.active&&m.contact);
-    const msgIcon = activeMsg ? `<img src="${MSG_ICON_DATA[activeMsg[0]]}" width="13" height="13" style="display:inline-block;vertical-align:middle;border-radius:3px;margin-left:5px" title="${MSG_CONFIG[activeMsg[0]]?.label||activeMsg[0]}">` : '';
+    const activeMsgs = Object.entries(c.messengers||{}).filter(([,m])=>m.active&&m.contact);
+    const msgIcon = activeMsgs.map(([type])=>`<img src="${MSG_ICON_DATA[type]}" width="13" height="13" style="display:inline-block;vertical-align:middle;border-radius:3px;margin-left:5px" title="${MSG_CONFIG[type]?.label||type}">`).join('');
     const tier = c.tier || 'new';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
       <div title="${CLIENT_TIER_LABELS[tier]}" style="width:34px;height:34px;border-radius:50%;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CLIENT_TIER_ICONS[tier]}</div>
