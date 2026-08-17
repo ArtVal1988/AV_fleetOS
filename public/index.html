@@ -14357,12 +14357,31 @@ function isAnyModalOpen(){
   if(document.getElementById('custom-dp') || document.getElementById('custom-tp')) return true;
   return false;
 }
+let _appVersionAtLoad = null;
+async function checkAppVersion(){
+  try{
+    const res = await fetch(API_BASE + '/app-version', { cache: 'no-store' });
+    const data = await res.json();
+    if(!data?.version) return;
+    if(_appVersionAtLoad === null){ _appVersionAtLoad = data.version; return; }
+    if(data.version !== _appVersionAtLoad){
+      // A new version has been deployed since this tab was opened — reload
+      // to pick it up, so this device can never keep running stale JS
+      // indefinitely (which previously caused a real data-corruption bug:
+      // an old tab's outdated sync logic kept overwriting shared settings
+      // with its own stale local values every 60s).
+      window.location.reload();
+    }
+  }catch(e){ /* offline or transient — just try again next interval */ }
+}
 let _autoRefreshTimer = null;
 function startAutoRefresh(){
   if(_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+  checkAppVersion(); // establish the baseline version immediately
   _autoRefreshTimer = setInterval(() => {
     if(!_token || isAnyModalOpen()) return;
     syncFromServer();
+    checkAppVersion();
   }, 60000); // every 60s
 }
 

@@ -24,6 +24,18 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+const fs = require('fs');
+const crypto = require('crypto');
+app.get('/api/app-version', (req, res) => {
+  try {
+    const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+    const hash = crypto.createHash('md5').update(html).digest('hex');
+    res.set('Cache-Control', 'no-store').json({ version: hash });
+  } catch (e) {
+    res.status(500).json({ error: 'version check failed' });
+  }
+});
+
 // ── Routes ───────────────────────────────────────────────────────
 const { router: authRouter } = require('./routes/auth');
 app.use('/api/auth', authRouter);

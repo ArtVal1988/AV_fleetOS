@@ -8,10 +8,6 @@ router.get('/', auth, (req, res) => {
   const rows = db.prepare('SELECT key, value FROM settings').all();
   const result = {};
   rows.forEach(r => { try { result[r.key] = JSON.parse(r.value); } catch { /* skip corrupt row */ } });
-  // TEMP DIAGNOSTIC LOGGING — remove once the client-tiers reset issue is resolved.
-  if (result['client-tiers']) {
-    console.log('[settings GET]', new Date().toISOString(), 'user', req.user?.id, req.user?.username, '-> client-tiers:', JSON.stringify(result['client-tiers']));
-  }
   res.json(result);
 });
 
@@ -19,10 +15,6 @@ router.get('/', auth, (req, res) => {
 // config that every device/browser sees, so only an admin should change them.
 router.put('/:key', auth, adminOnly, (req, res) => {
   const value = JSON.stringify(req.body.value);
-  // TEMP DIAGNOSTIC LOGGING — remove once the client-tiers reset issue is resolved.
-  if (req.params.key === 'client-tiers') {
-    console.log('[settings PUT]', new Date().toISOString(), 'user', req.user?.id, req.user?.username, '-> client-tiers:', value);
-  }
   const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(req.params.key);
   if (existing) {
     db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(value, req.params.key);
