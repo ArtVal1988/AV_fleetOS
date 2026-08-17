@@ -13870,14 +13870,14 @@ async function syncFromServer(){
     // becomes the shared baseline for every other device going forward.
     apiFetch('PUT','/settings/statuses',{value:STATUSES});
   }
-  if(sSettings && Array.isArray(sSettings.clientTiers) && sSettings.clientTiers.length){
+  if(sSettings && Array.isArray(sSettings['client-tiers']) && sSettings['client-tiers'].length){
     CLIENT_TIERS.length = 0;
-    sSettings.clientTiers.forEach(t=>CLIENT_TIERS.push(t));
+    sSettings['client-tiers'].forEach(t=>CLIENT_TIERS.push(t));
     Object.keys(CTM).forEach(k=>delete CTM[k]);
     CLIENT_TIERS.forEach(t=>CTM[t.key]=t);
     try{ localStorage.setItem('av_fleetos_client_tiers', JSON.stringify(CLIENT_TIERS)); }catch(e){}
     if(document.getElementById('client-tiers-panel-overlay')?.style.display==='flex') renderClientTiersPanelList();
-  } else if(sSettings && !sSettings.clientTiers){
+  } else if(sSettings && !sSettings['client-tiers']){
     apiFetch('PUT','/settings/client-tiers',{value:CLIENT_TIERS});
   }
   ALL_VEHICLES.forEach(v => { if(v.service) v.service.status = computeServiceStatus(v); });
