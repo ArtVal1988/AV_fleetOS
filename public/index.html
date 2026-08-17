@@ -2532,7 +2532,10 @@ input.dm-pf-val.tel{font-size:14px;}
             style="text-align:center;font-family:var(--font-mono);width:60px;font-size:14px">
         </div>
         <div class="fin-field fin-label-style" style="flex:0 0 auto">
-          <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%">Вартість</label>
+          <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%;display:flex;align-items:center;justify-content:center;gap:3px">
+            <span>Вартість</span>
+            <span id="bm-rate-comment-btn" onclick="toggleRateCommentField()" title="Коментар до ставки" style="display:none;cursor:pointer;font-size:11px">💬</span>
+          </label>
           <div class="dep-inline-wrap">
             <input type="text" inputmode="decimal" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:92px;flex:0 0 92px;text-align:center;font-size:14px;padding-left:3px;padding-right:3px" oninput="formatRateInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;updateVatPreview()">
             <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
@@ -2589,6 +2592,9 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       <div id="bm-deposit-mixed-note-wrap" style="display:none;margin-top:8px">
         <input type="text" id="bm-deposit-mixed-note" placeholder="Напр.: 15 000₴ карткою + 50$ готівкою" style="width:100%;padding:7px 10px;border:1px solid #f0d060;background:#fffbeb;border-radius:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;text-align:right;box-sizing:border-box">
+      </div>
+      <div id="bm-rate-comment-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="bm-rate-comment" placeholder="Коментар до ставки, напр.: знижка за довгострокову оренду" style="width:100%;padding:7px 10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:6px;font-family:inherit;font-size:12px;outline:none;box-sizing:border-box">
       </div>
       <!-- Dual total preview -->
       <div id="bm-dual-total" style="display:none;margin-top:10px">
@@ -4813,6 +4819,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-company').value='';
   document.getElementById('bm-edrpou').value='';
   document.getElementById('bm-base-rate-excel').value='';
+  document.getElementById('bm-rate-comment').value='';
+  document.getElementById('bm-rate-comment-wrap').style.display='none';
   document.getElementById('bm-exchange-rate').value='';
   loadMessengers([]);
   document.getElementById('extras-panel').style.display='none';
@@ -4878,6 +4886,8 @@ function editBooking(bid){
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
   document.getElementById('bm-base-rate-excel').value=b.baseRateExcel||'';
+  document.getElementById('bm-rate-comment').value=b.rateComment||'';
+  document.getElementById('bm-rate-comment-wrap').style.display=b.rateComment?'block':'none';
   document.getElementById('bm-exchange-rate').value=b.exchangeRate||'';
   document.getElementById('bm-start-km').value=b.startKm?Number(b.startKm).toLocaleString('uk-UA'):'';
   document.getElementById('bm-end-km').value=b.endKm?Number(b.endKm).toLocaleString('uk-UA'):'';
@@ -5248,6 +5258,7 @@ function saveBooking(){
     vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?DEFAULT_VAT_RATE:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
     baseRateExcel: parseThousands(document.getElementById('bm-base-rate-excel').value) || null,
+    rateComment: document.getElementById('bm-rate-comment').value.trim() || null,
     exchangeRate: parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.'))||0,
     pickup:{date:document.getElementById('bm-pickup-date').value,time:document.getElementById('bm-pickup-time').value,loc:document.getElementById('bm-pickup-loc').value.trim()},
     ret:{date:document.getElementById('bm-return-date').value,time:document.getElementById('bm-return-time').value,loc:document.getElementById('bm-return-loc').value.trim()},
@@ -5378,7 +5389,7 @@ const EDIT_HISTORY_FIELD_LABELS = {
   orderCompany:'Компанія замовлення', vehicleId:'Авто',
   // Nested (dot-path) fields within common object-type fields:
   'customer.name':'Клієнт', 'customer.phone':'Телефон клієнта', 'customer.company':'Компанія клієнта',
-  'customer.edrpou':'ЄДРПОУ', 'customer.clientId':'Прив\'язаний клієнт', baseRateExcel:'Базова ставка (Excel)',
+  'customer.edrpou':'ЄДРПОУ', 'customer.clientId':'Прив\'язаний клієнт', baseRateExcel:'Базова ставка (Excel)', rateComment:'Коментар до ставки',
   'pickup.date':'Дата видачі', 'pickup.time':'Час видачі', 'pickup.loc':'Місце видачі',
   'ret.date':'Дата повернення', 'ret.time':'Час повернення', 'ret.loc':'Місце повернення',
   'extension.active':'Продовження активне', 'extension.fromDate':'Продовження від', 'extension.toDate':'Продовження до',
@@ -10574,6 +10585,14 @@ function setClientType(type, isUserAction = true){
 
   // Base rate for Excel reporting — internal field, all business types
   document.getElementById('bm-base-rate-field').style.display   = isCompany ? '' : 'none';
+  const rateCommentBtn = document.getElementById('bm-rate-comment-btn');
+  if(rateCommentBtn) rateCommentBtn.style.display = isCompany ? 'inline' : 'none';
+  if(!isCompany){
+    // Hide any open comment when switching back to individual, per the
+    // same convention as other business-only fields.
+    const rcWrap = document.getElementById('bm-rate-comment-wrap');
+    if(rcWrap) rcWrap.style.display = 'none';
+  }
 
   // Business types (ФОП без ПДВ / ФОП з ПДВ / ТОВ з ПДВ): Вартість is always
   // in ₴ for these — hide the $/₴ currency pills and show a "з ПДВ"/"без ПДВ"
@@ -11045,6 +11064,12 @@ function setPayMethod(method){
   bmPayMethod = method;
   document.getElementById('pm-btn-cash')?.classList.toggle('active', method==='cash');
   document.getElementById('pm-btn-card')?.classList.toggle('active', method==='card');
+}
+function toggleRateCommentField(){
+  const wrap = document.getElementById('bm-rate-comment-wrap');
+  if(!wrap) return;
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  if(wrap.style.display === 'block') document.getElementById('bm-rate-comment')?.focus();
 }
 function setDepositPayMethod(method){
   bmDepositPayMethod = method;
