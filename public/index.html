@@ -3261,6 +3261,16 @@ function getEffectiveEnd(b){
   if(b.repairPause && b.repairPause.toDate > maxEnd) maxEnd = b.repairPause.toDate;
   return maxEnd;
 }
+// How far the client's PAYMENT coverage extends — main booking or an
+// active extension — deliberately excluding repairPause, since a repair
+// day can be both paid-for (covered by rent already collected) AND under
+// repair simultaneously; these are two independent things to track.
+function getPaidThroughDate(b){
+  let maxEnd = b.end;
+  (b.extensionHistory||[]).forEach(h => { if(h.toDate > maxEnd) maxEnd = h.toDate; });
+  if(b.extension && b.extension.active && b.extension.toDate > maxEnd) maxEnd = b.extension.toDate;
+  return maxEnd;
+}
 // Resolve which "segment" (base period, or a specific extension) a given
 // calendar day belongs to, with everything needed to prorate it correctly
 // within that segment's own date range — daysOverride only ever covers the
@@ -3725,8 +3735,14 @@ function renderCalendar(){
         const dayExt = getDayExtension(booking, ds);
         const extStatus = dayExt ? getExtStatus(dayExt) : null;
         const dayRepair = getDayRepairPause(booking, ds);
+        // A repair day can still be within the client's paid coverage
+        // (e.g. rent collected through 20.08, repair starts 06.08) —
+        // these two states co-exist for those days, shown as a diagonal
+        // split rather than the solid repair color used once payment
+        // coverage has actually run out.
+        const isPaidDuringRepair = dayRepair && ds <= getPaidThroughDate(booking);
         let cellStatus, mainTotal, mainPaid;
-        if(dayRepair) cellStatus = 'repair';
+        if(dayRepair && !isPaidDuringRepair) cellStatus = 'repair';
         else if(extStatus === 'unpaid' || extStatus === 'partial') cellStatus = 'extension';
         else if(!dayExt && booking.partialPaymentActive){
           mainTotal = calcTotal(booking);
@@ -3759,14 +3775,17 @@ function renderCalendar(){
         // equal Math.ceil(daysOverride) — a booking can span more calendar
         // days than its billed day count.
         const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride);
-        const halfDayHtml = isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div>` : '';
-        const cellBg = isHalfLastDay ? 'transparent' : cellColor;
-        return`<td class="td-day${dayRepair?' repair-pause-day':''}${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
+        const repairSplitHtml = isPaidDuringRepair
+          ? `<div class="split-half split-top" style="background:${cellColor}"></div><div class="split-half split-bot" style="background:${SM['repair']?.color||'#f09060'}"></div>`
+          : '';
+        const halfDayHtml = isPaidDuringRepair ? repairSplitHtml : (isHalfLastDay ? `<div class="split-half split-top" style="background:${cellColor}"></div>` : '');
+        const cellBg = (isHalfLastDay || isPaidDuringRepair) ? 'transparent' : cellColor;
+        return`<td class="td-day${(dayRepair||isPaidDuringRepair)?' repair-pause-day':''}${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
           data-bid="${booking.id}"
           onmouseenter="if(!isMobileViewport())showTooltip(event,${booking.id})"
           onmouseleave="hideTooltip()"
           onclick="selectBooking(${booking.id},event)">
-          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${isHalfLastDay?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
+          <div class="day-cell booked ${posClass}${isSel?' selected-booking':''}" data-s="${cellStatus}" style="background:${cellBg};color:#fff">${halfDayHtml}<span class="cell-date-num cell-date-booked" style="${(isHalfLastDay||isPaidDuringRepair)?'position:relative;z-index:3':''}">${String(colDate(d).getDate()).padStart(2,'0')}</span>${progressStripHtml}</div></td>`;
         })();
         // Main vehicle's cell during an active substitution period — the
         // usual booking still renders normally for billing/history
