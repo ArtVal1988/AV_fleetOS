@@ -2550,8 +2550,8 @@ input.dm-pf-val.tel{font-size:14px;}
             oninput="formatExchangeRateInput(this);updateVatPreview()">
         </div>
         <div class="fin-field fin-label-style" id="bm-base-rate-field" style="display:none;flex:0 0 70px;min-width:70px">
-          <label style="white-space:nowrap;text-align:center;width:100%" title="Внутрішнє значення для звіту Excel — не впливає на документи для клієнта. Якщо порожнє, у звіті використовується поле «Вартість».">Баз. ставка</label>
-          <input type="text" inputmode="decimal" id="bm-base-rate-excel" placeholder="—" style="width:70px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
+          <label style="white-space:nowrap;text-align:center;width:100%" title="Внутрішнє значення для звіту Excel — не впливає на документи для клієнта. Якщо порожнє, у звіті використовується поле «Вартість». Завжди в $.">Баз. ставка $</label>
+          <input type="text" inputmode="decimal" id="bm-base-rate-excel" placeholder="—" style="width:70px;text-align:center;font-size:14px;color:#1d4ed8;font-weight:600" oninput="formatRateInput(this)">
         </div>
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
