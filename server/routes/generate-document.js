@@ -400,9 +400,29 @@ const DEFAULT_MAPPING = {
   'фирма2': 'client_legal', 'код2': 'client_inn', 'лицо2': 'client_name', 'адрес2': 'client_phone',
   'счет1': 'vehicle_vin', 'адрес1': 'vehicle_sts',
 };
-function getMapping() {
+// Two-layer structure — '_base' is a shared fallback (originally the only
+// layer that existed; different templates sharing the SAME #placeholder
+// text used to silently overwrite each other's mapping through it, since
+// there was no per-template distinction at all). 'byFile' holds per-template
+// overrides, keyed by the ACTUAL resolved filename (templateFileName()'s
+// result) — once a specific template has its own entry here, it no longer
+// shares anything with any other template, even ones using an identical
+// #placeholder name. getMappingForFile() below is the only place that
+// should ever be used to resolve a real mapping for generating a document;
+// getMapping()/setMapping() are kept only for the raw storage shape.
+function getMappingStore() {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
-  return row ? JSON.parse(row.value) : DEFAULT_MAPPING;
+  if (!row) return { _base: DEFAULT_MAPPING, byFile: {} };
+  const parsed = JSON.parse(row.value);
+  // Migrate old flat-format data (no _base/byFile split) into the new shape,
+  // preserving it as the shared fallback layer so nothing already
+  // configured gets silently reset to blank for every template at once.
+  if (!parsed._base && !parsed.byFile) return { _base: parsed, byFile: {} };
+  return { _base: parsed._base || {}, byFile: parsed.byFile || {} };
+}
+function getMappingForFile(file) {
+  const store = getMappingStore();
+  return { ...store._base, ...(store.byFile[file] || {}) };
 }
 function getRepresentatives() {
   const row = db.prepare("SELECT value FROM settings WHERE key = ?").get('representatives');
@@ -466,12 +486,6 @@ function getOrCreateContractNumber(ctx, bookingId) {
   }
   ctx.booking.contractNumber = contractNumber;
   return contractNumber;
-}
-function setMapping(mapping) {
-  const json = JSON.stringify(mapping);
-  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
-  if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(json, MAPPING_SETTINGS_KEY);
-  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
 }
 
 // Word frequently splits what looks like one continuous word into multiple
@@ -606,38 +620,78 @@ function getTemplateInfo(actualFileName, type, repKey) {
 // always means the same thing everywhere), so there's exactly one shared
 // table to configure instead of a separate one per document/slot.
 router.get('/mapping', auth, adminOnly, async (req, res) => {
-  const mapping = getMapping();
   const removedRow = db.prepare("SELECT value FROM settings WHERE key = ?").get('document_removed_placeholders');
-  const removed = removedRow ? JSON.parse(removedRow.value) : [];
+  const removedRaw = removedRow ? JSON.parse(removedRow.value) : {};
+  const removedIsFlatArray = Array.isArray(removedRaw);
+  const resolveRemovedForFile = file => removedIsFlatArray ? removedRaw : (removedRaw[file] || removedRaw._base || []);
+  const store = getMappingStore();
+  const needsMigration = Object.keys(store.byFile).length === 0 && Object.keys(store._base).length > 0;
   const slots = {};
-  const allPlaceholdersSet = new Set();
   for (const repKey of Object.keys(DOCUMENT_TYPES)) {
     const templates = {};
     for (const t of DOCUMENT_TYPES[repKey]) {
       const file = templateFileName(t.key, repKey);
-      const placeholders = (await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file))).filter(ph => !removed.includes(ph));
+      const removedForFile = resolveRemovedForFile(file);
+      const placeholders = (await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file))).filter(ph => !removedForFile.includes(ph));
       const info = getTemplateInfo(file, t.key, repKey);
-      templates[t.key] = { label: t.label, file, placeholders, info };
-      placeholders.forEach(ph => allPlaceholdersSet.add(ph));
+      templates[t.key] = { label: t.label, file, placeholders, info, mapping: getMappingForFile(file), removed: removedForFile };
     }
     slots[repKey] = templates;
   }
-  res.json({ mapping, slots, placeholders: [...allPlaceholdersSet], removed });
+  res.json({ slots, needsMigration });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
-  setMapping(req.body);
+  const { file, value } = req.body;
+  if (!file || typeof value !== 'object') return res.status(400).json({ error: 'Потрібні поля file та value' });
+  const store = getMappingStore();
+  store.byFile[file] = value;
+  const json = JSON.stringify(store);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, MAPPING_SETTINGS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
   res.json({ ok: true });
 });
 // Persist which scanned #placeholders the admin explicitly hid — can't
 // remove the actual text from the .docx file itself, but this stops them
 // from reappearing in the list every time the panel is reopened.
 router.put('/mapping/removed', auth, adminOnly, (req, res) => {
-  const removed = Array.isArray(req.body.removed) ? req.body.removed : [];
-  const json = JSON.stringify(removed);
+  const { file, removed } = req.body;
+  if (!file || !Array.isArray(removed)) return res.status(400).json({ error: 'Потрібні поля file та removed' });
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get('document_removed_placeholders');
+  let store = row ? JSON.parse(row.value) : {};
+  if (Array.isArray(store)) store = { _base: store }; // migrate the old flat shape into _base, preserved as a shared fallback for every OTHER file until it gets its own specific entry too
+  store[file] = removed;
+  const json = JSON.stringify(store);
   const existing = db.prepare("SELECT key FROM settings WHERE key = ?").get('document_removed_placeholders');
   if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, 'document_removed_placeholders');
   else db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run('document_removed_placeholders', json);
   res.json({ ok: true });
+});
+// One-time migration: every existing template is still silently sharing the
+// old, pre-per-template _base mapping as its fallback (never had its own
+// byFile[file] entry saved yet) — this is what causes different templates
+// that happen to reuse the same #placeholder text to affect each other.
+// Gives each currently-in-use template file its own independent starting
+// copy of the current (shared) values, so the admin only needs to ADJUST
+// whichever specific fields should genuinely differ per template, rather
+// than re-entering everything from scratch for every single one.
+router.post('/mapping/migrate-to-per-template', auth, adminOnly, (req, res) => {
+  const store = getMappingStore();
+  const filesTouched = [];
+  for (const repKey of Object.keys(DOCUMENT_TYPES)) {
+    for (const t of DOCUMENT_TYPES[repKey]) {
+      const file = templateFileName(t.key, repKey);
+      if (!store.byFile[file]) {
+        store.byFile[file] = { ...store._base };
+        if (!filesTouched.includes(file)) filesTouched.push(file);
+      }
+    }
+  }
+  const json = JSON.stringify(store);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(MAPPING_SETTINGS_KEY);
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, MAPPING_SETTINGS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(MAPPING_SETTINGS_KEY, json);
+  res.json({ ok: true, filesTouched });
 });
 
 // ── Admin: template upload ───────────────────────────────────────
@@ -777,7 +831,7 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
 
   const contractNumber = getOrCreateContractNumber(ctx, bookingId);
 
-  const mapping = getMapping() || {};
+  const mapping = getMappingForFile(templateFile);
   const placeholders = await scanTemplatePlaceholders(templatePath);
   const values = {};
   placeholders.forEach(ph => {
