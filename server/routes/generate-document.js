@@ -126,6 +126,20 @@ function buildClientLegalDescription(client, fallbackName) {
   if (passportBits.length) parts.push(passportBits.join(', ') + (client.passportIssuer ? ' ' + client.passportIssuer : ''));
   return parts.join('. ');
 }
+// Analogous to buildClientLegalDescription(), for non-resident clients —
+// citizenship + foreign passport fields instead of the Ukrainian passport.
+function buildClientLegalDescriptionNonresident(client, fallbackName) {
+  if (!client) return fallbackName || '';
+  const parts = [client.name || fallbackName || ''];
+  if (client.birthdate) parts[0] += `, ${fmtDateUk(client.birthdate)} року народження`;
+  if (client.nrCitizenship) parts.push(`Громадянин(ка) ${client.nrCitizenship}`);
+  const passportBits = [];
+  if (client.nrPassportNum) passportBits.push(`Паспорт №${client.nrPassportNum}`);
+  if (client.nrPassportDate) passportBits.push(`виданий ${fmtDateUk(client.nrPassportDate)} року`);
+  if (client.nrPassportExpiry) passportBits.push(`дійсний до ${fmtDateUk(client.nrPassportExpiry)} року`);
+  if (passportBits.length) parts.push(passportBits.join(', '));
+  return parts.join('. ');
+}
 function countDays(start, end) {
   const s = new Date(start), e = new Date(end);
   return Math.max(1, Math.round((e - s) / 86400000));
@@ -150,6 +164,7 @@ const FIELD_CATALOG = [
   { key: 'client_name', label: 'Клієнт: ПІБ', get: ctx => ctx.client?.name || ctx.booking.customer?.name || '' },
   { key: 'client_phone', label: 'Клієнт: телефон', get: ctx => ctx.client?.phone || ctx.booking.customer?.phone || '' },
   { key: 'client_legal', label: 'Клієнт: повний юридичний опис (ПІБ, дата народження, паспорт)', get: ctx => buildClientLegalDescription(ctx.client, ctx.booking.customer?.name) },
+  { key: 'client_legal_nonresident', label: 'Клієнт повний опис (нерезидент — громадянство, закордонний паспорт)', get: ctx => buildClientLegalDescriptionNonresident(ctx.client, ctx.booking.customer?.name) },
   { key: 'client_inn', label: 'Клієнт: ІПН', get: ctx => ctx.client?.inn || ctx.booking.customer?.edrpou || '' },
   { key: 'client_address', label: 'Клієнт: адреса реєстрації', get: ctx => ctx.client?.address || '' },
   { key: 'client_license_num', label: 'Клієнт: номер посвідчення водія', get: ctx => ctx.client?.licenseNum || '' },
