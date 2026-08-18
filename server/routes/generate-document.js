@@ -64,6 +64,12 @@ function fmtDateUkFull(iso) {
   const [y, m, d] = iso.split('-');
   return `${parseInt(d)} ${UK_MONTHS[parseInt(m)-1]} ${y} року`;
 }
+const EN_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtDateEnFull(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${parseInt(d)} ${EN_MONTHS[parseInt(m)-1]} ${y}`;
+}
 function fmtMoney(n) {
   if (n === null || n === undefined || n === '') return '';
   return Number(n).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -176,6 +182,7 @@ const FIELD_CATALOG = [
   { key: 'company_name', label: 'Компанія-наймач (юрособа), якщо є', get: ctx => ctx.booking.customer?.company || '' },
   { key: 'rental_start', label: 'Дата отримання авто', get: ctx => fmtDateUk(ctx.booking.start) },
   { key: 'rental_start_text', label: 'Дата отримання авто текстом ("26 липня 2026 року")', get: ctx => fmtDateUkFull(ctx.booking.start) },
+  { key: 'rental_start_text_en', label: 'Дата отримання авто текстом англійською ("26 July 2026")', get: ctx => fmtDateEnFull(ctx.booking.start) },
   { key: 'rental_end', label: 'Дата повернення авто', get: ctx => fmtDateUk(ctx.booking.end) },
   { key: 'rental_days', label: 'Кількість діб оренди', get: ctx => String(ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end)) },
   { key: 'pickup_time', label: 'Час отримання', get: ctx => ctx.booking.pickup?.time || '' },
