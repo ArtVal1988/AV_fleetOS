@@ -1789,7 +1789,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
-        <div style="flex:0.6">
+        <div id="cf-inn-wrap" style="flex:0.6">
           <label class="vf-lbl">ІПН</label>
           <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
         </div>
@@ -1848,7 +1848,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div style="margin-bottom:10px">
+      <div id="cf-address-wrap" style="margin-bottom:10px">
         <label class="vf-lbl" id="cf-address-label">Адреса реєстрації</label>
         <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
       </div>
@@ -1911,11 +1911,11 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="cf-nonresident-fields" style="display:none">
         <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Закордонний паспорт</div>
-        <div style="margin-bottom:10px">
-          <label class="vf-lbl">Громадянство</label>
-          <input id="cf-nr-citizenship" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
-        </div>
         <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div style="flex:1">
+            <label class="vf-lbl">Громадянство</label>
+            <input id="cf-nr-citizenship" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
+          </div>
           <div style="flex:1">
             <label class="vf-lbl">Номер закордонного паспорта</label>
             <input id="cf-nr-passport-num" type="text" class="vf-inp" placeholder="AB1234567" style="width:100%">
@@ -1929,31 +1929,6 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="flex:1">
             <label class="vf-lbl">Дійсний до</label>
             <input id="cf-nr-passport-expiry" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
-          </div>
-        </div>
-        <div style="margin-bottom:10px">
-          <label class="vf-lbl">Реєстраційний номер платника податків (за наявності)</label>
-          <input id="cf-nr-taxnum" type="text" class="vf-inp" placeholder="Необов'язково" style="width:100%">
-        </div>
-        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Посвідчення водія</div>
-        <div style="display:flex;gap:10px;margin-bottom:10px">
-          <div style="flex:1">
-            <label class="vf-lbl">Номер (національне/міжнародне)</label>
-            <input id="cf-nr-license-num" type="text" class="vf-inp" placeholder="Номер посвідчення" style="width:100%">
-          </div>
-          <div style="flex:1">
-            <label class="vf-lbl">Категорія</label>
-            <input id="cf-nr-license-cat" type="text" class="vf-inp" placeholder="B" style="width:100%">
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:10px">
-          <div style="flex:1">
-            <label class="vf-lbl">Країна видачі</label>
-            <input id="cf-nr-license-country" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
-          </div>
-          <div style="flex:1">
-            <label class="vf-lbl">Дійсне до</label>
-            <input id="cf-nr-license-expiry" type="date" readonly class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" style="width:100%">
           </div>
         </div>
       </div>
@@ -12324,11 +12299,6 @@ function openClientForm(id){
   document.getElementById('cf-nr-passport-num').value = c?.nrPassportNum || '';
   document.getElementById('cf-nr-passport-date').value = c?.nrPassportDate || '';
   document.getElementById('cf-nr-passport-expiry').value = c?.nrPassportExpiry || '';
-  document.getElementById('cf-nr-taxnum').value = c?.nrTaxNum || '';
-  document.getElementById('cf-nr-license-num').value = c?.nrLicenseNum || '';
-  document.getElementById('cf-nr-license-cat').value = c?.nrLicenseCat || '';
-  document.getElementById('cf-nr-license-country').value = c?.nrLicenseCountry || '';
-  document.getElementById('cf-nr-license-expiry').value = c?.nrLicenseExpiry || '';
   document.getElementById('cf-notes').value = c?.notes || '';
   applyResidencyLock(false); // clear any lock from a previously open client before setting the new one
   setClientResidency(c?.residency || 'resident');
@@ -12360,7 +12330,8 @@ function setClientResidency(type){
   const isResident = type !== 'nonresident';
   document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
   document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
-  document.getElementById('cf-address-label').textContent = isResident ? 'Адреса реєстрації' : 'Адреса проживання / готель в Україні';
+  document.getElementById('cf-inn-wrap').style.display = isResident ? '' : 'none';
+  document.getElementById('cf-address-wrap').style.display = isResident ? '' : 'none';
   const resBtn = document.getElementById('cf-res-resident');
   const nrBtn = document.getElementById('cf-res-nonresident');
   const baseStyle = 'padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;';
@@ -12475,11 +12446,6 @@ async function saveClientForm(){
     nrPassportNum: document.getElementById('cf-nr-passport-num').value.trim(),
     nrPassportDate: document.getElementById('cf-nr-passport-date').value,
     nrPassportExpiry: document.getElementById('cf-nr-passport-expiry').value,
-    nrTaxNum: document.getElementById('cf-nr-taxnum').value.trim(),
-    nrLicenseNum: document.getElementById('cf-nr-license-num').value.trim(),
-    nrLicenseCat: document.getElementById('cf-nr-license-cat').value.trim(),
-    nrLicenseCountry: document.getElementById('cf-nr-license-country').value.trim(),
-    nrLicenseExpiry: document.getElementById('cf-nr-license-expiry').value,
     notes: document.getElementById('cf-notes').value.trim(),
   };
   if(id) await apiFetch('PUT', '/clients/'+id, data);
