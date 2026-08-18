@@ -12712,12 +12712,12 @@ function renderUnifiedDocFields(){
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
     const isCustom = DOC_CUSTOM.includes(ph);
-    return `<div class="dt-row" draggable="true" data-idx="${idx}"
+    return `<div class="dt-row" draggable="false" data-idx="${idx}"
         ondragstart="dtRowDragStart(event)" ondragover="dtRowDragOver(event)" ondrop="dtRowDrop(event)" ondragend="dtRowDragEnd(event)"
         style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px;background:#fff">
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="cursor:grab;color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок">⠿</span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
+        <span onmousedown="this.closest('.dt-row').draggable=true" onmouseup="this.closest('.dt-row').draggable=false" style="cursor:grab;color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок">⠿</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap;user-select:text;cursor:text">#${ph}${isCustom?' <span style="color:#059669">(нова)</span>':''}</span>
         <span style="color:#9ca3af;font-size:11px">→</span>
         <select data-placeholder="${ph}" class="dt-field-select" onchange="onDocFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
           <option value="">— не заповнювати —</option>
