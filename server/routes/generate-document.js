@@ -637,6 +637,8 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
   const removedRaw = removedRow ? JSON.parse(removedRow.value) : {};
   const removedIsFlatArray = Array.isArray(removedRaw);
   const resolveRemovedForFile = file => removedIsFlatArray ? removedRaw : (removedRaw[file] || removedRaw._base || []);
+  const customRow = db.prepare("SELECT value FROM settings WHERE key = ?").get('document_custom_placeholders');
+  const customRaw = customRow ? JSON.parse(customRow.value) : {};
   const store = getMappingStore();
   const needsMigration = Object.keys(store.byFile).length === 0 && Object.keys(store._base).length > 0;
   const slots = {};
@@ -645,9 +647,10 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
     for (const t of DOCUMENT_TYPES[repKey]) {
       const file = templateFileName(t.key, repKey);
       const removedForFile = resolveRemovedForFile(file);
+      const customForFile = customRaw[file] || [];
       const placeholders = (await scanTemplatePlaceholders(path.join(TEMPLATES_DIR, file))).filter(ph => !removedForFile.includes(ph));
       const info = getTemplateInfo(file, t.key, repKey);
-      templates[t.key] = { label: t.label, file, placeholders, info, mapping: getMappingForFile(file), removed: removedForFile };
+      templates[t.key] = { label: t.label, file, placeholders, info, mapping: getMappingForFile(file), removed: removedForFile, custom: customForFile };
     }
     slots[repKey] = templates;
   }
@@ -713,6 +716,24 @@ router.put('/mapping/removed', auth, adminOnly, (req, res) => {
   const existing = db.prepare("SELECT key FROM settings WHERE key = ?").get('document_removed_placeholders');
   if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, 'document_removed_placeholders');
   else db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run('document_removed_placeholders', json);
+  res.json({ ok: true });
+});
+// Explicitly-added custom placeholder names, tracked separately per file —
+// distinct from what's scanned from the .docx text, and distinct from
+// whatever raw keys happen to sit in that file's mapping (which can include
+// leftover migration cruft from other documents that share a placeholder
+// name). Only names the admin genuinely added via + Додати нову змінну for
+// THIS specific document persist here.
+router.put('/mapping/custom', auth, adminOnly, (req, res) => {
+  const { file, custom } = req.body;
+  if (!file || !Array.isArray(custom)) return res.status(400).json({ error: 'Потрібні поля file та custom' });
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get('document_custom_placeholders');
+  const store = row ? JSON.parse(row.value) : {};
+  store[file] = custom;
+  const json = JSON.stringify(store);
+  const existing = db.prepare("SELECT key FROM settings WHERE key = ?").get('document_custom_placeholders');
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, 'document_custom_placeholders');
+  else db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run('document_custom_placeholders', json);
   res.json({ ok: true });
 });
 // One-time migration: every existing template is still silently sharing the

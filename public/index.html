@@ -12795,6 +12795,7 @@ function addCustomDocField(){
     return;
   }
   DOC_CUSTOM.push(clean);
+  apiFetch('PUT', '/generate-document/mapping/custom', {file: currentTemplateFile, custom: DOC_CUSTOM});
   renderTemplateFields();
 }
 function closeDocTemplatesPanel(){
@@ -12814,13 +12815,11 @@ function openTemplateFields(repKey, typeKey){
   DOC_SCANNED = tpl.placeholders || [];
   DOC_MAPPING = { ...(tpl.mapping || {}) };
   DOC_REMOVED = [...(tpl.removed || [])];
-  // Starts empty — the list shown must exactly match what's actually
-  // scanned from THIS document's own .docx text (matching the "Змінні (N)"
-  // count on its card), not leftover mapping keys from other documents
-  // that happened to get copied in during the earlier per-template
-  // migration. Grows only when the admin explicitly adds something new via
-  // the picker below, during this session.
-  DOC_CUSTOM = [];
+  // Loaded from the persisted, explicit per-file list — only fields the
+  // admin genuinely added via + Додати нову змінну for THIS document, not
+  // leftover mapping keys from other documents that happened to get copied
+  // in during the earlier per-template migration.
+  DOC_CUSTOM = [...(tpl.custom || [])];
   renderDocTemplatesSection(); // rebuilds the cards, embedding the now-active template's fields section directly inside its own card
   document.getElementById('dt-fields-unified')?.scrollIntoView({behavior:'smooth', block:'center'});
 }
@@ -12872,6 +12871,7 @@ function removeDocField(ph){
   if(!confirm(`Видалити рядок #${ph}?`)) return;
   if(DOC_CUSTOM.includes(ph)){
     DOC_CUSTOM = DOC_CUSTOM.filter(x=>x!==ph);
+    apiFetch('PUT', '/generate-document/mapping/custom', {file: currentTemplateFile, custom: DOC_CUSTOM});
   } else {
     // Scanned straight from a .docx file — can't remove the #placeholder
     // text itself from here, just stop showing/managing this row. Persist
