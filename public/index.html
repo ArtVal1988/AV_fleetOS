@@ -12750,10 +12750,13 @@ function openTemplateFields(repKey, typeKey){
   DOC_SCANNED = tpl.placeholders || [];
   DOC_MAPPING = { ...(tpl.mapping || {}) };
   DOC_REMOVED = [...(tpl.removed || [])];
-  // Any mapping key that isn't in this template's own scanned list was
-  // added manually for THIS template in a previous session — keep showing
-  // it so it doesn't silently vanish.
-  DOC_CUSTOM = Object.keys(DOC_MAPPING).filter(k => !DOC_SCANNED.includes(k) && !DOC_REMOVED.includes(k));
+  // Starts empty — the list shown must exactly match what's actually
+  // scanned from THIS document's own .docx text (matching the "Змінні (N)"
+  // count on its card), not leftover mapping keys from other documents
+  // that happened to get copied in during the earlier per-template
+  // migration. Grows only when the admin explicitly adds something new via
+  // the picker below, during this session.
+  DOC_CUSTOM = [];
   renderDocTemplatesSection(); // rebuilds the cards, embedding the now-active template's fields section directly inside its own card
   document.getElementById('dt-fields-unified')?.scrollIntoView({behavior:'smooth', block:'center'});
 }
