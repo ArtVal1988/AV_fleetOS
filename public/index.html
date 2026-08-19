@@ -12783,6 +12783,7 @@ function onAddCreatedFieldPick(sel){
   }
   DOC_CUSTOM.push(name);
   DOC_MAPPING[name] = 'general:' + name;
+  apiFetch('PUT', '/generate-document/mapping/custom', {file: currentTemplateFile, custom: DOC_CUSTOM});
   renderTemplateFields();
 }
 function addCustomDocField(){
@@ -12858,7 +12859,15 @@ function renderTemplateFields(){
     </div>`;
   }).join('');
   const hiddenNote = DOC_REMOVED.length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields()">↺ Приховано рядків: ${DOC_REMOVED.length} · натисніть, щоб показати знову</div>` : '';
-  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField()" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  const generalNames = Object.keys(GENERAL_VARIABLES);
+  const generalOptions = generalNames.length
+    ? generalNames.map(name=>`<option value="${name}">#${name}</option>`).join('')
+    : '<option value="" disabled>Ще немає жодної створеної змінної внизу</option>';
+  const addPickerHtml = `<select onchange="onAddCreatedFieldPick(this)" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">
+    <option value="" selected disabled>+ Додати змінну — оберіть зі списку створених</option>
+    ${generalOptions}
+  </select>`;
+  wrap.innerHTML = rowsHtml + hiddenNote + addPickerHtml;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
     const val = DOC_MAPPING[ph] || '';
