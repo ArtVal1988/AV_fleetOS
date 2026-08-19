@@ -2018,9 +2018,6 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="dt-templates-section" style="margin-bottom:24px"></div>
 
-      <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:8px;padding-top:8px;border-top:1px solid #f0f2f5" id="dt-fields-header">Змінні — оберіть шаблон вище, натиснувши «⚙️ Змінні»</div>
-      <div id="dt-fields-unified"></div>
-
       <div style="margin-top:28px;padding-top:16px;border-top:1px solid #f0f2f5">
         <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:4px">⭐ Універсальні змінні</div>
         <div style="font-size:11px;color:#6b7280;margin-bottom:12px;line-height:1.4">
@@ -2045,10 +2042,6 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <button type="button" onclick="addUniversalVariable()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;height:34px">+ Додати</button>
         </div>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;margin-top:20px;position:sticky;bottom:0;background:#fff;padding-top:12px;border-top:1px solid #f0f2f5">
-        <button onclick="saveDocTemplateMapping()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти налаштування полів</button>
       </div>
     </div>
   </div>
@@ -12693,6 +12686,13 @@ function renderDocTemplatesSection(){
           </div>
         </div>
         ${infoHtml}
+        ${isActive ? `
+        <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #bfdbfe">
+          <div id="dt-fields-unified"></div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button onclick="saveDocTemplateMapping()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Зберегти налаштування полів</button>
+          </div>
+        </div>` : ''}
       </div>`;
     }).join('');
     return `<div id="dt-slot-${slot.key}" style="background:${slot.bg};border:1px solid ${slot.border};border-radius:10px;padding:14px;margin-bottom:14px">
@@ -12700,6 +12700,9 @@ function renderDocTemplatesSection(){
       ${cardsHtml}
     </div>`;
   }).join('');
+  // The active card's own #dt-fields-unified placeholder now exists in the
+  // DOM (just rebuilt above) — populate it with that template's rows.
+  if(currentTemplateFile) renderTemplateFields();
 }
 function addCustomDocField(){
   const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
@@ -12720,6 +12723,12 @@ let DOC_REMOVED = []; // scanned placeholders the user chose to hide (can't actu
 function openTemplateFields(repKey, typeKey){
   const tpl = currentDocSlots[repKey]?.[typeKey];
   if(!tpl) return;
+  if(currentTemplateFile === tpl.file){
+    // Clicking the already-expanded template's own button again collapses it.
+    currentTemplateFile = null;
+    renderDocTemplatesSection();
+    return;
+  }
   currentTemplateFile = tpl.file;
   DOC_SCANNED = tpl.placeholders || [];
   DOC_MAPPING = { ...(tpl.mapping || {}) };
@@ -12728,12 +12737,8 @@ function openTemplateFields(repKey, typeKey){
   // added manually for THIS template in a previous session — keep showing
   // it so it doesn't silently vanish.
   DOC_CUSTOM = Object.keys(DOC_MAPPING).filter(k => !DOC_SCANNED.includes(k) && !DOC_REMOVED.includes(k));
-  const slot = REP_SLOTS.find(s => s.key === repKey);
-  const typeLabel = (DOC_TYPES_REGISTRY?.[repKey] || []).find(t => t.key === typeKey)?.label || typeKey;
-  document.getElementById('dt-fields-header').textContent = `Змінні — ${slot?.label || repKey} · ${typeLabel} (${tpl.file})`;
-  renderDocTemplatesSection(); // re-render so the just-opened card gets its active highlight
-  renderTemplateFields();
-  document.getElementById('dt-fields-unified').scrollIntoView({behavior:'smooth', block:'start'});
+  renderDocTemplatesSection(); // rebuilds the cards, embedding the now-active template's fields section directly inside its own card
+  document.getElementById('dt-fields-unified')?.scrollIntoView({behavior:'smooth', block:'center'});
 }
 function renderUniversalVariablesList(){
   const wrap = document.getElementById('dt-universal-list');
