@@ -358,6 +358,11 @@ const FIELD_CATALOG = [
   { key: 'blank', label: '(порожньо — залишити поле для ручного заповнення)', get: () => '' },
 ];
 
+const GENERAL_VARS_KEY = 'document_general_variables';
+function getGeneralVariables() {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(GENERAL_VARS_KEY);
+  try { return row ? JSON.parse(row.value) : {}; } catch (e) { return {}; }
+}
 function getFieldValue(key, ctx) {
   if (!key) return '';
   if (key.startsWith('static:')) {
@@ -365,6 +370,12 @@ function getFieldValue(key, ctx) {
   }
   if (key.startsWith('path:')) {
     return resolveDataPath(key.slice('path:'.length), ctx);
+  }
+  if (key.startsWith('general:')) {
+    const name = key.slice('general:'.length);
+    const generalValue = getGeneralVariables()[name];
+    if (!generalValue) return '';
+    return getFieldValue(generalValue, ctx); // reuse the same static:/path:/catalog resolution
   }
   const entry = FIELD_CATALOG.find(f => f.key === key);
   if (!entry) return '';
@@ -636,7 +647,16 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
     }
     slots[repKey] = templates;
   }
-  res.json({ slots, needsMigration });
+  res.json({ slots, needsMigration, generalVariables: getGeneralVariables() });
+});
+router.put('/general-variables', auth, adminOnly, (req, res) => {
+  const { value } = req.body;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return res.status(400).json({ error: 'Очікується об\'єкт' });
+  const json = JSON.stringify(value);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(GENERAL_VARS_KEY);
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, GENERAL_VARS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(GENERAL_VARS_KEY, json);
+  res.json({ ok: true });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
   const { file, value } = req.body;

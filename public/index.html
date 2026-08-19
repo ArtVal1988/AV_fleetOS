@@ -2017,6 +2017,17 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="dt-templates-section" style="margin-bottom:24px"></div>
+
+      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #f0f2f5">
+        <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:4px">⭐ Створені змінні</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:12px;line-height:1.4">
+          Створіть тут один раз, потім у будь-якому договорі натисніть «+ Додати створену змінну» — і оберіть зі списку, замість того щоб заповнювати заново.
+        </div>
+        <div id="dt-general-list"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button onclick="saveGeneralVariables()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Зберегти створені змінні</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -12519,6 +12530,7 @@ async function deleteClientDoc(id){
 
 // ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
 let DOC_FIELDS = [];
+let GENERAL_VARIABLES = {}; // {name: mappingValue} — standalone, not tied to any specific document
 let DOC_MAPPING = {};
 let DOC_SCANNED = [];
 let DOC_CUSTOM = [];
@@ -12623,6 +12635,8 @@ async function openDocTemplatesPanel(repKey){
     currentDocSlots = mappingData.slots || {};
     currentTemplateFile = null; // close any previously-open template fields section — its data belongs to the panel instance that just closed
     document.getElementById('dt-migrate-banner').style.display = mappingData.needsMigration ? 'block' : 'none';
+    GENERAL_VARIABLES = mappingData.generalVariables || {};
+    renderGeneralVariablesList();
     renderDocTemplatesSection();
   }
   if(scrollToRepKeyOnOpen){
@@ -12672,6 +12686,93 @@ function renderDocTemplatesSection(){
   // The active card's own #dt-fields-unified placeholder now exists in the
   // DOM (just rebuilt above) — populate it with that template's rows.
   if(currentTemplateFile) renderTemplateFields();
+}
+function renderGeneralVariablesList(){
+  const wrap = document.getElementById('dt-general-list');
+  if(!wrap) return;
+  const names = Object.keys(GENERAL_VARIABLES);
+  const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
+  const rowsHtml = !names.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">Ще немає жодної створеної змінної</div>' :
+    names.map(name => {
+    const current = GENERAL_VARIABLES[name] || '';
+    const isStatic = current.startsWith('static:');
+    const isPath = current.startsWith('path:');
+    return `<div style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px;background:#fff">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:var(--font-mono);font-size:11px;color:#7c3aed;background:#f5f3ff;padding:3px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap;user-select:text;cursor:text">#${name}</span>
+        <span style="color:#9ca3af;font-size:11px">→</span>
+        <select data-name="${name}" class="dt-general-select" onchange="onGeneralFieldSelectChange(this)" style="flex:1;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:inherit;font-size:11px">
+          <option value="">— не заповнювати —</option>
+          <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
+          <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
+          <option disabled>──────────</option>
+          ${options}
+        </select>
+        <button type="button" onclick="removeGeneralVariable('${name}')" title="Видалити цю змінну" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:24px;height:24px;cursor:pointer;flex-shrink:0">✕</button>
+      </div>
+      <input type="text" class="dt-general-extra" data-name="${name}"
+        style="width:100%;margin-top:6px;padding:6px 8px;border:1px solid #e5e7eb;border-radius:5px;font-family:var(--font-mono);font-size:11px;display:${isStatic||isPath?'block':'none'}"
+        placeholder="${isPath?'наприклад: booking.rate або vehicle.specs.color':'текст, який завжди буде тут'}"
+        value="${isStatic?current.slice(7):isPath?current.slice(5):''}">
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rowsHtml + `<button type="button" onclick="addGeneralVariable()" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову створену змінну</button>`;
+  wrap.querySelectorAll('.dt-general-select').forEach(sel => {
+    const name = sel.dataset.name;
+    const val = GENERAL_VARIABLES[name] || '';
+    if(val.startsWith('static:')) sel.value = '__static__';
+    else if(val.startsWith('path:')) sel.value = '__path__';
+    else sel.value = val;
+  });
+}
+function onGeneralFieldSelectChange(sel){
+  const extra = sel.closest('div').parentElement.querySelector('.dt-general-extra');
+  const showExtra = sel.value === '__static__' || sel.value === '__path__';
+  extra.style.display = showExtra ? 'block' : 'none';
+  extra.placeholder = sel.value === '__path__' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
+}
+function addGeneralVariable(){
+  const name = prompt('Назва нової створеної змінної (без символу #), наприклад: дата');
+  if(!name) return;
+  const clean = name.trim().replace(/^#/,'').replace(/[^а-яА-ЯіІїЇєЄa-zA-Z0-9_]/g,'');
+  if(!clean) return;
+  if(Object.prototype.hasOwnProperty.call(GENERAL_VARIABLES, clean)){ alert('Змінна з такою назвою вже є'); return; }
+  GENERAL_VARIABLES[clean] = '';
+  renderGeneralVariablesList();
+}
+function removeGeneralVariable(name){
+  if(!confirm(`Видалити змінну #${name}? Документи, де вона вже використана, після цього перестануть її знаходити (поле стане порожнім).`)) return;
+  delete GENERAL_VARIABLES[name];
+  renderGeneralVariablesList();
+}
+async function saveGeneralVariables(){
+  const newValues = {};
+  document.querySelectorAll('.dt-general-select').forEach(sel => {
+    const name = sel.dataset.name;
+    if(!sel.value){ newValues[name] = ''; return; }
+    if(sel.value === '__static__' || sel.value === '__path__'){
+      const extra = sel.closest('div').parentElement.querySelector('.dt-general-extra');
+      const extraVal = (extra?.value || '').trim();
+      newValues[name] = extraVal ? (sel.value === '__static__' ? 'static:' : 'path:') + extraVal : '';
+    } else {
+      newValues[name] = sel.value;
+    }
+  });
+  GENERAL_VARIABLES = newValues;
+  await apiFetch('PUT', '/generate-document/general-variables', {value: GENERAL_VARIABLES});
+  alert('✅ Створені змінні збережено');
+}
+function onAddCreatedFieldPick(sel){
+  const name = sel.value;
+  if(!name) return;
+  if(DOC_SCANNED.includes(name) || DOC_CUSTOM.includes(name)){
+    alert('Змінна з такою назвою вже є в списку цього документа');
+    sel.value = '';
+    return;
+  }
+  DOC_CUSTOM.push(name);
+  DOC_MAPPING[name] = 'general:' + name;
+  renderTemplateFields();
 }
 function addCustomDocField(){
   const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
@@ -12745,7 +12846,15 @@ function renderTemplateFields(){
     </div>`;
   }).join('');
   const hiddenNote = DOC_REMOVED.length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields()">↺ Приховано рядків: ${DOC_REMOVED.length} · натисніть, щоб показати знову</div>` : '';
-  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField()" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  const generalNames = Object.keys(GENERAL_VARIABLES);
+  const generalOptions = generalNames.length
+    ? generalNames.map(name=>`<option value="${name}">#${name}</option>`).join('')
+    : '<option value="" disabled>Ще немає жодної створеної змінної внизу</option>';
+  const addPickerHtml = `<select onchange="onAddCreatedFieldPick(this)" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">
+    <option value="" selected disabled>+ Додати створену змінну — оберіть зі списку</option>
+    ${generalOptions}
+  </select>`;
+  wrap.innerHTML = rowsHtml + hiddenNote + addPickerHtml;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
     const val = DOC_MAPPING[ph] || '';
