@@ -358,6 +358,11 @@ const FIELD_CATALOG = [
   { key: 'blank', label: '(порожньо — залишити поле для ручного заповнення)', get: () => '' },
 ];
 
+const UNIVERSAL_VARS_KEY = 'document_universal_variables';
+function getUniversalVariables() {
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(UNIVERSAL_VARS_KEY);
+  try { return row ? JSON.parse(row.value) : []; } catch (e) { return []; }
+}
 function getFieldValue(key, ctx) {
   if (!key) return '';
   if (key.startsWith('static:')) {
@@ -365,6 +370,12 @@ function getFieldValue(key, ctx) {
   }
   if (key.startsWith('path:')) {
     return resolveDataPath(key.slice('path:'.length), ctx);
+  }
+  if (key.startsWith('universal:')) {
+    const uKey = key.slice('universal:'.length);
+    const uv = getUniversalVariables().find(v => v.key === uKey);
+    if (!uv) return '';
+    return getFieldValue(uv.value, ctx); // reuse the same static:/path:/catalog resolution
   }
   const entry = FIELD_CATALOG.find(f => f.key === key);
   if (!entry) return '';
@@ -391,10 +402,8 @@ function resolveDataPath(pathStr, ctx) {
 
 // ── Mapping storage (reuses the settings table) ─────────────────
 const MAPPING_SETTINGS_KEY = 'document_variable_mapping';
-// One flat, shared mapping per ФОП slot — a #placeholder means the same
-// thing no matter which of the slot's document types it appears in
-// (Договір, Акт, Рахунок_оренда, etc.), so there's no reason to configure
-// the same #номер -> contract_number mapping separately for each one.
+// Seed values used the first time a template file has no mapping of its
+// own yet (byFile[file] empty) — falls back to _base, the shared layer.
 const DEFAULT_MAPPING = {
   'номер': 'contract_number', 'дата': 'today_full', 'фирма1': 'vehicle_name', 'код1': 'vehicle_plate',
   'фирма2': 'client_legal', 'код2': 'client_inn', 'лицо2': 'client_name', 'адрес2': 'client_phone',
@@ -638,7 +647,16 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
     }
     slots[repKey] = templates;
   }
-  res.json({ slots, needsMigration });
+  res.json({ slots, needsMigration, universalVariables: getUniversalVariables() });
+});
+router.put('/universal-variables', auth, adminOnly, (req, res) => {
+  const { value } = req.body;
+  if (!Array.isArray(value)) return res.status(400).json({ error: 'Очікується масив' });
+  const json = JSON.stringify(value);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(UNIVERSAL_VARS_KEY);
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, UNIVERSAL_VARS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(UNIVERSAL_VARS_KEY, json);
+  res.json({ ok: true });
 });
 router.put('/mapping', auth, adminOnly, (req, res) => {
   const { file, value } = req.body;

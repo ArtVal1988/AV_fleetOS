@@ -2021,6 +2021,32 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:8px;padding-top:8px;border-top:1px solid #f0f2f5" id="dt-fields-header">Змінні — оберіть шаблон вище, натиснувши «⚙️ Змінні»</div>
       <div id="dt-fields-unified"></div>
 
+      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #f0f2f5">
+        <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:4px">⭐ Універсальні змінні</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:12px;line-height:1.4">
+          Створіть тут один раз (фіксований текст або шлях до даних) — потім оберіть зі списку в будь-якому документі, замість того щоб вписувати заново щоразу.
+        </div>
+        <div id="dt-universal-list" style="margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1.2">
+            <label class="vf-lbl">Назва</label>
+            <input id="dt-univ-new-label" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
+          </div>
+          <div style="flex:0.8">
+            <label class="vf-lbl">Тип</label>
+            <select id="dt-univ-new-type" class="vf-inp" style="width:100%" onchange="onUnivNewTypeChange()">
+              <option value="static">✏️ Фіксований текст</option>
+              <option value="path">🔧 Шлях до даних</option>
+            </select>
+          </div>
+          <div style="flex:1.5">
+            <label class="vf-lbl">Значення</label>
+            <input id="dt-univ-new-value" type="text" class="vf-inp" placeholder="текст, який завжди буде тут" style="width:100%">
+          </div>
+          <button type="button" onclick="addUniversalVariable()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;height:34px">+ Додати</button>
+        </div>
+      </div>
+
       <div style="display:flex;justify-content:flex-end;margin-top:20px;position:sticky;bottom:0;background:#fff;padding-top:12px;border-top:1px solid #f0f2f5">
         <button onclick="saveDocTemplateMapping()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:10px 20px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">Зберегти налаштування полів</button>
       </div>
@@ -12526,6 +12552,7 @@ async function deleteClientDoc(id){
 
 // ── DOCUMENT TEMPLATES ADMIN PANEL ──────────────────────────────
 let DOC_FIELDS = [];
+let UNIVERSAL_VARIABLES = []; // [{key, label, value}] — value is 'static:...' or 'path:...'
 let DOC_MAPPING = {};
 let DOC_SCANNED = [];
 let DOC_CUSTOM = [];
@@ -12632,6 +12659,8 @@ async function openDocTemplatesPanel(repKey){
     document.getElementById('dt-fields-header').textContent = 'Змінні — оберіть шаблон вище, натиснувши «⚙️ Змінні»';
     document.getElementById('dt-fields-unified').innerHTML = '';
     document.getElementById('dt-migrate-banner').style.display = mappingData.needsMigration ? 'block' : 'none';
+    UNIVERSAL_VARIABLES = mappingData.universalVariables || [];
+    renderUniversalVariablesList();
     renderDocTemplatesSection();
   }
   if(scrollToRepKeyOnOpen){
@@ -12706,10 +12735,53 @@ function openTemplateFields(repKey, typeKey){
   renderTemplateFields();
   document.getElementById('dt-fields-unified').scrollIntoView({behavior:'smooth', block:'start'});
 }
+function renderUniversalVariablesList(){
+  const wrap = document.getElementById('dt-universal-list');
+  if(!wrap) return;
+  if(!UNIVERSAL_VARIABLES.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:4px 0">Ще немає жодної універсальної змінної</div>';
+    return;
+  }
+  wrap.innerHTML = UNIVERSAL_VARIABLES.map(v => {
+    const isPath = v.value.startsWith('path:');
+    const rawVal = isPath ? v.value.slice(5) : v.value.slice(7);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:6px;background:#fffbeb">
+      <span style="font-size:11px;font-weight:600;color:#1a1d26;flex:1.2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">⭐ ${v.label}</span>
+      <span style="font-size:10px;color:${isPath?'#7c3aed':'#166534'};background:${isPath?'#f5f3ff':'#f0fdf4'};padding:2px 6px;border-radius:4px;flex-shrink:0">${isPath?'🔧 шлях':'✏️ текст'}</span>
+      <span style="font-size:10.5px;color:#6b7280;flex:1.5;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${rawVal}</span>
+      <button type="button" onclick="deleteUniversalVariable('${v.key}')" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:22px;height:22px;cursor:pointer;flex-shrink:0;font-size:11px">✕</button>
+    </div>`;
+  }).join('');
+}
+function onUnivNewTypeChange(){
+  const type = document.getElementById('dt-univ-new-type').value;
+  document.getElementById('dt-univ-new-value').placeholder = type === 'path' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
+}
+async function addUniversalVariable(){
+  const label = document.getElementById('dt-univ-new-label').value.trim();
+  const type = document.getElementById('dt-univ-new-type').value;
+  const value = document.getElementById('dt-univ-new-value').value.trim();
+  if(!label || !value){ alert('Заповніть назву і значення'); return; }
+  const key = 'u' + Date.now();
+  UNIVERSAL_VARIABLES.push({ key, label, value: (type === 'path' ? 'path:' : 'static:') + value });
+  await apiFetch('PUT', '/generate-document/universal-variables', {value: UNIVERSAL_VARIABLES});
+  document.getElementById('dt-univ-new-label').value = '';
+  document.getElementById('dt-univ-new-value').value = '';
+  renderUniversalVariablesList();
+  if(currentTemplateFile) renderTemplateFields(); // so the new one shows up immediately in the currently-open template's dropdown too
+}
+async function deleteUniversalVariable(key){
+  if(!confirm('Видалити цю універсальну змінну? Документи, де вона вже обрана, після цього перестануть її знаходити (поле стане порожнім) — доведеться обрати щось інше.')) return;
+  UNIVERSAL_VARIABLES = UNIVERSAL_VARIABLES.filter(v => v.key !== key);
+  await apiFetch('PUT', '/generate-document/universal-variables', {value: UNIVERSAL_VARIABLES});
+  renderUniversalVariablesList();
+  if(currentTemplateFile) renderTemplateFields();
+}
 function renderTemplateFields(){
   const wrap = document.getElementById('dt-fields-unified');
   const placeholders = [...DOC_SCANNED, ...DOC_CUSTOM].filter(ph => !DOC_REMOVED.includes(ph));
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
+  const univOptions = UNIVERSAL_VARIABLES.map(v=>`<option value="universal:${v.key}">⭐ ${v.label}</option>`).join('');
   const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У завантаженому шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
     placeholders.map((ph, idx) => {
     const current = DOC_MAPPING[ph] || '';
@@ -12727,6 +12799,7 @@ function renderTemplateFields(){
           <option value="">— не заповнювати —</option>
           <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
           <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
+          ${univOptions ? `<option disabled>─── Універсальні змінні ───</option>${univOptions}` : ''}
           <option disabled>──────────</option>
           ${options}
         </select>
