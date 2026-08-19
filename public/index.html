@@ -12834,6 +12834,7 @@ function renderTemplateFields(){
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
     const isCustom = DOC_CUSTOM.includes(ph);
+    const isGeneral = current.startsWith('general:');
     return `<div class="dt-row" draggable="false" data-idx="${idx}"
         ondragstart="dtRowDragStart(event)" ondragover="dtRowDragOver(event)" ondrop="dtRowDrop(event)" ondragend="dtRowDragEnd(event)"
         style="border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;padding:8px 10px;background:#fff">
@@ -12845,6 +12846,7 @@ function renderTemplateFields(){
           <option value="">— не заповнювати —</option>
           <option value="__static__"${isStatic?' selected':''}>✏️ Статичний текст (завжди однаковий)</option>
           <option value="__path__"${isPath?' selected':''}>🔧 Довільний шлях до даних (booking.rate, vehicle.specs.color...)</option>
+          ${Object.keys(GENERAL_VARIABLES).length ? `<option disabled>─── Створені змінні ───</option>${Object.keys(GENERAL_VARIABLES).map(name=>`<option value="general:${name}"${isGeneral&&current.slice(8)===name?' selected':''}>⭐ #${name}</option>`).join('')}` : ''}
           <option disabled>──────────</option>
           ${options}
         </select>
