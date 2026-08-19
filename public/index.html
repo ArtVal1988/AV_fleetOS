@@ -2043,6 +2043,14 @@ input.dm-pf-val.tel{font-size:14px;}
           <button type="button" onclick="addUniversalVariable()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;height:34px">+ Додати</button>
         </div>
       </div>
+
+      <div style="margin-top:28px;padding-top:16px;border-top:1px solid #f0f2f5">
+        <div style="font-size:13px;font-weight:700;color:#1a1d26;margin-bottom:4px">📋 Довідник системних полів</div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:12px;line-height:1.4">
+          Повний перелік готових полів, доступних для вибору в кожному документі (для перегляду, нічого тут не редагується).
+        </div>
+        <div id="dt-fieldcatalog-list"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -12652,6 +12660,7 @@ async function openDocTemplatesPanel(repKey){
     document.getElementById('dt-migrate-banner').style.display = mappingData.needsMigration ? 'block' : 'none';
     UNIVERSAL_VARIABLES = mappingData.universalVariables || [];
     renderUniversalVariablesList();
+    renderFieldCatalogList();
     renderDocTemplatesSection();
   }
   if(scrollToRepKeyOnOpen){
@@ -12759,6 +12768,20 @@ function openTemplateFields(repKey, typeKey){
   DOC_CUSTOM = [];
   renderDocTemplatesSection(); // rebuilds the cards, embedding the now-active template's fields section directly inside its own card
   document.getElementById('dt-fields-unified')?.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function renderFieldCatalogList(){
+  const wrap = document.getElementById('dt-fieldcatalog-list');
+  if(!wrap) return;
+  if(!DOC_FIELDS.length){
+    wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:4px 0">Завантаження…</div>';
+    return;
+  }
+  wrap.innerHTML = `<div style="max-height:260px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:7px">
+    ${DOC_FIELDS.map((f,i) => `<div style="display:flex;gap:10px;padding:6px 10px;${i%2?'background:#fafafa':''};font-size:11px">
+      <span style="font-family:var(--font-mono);color:#6b7280;flex-shrink:0;width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.key}</span>
+      <span style="color:#1a1d26">${f.label}</span>
+    </div>`).join('')}
+  </div>`;
 }
 function renderUniversalVariablesList(){
   const wrap = document.getElementById('dt-universal-list');
