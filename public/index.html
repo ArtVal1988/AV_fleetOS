@@ -12702,6 +12702,25 @@ function renderDocTemplatesSection(){
   // DOM (just rebuilt above) — populate it with that template's rows.
   if(currentTemplateFile) renderTemplateFields();
 }
+function onAddDocFieldPick(sel){
+  const val = sel.value;
+  sel.value = ''; // reset so it shows the placeholder prompt again next time
+  if(val === '__manual__'){
+    addCustomDocField();
+    return;
+  }
+  const uv = UNIVERSAL_VARIABLES.find(v => v.key === val);
+  if(!uv) return;
+  const clean = uv.label.trim().replace(/^#/,'').replace(/[^а-яА-ЯіІїЇєЄa-zA-Z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+  if(!clean){ alert('Не вдалось сформувати назву поля з цієї назви змінної — додайте вручну'); return; }
+  if(DOC_SCANNED.includes(clean) || DOC_CUSTOM.includes(clean)){
+    alert('Змінна з такою назвою вже є в списку цього документа');
+    return;
+  }
+  DOC_CUSTOM.push(clean);
+  DOC_MAPPING[clean] = 'universal:' + uv.key; // pre-configured — no need to also pick it again in the new row's own dropdown
+  renderTemplateFields();
+}
 function addCustomDocField(){
   const name = prompt('Назва нової змінної (без символу #), наприклад: комплектуючі');
   if(!name) return;
@@ -12815,7 +12834,13 @@ function renderTemplateFields(){
     </div>`;
   }).join('');
   const hiddenNote = DOC_REMOVED.length ? `<div style="font-size:10.5px;color:#9ca3af;margin:4px 0 8px;cursor:pointer" onclick="restoreDocFields()">↺ Приховано рядків: ${DOC_REMOVED.length} · натисніть, щоб показати знову</div>` : '';
-  wrap.innerHTML = rowsHtml + hiddenNote + `<button type="button" onclick="addCustomDocField()" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">+ Додати нову змінну</button>`;
+  const univPickerOptions = UNIVERSAL_VARIABLES.map(v=>`<option value="${v.key}">⭐ ${v.label}</option>`).join('');
+  const addPickerHtml = `<select onchange="onAddDocFieldPick(this)" style="width:100%;background:#f0fdf4;border:1px dashed #86efac;color:#166534;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-top:4px">
+    <option value="" selected disabled>+ Додати змінну — оберіть зі списку</option>
+    ${univPickerOptions ? univPickerOptions + '<option disabled>──────────</option>' : ''}
+    <option value="__manual__">✏️ Своя (вручну, новий #заповнювач)</option>
+  </select>`;
+  wrap.innerHTML = rowsHtml + hiddenNote + addPickerHtml;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
     const val = DOC_MAPPING[ph] || '';
