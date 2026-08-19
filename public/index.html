@@ -1854,9 +1854,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="cf-resident-fields">
-        <div style="border-top:1px solid #f0f2f5;padding-top:14px"></div>
-
-        <div class="msec-inner-sep">
+        <div class="msec-inner-sep" style="margin-top:0">
           <div style="display:flex;gap:8px">
             <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')" style="flex:1">
               <span id="cf-passport-toggle-icon">⊕</span>
@@ -1870,7 +1868,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </button>
           </div>
           <div class="extras-panel" id="cf-doc-passport-fields" style="display:none">
-            <div style="display:flex;gap:10px;margin:12px 0">
+            <div style="display:flex;gap:10px;margin:0">
               <div style="flex:1">
                 <label class="vf-lbl">Серія та номер</label>
                 <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456" style="width:100%">
@@ -1886,7 +1884,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
           <div class="extras-panel" id="cf-doc-idcard-fields" style="display:none">
-            <div style="display:flex;gap:10px;margin:12px 0">
+            <div style="display:flex;gap:10px;margin:0">
               <div style="flex:1">
                 <label class="vf-lbl">Документ №</label>
                 <input id="cf-idcard-num" type="text" class="vf-inp" placeholder="123456789" style="width:100%">
@@ -12498,9 +12496,9 @@ function renderClientDocsList(){
   wrap.innerHTML = CLIENT_DOCS.map((d,i) => {
     const thumb = d.thumbUrl || (d.mime_type && d.mime_type.startsWith('image/') ? d.url : null);
     const cacheBustThumb = thumb ? thumb + (thumb.includes('?')?'&':'?') + 't=' + (d._rotatedAt||0) : thumb;
-    const preview = thumb ? `<img src="${cacheBustThumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:22px">📄</div>';
-    return `<div style="position:relative;width:76px">
-      <a href="javascript:void(0)" onclick="viewAttachmentGallery('client-docs',${i})" style="display:flex;align-items:center;justify-content:center;width:76px;height:76px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
+    const preview = thumb ? `<img src="${cacheBustThumb}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:16px">📄</div>';
+    return `<div style="position:relative;width:56px">
+      <a href="javascript:void(0)" onclick="viewAttachmentGallery('client-docs',${i})" style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:8px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;cursor:pointer">${preview}</a>
       <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${labels[d.doc_type]||d.doc_type}</div>
       <button type="button" onclick="deleteClientDoc(${d.id})" title="Видалити" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fecaca;color:#dc2626;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
     </div>`;
