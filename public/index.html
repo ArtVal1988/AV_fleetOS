@@ -2024,7 +2024,8 @@ input.dm-pf-val.tel{font-size:14px;}
           Створіть тут один раз, потім у будь-якому договорі натисніть «+ Додати створену змінну» — і оберіть зі списку, замість того щоб заповнювати заново.
         </div>
         <div id="dt-general-list"></div>
-        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+        <div style="display:flex;justify-content:space-between;margin-top:10px">
+          <button onclick="collectGeneralVariablesFromTemplates()" style="background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">📥 Зібрати всі змінні з шаблонів</button>
           <button onclick="saveGeneralVariables()" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer">Зберегти створені змінні</button>
         </div>
       </div>
@@ -12744,6 +12745,16 @@ function removeGeneralVariable(name){
   if(!confirm(`Видалити змінну #${name}? Документи, де вона вже використана, після цього перестануть її знаходити (поле стане порожнім).`)) return;
   delete GENERAL_VARIABLES[name];
   renderGeneralVariablesList();
+}
+async function collectGeneralVariablesFromTemplates(){
+  if(!confirm('Зібрати всі змінні з усіх шаблонів у "Створені змінні"? Вже наявні створені змінні не постраждають — додадуться лише нові, яких там ще немає.')) return;
+  const res = await apiFetch('POST', '/generate-document/general-variables/collect-from-templates', {});
+  if(res){
+    GENERAL_VARIABLES = res.generalVariables || GENERAL_VARIABLES;
+    renderGeneralVariablesList();
+    if(currentTemplateFile) renderTemplateFields(); // so the newly-collected ones show up immediately in the picker too
+    alert(`✅ Додано нових змінних: ${res.addedCount}`);
+  }
 }
 async function saveGeneralVariables(){
   const newValues = {};

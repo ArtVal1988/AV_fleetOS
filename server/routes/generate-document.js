@@ -658,6 +658,32 @@ router.put('/general-variables', auth, adminOnly, (req, res) => {
   else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(GENERAL_VARS_KEY, json);
   res.json({ ok: true });
 });
+// One-time action: collect every placeholder->value mapping currently
+// configured across ALL templates (every repKey+docType combination) into
+// the standalone Створені змінні collection — existing created variables
+// are preserved untouched, only genuinely new names get added.
+router.post('/general-variables/collect-from-templates', auth, adminOnly, (req, res) => {
+  const general = getGeneralVariables();
+  let addedCount = 0;
+  for (const repKey of Object.keys(DOCUMENT_TYPES)) {
+    for (const t of DOCUMENT_TYPES[repKey]) {
+      const file = templateFileName(t.key, repKey);
+      const mapping = getMappingForFile(file);
+      for (const [ph, val] of Object.entries(mapping)) {
+        if (!val) continue;
+        if (!Object.prototype.hasOwnProperty.call(general, ph)) {
+          general[ph] = val;
+          addedCount++;
+        }
+      }
+    }
+  }
+  const json = JSON.stringify(general);
+  const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(GENERAL_VARS_KEY);
+  if (existing) db.prepare("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?").run(json, GENERAL_VARS_KEY);
+  else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(GENERAL_VARS_KEY, json);
+  res.json({ ok: true, addedCount, generalVariables: general });
+});
 router.put('/mapping', auth, adminOnly, (req, res) => {
   const { file, value } = req.body;
   if (!file || typeof value !== 'object') return res.status(400).json({ error: 'Потрібні поля file та value' });
