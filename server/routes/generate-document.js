@@ -878,6 +878,13 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
       if (entry.exchangeRate > 0) ctx.booking.exchangeRate = entry.exchangeRate;
     }
   }
+  // Отримання/Повернення за адресою (and неробочі години) only ever apply
+  // to the main period — the car isn't delivered/collected again for an
+  // extension — so once the scoping above actually narrowed this document
+  // to an extension period, these fees must not carry into its own total.
+  if (periodLabel !== 'Основний' && ctx.booking.extras) {
+    ctx.booking.extras = { ...ctx.booking.extras, pickup_address:null, pickup_offhours:null, return_address:null, return_offhours:null };
+  }
 
   // Main-period payment-row acts (Платежі основного періоду оренди) need
   // Оплачено/Борг to reflect the state as of THIS SPECIFIC payment, not the
