@@ -3979,7 +3979,7 @@ function showTooltip(e,bid,subContext){
       const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
       const hCur = h.currency||'$';
       const hExRate = parseFloat(h.totalExchangeRate) || 0;
-      const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmt2((h.rate||0)/hExRate)} $)</span>` : '';
+      const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart((h.rate||0)/hExRate)} $)</span>` : '';
       return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
@@ -3994,7 +3994,7 @@ function showTooltip(e,bid,subContext){
       const ext = b.extension;
       const st = getExtStatus(ext);
       const color = st==='paid'?'#2F6364':st==='partial'?'#f0a830':'#ef4444';
-      const label = st==='paid'?'✓':'Борг '+fmt1((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
+      const label = st==='paid'?'✓':'Борг '+fmtSmart((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         ${st==='paid' ? `<span style="display:flex;align-items:center;gap:6px">
@@ -4010,7 +4010,7 @@ function showTooltip(e,bid,subContext){
       if(st !== 'paid' && ext.fromDate && ext.toDate && ext.cost>0){
         const extCur = ext.currency||b.currency||'$';
         const extCurColor = extCur==='₴' ? '#166534' : '#1d4ed8';
-        const amtSpan = amt => `<span style="color:${extCurColor};font-weight:600">${fmt1(amt)} ${extCur}</span>`;
+        const amtSpan = amt => `<span style="color:${extCurColor};font-weight:600">${fmtSmart(amt)} ${extCur}</span>`;
         const totalDays = ext.days>0 ? ext.days : Math.max(1, Math.round((new Date(ext.toDate)-new Date(ext.fromDate))/86400000));
         const paid = ext.amountPaid||0;
         const dailyRate = ext.cost/totalDays;
@@ -4151,7 +4151,7 @@ function showTooltip(e,bid,subContext){
           // since they're assumed to share the booking's primary currency.
           const totalRemaining = mainRemaining + extRemaining;
           const debtCur = hasActiveExt && !b.partialPaymentActive ? (b.extension.currency||b.currency||'$') : cur;
-          return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">⚠ Борг</span> <span style="color:${curColor(debtCur)}">${fmt1(totalRemaining)} ${debtCur}</span></span>`;
+          return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;background:#fee2e2"><span style="color:#dc2626">⚠ Борг</span> <span style="color:${curColor(debtCur)}">${fmtSmart(totalRemaining)} ${debtCur}</span></span>`;
         })()}
       </span>
     </div>
@@ -4162,7 +4162,7 @@ function showTooltip(e,bid,subContext){
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmt2(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>
+    <div class="tt-row" style="padding:0 8px"><span class="tt-label">Оренда</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>
     ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700;color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmtSmart(extrasUah)+'₴':'+'+fmtSmart(extrasTotal)+cur}</span></div>`:''}
     ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">ПДВ ${b.vatRate}%</span><span class="tt-val">${canShowUahOnly?`<span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:`<span style="color:${curColor(cur)}">+${fmtSmart(vatAmount)}${cur}</span>${vatUah!==null?` · <span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:''}`}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
