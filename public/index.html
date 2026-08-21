@@ -8156,9 +8156,12 @@ function toggleExtensionSection(){
     onExtCurrencyChange();
     onExtDatesChanged();
   } else {
-    // Deactivated: return date reverts to the booking's own end (no longer extended)
-    const origEnd = document.getElementById('bm-end').value;
-    if(origEnd) document.getElementById('bm-return-date').value = origEnd;
+    // Deactivated: return date reverts to wherever the booking's period
+    // actually ends now — the last remaining extension in history if any
+    // still exist, otherwise the booking's own original end.
+    const lastRemaining = currentExtHistory.length ? currentExtHistory[currentExtHistory.length-1] : null;
+    const revertTo = lastRemaining ? lastRemaining.toDate : document.getElementById('bm-end').value;
+    if(revertTo) document.getElementById('bm-return-date').value = revertTo;
     updateExtensionPaidUI();
     const widget = document.getElementById('ext-debt-at-date-widget');
     if(widget) widget.style.display = 'none';
