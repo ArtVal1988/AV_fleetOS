@@ -5388,14 +5388,14 @@ const EDIT_HISTORY_FIELD_LABELS = {
   'ret.date':'Дата повернення', 'ret.time':'Час повернення', 'ret.loc':'Місце повернення',
   'extension.active':'Продовження активне', 'extension.fromDate':'Продовження від', 'extension.toDate':'Продовження до',
   'extension.days':'Днів продовження', 'extension.rate':'Ставка продовження', 'extension.cost':'Сума продовження',
-  'extension.currency':'Валюта продовження',
+  'extension.currency':'Валюта продовження', 'extension.amountPaid':'Оплачено за продовження',
   'repairPause.fromDate':'Ремонт від', 'repairPause.toDate':'Ремонт до',
 };
 // Internal/metadata fields — never meaningful to show as a "change" to the user.
 const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','_updatedAt','_createdAt','_createdBy','_rotatedAt','_id']);
 const EDIT_HISTORY_ARRAY_LABELS = {
   fines:'Штрафи', substituteVehicles:'Підмінні авто', extensionHistory:'Історія продовжень',
-  messengers:'Месенджери', payments:'Платежі', equipment:'Обладнання',
+  messengers:'Месенджери', payments:'Платежі', equipment:'Обладнання', 'extension.payments':'Платежі продовження',
 };
 function fmtHistVal(v){
   if(v===undefined || v===null || v==='') return '—';
