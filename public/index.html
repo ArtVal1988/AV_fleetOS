@@ -3977,10 +3977,13 @@ function showTooltip(e,bid,subContext){
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmtSmart(hDays*(h.rate||0));
       const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
+      const hCur = h.currency||'$';
+      const hExRate = parseFloat(h.totalExchangeRate) || 0;
+      const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmt2(hDays*(h.rate||0)/hExRate)} $)</span>` : '';
       return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
         <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(h.currency||'$')}">${fmtSmart(h.rate||0)} ${h.currency||'$'}</span> = <span style="color:${curColor(h.currency||'$')}">${total} ${h.currency||'$'}</span>${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''}</span>
+          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(hCur)}">${fmtSmart(h.rate||0)} ${hCur}</span> = <span style="color:${curColor(hCur)}">${total} ${hCur}</span>${usdEquiv}${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''}</span>
           <span class="tt-val" style="color:#2F6364;font-weight:700">✓</span>
         </span>
       </div>`;
@@ -3995,7 +3998,7 @@ function showTooltip(e,bid,subContext){
       activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
         <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
         ${st==='paid' ? `<span style="display:flex;align-items:center;gap:6px">
-          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmtSmart(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
+          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmtSmart(ext.cost)} ${ext.currency||b.currency||'$'}${(ext.currency||b.currency)==='₴'&&ext.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmt2(ext.cost/ext.exchangeRate)} $)</span>`:''}</span>`:''}
           <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
         </span>` : ''}
       </div>`;
