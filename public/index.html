@@ -8624,10 +8624,18 @@ function addExtPayment(){
   const amount = parseThousands(amountEl.value);
   if(!amount || amount <= 0){ alert('Вкажіть суму платежу'); return; }
   const total = parseThousands(document.getElementById('bm-ext-total').value);
+  const cur = document.getElementById('bm-ext-currency')?.value || '$';
   const isEditing = extEditingPaymentIndex !== null;
   const otherPaymentsTotal = currentExtPayments.reduce((s,p,i)=>i===extEditingPaymentIndex?s:s+(p.amount||0), 0);
   if(total > 0 && otherPaymentsTotal + amount > total + 0.01){
-    if(!confirm(`Сума перевищить загальну вартість продовження (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
+    // Extreme overpayment (3x+ the total) is almost always a data-entry
+    // mistake — most often the wrong currency (e.g. typing a ₴ amount into
+    // a $ field) — so a single confirm()-click warning is too easy to blow
+    // past without noticing. Requires re-typing the exact amount instead.
+    if(amount > total * 3){
+      const typed = prompt(`⚠ Сума ${fmtSmart(amount)} ${cur} У КІЛЬКА РАЗІВ БІЛЬША за загальну вартість продовження (${fmtSmart(total)} ${cur}) — це часто трапляється через помилку з валютою. Якщо сума дійсно правильна, введіть її ще раз тут для підтвердження:`);
+      if(parseThousands(typed || '') !== amount){ alert('Підтвердження не збіглося — платіж не додано.'); return; }
+    } else if(!confirm(`Сума перевищить загальну вартість продовження (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
   }
   if(isEditing){
     currentExtPayments[extEditingPaymentIndex] = { amount, date: dateEl.value || '', method: extNewPaymentMethod };
