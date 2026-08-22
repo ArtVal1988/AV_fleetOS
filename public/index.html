@@ -270,6 +270,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .vat-row-label{font-size:10px!important;}
   .vat-orig,.vat-uah{font-size:11px!important;}
   #dp-total-label,#dp-total,#dp-total-uah{font-size:13px!important;}
+  /* Booking form: compact the 5 category buttons (Продовження/Підмінне/
+     Штрафи/Ремонт/Утримання), payment-method icon pills, and rate/deposit
+     inputs — these were oversized on mobile (per user screenshot). */
+  #bm-sections-nav-row > div{gap:4px!important;}
+  .bm-sec-btn{padding:6px 2px!important;font-size:8px!important;gap:1px!important;}
+  .bm-sec-btn span:first-child{font-size:13px!important;}
+  .dep-cur-pill{padding:3px 4px!important;}
+  .dep-cur-pill svg{width:12px!important;height:12px!important;}
+  #bm-deposit{font-size:15px!important;}
+  .km-compact-field{padding:10px 8px 5px!important;}
+  .km-compact-field input{font-size:14px!important;}
   .vat-row-label[style*="display:flex"]{gap:6px!important;}
   .km-row-compact{flex-wrap:wrap!important;}
   .km-diff-badge{flex:1 1 100%!important;justify-content:center;}
