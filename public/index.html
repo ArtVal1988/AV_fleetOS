@@ -4901,11 +4901,9 @@ function editBooking(bid){
   document.getElementById('bm-return-time').value=b.ret?.time||'09:00';
   document.getElementById('bm-return-loc').value=b.ret?.loc||'';
   updateStatusSelectColor();
+  currentExtHistory = (b.extensionHistory||[]).slice();
   if(b.extension && b.extension.active){
     extDaysOverridden=false;
-    document.getElementById('bm-ext-active').checked=true;
-    document.getElementById('bm-ext-fields').style.display='';
-    document.getElementById('bm-ext-gen-act-btn').style.display='';
     setExtDateField('bm-ext-from', b.extension.fromDate||'');
     setExtDateField('bm-ext-to', b.extension.toDate||'');
     document.getElementById('bm-ext-days').value=b.extension.days||Math.max(1,Math.round((new Date(b.extension.toDate)-new Date(b.extension.fromDate))/86400000));
@@ -4919,19 +4917,18 @@ function editBooking(bid){
     document.getElementById('bm-ext-rate2').value=b.extension.exchangeRate||'';
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
+    document.getElementById('bm-ext-active').checked=true;
+    toggleExtensionSection(); // single canonical path — sets bm-ext-fields/bm-ext-gen-act-btn visibility, moves the Повернення row, shows bm-block-ext-section, exactly like activating via the button
     onExtRateInput();
     onExtCurrencyChange();
     const debtDatePicked = document.getElementById('ext-debt-date-picked');
     if(debtDatePicked) debtDatePicked.value = '';
     updateExtensionPaidUI();
   } else {
-    document.getElementById('bm-ext-active').checked=false;
-    document.getElementById('bm-ext-fields').style.display='none';
-    document.getElementById('bm-ext-gen-act-btn').style.display='none';
     loadExtPayments([]);
+    document.getElementById('bm-ext-active').checked=false;
+    toggleExtensionSection();
   }
-  moveReturnRow(!!(b.extension && b.extension.active));
-  currentExtHistory = (b.extensionHistory||[]).slice();
   editingExtHistoryIndex = null;
   renderExtTimeline();
 
