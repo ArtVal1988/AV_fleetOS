@@ -84,6 +84,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .sticker-popup-actions{display:flex;gap:8px;justify-content:flex-end;}
 .btn{border:none;border-radius:4px;padding:8px 14px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;letter-spacing:.8px;text-transform:uppercase;transition:all .15s;}
 .btn-primary{background:var(--accent);color:#fff;}
+.nb-icon{display:none;}
 .btn-primary:hover{box-shadow:0 4px 20px rgba(37,99,235,.3);transform:translateY(-1px);}
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
@@ -205,6 +206,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .topbar>div:first-child{gap:4px!important;}
   .topbar-right{gap:6px!important;}
   .topbar .btn-primary{padding:7px 10px;font-size:10px;}
+  #new-booking-btn{width:34px;height:34px;padding:0!important;border-radius:10px!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  #new-booking-btn .nb-icon{display:block!important;font-size:20px;line-height:1;font-weight:700;}
+  #new-booking-btn .nb-text{display:none!important;}
   #topbar-username{display:none;}
   .topbar-right .btn-ghost{padding:0;width:30px;height:30px;border-radius:50%;font-size:14px;overflow:hidden;white-space:nowrap;}
   .topbar-right .btn-ghost .logout-text{display:none;}
@@ -2275,7 +2279,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div><!-- end month wrapper -->
     <div class="topbar-right" style="gap:14px">
-      <button class="btn btn-primary" onclick="openBookingModal()">Замовлення</button>
+      <button class="btn btn-primary" id="new-booking-btn" onclick="openBookingModal()"><span class="nb-icon">+</span><span class="nb-text">Замовлення</span></button>
       <div style="width:1px;height:22px;background:var(--border)"></div>
       <div style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:5px 12px 5px 6px">
         <span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0" id="topbar-user-initials"></span>
