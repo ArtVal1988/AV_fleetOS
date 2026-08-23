@@ -2270,9 +2270,9 @@ input.dm-pf-val.tel{font-size:14px;}
       <button class="btn btn-primary" onclick="goToday()">Сьогодні</button>
       <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
       <div class="month-nav">
-        <button class="mn-btn" onclick="shiftMonth(-1)">‹</button>
+        <button class="mn-btn" onclick="shiftMonthOrWeekMobile(-1)">‹</button>
         <div class="mn-label" id="mn-label" onclick="toggleNavPicker()" title="Оберіть місяць або дату ▾" style="cursor:pointer;user-select:none"></div>
-        <button class="mn-btn" onclick="shiftMonth(1)">›</button>
+        <button class="mn-btn" onclick="shiftMonthOrWeekMobile(1)">›</button>
       </div>
       <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
       <!-- NAV PICKER POPUP -->
@@ -6895,6 +6895,10 @@ function shiftMonth(d){
   viewYear=viewStartDate.getFullYear();
   viewMonth=viewStartDate.getMonth();
   render();
+}
+function shiftMonthOrWeekMobile(d){
+  if(isMobileViewport()) shiftWindow(d*7);
+  else shiftMonth(d);
 }
 function goToday(){
   viewStartDate=new Date(today);
