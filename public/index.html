@@ -225,7 +225,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .calendar-scroll{border-right:none;border-radius:8px 0 0 8px;}
   .calendar-scroll{scroll-snap-type:x proximity;}
   .th-day,.td-day{scroll-snap-align:start;}
-  .mn-label{display:none;}
+  .mn-label{display:block!important;font-size:11px!important;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+  .topbar > div:first-child > .mn-btn[title*="тиждень"]{display:none!important;}
+  .topbar .month-nav{position:fixed!important;left:50%!important;top:8px!important;transform:translateX(-50%)!important;z-index:1;background:#fff;}
   .month-nav{gap:2px;}
   .app.sb-hidden-mobile{grid-template-columns:0 1fr;}
   .app.sb-hidden-mobile .sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right:none;box-shadow:none;}
