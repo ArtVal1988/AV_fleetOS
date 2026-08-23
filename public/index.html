@@ -237,7 +237,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .th-day,.td-day{scroll-snap-align:start;}
   .mn-label{display:block!important;font-size:11px!important;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;padding:8px 4px!important;min-width:0!important;}
   .topbar > div:first-child > .mn-btn[title*="тиждень"]{display:none!important;}
-  .topbar .month-nav{position:fixed!important;left:50%!important;top:8px!important;transform:translateX(-50%)!important;z-index:1;background:#fff;}
+  .topbar > .month-nav{justify-self:center;}
   .month-nav{gap:2px;}
   .app.sb-hidden-mobile{grid-template-columns:0 1fr;}
   .app.sb-hidden-mobile .sidebar{width:0;min-width:0;padding:0;overflow:hidden;border-right:none;box-shadow:none;}
@@ -2272,6 +2272,7 @@ input.dm-pf-val.tel{font-size:14px;}
     <div style="position:relative;display:flex;align-items:center;gap:8px">
       <button class="btn btn-primary" onclick="goToday()">Сьогодні</button>
       <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
+      <div id="month-nav-anchor-normal"></div>
       <div class="month-nav">
         <button class="mn-btn" id="mn-btn-prev" onclick="shiftMonthOrWeekMobile(-1)">‹</button>
         <div class="mn-label" id="mn-label" onclick="toggleNavPicker()" title="Оберіть місяць або дату ▾" style="cursor:pointer;user-select:none"></div>
@@ -2295,7 +2296,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
       </div>
     </div><!-- end month wrapper -->
-    <div class="topbar-right" style="gap:14px">
+    <div class="topbar-right" style="gap:14px;grid-column:3">
       <button class="btn btn-primary" id="new-booking-btn" onclick="openBookingModal()"><span class="nb-icon">+</span><span class="nb-text">Замовлення</span></button>
       <div style="width:1px;height:22px;background:var(--border)"></div>
       <div style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:5px 12px 5px 6px">
@@ -3170,6 +3171,25 @@ function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 function isMobileViewport(){
   return window.innerWidth <= 640 || (window.innerHeight <= 500 && window.innerWidth > window.innerHeight);
 }
+function positionMonthNavForViewport(){
+  const monthNav = document.getElementById('mn-label')?.closest('.month-nav');
+  const navPicker = document.getElementById('nav-picker');
+  const anchor = document.getElementById('month-nav-anchor-normal');
+  const topbar = document.querySelector('.topbar');
+  const topbarRight = document.querySelector('.topbar-right');
+  if(!monthNav || !anchor || !topbar || !topbarRight) return;
+  if(isMobileViewport()){
+    if(monthNav.parentElement !== topbar){
+      topbar.insertBefore(monthNav, topbarRight);
+      if(navPicker) topbar.insertBefore(navPicker, topbarRight);
+    }
+  } else if(monthNav.parentElement === topbar){
+    anchor.parentNode.insertBefore(monthNav, anchor.nextSibling);
+    if(navPicker) monthNav.parentNode.insertBefore(navPicker, monthNav.nextSibling);
+  }
+}
+window.addEventListener('resize', positionMonthNavForViewport);
+positionMonthNavForViewport();
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
