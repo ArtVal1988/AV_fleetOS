@@ -2252,7 +2252,10 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
   <div style="margin-top:auto">
     <div class="sidebar-legend-section">
-      <div class="sidebar-legend-title nav-label">Статуси</div>
+      <div class="sidebar-legend-title nav-label" onclick="toggleSidebarLegend()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <span>Статуси</span>
+        <span id="sidebar-legend-chevron" style="transition:transform .15s">▾</span>
+      </div>
       <div class="legend" id="legend"></div>
     </div>
     <div class="sidebar-mobile-user" id="sidebar-mobile-user">
@@ -6118,6 +6121,15 @@ function toggleSidebar(){
   const collapsed = app.classList.toggle('sb-collapsed');
   try { localStorage.setItem('fleet_sb', collapsed?'1':'0'); } catch(e){}
 }
+function toggleSidebarLegend(){
+  const legend = document.getElementById('legend');
+  const chevron = document.getElementById('sidebar-legend-chevron');
+  if(!legend) return;
+  const nowCollapsed = legend.style.display !== 'none';
+  legend.style.display = nowCollapsed ? 'none' : '';
+  if(chevron) chevron.style.transform = nowCollapsed ? 'rotate(-90deg)' : '';
+  try { localStorage.setItem('fleet_sb_legend_collapsed', nowCollapsed?'1':'0'); } catch(e){}
+}
 // Restore sidebar state immediately
 try{
   if(!isMobileViewport() && localStorage.getItem('fleet_sb')==='1'){
@@ -6130,6 +6142,14 @@ try{
     document.addEventListener('DOMContentLoaded',()=>{
       const a=document.querySelector('.app');
       if(a) a.classList.add('sb-hidden-mobile');
+    });
+  }
+  if(localStorage.getItem('fleet_sb_legend_collapsed')==='1'){
+    document.addEventListener('DOMContentLoaded',()=>{
+      const legend=document.getElementById('legend');
+      const chevron=document.getElementById('sidebar-legend-chevron');
+      if(legend) legend.style.display='none';
+      if(chevron) chevron.style.transform='rotate(-90deg)';
     });
   }
 }catch(e){}
