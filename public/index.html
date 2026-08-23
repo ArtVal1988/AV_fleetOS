@@ -85,6 +85,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .btn{border:none;border-radius:4px;padding:8px 14px;font-family:var(--font-mono);font-size:11px;font-weight:500;cursor:pointer;letter-spacing:.8px;text-transform:uppercase;transition:all .15s;}
 .btn-primary{background:var(--accent);color:#fff;}
 .nb-icon{display:none;}
+.sidebar-mobile-user{display:none;}
 .btn-primary:hover{box-shadow:0 4px 20px rgba(37,99,235,.3);transform:translateY(-1px);}
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
@@ -210,6 +211,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   #new-booking-btn .nb-icon{display:block!important;font-size:20px;line-height:1;font-weight:700;}
   #new-booking-btn .nb-text{display:none!important;}
   #topbar-username{display:none;}
+  .topbar-right > div[style*="border-radius:20px"]{display:none!important;}
+  .topbar-right > button[onclick="doLogout()"]{display:none!important;}
+  .sidebar-mobile-user{display:flex!important;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--border);}
+  .sidebar-mobile-user-initials{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sidebar-mobile-user-name{font-size:12px;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sidebar-mobile-logout{background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;font-size:14px;color:#6b7280;cursor:pointer;flex-shrink:0;}
   .topbar-right .btn-ghost{padding:0;width:30px;height:30px;border-radius:50%;font-size:14px;overflow:hidden;white-space:nowrap;}
   .topbar-right .btn-ghost .logout-text{display:none;}
   .month-nav{padding:2px;}
@@ -2244,6 +2251,11 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="sidebar-legend-section">
       <div class="sidebar-legend-title nav-label">Статуси</div>
       <div class="legend" id="legend"></div>
+    </div>
+    <div class="sidebar-mobile-user" id="sidebar-mobile-user">
+      <span class="sidebar-mobile-user-initials" id="sidebar-user-initials"></span>
+      <span class="sidebar-mobile-user-name" id="sidebar-username"></span>
+      <button class="sidebar-mobile-logout" onclick="doLogout()" title="Вийти">⏻</button>
     </div>
     <button class="sb-toggle-bottom" onclick="toggleSidebar()" title="Згорнути меню" id="sb-toggle-bottom">
       <svg id="sb-toggle-bottom-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -11814,6 +11826,10 @@ function showSidebarUser(user){
   const initials = user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   const topbarInitials = document.getElementById('topbar-user-initials');
   if(topbarInitials) topbarInitials.textContent = initials;
+  const sbName = document.getElementById('sidebar-username');
+  if(sbName) sbName.textContent = user.name;
+  const sbInitials = document.getElementById('sidebar-user-initials');
+  if(sbInitials) sbInitials.textContent = initials;
 }
 
 async function doLogin(){
