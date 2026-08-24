@@ -14654,7 +14654,7 @@ async function checkAppVersion(){
       // to pick it up, so this device can never keep running stale JS
       // indefinitely (which previously caused a real data-corruption bug:
       // an old tab's outdated sync logic kept overwriting shared settings
-      // with its own stale local values every 60s).
+      // with its own stale local values every 180s).
       window.location.reload();
     }
   }catch(e){ /* offline or transient — just try again next interval */ }
@@ -14667,7 +14667,7 @@ function startAutoRefresh(){
     if(!_token || isAnyModalOpen()) return;
     syncFromServer();
     checkAppVersion();
-  }, 60000); // every 60s
+  }, 180000); // every 180s
 }
 
 </script>
