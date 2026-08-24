@@ -2662,10 +2662,10 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <div id="bm-main-payments-wrap" style="display:none;margin:10px">
             <div style="display:flex;align-items:flex-end;gap:10px">
-              <div id="bm-main-payments-column" style="width:377px;flex-shrink:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+              <div id="bm-main-payments-column" style="width:450px;flex-shrink:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
                 <div id="bm-main-payments-list"></div>
               </div>
-              <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
+              <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center;padding-top:6px">
                 <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
                 <div class="ext-remaining-display" id="bm-partial-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">—</div>
               </div>
@@ -8528,7 +8528,7 @@ function renderMainPaymentsList(){
     const methods = [...new Set(currentMainPayments.map(p=>p.method))];
     const methodLabel = methods.length>1 ? methods.map(m=>m==='cash'?'готівка':'картка').join(' + ') : (methods[0]==='cash'?'готівка':'картка');
     col.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
-      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду оренди</span>
+      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду</span>
       <span style="display:flex;align-items:center;gap:6px;font-size:12px">
         <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(sum)} ${cur}</span>
         <span style="color:#9ca3af">· ${methodLabel}</span>
@@ -8551,7 +8551,7 @@ function renderMainPaymentsList(){
   const showForm = mainPaymentFormOpen && (isEditing || !isFullyPaid);
   col.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду оренди</span>
+      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду</span>
       ${isFullyPaid?'':`<button type="button" onclick="toggleMainPaymentForm()" title="${showForm?'Сховати форму':'Додати платіж'}" style="background:${showForm?'#374151':'#f7f8fb'};color:${showForm?'#fff':'#374151'};border:1px solid #d8dbe2;border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:13px;font-weight:700;line-height:1;flex-shrink:0">+</button>`}
     </div>
     ${list?`<div style="max-height:160px;overflow-y:auto">${list}</div>`:''}
