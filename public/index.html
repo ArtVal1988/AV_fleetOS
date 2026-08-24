@@ -8521,6 +8521,22 @@ function renderMainPaymentsList(){
   const col = document.getElementById('bm-main-payments-list');
   if(!col) return;
   const cur = document.getElementById('bm-currency')?.value || '$';
+  const total = getMainBookingTotal();
+  const sum = currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0);
+  const isFullyPaid = total > 0 && sum >= total;
+  if(isFullyPaid){
+    const methods = [...new Set(currentMainPayments.map(p=>p.method))];
+    const methodLabel = methods.length>1 ? methods.map(m=>m==='cash'?'готівка':'картка').join(' + ') : (methods[0]==='cash'?'готівка':'картка');
+    col.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0">
+      <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі основного періоду оренди</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12px">
+        <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(sum)} ${cur}</span>
+        <span style="color:#9ca3af">· ${methodLabel}</span>
+        <span style="color:#16a34a;font-weight:700">✓ Сплачено</span>
+      </span>
+    </div>`;
+    return;
+  }
   const list = currentMainPayments.map((p,i) => {
     return `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px${i===mainEditingPaymentIndex?';background:#eff6ff':''}">
@@ -8531,9 +8547,6 @@ function renderMainPaymentsList(){
       <button type="button" onclick="deleteMainPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`;
   }).join('');
-  const total = getMainBookingTotal();
-  const sum = currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0);
-  const isFullyPaid = total > 0 && sum >= total;
   const isEditing = mainEditingPaymentIndex !== null;
   const showForm = mainPaymentFormOpen && (isEditing || !isFullyPaid);
   col.innerHTML = `
