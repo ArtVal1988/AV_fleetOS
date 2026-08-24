@@ -4973,7 +4973,7 @@ function editBooking(bid){
     if(document.getElementById('bm-ext-total-rate')) document.getElementById('bm-ext-total-rate').value = b.extension.totalExchangeRate||'';
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = b.extension.paidExchangeRate||'';
     document.getElementById('bm-ext-active').checked=true;
-    toggleExtensionSection(); // single canonical path — sets bm-ext-fields/bm-ext-gen-act-btn visibility, moves the Повернення row, shows bm-block-ext-section, exactly like activating via the button
+    toggleExtensionSection(true); // preserveExistingData=true — дані вже коректно завантажені вище, не давати toggleExtensionSection() скидати їх до значень 'нового продовження'
     onExtRateInput();
     onExtCurrencyChange();
     const debtDatePicked = document.getElementById('ext-debt-date-picked');
@@ -8200,7 +8200,7 @@ function deleteSubstitutePeriod(i){
   currentSubstitutes.splice(i,1);
   renderSubstituteList();
 }
-function toggleExtensionSection(){
+function toggleExtensionSection(preserveExistingData){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
   block.style.display = active ? '' : 'none';
@@ -8208,7 +8208,7 @@ function toggleExtensionSection(){
   if(actBtn) actBtn.style.display = active ? '' : 'none';
   renderExtTimeline();
   moveReturnRow(active);
-  if(active){
+  if(active && !preserveExistingData){
     extDaysOverridden = false;
     extTotalOverridden = false;
     extTotalCurTouched = false; extPaidCurTouched = false;
@@ -8228,6 +8228,8 @@ function toggleExtensionSection(){
     if(document.getElementById('bm-ext-paid-rate')) document.getElementById('bm-ext-paid-rate').value = document.getElementById('bm-ext-rate2').value;
     onExtCurrencyChange();
     onExtDatesChanged();
+  } else if(active && preserveExistingData){
+    onExtCurrencyChange();
   } else {
     // Deactivated: return date reverts to wherever the booking's period
     // actually ends now — the last remaining extension in history if any
