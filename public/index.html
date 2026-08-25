@@ -3952,9 +3952,10 @@ function showTooltip(e,bid,subContext){
 
   // 1: name left, phone right, same row
   const msgEntries = Object.entries(b.messengers||{}).filter(([,m])=>m.active&&m.contact);
-  const msgIconsInline = msgEntries.map(([type])=>{
+  const msgIconsInline = msgEntries.map(([type,m])=>{
     const uri = MSG_ICON_DATA[type]; if(!uri) return '';
-    return `<img src="${uri}" width="14" height="14" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}">`;
+    const link = getMsgUrl(type, m.contact, b.customer?.phone, b.customer?.name);
+    return `<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block"><img src="${uri}" width="14" height="14" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}"></a>`;
   }).join('');
 
   let nameRow;
@@ -3965,7 +3966,7 @@ function showTooltip(e,bid,subContext){
   nameRow = `<div style="margin-bottom:2px">
     <span class="tt-name" style="${primaryName?'':'color:var(--muted)'}">${clientTierIconHtml(b.customer?.clientId)}${primaryName}</span>
   </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${secondaryName}</div>`:'')
-  + (b.customer?.phone?`<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:6px">${msgIconsInline}<span class="tt-phone" style="margin-bottom:0">${b.customer.phone}</span>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
+  + (b.customer?.phone?`<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:6px">${msgIconsInline}<a href="tel:${b.customer.phone.replace(/[^+\d]/g,'')}" onclick="event.stopPropagation()" class="tt-phone" style="margin-bottom:0;color:inherit;text-decoration:none">${b.customer.phone}</a>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
 
   // 2: date+time on one line, address on the line below
   const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
@@ -4297,9 +4298,10 @@ function renderSplitPanel(bid1,bid2){
     const ctBadge = (b.clientType && b.clientType!=='individual') ?
       `<span style="font-size:9px;padding:2px 6px;border-radius:3px;background:#eff6ff;color:#1d4ed8;border:0.5px solid #bfdbfe;margin-left:6px">${ctLabel(b.clientType)}</span>` : '';
     const msgEntries = Object.entries(b.messengers||{}).filter(([,m])=>m.active&&m.contact);
-    const msgIconsInline = msgEntries.map(([type])=>{
+    const msgIconsInline = msgEntries.map(([type,m])=>{
       const uri = MSG_ICON_DATA[type]; if(!uri) return '';
-      return `<img src="${uri}" width="14" height="14" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}">`;
+      const link = getMsgUrl(type, m.contact, b.customer?.phone, b.customer?.name);
+      return `<a href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block"><img src="${uri}" width="14" height="14" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}"></a>`;
     }).join('');
     const extrasList = Object.values(b.extras||{}).filter(x=>x.active);
     const equipList = b.equipment||[];
@@ -4313,7 +4315,7 @@ function renderSplitPanel(bid1,bid2){
       </div>
       <div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:2px">${hasCompany?b.customer.company:(b.customer?.name||'—')}${ctBadge}</div>
       ${hasCompany&&b.customer?.name?`<div style="font-size:10px;color:var(--muted);margin-bottom:2px">${b.customer.name}</div>`:''}
-      <div style="font-size:11px;color:var(--accent2);margin-bottom:4px;display:flex;align-items:center;gap:4px">${msgIconsInline}${b.customer?.phone||''}</div>
+      <div style="font-size:11px;color:var(--accent2);margin-bottom:4px;display:flex;align-items:center;gap:4px">${msgIconsInline}${b.customer?.phone?`<a href="tel:${b.customer.phone.replace(/[^+\d]/g,'')}" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">${b.customer.phone}</a>`:''}</div>
       ${loc?`<div style="font-size:10px;color:var(--muted)">📍 ${loc}</div>`:''}
       ${servicesLine}
       <div style="display:flex;gap:8px;font-size:10px;color:var(--muted);margin-top:6px">
