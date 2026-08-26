@@ -7835,12 +7835,20 @@ function bmDedHasData(){
 }
 // Auto-open any section that already has data when a booking is loaded,
 // so it's visible right away rather than needing a click every time —
-// matching how a genuinely committed extension already auto-shows.
+// matching how a genuinely committed extension already auto-shows. Also
+// auto-CLOSES a section left open from a PREVIOUSLY-viewed booking (these
+// panels are static DOM elements reused across every booking switch) when
+// the newly-loaded booking has no data in it — otherwise a panel opened
+// once stays visually 'stuck open' for every other booking afterward.
 function autoOpenBmSectionsWithData(){
-  if(bmSubHasData() && document.getElementById('bm-substitute-panel')?.style.display === 'none') toggleSubstituteSection();
-  if(bmFineHasData() && document.getElementById('bm-fines-panel')?.style.display === 'none') toggleFinesSection();
-  if(bmRepHasData() && document.getElementById('bm-repair-panel')?.style.display === 'none') toggleRepairSection();
-  if(bmDedHasData() && document.getElementById('ded-panel')?.style.display === 'none') toggleDedPanel();
+  const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
+  if(bmSubHasData() !== subOpen) toggleSubstituteSection();
+  const fineOpen = document.getElementById('bm-fines-panel')?.style.display !== 'none';
+  if(bmFineHasData() !== fineOpen) toggleFinesSection();
+  const repOpen = document.getElementById('bm-repair-panel')?.style.display !== 'none';
+  if(bmRepHasData() !== repOpen) toggleRepairSection();
+  const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
+  if(bmDedHasData() !== dedOpen) toggleDedPanel();
 }
 function activateBmSection(id){
   // Close every OTHER section — but never force-close one that already has
