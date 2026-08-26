@@ -12194,7 +12194,7 @@ function renderInsuranceOverviewPanel(){
           const isNext = p.date === nextDueDate;
           const days = daysFromNow(p.date);
           const color = p.paid ? '#0023ff' : (isNext ? kaskoInsColor(days) : '#9ca3af');
-          const bg = p.paid ? '#f0fdf4' : (isNext ? kaskoInsBg(days) : 'transparent');
+          const bg = p.paid ? 'transparent' : (isNext ? kaskoInsBg(days) : 'transparent');
           const amtColor = p.paid ? '#166534' : (isNext ? '#000' : '#9ca3af');
           const amtWeight = p.paid ? 400 : (isNext ? 600 : 400);
           const amtSize = isNext && !p.paid ? 'inherit' : '10px';
