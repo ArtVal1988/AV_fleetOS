@@ -1631,8 +1631,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Автомобіль</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;width:180px">ОСЦПВ</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">
-              <div>КАСКО</div>
-              <div id="ins-ov-kasko-totals" style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;text-align:center;text-transform:none;margin-top:3px"></div>
+              <div id="ins-ov-kasko-totals" style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;text-align:left"><div>КАСКО</div></div>
             </th>
           </tr>
         </thead>
@@ -12243,9 +12242,9 @@ function renderInsuranceOverviewPanel(){
 
   document.getElementById('ins-ov-tbody').innerHTML = rowsHtml || `<tr><td colspan="3" style="padding:20px;text-align:center;color:#9ca3af;font-style:italic">Авто не знайдено</td></tr>`;
   const totalsEl = document.getElementById('ins-ov-kasko-totals');
-  if(totalsEl) totalsEl.innerHTML = insOvKaskoOnly
-    ? `<div></div><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoSumTotal)}</div><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoPremiumTotal)}</div><div></div>`
-    : '';
+  if(totalsEl) totalsEl.innerHTML = `<div>КАСКО</div>` + (insOvKaskoOnly
+    ? `<div style="text-align:center;text-transform:none"><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoSumTotal)}</div></div><div style="text-align:center;text-transform:none"><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoPremiumTotal)}</div></div><div></div>`
+    : '<div></div><div></div><div></div>');
 }
 function openMaintenancePanel(){
   document.getElementById('maintenance-panel-overlay').style.display='flex';
