@@ -6944,8 +6944,7 @@ function shiftMonth(d){
   render();
 }
 function shiftMonthOrWeekMobile(d){
-  if(isMobileViewport()) shiftWindow(d*7);
-  else shiftMonth(d);
+  shiftWindow(d*7);
 }
 function goToday(){
   viewStartDate=new Date(today);
