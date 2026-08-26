@@ -9902,7 +9902,7 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-req-code').value=k.reqCode||'';
   document.getElementById('ck-req-account').value=k.reqAccount||'';
   document.getElementById('ck-contract-date').value=k.contractDate||'';
-  document.getElementById('ck-req-purpose').value=k.reqPurpose || buildKaskoReqPurpose(k.policyNum, k.contractDate);
+  document.getElementById('ck-req-purpose').value=k.reqPurpose || buildKaskoReqPurpose(k.policyNum, k.contractDate, v?.owner?.name, v?.owner?.inn);
   const hasNotes = !!k.notes;
   document.getElementById('ck-notes-panel').style.display = hasNotes ? 'block' : 'none';
   document.getElementById('ck-notes-toggle-icon').textContent = hasNotes ? '⊖' : '⊕';
@@ -9949,13 +9949,17 @@ function copyKaskoReqValue(btn){
     setTimeout(()=>{ btn.innerHTML = original; }, 1200);
   }).catch(()=>alert('Не вдалося скопіювати'));
 }
-function buildKaskoReqPurpose(policyNum, contractDate){
+function buildKaskoReqPurpose(policyNum, contractDate, ownerName, ownerInn){
   if(!policyNum && !contractDate) return '';
-  return `Платіж по договору №${policyNum||'—'} від ${contractDate?fmtCaseDate(contractDate):'—'}`;
+  let s = `Платіж по договору №${policyNum||'—'} від ${contractDate?fmtCaseDate(contractDate):'—'}`;
+  if(ownerName) s += `, ${ownerName}`;
+  if(ownerInn) s += `, ${ownerInn}`;
+  return s;
 }
 function updateCkReqPurposeAuto(){
   const el = document.getElementById('ck-req-purpose');
-  if(el) el.value = buildKaskoReqPurpose(document.getElementById('ck-policy').value.trim(), document.getElementById('ck-contract-date').value);
+  const v = ALL_VEHICLES.find(x=>x.id===insVehicleId);
+  if(el) el.value = buildKaskoReqPurpose(document.getElementById('ck-policy').value.trim(), document.getElementById('ck-contract-date').value, v?.owner?.name, v?.owner?.inn);
 }
 function copyCkReqField(fieldId){
   const el = document.getElementById(fieldId);
@@ -14830,11 +14834,11 @@ function startAutoRefresh(){
       <div class="fgrid" style="grid-template-columns:1fr 1fr 0.8fr;gap:8px">
         <div class="fg"><label>Страхова компанія</label><input type="text" id="ck-insurer" placeholder="УНІКА"></div>
         <div class="fg"><label>Номер договору</label><input type="text" id="ck-policy" placeholder="КС/98765432" oninput="updateCkReqPurposeAuto()"></div>
-        <div class="fg"><label>від</label><input type="date" readonly id="ck-contract-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="updateCkReqPurposeAuto()"></div>
+        <div class="fg"><label>від</label><input type="date" id="ck-contract-date" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="updateCkReqPurposeAuto()"></div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr 1fr 1.2fr;gap:8px;margin-top:10px">
-        <div class="fg"><label>Дата початку</label><input type="date" readonly id="ck-start" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="autoCalcKaskoEndDate()"></div>
-        <div class="fg"><label>Дата закінчення</label><input type="date" readonly id="ck-end" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
+        <div class="fg"><label>Дата початку</label><input type="date" id="ck-start" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="autoCalcKaskoEndDate()"></div>
+        <div class="fg"><label>Дата закінчення</label><input type="date" id="ck-end" class="custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
         <div class="fg"><label>Страхова сума</label><input type="text" inputmode="numeric" id="ck-sum" placeholder="450 000" oninput="formatThousandsInput(this);recalcKaskoTariffPayment();recalcKaskoDeductible()"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px">
@@ -14872,7 +14876,7 @@ function startAutoRefresh(){
           </div>
           <div class="fg"><label>Рахунок отримувача</label>
             <div style="display:flex;gap:4px">
-              <input type="text" id="ck-req-account" placeholder="UA123052990000026001234567890" style="flex:1;min-width:0;font-family:var(--font-mono);font-size:11px">
+              <input type="text" id="ck-req-account" name="ck-req-account-hist" placeholder="UA123052990000026001234567890" style="flex:1;min-width:0;font-family:var(--font-mono);font-size:11px">
               <button type="button" onclick="copyCkReqField('ck-req-account')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
             </div>
           </div>
