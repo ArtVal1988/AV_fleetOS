@@ -1411,6 +1411,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <label style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;font-weight:600">Роль</label>
             <select id="nu-role" style="width:100%;margin-top:3px;padding:8px 10px;border:1px solid #dbeafe;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;background:#fff;outline:none">
               <option value="manager">👤 Менеджер</option>
+              <option value="accountant">🧾 Бухгалтер</option>
               <option value="admin">👑 Адмін</option>
             </select>
           </div>
@@ -3446,6 +3447,7 @@ function buildCellMap(){
   const map=new Map();
   bookingsById = new Map();
   bookings.forEach(b=>{
+    if(IS_ACCOUNTANT_ROLE && (!b.clientType || b.clientType==='individual')) return;
     bookingsById.set(b.id, b);
     const cur=new Date(b.start);
     const end=new Date(getEffectiveEnd(b));
@@ -5056,6 +5058,7 @@ function editBooking(bid){
   updateAllMsgIconStates();
   autoOpenBmSectionsWithData();
   updateBmSectionButtons();
+  applyAccountantBookingFormRestrictions();
   document.getElementById('booking-modal').classList.add('open');
 }
 function closeBookingModal(){
@@ -6114,6 +6117,22 @@ function buildKaskoPhotoSection(v){
 }
 
 /* ── SIDEBAR TOGGLE ── */
+// Front-end-only restriction, per request — for the Бухгалтер role, makes
+// the booking form read-only except payments (main + extension) and
+// document generation, which stay fully interactive.
+function applyAccountantBookingFormRestrictions(){
+  if(!IS_ACCOUNTANT_ROLE) return;
+  const readonlyContainers = ['bm-block-1','bm-block-3','bm-substitute-section','bm-fines-section','bm-repair-section','bm-block-4','bm-block-5'];
+  readonlyContainers.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.querySelectorAll('input,select,textarea,button').forEach(f => f.disabled = true);
+  });
+  ['bm-ext-from','bm-ext-to','bm-ext-days','bm-ext-rate','bm-ext-currency','bm-ext-rate2','bm-ext-total-rate','bm-ext-paid-rate','bm-ext-active'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.disabled = true;
+  });
+}
 function toggleSidebar(){
   const app = document.querySelector('.app');
   if(!app) return;
@@ -11897,6 +11916,27 @@ function hideLoginOverlay(){
   document.getElementById('login-overlay').style.display='none';
 }
 
+let IS_ACCOUNTANT_ROLE = false;
+// Front-end-only restriction, per request — hides irrelevant sections for
+// the Бухгалтер role (keeps only Клієнти and Графік зайнятості), and gates
+// legal-entity-only filtering elsewhere via the IS_ACCOUNTANT_ROLE flag.
+function applyAccountantRestrictions(){
+  IS_ACCOUNTANT_ROLE = !!(_currentUser && _currentUser.role === 'accountant');
+  if(!IS_ACCOUNTANT_ROLE) return;
+  const hideSelectors = [
+    '[onclick="openDashboard()"]',
+    '[onclick="openVehiclesPanel()"]',
+    '[onclick="openSparePartsPanel()"]',
+    '[onclick="openMaintenancePanel()"]',
+    '[onclick="openInsuranceOverviewPanel()"]',
+  ];
+  hideSelectors.forEach(sel => {
+    const el = document.querySelector('.nav-item'+sel);
+    if(el) el.style.display='none';
+  });
+  const newBookingBtn = document.getElementById('new-booking-btn');
+  if(newBookingBtn) newBookingBtn.style.display='none';
+}
 function showSidebarUser(user){
   const topbarName = document.getElementById('topbar-username');
   if(topbarName) topbarName.textContent = user.name;
@@ -11924,6 +11964,7 @@ async function doLogin(){
     hideLoginOverlay();
     showSidebarUser(_currentUser);
     if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
+    applyAccountantRestrictions();
     await syncFromServer();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
@@ -12396,7 +12437,8 @@ function renderClientsPanelList(){
   const list = document.getElementById('clients-panel-list');
   const q = (document.getElementById('cl-search')?.value||'').trim().toLowerCase();
   const digits = q.replace(/\D/g,'');
-  const matches = c => !q || (c.name||'').toLowerCase().includes(q) || (digits && (c.phone||'').replace(/\D/g,'').includes(digits));
+  const matches = c => (!q || (c.name||'').toLowerCase().includes(q) || (digits && (c.phone||'').replace(/\D/g,'').includes(digits)))
+    && (!IS_ACCOUNTANT_ROLE || bookings.some(b => b.customer?.clientId===c.id && b.clientType && b.clientType!=='individual'));
   const items = CLIENTS.filter(matches);
   if(!items.length){
     list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Немає клієнтів. Натисніть "+ Додати клієнта".</div>';
@@ -13876,7 +13918,7 @@ async function loadUsersList(){
     <div style="display:flex;flex-direction:column;gap:8px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:${u.active?'#fff':'#f9fafb'}">
       <div style="font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</span>
-        <span style="color:#9ca3af;font-size:11px">@${u.username} · ${u.role==='admin'?'👑 Адмін':'👤 Менеджер'}</span>
+        <span style="color:#9ca3af;font-size:11px">@${u.username} · ${u.role==='admin'?'👑 Адмін':u.role==='accountant'?'🧾 Бухгалтер':'👤 Менеджер'}</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
       ${u.id !== _currentUser?.id ? `
@@ -14661,6 +14703,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     hideLoginOverlay();
     showSidebarUser(_currentUser);
     if(_currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
+    applyAccountantRestrictions();
     await syncFromServer();
     startAutoRefresh();
   } catch(e){ showLoginOverlay(); }

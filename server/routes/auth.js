@@ -70,7 +70,7 @@ router.post('/users', auth, adminOnly, (req, res) => {
   const { username, password, name, role = 'manager' } = req.body;
   if (!username || !password || !name)
     return res.status(400).json({ error: 'Заповніть всі поля' });
-  if (!['admin', 'manager'].includes(role))
+  if (!['admin', 'manager', 'accountant'].includes(role))
     return res.status(400).json({ error: 'Невірна роль' });
 
   const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
