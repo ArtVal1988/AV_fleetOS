@@ -1630,7 +1630,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <tr style="border-bottom:2px solid #e5e7eb">
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Автомобіль</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;width:180px">ОСЦПВ</th>
-            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">КАСКО</th>
+            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">КАСКО<span id="ins-ov-kasko-totals" style="text-transform:none;font-weight:700;color:#2563eb;margin-left:8px"></span></th>
           </tr>
         </thead>
         <tbody id="ins-ov-tbody"></tbody>
@@ -12156,6 +12156,7 @@ function renderInsuranceOverviewPanel(){
 
   const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
   let rowsHtml = '';
+  let kaskoSumTotal = 0, kaskoPremiumTotal = 0;
 
   orderedCategories.forEach(cat=>{
     const vehicles = cat.vehicles.filter(matches);
@@ -12179,6 +12180,8 @@ function renderInsuranceOverviewPanel(){
       // ── КАСКО cell: top row of 4 parts, bottom row = all payments (quarterly: Q1-Q4, or the single payment) ──
       let kaskoHtml = '<span style="color:#c7c7c7;font-style:italic">не вказано</span>';
       if(v.kasko?.end){
+        kaskoSumTotal += v.kasko.insuredSum||0;
+        kaskoPremiumTotal += v.kasko.totalPremium||0;
         const k = v.kasko;
         const durationText = `${fmt(k.start)}–${fmt(k.end)}`;
         const payments = k.payments || [];
@@ -12236,6 +12239,8 @@ function renderInsuranceOverviewPanel(){
   });
 
   document.getElementById('ins-ov-tbody').innerHTML = rowsHtml || `<tr><td colspan="3" style="padding:20px;text-align:center;color:#9ca3af;font-style:italic">Авто не знайдено</td></tr>`;
+  const totalsEl = document.getElementById('ins-ov-kasko-totals');
+  if(totalsEl) totalsEl.textContent = insOvKaskoOnly ? `· Страхова сума: ${fmtMon(kaskoSumTotal)} · Платіж: ${fmtMon(kaskoPremiumTotal)}` : '';
 }
 function openMaintenancePanel(){
   document.getElementById('maintenance-panel-overlay').style.display='flex';
