@@ -1630,7 +1630,10 @@ input.dm-pf-val.tel{font-size:14px;}
           <tr style="border-bottom:2px solid #e5e7eb">
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap">Автомобіль</th>
             <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;width:180px">ОСЦПВ</th>
-            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">КАСКО<span id="ins-ov-kasko-totals" style="text-transform:none;font-weight:700;color:#2563eb;margin-left:8px"></span></th>
+            <th style="text-align:left;padding:6px 8px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">
+              <div>КАСКО</div>
+              <div id="ins-ov-kasko-totals" style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1fr;gap:10px;text-align:center;text-transform:none;margin-top:3px"></div>
+            </th>
           </tr>
         </thead>
         <tbody id="ins-ov-tbody"></tbody>
@@ -12240,7 +12243,9 @@ function renderInsuranceOverviewPanel(){
 
   document.getElementById('ins-ov-tbody').innerHTML = rowsHtml || `<tr><td colspan="3" style="padding:20px;text-align:center;color:#9ca3af;font-style:italic">Авто не знайдено</td></tr>`;
   const totalsEl = document.getElementById('ins-ov-kasko-totals');
-  if(totalsEl) totalsEl.textContent = insOvKaskoOnly ? `· Страхова сума: ${fmtMon(kaskoSumTotal)} · Платіж: ${fmtMon(kaskoPremiumTotal)}` : '';
+  if(totalsEl) totalsEl.innerHTML = insOvKaskoOnly
+    ? `<div></div><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoSumTotal)}</div><div style="font-weight:600;color:var(--text)">${fmtMon(kaskoPremiumTotal)}</div><div></div>`
+    : '';
 }
 function openMaintenancePanel(){
   document.getElementById('maintenance-panel-overlay').style.display='flex';
