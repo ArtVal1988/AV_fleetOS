@@ -6958,12 +6958,6 @@ function shiftWindow(days){
   render();
 }
 
-function shiftMonth(d){
-  viewStartDate.setDate(viewStartDate.getDate()+d*VIEW_DAYS);
-  viewYear=viewStartDate.getFullYear();
-  viewMonth=viewStartDate.getMonth();
-  render();
-}
 function shiftMonthOrWeekMobile(d){
   shiftWindow(d*7);
 }
