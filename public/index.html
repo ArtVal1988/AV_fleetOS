@@ -5647,6 +5647,8 @@ function toggleNavPicker(){
     pickerYear = viewYear;
     renderNavPicker();
     el.style.display = 'block';
+    const monthNav = document.querySelector('.month-nav');
+    if(monthNav) el.style.left = monthNav.offsetLeft + 'px';
     const td = new Date();
     document.getElementById('np-date').value = td.toISOString().split('T')[0];
     // Focus the date input for quick keyboard entry
