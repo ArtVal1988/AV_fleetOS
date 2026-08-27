@@ -5,7 +5,12 @@ const { logActivity } = require('../activityLog');
 
 function bookingSummary(b) {
   const name = b?.customer?.name || '';
-  return `${name ? name + ' · ' : ''}${b?.start || ''}–${b?.end || ''}`.trim();
+  let plate = '';
+  if (b?.vehicleId) {
+    const v = db.prepare('SELECT service_data FROM vehicles WHERE id = ?').get(b.vehicleId);
+    if (v) { try { plate = JSON.parse(v.service_data)?.plate || ''; } catch (e) {} }
+  }
+  return `${name ? name + ' · ' : ''}${plate}`.trim();
 }
 
 // GET /api/bookings
