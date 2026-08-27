@@ -221,9 +221,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .topbar-right .btn-ghost .logout-text{display:none;}
   .month-nav{padding:2px;}
   .mn-btn{padding:5px 8px;}
-  #mn-btn-prev,#mn-btn-next{padding:5px 12px!important;font-size:0!important;position:relative;}
-  #mn-btn-prev::before{content:"<<<";font-size:12px;}
-  #mn-btn-next::before{content:">>>";font-size:12px;}
   .today-btn{padding:5px 9px;}
   .stickers-bar{padding:6px 10px;gap:6px;}
   .sticker-card{width:120px;height:64px;padding:6px 8px 5px;font-size:10px;}
@@ -236,7 +233,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .calendar-scroll{scroll-snap-type:x proximity;}
   .th-day,.td-day{scroll-snap-align:start;}
   .mn-label{display:block!important;font-size:11px!important;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;padding:8px 4px!important;min-width:0!important;}
-  .topbar > div:first-child > .mn-btn[title*="тиждень"]{display:none!important;}
   .topbar > .month-nav{justify-self:center;}
   .month-nav{gap:2px;}
   .app.sb-hidden-mobile{grid-template-columns:0 1fr;}
@@ -2282,9 +2278,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
       <div id="month-nav-anchor-normal"></div>
       <div class="month-nav">
-        <button class="mn-btn" id="mn-btn-prev" onclick="shiftMonthOrWeekMobile(-1)">‹</button>
         <div class="mn-label" id="mn-label" onclick="toggleNavPicker()" title="Оберіть місяць або дату ▾" style="cursor:pointer;user-select:none"></div>
-        <button class="mn-btn" id="mn-btn-next" onclick="shiftMonthOrWeekMobile(1)">›</button>
       </div>
       <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
       <!-- NAV PICKER POPUP -->
@@ -6958,9 +6952,6 @@ function shiftWindow(days){
   render();
 }
 
-function shiftMonthOrWeekMobile(d){
-  shiftWindow(d*7);
-}
 function goToday(){
   viewStartDate=new Date(today);
   viewYear=viewStartDate.getFullYear();
