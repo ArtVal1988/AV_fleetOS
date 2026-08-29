@@ -1595,11 +1595,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">🚗 Автомобілі</div>
       <input id="veh-search" type="text" placeholder="Пошук за номером, маркою, моделлю…" oninput="renderVehiclesPanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
-      <button onclick="openVehicleForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати авто</button>
+      <button onclick="openVehicleForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Авто</button>
+      <button onclick="toggleNewCatRow()" style="background:#f0f7ff;border:1px solid #bfdbfe;color:#2563eb;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Розділ</button>
       <button onclick="closeVehiclesPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
-      <div id="veh-panel-newcat-row" style="display:flex;gap:8px;margin-bottom:18px">
+      <div id="veh-panel-newcat-row" style="display:none;gap:8px;margin-bottom:18px">
         <input id="veh-new-cat" type="text" placeholder="Назва нового розділу…"
           style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addVehicleCategory();}">
@@ -13588,6 +13589,12 @@ function restoreVehicleFromArchive(id){
   renderVehiclesPanelList();
   render();
 }
+function toggleNewCatRow(){
+  const row = document.getElementById('veh-panel-newcat-row');
+  const isHidden = row.style.display === 'none';
+  row.style.display = isHidden ? 'flex' : 'none';
+  if(isHidden) setTimeout(()=>{ try{ document.getElementById('veh-new-cat').focus(); }catch(e){} }, 50);
+}
 function addVehicleCategory(){
   const inp = document.getElementById('veh-new-cat');
   const name = inp.value.trim();
@@ -13598,6 +13605,7 @@ function addVehicleCategory(){
   }
   CATEGORIES.push({name, vehicles: []});
   inp.value = '';
+  document.getElementById('veh-panel-newcat-row').style.display = 'none';
   renderVehiclesPanelList();
 }
 function deleteVehicleCategory(name){
