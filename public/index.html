@@ -302,7 +302,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
   .vf-basic-fields.vf-basic-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"brand model year" "plate plate category" "vin vin vin"!important;}
-  .vf-tech-fields.vf-tech-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"engine power ." "transmission drive fuel"!important;}
+  .vf-tech-fields.vf-tech-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"engine power consumption" "transmission drive fuel"!important;}
   .vf-tech-fields.vf-tech-fields [style*="grid-area:transmission"] select,
   .vf-tech-fields.vf-tech-fields [style*="grid-area:drive"] select,
   .vf-tech-fields.vf-tech-fields [style*="grid-area:fuel"] select{height:33px!important;}
@@ -672,7 +672,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .im-fields-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
 .vf-basic-fields{grid-template-areas:"brand model" "plate category" "vin year";}
-.vf-tech-fields{grid-template-areas:"engine power" "transmission drive" "fuel fuel";}
+.vf-tech-fields{grid-template-areas:"engine power" "transmission drive" "fuel consumption";}
 .kasko-main-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"insurer policyNum period" "sum premium deductible";}
 .osago-top-fields{grid-template-areas:"insurer policyNum end";}
 .osago-top-fields .osago-end-field{grid-area:end;}
@@ -2233,6 +2233,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <option value="">—</option><option>Бензин А95</option><option>Дизель</option><option>Гібрид</option><option>Електро</option><option>Бензин-газ</option>
           </select>
         </div>
+        <div style="grid-area:consumption"><label class="vf-lbl">л/100км</label><input id="vf-consumption" type="number" step="0.1" class="vf-inp no-spinner" placeholder="6.4"></div>
       </div>
       <div>
         <label class="vf-lbl">Кондиціонер / клімат</label>
@@ -13665,6 +13666,7 @@ function openVehicleForm(vehicleId){
   document.getElementById('vf-transmission').value = s.transmission || '';
   document.getElementById('vf-drive').value = s.drive || '';
   document.getElementById('vf-fuel').value = s.fuel || (v ? '' : 'Бензин А95');
+  document.getElementById('vf-consumption').value = s.consumption || '';
   document.getElementById('vf-climate').value = s.climate || '';
   document.getElementById('vf-option-input').value = '';
   vfOptions = [...(s.options || [])];
@@ -13734,7 +13736,7 @@ function saveVehicleForm(){
     transmission: document.getElementById('vf-transmission').value,
     drive: document.getElementById('vf-drive').value,
     fuel: document.getElementById('vf-fuel').value,
-    consumption: (id ? ALL_VEHICLES.find(x=>x.id===id)?.specs?.consumption : null) ?? null,
+    consumption: parseFloat(document.getElementById('vf-consumption').value) || null,
     climate: document.getElementById('vf-climate').value,
     options: [...vfOptions]
   };
