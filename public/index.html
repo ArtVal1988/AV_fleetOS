@@ -375,6 +375,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .ext-box:has(#bm-ext-total){flex:1 1 45%!important;}
   .ext-box:has(#bm-ext-paid){flex:1 1 45%!important;}
   #bm-ext-fields .ext-fin-field[style*="margin-left:auto"]{margin-left:0!important;text-align:center!important;width:100%!important;margin-top:6px!important;}
+  #bm-ext-rate2-field{flex:1 1 0!important;}
   .ext-fin-row div[style*="width:108px"]{flex:1 1 45%!important;width:auto!important;}
   .ext-fin-row div[style*="width:96px"]{flex:1 1 45%!important;width:auto!important;}
   .ext-fin-row div[style*="flex:1;min-width:170px"]{flex:1 1 45%!important;}
@@ -2768,8 +2769,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="text" readonly id="bm-ext-to" class="custom-dp-trigger ext-date-short" data-iso="" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="onExtDatesChanged()" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 6px;width:85px!important;text-align:center">
             <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
-        </div>
-        <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:4px;margin-top:6px">
           <div class="ext-compact-box" style="width:25px;margin-left:0">
             <span class="ext-compact-label">Діб</span>
             <input type="number" id="bm-ext-days" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 3px!important;border:1px solid #d8dbe2;border-radius:6px" min="1" oninput="extDaysOverridden=true;extTotalOverridden=false;recalcExtensionCost()">
@@ -2788,16 +2787,15 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
           </div>
-          <div class="ext-compact-box" style="width:130px;margin-left:auto">
+          <div class="ext-compact-box" id="bm-ext-rate2-field" style="width:50px;display:none">
+            <span class="ext-compact-label">Курс</span>
+            <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:100%;height:36px;text-align:center;box-sizing:border-box;padding:0 3px!important;border:1px solid #d8dbe2;border-radius:6px" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
+          </div>
+          <div class="ext-compact-box" style="width:100px;margin-left:auto">
             <span class="ext-compact-label">Загалом</span>
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right;padding:0 3px!important" oninput="formatExtAmountInput(this);onExtTotalInput(this);updateExtTotalColor()">
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
-              <span id="bm-ext-rate2-field" style="display:none;align-items:center;flex-shrink:0">
-                <span style="color:#9ca3af;font-size:12px">(</span>
-                <input type="text" inputmode="decimal" id="bm-ext-rate2" class="no-spinner" style="width:38px;height:20px;text-align:center;box-sizing:border-box;padding:0;border:none;background:none;font-size:11px;color:#9ca3af" placeholder="00,00" oninput="formatExchangeRateInput(this);onExtRateInput()">
-                <span style="color:#9ca3af;font-size:12px">)</span>
-              </span>
             </div>
           </div>
           <div class="ext-compact-box" style="width:100px">
@@ -8439,7 +8437,7 @@ function onExtCurrencyChange(){
   // potentially at a different real-world rate, so it's just recorded as a
   // note and never drives any conversion math here.
   const rate2Field = document.getElementById('bm-ext-rate2-field');
-  if(rate2Field) rate2Field.style.display = 'inline-flex';
+  if(rate2Field) rate2Field.style.display = '';
   setExtTotalCurrency(cur);
   setExtPaidCurrency(cur);
   updateExtensionPaidUI();
