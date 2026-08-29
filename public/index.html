@@ -13460,7 +13460,7 @@ function renderVehiclesPanelList(){
     const tint = hexToRgba(cat.colorHex, .09);
     return `<div id="veh-cat-block-${CATEGORIES.indexOf(cat)}" data-cat-idx="${CATEGORIES.indexOf(cat)}"
         ondragover="catRowDragOver(event)" ondrop="catRowDrop(event)" ondragend="catRowDragEnd(event)"
-        style="margin-bottom:16px;padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
+        style="margin-bottom:16px;padding:9px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span draggable="true" ondragstart="catRowDragStart(event)"
           onmousedown="this.closest('[data-cat-idx]').draggable=true" onmouseup="this.closest('[data-cat-idx]').draggable=false"
