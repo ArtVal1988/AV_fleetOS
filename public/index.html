@@ -304,6 +304,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
+  #add-client-btn{width:34px;height:34px;padding:0!important;border-radius:8px!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  #add-client-btn .acb-icon{font-size:18px;line-height:1;font-weight:700;}
+  #add-client-btn .acb-text{display:none!important;}
   #maint-panel-header{flex-wrap:wrap!important;}
   #maint-panel-header #maint-search{order:3;max-width:none!important;flex:1 1 100%!important;}
   .dash-activity-cols{grid-template-columns:1fr!important;}
@@ -1801,7 +1804,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">👤 Клієнти</div>
       <input id="cl-search" type="text" placeholder="Пошук за ПІБ, телефоном…" oninput="renderClientsPanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
-      <button onclick="openClientForm(null)" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">+ Додати клієнта</button>
+      <button onclick="openClientForm(null)" id="add-client-btn" style="background:#2563eb;color:#fff;border:none;border-radius:7px;padding:9px 16px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap"><span class="acb-icon">+</span><span class="acb-text"> Додати клієнта</span></button>
       <button onclick="closeClientsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
     <div style="padding:20px 28px">
