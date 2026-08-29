@@ -436,7 +436,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .fin-row{flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:4px;}
   .ext-fin-row{flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:4px;}
   #bm-ext-rate2-field{display:none!important;}
-  #bm-ext-course-display{display:inline!important;}
 }
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
@@ -2799,7 +2798,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <div class="ext-cur-inline-wrap">
               <input type="text" inputmode="decimal" id="bm-ext-total" style="flex:1;min-width:0;text-align:right;padding:0 3px!important" oninput="formatExtAmountInput(this);onExtTotalInput(this);updateExtTotalColor()">
               <span class="ext-cur-suffix" id="ext-total-cur-display">$</span>
-              <span id="bm-ext-course-display" onclick="editExtCourseMobile()" style="display:none;font-size:10px;color:#9ca3af;flex-shrink:0;margin-left:2px;cursor:pointer;text-decoration:underline dotted">(<span id="bm-ext-course-value"></span>)</span>
+              <span id="bm-ext-course-display" style="display:none;font-size:10px;color:#9ca3af;flex-shrink:0;margin-left:2px">(<span id="bm-ext-course-value"></span>)</span>
             </div>
           </div>
           <div class="ext-compact-box" style="width:100px">
@@ -8407,15 +8406,6 @@ function setExtPaidCurrency(cur){
   if(rateField) rateField.style.display = (cur === '₴') ? 'none' : '';
   const paidField = document.getElementById('bm-ext-paid');
   if(paidField) paidField.style.color = curColor(cur);
-}
-function editExtCourseMobile(){
-  const input = document.getElementById('bm-ext-rate2');
-  if(!input) return;
-  const typed = prompt('Курс (для довідки, не впливає на розрахунки)', input.value || '');
-  if(typed === null) return; // cancelled
-  input.value = typed.trim();
-  formatExchangeRateInput(input);
-  onExtRateInput();
 }
 function onExtRateInput(){
   const val = document.getElementById('bm-ext-rate2').value;
