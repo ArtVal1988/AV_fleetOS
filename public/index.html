@@ -296,10 +296,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   #bm-deposit{font-size:15px!important;}
   .km-compact-field{padding:10px 8px 5px!important;}
   .dash-activity-cols{grid-template-columns:1fr!important;}
-  .dash-attention-cols{grid-template-columns:repeat(3,1fr)!important;}
   .dash-activity-col{border-left:none!important;border-top:1px solid rgba(0,0,0,.08)!important;padding:12px 0 0!important;margin-top:12px!important;}
   .dash-activity-col:first-child{border-top:none!important;margin-top:0!important;padding-top:0!important;}
-  .dash-fleet-stats{grid-template-columns:repeat(2,1fr)!important;}
+  .dash-fleet-stats{grid-template-columns:repeat(3,1fr)!important;}
   .km-compact-field input{font-size:14px!important;}
   .vat-row-label[style*="display:flex"]{gap:6px!important;}
   .km-row-compact{flex-wrap:wrap!important;}
@@ -7102,10 +7101,10 @@ function renderDashboard(){
   const attentionHtml = `
     <div class="msec-b5">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">🔔 Потребує уваги</div>
-      <div class="dash-attention-cols" style="display:grid;grid-template-columns:1fr 1fr 1fr">
-        <div class="dash-attention-col" style="padding-right:12px">${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Перепробіг ТО - '+Math.abs(left).toLocaleString('uk-UA')+' км'; }, v => `openToModal(${v.id})`)}</div>
-        <div class="dash-attention-col" style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
-        <div class="dash-attention-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">
+      <div class="dash-activity-cols" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+        <div class="dash-activity-col" style="padding-right:12px">${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Перепробіг ТО - '+Math.abs(left).toLocaleString('uk-UA')+' км'; }, v => `openToModal(${v.id})`)}</div>
+        <div class="dash-activity-col" style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
+        <div class="dash-activity-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">
           ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? `<span style="color:#166534">${fmtMon(p.amount)}</span> · ` : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}
           <div style="margin-top:14px">${dashAlertList('🛡 КАСКО пролонгація (≤30 днів)', kaskoRenewalSoon, v => fmtD(v.kasko.end), v => `openInsuranceModal(${v.id})`)}</div>
         </div>
