@@ -301,9 +301,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
-  .vf-basic-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"brand model year" "plate plate category" "vin vin vin"!important;}
-  .vf-tech-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"engine power consumption" "transmission drive drive" "fuel fuel fuel"!important;}
+  .vf-basic-fields.vf-basic-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"brand model year" "plate plate category" "vin vin vin"!important;}
+  .vf-tech-fields.vf-tech-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"engine power consumption" "transmission drive drive" "fuel fuel fuel"!important;}
   #vf-update-specs-btn .vfus-text{display:none!important;}
+  .vf-keep-2col.vf-keep-2col{grid-template-columns:1fr 1fr!important;}
+  #vf-category{height:33px!important;}
   .veh-row{flex-wrap:nowrap!important;}
   .veh-row-line1{flex:1!important;}
   .veh-row-line2,.veh-row-line3{display:none!important;}
@@ -2168,11 +2170,11 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="margin-bottom:10px">
         <label class="vf-lbl">ПІБ власника</label><input id="vf-owner-name" type="text" class="vf-inp" placeholder="Прізвище Ім'я По-батькові">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+      <div class="vf-keep-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Телефон власника</label><input id="vf-owner-phone" type="text" class="vf-inp" placeholder="+380..."></div>
         <div><label class="vf-lbl">ІПН власника</label><input id="vf-owner-inn" type="text" class="vf-inp no-spinner" placeholder="1234567890"></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+      <div class="vf-keep-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
         <div><label class="vf-lbl">Номер техпаспорта</label><input id="vf-sts-number" type="text" class="vf-inp" placeholder="СХА123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
         <div><label class="vf-lbl">Дата видачі техпаспорта</label><input type="date" readonly id="vf-sts-date" class="vf-inp custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)"></div>
       </div>
@@ -2182,7 +2184,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <option value="">— не призначено —</option>
         </select>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="vf-keep-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><label class="vf-lbl">Колір кузова</label><input id="vf-color" type="text" class="vf-inp" placeholder="Білий"></div>
         <div><label class="vf-lbl">Тип кузова</label>
           <select id="vf-bodytype" class="vf-inp">
