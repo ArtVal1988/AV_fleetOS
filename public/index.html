@@ -304,6 +304,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
+  .veh-row{flex-wrap:wrap!important;}
+  .veh-row-line1,.veh-row-line2,.veh-row-line3{flex:1 1 100%!important;border-left:none!important;padding-left:0!important;}
+  .veh-row-line2,.veh-row-line3{margin-left:23px!important;padding-top:4px!important;border-top:1px solid rgba(0,0,0,.06)!important;}
   #add-client-btn{width:34px;height:34px;padding:0!important;border-radius:8px!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   #add-client-btn .acb-icon{font-size:18px;line-height:1;font-weight:700;}
   #add-client-btn .acb-text{display:none!important;}
@@ -13473,20 +13476,22 @@ function renderVehiclesPanelList(){
           ${q?'':'ondragstart="vehRowDragStart(event)" ondragover="vehRowDragOver(event)" ondrop="vehRowDrop(event)" ondragend="vehRowDragEnd(event)"'}
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
-          <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
-            ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
+          <div class="veh-row-line1" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+            <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
+              ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
+            </div>
           </div>
           ${(v.owner?.name || v.owner?.phone || v.owner?.inn) ? `
-          <div style="flex:1.8;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
-            <div onclick="openDocsModal(${v.id})" title="Відкрити документи" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration=''">${v.owner?.name||'—'}</div>
-            ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
+          <div class="veh-row-line2" style="flex:1.8;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px;display:flex;align-items:center;gap:8px">
+            <div onclick="openDocsModal(${v.id})" title="Відкрити документи" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;flex-shrink:0" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration=''">${v.owner?.name||'—'}</div>
+            ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
           </div>` : ''}
           ${(v.vin || v.sts?.number || v.sts?.date) ? `
-          <div style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
-            <div style="font-size:13px;font-weight:600;color:#1a1d26;font-family:var(--font-mono)">${v.vin||'—'}</div>
-            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📄 ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
+          <div class="veh-row-line3" style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px;display:flex;align-items:center;gap:8px">
+            <div style="font-size:13px;font-weight:600;color:#1a1d26;font-family:var(--font-mono);flex-shrink:0">${v.vin||'—'}</div>
+            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
           </div>` : ''}
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
