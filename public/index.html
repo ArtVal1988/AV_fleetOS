@@ -9974,8 +9974,8 @@ function buildKaskoReqDisplay(k){
     const inner = rowInner(label, rawValue, false, truncate);
     return inner ? '<div class="im-field full">'+inner+'</div>' : '';
   };
-  const codeVal = rowInner('Код отримувача', k.reqCode, true);
-  const accountVal = rowInner('Рахунок отримувача', k.reqAccount, false, true);
+  const codeVal = rowInner('Код', k.reqCode, true);
+  const accountVal = rowInner('Рахунок', k.reqAccount, false, true);
   const wrapBox = (html, noFlex, padH) => html ? '<div style="'+(noFlex?'flex:0 0 auto;':'flex:1;')+'min-width:0;border:1px solid #fed7aa;border-radius:6px;padding:6px '+(padH||8)+'px;background:#fff">'+html+'</div>' : '';
   const codeAccountRow = (codeVal||accountVal) ? '<div class="im-field full" style="display:flex;gap:8px">'+wrapBox(codeVal,true,3)+wrapBox(accountVal)+'</div>' : '';
   const content = row('Отримувач', k.reqRecipient, true) + codeAccountRow + row('Призначення платежу', k.reqPurpose);
