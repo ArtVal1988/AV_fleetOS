@@ -6176,7 +6176,7 @@ try{
       if(a) a.classList.add('sb-collapsed');
     });
   }
-  if(isMobileViewport() && localStorage.getItem('fleet_sb_mobile')==='1'){
+  if(isMobileViewport() && localStorage.getItem('fleet_sb_mobile')!=='0'){
     document.addEventListener('DOMContentLoaded',()=>{
       const a=document.querySelector('.app');
       if(a) a.classList.add('sb-hidden-mobile');
