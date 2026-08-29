@@ -306,7 +306,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-phone{width:100%!important;}
   .veh-row{flex-wrap:wrap!important;}
   .veh-row-line1,.veh-row-line2,.veh-row-line3{flex:1 1 100%!important;border-left:none!important;padding-left:0!important;}
-  .veh-row-line2,.veh-row-line3{margin-left:23px!important;padding-top:4px!important;border-top:1px solid rgba(0,0,0,.06)!important;}
+  .veh-row-line2,.veh-row-line3{padding-top:4px!important;border-top:1px solid rgba(0,0,0,.06)!important;}
   #add-client-btn{width:34px;height:34px;padding:0!important;border-radius:8px!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   #add-client-btn .acb-icon{font-size:18px;line-height:1;font-weight:700;}
   #add-client-btn .acb-text{display:none!important;}
@@ -13480,7 +13480,6 @@ function renderVehiclesPanelList(){
             <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
-              ${v.specs ? `<div style="font-size:11px;color:#6b7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[v.specs.bodyType,v.specs.transmission,v.specs.fuel].filter(Boolean).join(' · ')||'—'}</div>` : ''}
             </div>
           </div>
           ${(v.owner?.name || v.owner?.phone || v.owner?.inn) ? `
