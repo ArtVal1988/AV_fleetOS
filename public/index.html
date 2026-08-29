@@ -9047,7 +9047,7 @@ function renderExtTimeline(){
     originalRowHtml = `
       <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
         <div class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</div>
-        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'} · <span style="color:#16a34a;font-weight:700">✓</span></div>
+        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' ('+fmtSmart(b.exchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
       </div>`;
   }
 
