@@ -9055,7 +9055,7 @@ function renderExtTimeline(){
     <div class="ext-history-row" style="display:flex;align-items:center;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
       <div style="flex:1;min-width:0">
         <div class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</div>
-        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency} · <span style="color:#16a34a;font-weight:700">✓</span></div>
+        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' ('+fmt1(h.totalExchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="generateExtHistoryAct(${i})" title="Сформувати акт продовження" style="background:none;border:1px solid #bfdbfe;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#1d4ed8;font-size:10px;padding:0">🖨️</button>
