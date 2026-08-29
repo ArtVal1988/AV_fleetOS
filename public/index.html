@@ -7159,10 +7159,10 @@ function dashStatCard(value, label, color){
   </div>`;
 }
 function dashAlertList(title, list, detailFn, onClickFn){
-  return `<div>
+  return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
     <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(v => `
-      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;text-align:left${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
         <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
         <span style="color:#dc2626;font-weight:600;flex-shrink:0;margin-left:8px">${detailFn(v)}</span>
       </div>
