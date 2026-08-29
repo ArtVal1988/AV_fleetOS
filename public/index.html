@@ -12322,10 +12322,10 @@ function renderMaintenancePanelList(){
   };
 
   const summaryHtml = [
-    {key:'danger', label:'Прострочено / терміново', color:'#ef4444', bg:'#fef2f2'},
+    {key:'danger', label:'Терміново', color:'#ef4444', bg:'#fef2f2'},
     {key:'warn', label:'Незабаром', color:'#f59e0b', bg:'#fffbeb'},
     {key:'ok', label:'В нормі', color:'#2F6364', bg:'#f0fdf4'},
-  ].map(g => `<div style="flex:1;background:${g.bg};border:1px solid ${g.color}33;border-radius:10px;padding:12px;text-align:center">
+  ].map(g => `<div style="flex:1;background:${g.bg};border:1px solid ${g.color}33;border-radius:10px;padding:3px;text-align:center">
     <div style="font-size:22px;font-weight:800;color:${g.color}">${groups[g.key].length}</div>
     <div style="font-size:10px;color:${g.color};font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">${g.label}</div>
   </div>`).join('');
@@ -12336,7 +12336,7 @@ function renderMaintenancePanelList(){
     return `<div style="margin-bottom:16px">
       <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${label} (${items.length})</div>
       ${items.map(r => {
-        const kmText = r.kmLeft <= 0 ? `Прострочено на ${Math.abs(r.kmLeft).toLocaleString('uk-UA')} км` : `${r.kmLeft.toLocaleString('uk-UA')} км залишилось`;
+        const kmText = r.kmLeft <= 0 ? `Прострочено на ${Math.abs(r.kmLeft).toLocaleString('uk-UA')} км` : `${r.kmLeft.toLocaleString('uk-UA')} км`;
         return `<div onclick="openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.75);cursor:pointer">
           <div style="display:flex;align-items:center;gap:10px;min-width:0">
             <span style="font-family:var(--font-mono);font-weight:700;font-size:12px;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;flex-shrink:0">${r.v.plate}</span>
@@ -12348,7 +12348,7 @@ function renderMaintenancePanelList(){
     </div>`;
   };
 
-  const listHtml = renderGroup('⚠ Прострочено / терміново', '#ef4444', groups.danger) +
+  const listHtml = renderGroup('⚠ Терміново', '#ef4444', groups.danger) +
     renderGroup('🔶 Незабаром', '#f59e0b', groups.warn) +
     renderGroup('✓ В нормі', '#2F6364', groups.ok);
 
