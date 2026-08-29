@@ -304,9 +304,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
-  .veh-row{flex-wrap:wrap!important;}
-  .veh-row-line1,.veh-row-line2,.veh-row-line3{flex:1 1 100%!important;border-left:none!important;padding-left:0!important;}
-  .veh-row-line2,.veh-row-line3{padding-top:4px!important;border-top:1px solid rgba(0,0,0,.06)!important;}
+  .veh-row{flex-wrap:nowrap!important;}
+  .veh-row-line1{flex:1!important;}
+  .veh-row-line2,.veh-row-line3{display:none!important;}
+  .veh-row-actions{display:flex;gap:6px;flex-shrink:0;}
+  .veh-row-actions button{width:30px;height:30px;padding:0!important;display:flex;align-items:center;justify-content:center;font-size:13px!important;}
+  .vra-text{display:none!important;}
+  .veh-row-line1 > div{overflow:hidden;}
+  .veh-row-line1 > div > div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #add-client-btn{width:34px;height:34px;padding:0!important;border-radius:8px!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   #add-client-btn .acb-icon{font-size:18px;line-height:1;font-weight:700;}
   #add-client-btn .acb-text{display:none!important;}
@@ -13477,7 +13482,7 @@ function renderVehiclesPanelList(){
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <div class="veh-row-line1" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-            <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+            <span onclick="openDocsModal(${v.id})" title="Відкрити документи" style="cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
             <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
             </div>
@@ -13495,16 +13500,16 @@ function renderVehiclesPanelList(){
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">
-            ✎ Редагувати
+            <span class="vra-icon">✎</span><span class="vra-text"> Редагувати</span>
           </button>
           ${cat.name==='Архів' ? `
           <button onclick="restoreVehicleFromArchive(${v.id})"
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #86efac;background:#fff;color:#166534;font-family:inherit;font-weight:600">
-            ↩ Відновити
+            <span class="vra-icon">↩</span><span class="vra-text"> Відновити</span>
           </button>` : `
           <button onclick="archiveVehicle(${v.id})"
             style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-family:inherit;font-weight:600">
-            📦 В архів
+            <span class="vra-icon">📦</span><span class="vra-text"> В архів</span>
           </button>`}
           </div>
         </div>
