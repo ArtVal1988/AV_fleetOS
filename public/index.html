@@ -301,6 +301,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .kasko-compact-field .imf-lbl{font-size:8px!important;}
   .kasko-compact-field .imf-val{font-size:11px!important;}
   .kasko-compact-field .imf-val span{font-size:11px!important;}
+  .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
+  .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  .client-row-phone{width:100%!important;}
   #maint-panel-header{flex-wrap:wrap!important;}
   #maint-panel-header #maint-search{order:3;max-width:none!important;flex:1 1 100%!important;}
   .dash-activity-cols{grid-template-columns:1fr!important;}
@@ -12464,8 +12467,10 @@ function renderClientsPanelList(){
     const tierInfo = CTM[c.tier || 'new'] || CTM.new;
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
       <div title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
-      <div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
-      <div style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
+      <div class="client-row-namephone" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
+        <div class="client-row-name" style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
+        <div class="client-row-phone" style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
+      </div>
       <button onclick="openClientForm(${c.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600">✎ Редагувати</button>
     </div>`;
   }).join('');
