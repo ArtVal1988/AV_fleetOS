@@ -295,6 +295,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .dep-cur-pill svg{width:12px!important;height:12px!important;}
   #bm-deposit{font-size:15px!important;}
   .km-compact-field{padding:10px 8px 5px!important;}
+  #maint-panel-header{flex-wrap:wrap!important;}
+  #maint-panel-header #maint-search{order:3;max-width:none!important;flex:1 1 100%!important;}
   .dash-activity-cols{grid-template-columns:1fr!important;}
   .dash-activity-col{border-left:none!important;border-top:1px solid rgba(0,0,0,.08)!important;padding:12px 0 0!important;margin-top:12px!important;}
   .dash-activity-col:first-child{border-top:none!important;margin-top:0!important;padding-top:0!important;}
@@ -1605,7 +1607,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <div id="maintenance-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:200;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+    <div id="maint-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">⚙ Тех. обслуговування — весь парк</div>
       <input id="maint-search" type="text" placeholder="Пошук за номером, назвою…" oninput="renderMaintenancePanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:260px">
