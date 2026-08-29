@@ -220,6 +220,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .topbar-right .btn-ghost{padding:0;width:30px;height:30px;border-radius:50%;font-size:14px;overflow:hidden;white-space:nowrap;}
   .topbar-right .btn-ghost .logout-text{display:none;}
   .month-nav{padding:2px;}
+  #mn-btn-prev-week,#mn-btn-next-week{font-size:0!important;position:relative;padding:5px 10px!important;}
+  #mn-btn-prev-week::before{content:"<<<";font-size:12px;}
+  #mn-btn-next-week::before{content:">>>";font-size:12px;}
   .mn-btn{padding:5px 8px;}
   .today-btn{padding:5px 9px;}
   .stickers-bar{padding:6px 10px;gap:6px;}
@@ -2275,12 +2278,12 @@ input.dm-pf-val.tel{font-size:14px;}
   <div class="topbar">
     <div style="position:relative;display:flex;align-items:center;gap:8px">
       <button class="btn btn-primary" onclick="goToday()">Сьогодні</button>
-      <button class="mn-btn" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
       <div id="month-nav-anchor-normal"></div>
       <div class="month-nav">
+        <button class="mn-btn" id="mn-btn-prev-week" onclick="shiftWindow(-7)" title="Назад на тиждень">«</button>
         <div class="mn-label" id="mn-label" onclick="toggleNavPicker()" title="Оберіть місяць або дату ▾" style="cursor:pointer;user-select:none"></div>
+        <button class="mn-btn" id="mn-btn-next-week" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
       </div>
-      <button class="mn-btn" onclick="shiftWindow(7)" title="Вперед на тиждень">»</button>
       <!-- NAV PICKER POPUP -->
       <div class="nav-picker" id="nav-picker" style="display:none">
       <div class="np-section">
