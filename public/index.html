@@ -8238,7 +8238,7 @@ function renderSubstituteList(){
     const cur = s.currency||'$';
     const total = days*(s.rate||0);
     const priceText = s.rate>0
-      ? `${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur}${s.exchangeRate>0?' (курс '+fmt1(s.exchangeRate)+')':''} ·`
+      ? `${days} ${pluralDoba(days)} × ${fmt1(s.rate)} ${cur} = ${fmt1(total)} ${cur} ·`
       : '—';
     return `<div class="ext-history-row" style="display:flex;flex-direction:column;gap:2px;background:${isEditing?'#fef9c3':(i%2?'#eceef1':'transparent')};border:${isEditing?'1px solid #fde047':'none'};border-radius:4px;padding:5px 6px">
       <div style="display:flex;align-items:center;gap:10px">
@@ -9043,7 +9043,7 @@ function renderExtTimeline(){
     originalRowHtml = `
       <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
         <div class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</div>
-        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' (курс '+fmt1(b.exchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
+        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'} · <span style="color:#16a34a;font-weight:700">✓</span></div>
       </div>`;
   }
 
@@ -9051,7 +9051,7 @@ function renderExtTimeline(){
     <div class="ext-history-row" style="display:flex;align-items:center;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
       <div style="flex:1;min-width:0">
         <div class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</div>
-        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
+        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency} · <span style="color:#16a34a;font-weight:700">✓</span></div>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="generateExtHistoryAct(${i})" title="Сформувати акт продовження" style="background:none;border:1px solid #bfdbfe;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#1d4ed8;font-size:10px;padding:0">🖨️</button>
@@ -9079,9 +9079,9 @@ function renderExtTimeline(){
     const sumText = Object.entries(totalsByCur).map(([cur,sum]) => fmt1(sum) + ' ' + cur).join(' + ');
 
     summaryHtml = `
-      <div class="ext-history-row" style="background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:8px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
-        <span class="eh-dates">📊 ${fmt(b.start)}–${fmt(overallEnd)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${totalDays} ${pluralDoba(totalDays)} = ${sumText}</span>
+      <div class="ext-history-row" style="background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:8px;padding:9px 12px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
+        <div class="eh-dates">📊 ${fmt(b.start)}–${fmt(overallEnd)}</div>
+        <div class="eh-amt" style="text-align:right">${totalDays} ${pluralDoba(totalDays)} = ${sumText}</div>
       </div>`;
   }
 
