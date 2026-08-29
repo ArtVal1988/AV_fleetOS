@@ -9041,17 +9041,17 @@ function renderExtTimeline(){
     const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
     const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
     originalRowHtml = `
-      <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26;display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <span class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' (курс '+fmt1(b.exchangeRate)+')':''} · сплачено</span>
+      <div class="ext-history-row" style="border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
+        <div class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</div>
+        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' (курс '+fmt1(b.exchangeRate)+')':''} · сплачено</div>
       </div>`;
   }
 
   const historyRowsHtml = currentExtHistory.map((h,i) => `
-    <div class="ext-history-row" style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex:1;min-width:0">
-        <span class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
-        <span class="eh-amt" style="flex:1;text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</span>
+    <div class="ext-history-row" style="display:flex;align-items:center;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
+      <div style="flex:1;min-width:0">
+        <div class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</div>
+        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmt1(h.rate||0)} ${h.currency} = ${fmt1(h.cost||0)} ${h.currency}${h.totalExchangeRate?' (курс '+fmt1(h.totalExchangeRate)+')':''} · сплачено</div>
       </div>
       <div style="display:flex;gap:2px;flex-shrink:0">
         <button type="button" onclick="generateExtHistoryAct(${i})" title="Сформувати акт продовження" style="background:none;border:1px solid #bfdbfe;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#1d4ed8;font-size:10px;padding:0">🖨️</button>
