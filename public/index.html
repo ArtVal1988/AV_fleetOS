@@ -13405,6 +13405,7 @@ function renderActivityLogList(){
     create: {label:'+ Створено', color:'#166534', bg:'#f0fdf4'},
     update: {label:'✎ Змінено', color:'#92400e', bg:'#fffbeb'},
     delete: {label:'✕ Видалено', color:'#991b1b', bg:'#fef2f2'},
+    undo: {label:'↩ Скасування', color:'#1d4ed8', bg:'#eff6ff'},
   };
   const entityLabels = {booking:'Замовлення', vehicle:'Авто', client:'Клієнт', sticker:'Стікер'};
   list.innerHTML = ACTIVITY_LOG.map((entry,i) => {
@@ -13418,6 +13419,8 @@ function renderActivityLogList(){
         <div style="font-size:11px;color:#6b7280;margin-top:2px">${dateStr}${entry.user_name?' · '+entry.user_name:''}</div>
       </div>
       ${entry.snapshot?`<button onclick="viewAlSnapshot(${i})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">Переглянути дані</button>`:''}
+      ${entry.undone_at ? `<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#fef2f2;color:#991b1b;flex-shrink:0;white-space:nowrap">↩ Скасовано</span>`
+        : (entry.snapshot && entry.entity_type==='booking' && ['create','update','delete'].includes(entry.action) ? `<button onclick="undoActivityLogEntry(${entry.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #fca5a5;background:#fff;color:#991b1b;font-family:inherit;font-weight:600;flex-shrink:0">↩ Скасувати</button>` : '')}
     </div>`;
   }).join('');
 }
@@ -13439,6 +13442,18 @@ function formatBookingSnapshot(b){
   if(b.notes) lines.push('Нотатки: ' + b.notes);
   if(b.extensionHistory?.length) lines.push('Продовжень в історії: ' + b.extensionHistory.length);
   return lines.join('\n');
+}
+async function undoActivityLogEntry(id){
+  if(!confirm('Скасувати цю дію? Замовлення буде відновлено/повернуто до попереднього стану.')) return;
+  try{
+    const res = await fetch(API_BASE+'/activity-log/'+id+'/undo', {method:'POST', headers:apiHeaders()});
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok){ alert(data.error || 'Не вдалося скасувати дію'); return; }
+    await loadActivityLog();
+    await syncFromServer();
+  } catch(e){
+    alert('Не вдалося скасувати дію');
+  }
 }
 function viewAlSnapshot(i){
   const entry = ACTIVITY_LOG[i];
