@@ -301,6 +301,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row-namephone{flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
   .client-row-name{width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
   .client-row-phone{width:100%!important;}
+  .vf-basic-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"brand model year" "plate plate category" "vin vin vin"!important;}
+  .vf-tech-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"engine power consumption" "transmission drive drive" "fuel fuel fuel"!important;}
+  #vf-update-specs-btn .vfus-text{display:none!important;}
   .veh-row{flex-wrap:nowrap!important;}
   .veh-row-line1{flex:1!important;}
   .veh-row-line2,.veh-row-line3{display:none!important;}
@@ -662,6 +665,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
 .im-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .im-fields-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.vf-basic-fields{grid-template-areas:"brand model" "plate category" "vin year";}
+.vf-tech-fields{grid-template-areas:"engine power" "transmission drive" "fuel consumption";}
 .kasko-main-fields{grid-template-columns:1fr 1fr 1fr!important;grid-template-areas:"insurer policyNum period" "sum premium deductible";}
 .osago-top-fields{grid-template-areas:"insurer policyNum end";}
 .osago-top-fields .osago-end-field{grid-area:end;}
@@ -2149,19 +2154,15 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div class="msec-b1">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">🚘 Основне</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Марка</label><input id="vf-brand" type="text" class="vf-inp" placeholder="Toyota"></div>
-        <div><label class="vf-lbl">Модель</label><input id="vf-model" type="text" class="vf-inp" placeholder="Camry"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Номерний знак</label><input id="vf-plate" type="text" class="vf-inp" placeholder="AA 1234 BC" style="text-transform:uppercase"></div>
-        <div><label class="vf-lbl">Категорія</label>
+      <div class="vf-basic-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div style="grid-area:brand"><label class="vf-lbl">Марка</label><input id="vf-brand" type="text" class="vf-inp" placeholder="Toyota"></div>
+        <div style="grid-area:model"><label class="vf-lbl">Модель</label><input id="vf-model" type="text" class="vf-inp" placeholder="Camry"></div>
+        <div style="grid-area:plate"><label class="vf-lbl">Номерний знак</label><input id="vf-plate" type="text" class="vf-inp" placeholder="AA 1234 BC" style="text-transform:uppercase"></div>
+        <div style="grid-area:category"><label class="vf-lbl">Категорія</label>
           <select id="vf-category" class="vf-inp"></select>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
-        <div><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
+        <div style="grid-area:vin"><label class="vf-lbl">VIN</label><input id="vf-vin" type="text" class="vf-inp" placeholder="WVWZZZ1KZAW123456" style="text-transform:uppercase;font-family:var(--font-mono)"></div>
+        <div style="grid-area:year"><label class="vf-lbl">Рік випуску</label><input id="vf-year" type="number" class="vf-inp no-spinner" placeholder="2024" min="1970" max="2030"></div>
       </div>
       <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin:14px 0 8px">Власник та техпаспорт</div>
       <div style="margin-bottom:10px">
@@ -2196,7 +2197,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <label class="vf-lbl">🔗 Посилання TopRent</label>
         <div style="display:flex;gap:8px">
           <input id="vf-pricelink" type="url" class="vf-inp" placeholder="https://toprent.ua/uk/skoda-rapid-2015" style="flex:1">
-          <button type="button" onclick="fetchAndApplySpecsInForm()" style="flex-shrink:0;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔄 Оновити характеристики</button>
+          <button type="button" id="vf-update-specs-btn" onclick="fetchAndApplySpecsInForm()" style="flex-shrink:0;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:6px;padding:0 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap"><span class="vfus-icon">🔄</span><span class="vfus-text"> Оновити характеристики</span></button>
         </div>
         <div id="vf-pricelink-status" style="font-size:10px;color:#9ca3af;margin-top:4px"></div>
       </div>
@@ -2208,29 +2209,25 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div class="msec-b4">
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px">⚙ Технічні характеристики</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Об'єм двигуна (л)</label><input id="vf-engine" type="number" step="0.1" class="vf-inp no-spinner" placeholder="1.6"></div>
-        <div><label class="vf-lbl">Потужність (к.с.)</label><input id="vf-power" type="number" class="vf-inp no-spinner" placeholder="120"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Тип КПП</label>
+      <div class="vf-tech-fields" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div style="grid-area:engine"><label class="vf-lbl">Двигун</label><input id="vf-engine" type="number" step="0.1" class="vf-inp no-spinner" placeholder="1.6"></div>
+        <div style="grid-area:power"><label class="vf-lbl">Потужність (к.с.)</label><input id="vf-power" type="number" class="vf-inp no-spinner" placeholder="120"></div>
+        <div style="grid-area:transmission"><label class="vf-lbl">Тип КПП</label>
           <select id="vf-transmission" class="vf-inp">
             <option value="">—</option><option>Автомат</option><option>Механіка</option><option>Робот</option><option>Варіатор</option>
           </select>
         </div>
-        <div><label class="vf-lbl">Привід</label>
+        <div style="grid-area:drive"><label class="vf-lbl">Привід</label>
           <select id="vf-drive" class="vf-inp">
             <option value="">—</option><option>Передній</option><option>Задній</option><option>Повний</option>
           </select>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Тип пального</label>
+        <div style="grid-area:fuel"><label class="vf-lbl">Тип пального</label>
           <select id="vf-fuel" class="vf-inp">
             <option value="">—</option><option>Бензин А95</option><option>Дизель</option><option>Гібрид</option><option>Електро</option><option>Бензин-газ</option>
           </select>
         </div>
-        <div><label class="vf-lbl">Витрата (л/100км)</label><input id="vf-consumption" type="number" step="0.1" class="vf-inp no-spinner" placeholder="6.4"></div>
+        <div style="grid-area:consumption"><label class="vf-lbl">Витрата (л/100км)</label><input id="vf-consumption" type="number" step="0.1" class="vf-inp no-spinner" placeholder="6.4"></div>
       </div>
       <div>
         <label class="vf-lbl">Кондиціонер / клімат</label>
