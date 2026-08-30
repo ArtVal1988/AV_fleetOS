@@ -2345,7 +2345,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="nav-picker" id="nav-picker" style="display:none">
       <div class="np-section">
         <div class="np-label">З дати</div>
-        <input type="date" readonly id="np-date" class="np-date-input custom-dp-trigger" onmousedown="event.preventDefault();openCustomDatePicker(this)" onchange="jumpToDate(this.value)">
+        <input type="date" id="np-date" class="np-date-input" onchange="jumpToDate(this.value)">
       </div>
       <div class="np-divider"></div>
       <div class="np-section">
