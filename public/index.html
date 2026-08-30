@@ -8292,8 +8292,10 @@ function deleteSubstitutePeriod(i){
   renderSubstituteList();
 }
 function toggleExtensionSection(preserveExistingData){
-  const active = document.getElementById('bm-ext-active').checked;
+  const activeCheckbox = document.getElementById('bm-ext-active');
+  const active = !!(activeCheckbox && activeCheckbox.checked);
   const block = document.getElementById('bm-ext-fields');
+  if(!block) return;
   block.style.display = active ? '' : 'none';
   if(active){
     block.querySelectorAll('.ext-fin-row').forEach(row => {
@@ -14455,6 +14457,16 @@ window.saveDocChanges = function(){
   const vid = docsVehicleId;
   _origSaveDocChanges();
   persistVehicle(ALL_VEHICLES.find(x=>x.id===vid));
+};
+const _origEditBooking = editBooking;
+window.editBooking = function(bid){
+  try{
+    _origEditBooking(bid);
+  } catch(e){
+    console.error('editBooking failed:', e);
+    closeBookingModal();
+    alert('Виникла помилка при відкритті замовлення. Спробуйте ще раз.');
+  }
 };
 const _origArchiveVehicle = archiveVehicle;
 window.archiveVehicle = function(id){
