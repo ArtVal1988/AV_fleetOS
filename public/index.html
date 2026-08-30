@@ -14510,6 +14510,13 @@ function openCustomDatePicker(inputEl){
   dp.id = 'custom-dp';
   document.body.appendChild(dp);
   renderCustomDatePicker();
+  if(isMobileViewport()){
+    dp.style.position = 'fixed';
+    dp.style.left = '50%';
+    dp.style.top = '50%';
+    dp.style.transform = 'translate(-50%,-50%)';
+    return;
+  }
   const r = inputEl.getBoundingClientRect();
   const dpW = 230, dpH = 280;
   let left = r.left, top = r.bottom + 4;
