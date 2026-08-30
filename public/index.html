@@ -5712,8 +5712,10 @@ function toggleNavPicker(){
     if(isMobileViewport()){
       el.style.position = 'fixed';
       el.style.left = '50%';
-      el.style.top = '50%';
-      el.style.transform = 'translate(-50%,-50%)';
+      el.style.transform = 'translateX(-50%)';
+      const monthNav = document.querySelector('.month-nav');
+      const topPos = monthNav ? monthNav.getBoundingClientRect().bottom + 8 : 70;
+      el.style.top = topPos + 'px';
     } else {
       el.style.position = 'absolute';
       el.style.top = '';
