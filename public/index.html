@@ -5711,17 +5711,9 @@ function toggleNavPicker(){
     el.style.display = 'block';
     if(isMobileViewport()){
       el.style.position = 'fixed';
+      el.style.left = '50%';
       el.style.top = '50%';
-      el.style.transform = 'translateY(-50%)';
-      const monthNav = document.querySelector('.month-nav');
-      if(monthNav){
-        const rect = monthNav.getBoundingClientRect();
-        const maxLeft = window.innerWidth - el.offsetWidth - 12;
-        el.style.left = Math.max(12, Math.min(rect.left, maxLeft)) + 'px';
-      } else {
-        el.style.left = '50%';
-        el.style.transform = 'translate(-50%,-50%)';
-      }
+      el.style.transform = 'translate(-50%,-50%)';
     } else {
       el.style.position = 'absolute';
       el.style.top = '';
