@@ -9092,7 +9092,7 @@ function renderExtTimeline(){
     const sumText = Object.entries(totalsByCur).map(([cur,sum]) => fmt1(sum) + ' ' + cur).join(' + ');
 
     summaryHtml = `
-      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;gap:2px;background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:8px;padding:9px 12px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
+      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;gap:2px;background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:6px;padding:6px 8px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
         <div class="eh-dates">📊 ${fmt(b.start)}–${fmt(overallEnd)}</div>
         <div class="eh-amt" style="text-align:right">${totalDays} ${pluralDoba(totalDays)} = ${sumText}</div>
       </div>`;
