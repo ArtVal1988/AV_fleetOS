@@ -8295,6 +8295,13 @@ function toggleExtensionSection(preserveExistingData){
   const active = document.getElementById('bm-ext-active').checked;
   const block = document.getElementById('bm-ext-fields');
   block.style.display = active ? '' : 'none';
+  if(active){
+    block.querySelectorAll('.ext-fin-row').forEach(row => {
+      row.style.setProperty('display', 'flex', 'important');
+      row.style.setProperty('flex-wrap', 'nowrap', 'important');
+      row.style.setProperty('overflow-x', 'auto', 'important');
+    });
+  }
   const actBtn = document.getElementById('bm-ext-gen-act-btn');
   if(actBtn) actBtn.style.display = active ? '' : 'none';
   renderExtTimeline();
