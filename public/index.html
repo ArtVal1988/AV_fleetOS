@@ -2520,7 +2520,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
-          <input type="time" id="bm-pickup-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')">
+          <input type="time" id="bm-pickup-time" step="600" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')">
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
@@ -2529,7 +2529,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
-          <input type="time" id="bm-return-time" readonly value="09:00" class="lr-time custom-tp-trigger" onmousedown="event.preventDefault();openCustomTimePicker(this)" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')">
+          <input type="time" id="bm-return-time" step="600" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')">
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
