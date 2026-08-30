@@ -9054,7 +9054,7 @@ function renderExtTimeline(){
     const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
     const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
     originalRowHtml = `
-      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
+      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;gap:2px;border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
         <div class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</div>
         <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmt1(b.rate||0)} ${b.currency||'$'} = ${fmt1(origTotal)} ${b.currency||'$'}${b.exchangeRate?' ('+fmtSmart(b.exchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
       </div>`;
@@ -9092,7 +9092,7 @@ function renderExtTimeline(){
     const sumText = Object.entries(totalsByCur).map(([cur,sum]) => fmt1(sum) + ' ' + cur).join(' + ');
 
     summaryHtml = `
-      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:8px;padding:9px 12px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
+      <div class="ext-history-row" style="display:flex;flex-direction:column;align-items:stretch;gap:2px;background:linear-gradient(135deg,#eff6ff,#e0e9fc);border:1px solid #93c5fd;border-radius:8px;margin-bottom:8px;padding:9px 12px;font-weight:800;color:#1d4ed8;box-shadow:0 1px 2px rgba(29,78,216,.08)">
         <div class="eh-dates">📊 ${fmt(b.start)}–${fmt(overallEnd)}</div>
         <div class="eh-amt" style="text-align:right">${totalDays} ${pluralDoba(totalDays)} = ${sumText}</div>
       </div>`;
