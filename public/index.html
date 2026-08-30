@@ -440,7 +440,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .al-body{order:2;width:100%;margin-top:4px;}
   .al-actions{order:3;width:100%;margin-top:6px;}
   #al-panel-header{flex-wrap:wrap!important;}
-  #al-panel-filters{order:3;flex:1 1 100%!important;flex-wrap:wrap;}
+  #al-panel-filters{order:3;flex:1 1 100%!important;flex-wrap:nowrap!important;overflow-x:auto;}
 }
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
@@ -13415,7 +13415,6 @@ function renderActivityLogList(){
     delete: {label:'✕ Видалено', color:'#991b1b', bg:'#fef2f2'},
     undo: {label:'↩ Скасування', color:'#1d4ed8', bg:'#eff6ff'},
   };
-  const entityLabels = {booking:'Замовлення', vehicle:'Авто', client:'Клієнт', sticker:'Стікер'};
   list.innerHTML = ACTIVITY_LOG.map((entry,i) => {
     const meta = actionMeta[entry.action] || {label:entry.action, color:'#6b7280', bg:'#f9fafb'};
     const dt = parseUtcTimestamp(entry.created_at);
@@ -13423,7 +13422,7 @@ function renderActivityLogList(){
     return `<div class="al-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
       <span class="al-badge" style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${meta.bg};color:${meta.color};flex-shrink:0;white-space:nowrap">${meta.label}</span>
       <div class="al-body" style="flex:1;min-width:0">
-        <div class="al-title" style="font-size:13px;font-weight:600;color:#1a1d26">${entityLabels[entry.entity_type]||entry.entity_type} №${entry.entity_id||'—'}${entry.summary?' · '+entry.summary:''}</div>
+        <div class="al-title" style="font-size:13px;font-weight:600;color:#1a1d26">№${entry.entity_id||'—'}${entry.summary?' · '+entry.summary:''}</div>
         <div class="al-meta" style="font-size:11px;color:#6b7280;margin-top:2px">${dateStr}${entry.user_name?' · '+entry.user_name:''}</div>
       </div>
       <div class="al-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
