@@ -1005,6 +1005,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-box label{color:#854f0b!important;}
 .ext-cur-display{font-family:var(--font-mono);font-weight:700;font-size:13px;color:#2563eb;padding:4px 8px;}
 @media (min-width:641px){
+  .client-row-icon{background:none!important;border-radius:0!important;}
   .ext-history-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   #dash-stale-km-section{display:block!important;}
   #bm-ext-from,#bm-ext-to{width:100px!important;text-align:center;}
@@ -12569,7 +12570,7 @@ function renderClientsPanelList(){
     const msgIcon = activeMsgs.map(([type,m])=>`<a href="${getMsgUrl(type, m.contact, c.phone, c.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;vertical-align:middle;margin-left:5px"><img src="${MSG_ICON_DATA[type]}" width="13" height="13" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}"></a>`).join('');
     const tierInfo = CTM[c.tier || 'new'] || CTM.new;
     return `<div class="client-row" style="display:flex;align-items:center;gap:10px;padding:5px 5px;border:1px solid rgba(0,0,0,.2);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
-      <div title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
+      <div class="client-row-icon" title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
       <div class="client-row-namephone" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
         <div class="client-row-name" style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
         <div class="client-row-phone" style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap"><span>${c.phone||''}${msgIcon}</span><span class="client-row-phone-date">${c.createdAt?fmtCaseDate(parseUtcTimestamp(c.createdAt)):''}</span></div>
