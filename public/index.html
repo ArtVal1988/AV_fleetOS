@@ -13600,7 +13600,7 @@ function renderVehiclesPanelList(){
           ${(v.vin || v.sts?.number) ? `
           <div class="veh-row-line3" style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
             <div style="font-size:13px;font-weight:600;color:#1a1d26;font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.vin||'—'}</div>
-            <div style="font-size:11px;color:#6b7280;margin-top:2px">${v.sts?.number||'—'}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px">${v.sts?.number||'—'}${v.sts?.date?' від '+fmtCaseDate(v.sts.date):''}</div>
           </div>` : ''}
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
