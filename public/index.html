@@ -3393,22 +3393,31 @@ function calcBookingDebtInfo(b){
 function calcBookingDebt(b){
   return calcBookingDebtInfo(b).debtUSD;
 }
-// Unpaid fines (штрафи) — this is also where damage charges (пошкодження)
-// and other extra/ad-hoc fees live, since they're all recorded generically
-// as a fine entry with a free-text description rather than separate fields.
+// Unpaid fines (штрафи) PLUS all post-rental deductions/утримання (wash/fuel/
+// mileage overage, damage, custom ad-hoc charges) — together these cover
+// every kind of additional charge the client might owe beyond the base
+// rental (пошкодження, штрафи, доплати, etc). 'refund' is excluded from std
+// deductions since it represents money owed TO the client, not debt.
 function calcFinesDebt(b, fallbackRate){
-  const unpaid = (b.fines||[]).filter(f=>!f.paid && f.amount>0);
-  if(!unpaid.length) return {debt:0, currency:'₴', debtUSD:0};
+  const parts = []; // {amount, currency}
+  (b.fines||[]).forEach(f => { if(!f.paid && f.amount>0) parts.push({amount:f.amount, currency:f.currency||'₴'}); });
+  const ded = b.deductions;
+  if(ded){
+    Object.entries(ded.std||{}).forEach(([k,d]) => { if(k!=='refund' && d?.amount>0) parts.push({amount:d.amount, currency:d.currency||'₴'}); });
+    (ded.damage||[]).forEach(d => { if(d.amount>0) parts.push({amount:d.amount, currency:d.currency||'₴'}); });
+    (ded.custom||[]).forEach(d => { if(d.amount>0) parts.push({amount:d.amount, currency:d.currency||'₴'}); });
+  }
+  if(!parts.length) return {debt:0, currency:'₴', debtUSD:0};
   const toUsdAmt = (amount, currency) => {
     if(!currency || currency==='$') return amount;
     const rate = fallbackRate || 0;
     return rate>0 ? amount/rate : amount;
   };
-  const debtUSD = Math.round(unpaid.reduce((s,f)=>s+toUsdAmt(f.amount,f.currency),0)*100)/100;
-  const currencies = new Set(unpaid.map(f=>f.currency||'₴'));
+  const debtUSD = Math.round(parts.reduce((s,p)=>s+toUsdAmt(p.amount,p.currency),0)*100)/100;
+  const currencies = new Set(parts.map(p=>p.currency));
   if(currencies.size===1){
-    const total = unpaid.reduce((s,f)=>s+f.amount,0);
-    return {debt: Math.round(total*100)/100, currency: unpaid[0].currency||'₴', debtUSD};
+    const total = parts.reduce((s,p)=>s+p.amount,0);
+    return {debt: Math.round(total*100)/100, currency: parts[0].currency, debtUSD};
   }
   return {debt: debtUSD, currency:'$', debtUSD};
 }
