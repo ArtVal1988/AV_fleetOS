@@ -86,6 +86,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .btn-primary{background:var(--accent);color:#fff;}
 .nb-icon{display:none;}
 .bmc-short{display:none;}
+.ceb-icon{display:none;}
 .bmd-icon{display:none;}
 .bmh-icon{display:inline;}
 .sidebar-mobile-user{display:none;}
@@ -329,7 +330,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .bmd-icon{display:inline!important;font-size:15px;}
   #vf-category{height:33px!important;}
   button[style*="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af"]{width:28px!important;height:28px!important;padding:3px!important;border-radius:50%!important;background:#eef0f3!important;display:flex!important;align-items:center;justify-content:center;color:var(--muted)!important;font-size:15px!important;}
-  .veh-row{flex-wrap:nowrap!important;}
+  .veh-row{flex-wrap:nowrap!important;padding:5px!important;}
+  .to-veh-row{padding:3px!important;margin-bottom:3px!important;}
+  .veh-cat-block{padding:9px!important;}
+  #clients-panel-header{padding:12px 20px 16px!important;}
+  .client-row{padding:5px 7px!important;}
+  .client-edit-btn{width:28px!important;height:28px!important;padding:0!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ceb-text{display:none!important;}
+  .ceb-icon{display:inline!important;font-size:13px;}
   .veh-row-line1{flex:1!important;}
   .veh-row-line2,.veh-row-line3{display:none!important;}
   .veh-row-actions{display:flex;gap:6px;flex-shrink:0;}
@@ -1847,7 +1855,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <!-- CLIENTS PANEL (list) -->
 <div id="clients-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:820px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="padding:12px 20px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
+    <div id="clients-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">👤 Клієнти</div>
       <input id="cl-search" type="text" placeholder="Пошук за ПІБ, телефоном…" oninput="renderClientsPanelList()"
         style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:280px">
@@ -12436,7 +12444,7 @@ function renderMaintenancePanelList(){
       <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">${label} (${items.length})</div>
       ${items.map(r => {
         const kmText = r.kmLeft <= 0 ? `Прострочено на ${Math.abs(r.kmLeft).toLocaleString('uk-UA')} км` : `${r.kmLeft.toLocaleString('uk-UA')} км`;
-        return `<div onclick="openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:3px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:3px;background:rgba(255,255,255,.75);cursor:pointer">
+        return `<div class="to-veh-row" onclick="openToModal(${r.v.id})" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,.75);cursor:pointer">
           <div style="display:flex;align-items:center;gap:10px;min-width:0">
             <span style="font-family:var(--font-mono);font-weight:700;font-size:12px;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:3px 7px;flex-shrink:0">${r.v.plate}</span>
             <span style="color:#374151;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stripYear(r.v.name)}</span>
@@ -12555,13 +12563,13 @@ function renderClientsPanelList(){
     const activeMsgs = Object.entries(c.messengers||{}).filter(([,m])=>m.active&&m.contact);
     const msgIcon = activeMsgs.map(([type,m])=>`<a href="${getMsgUrl(type, m.contact, c.phone, c.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;vertical-align:middle;margin-left:5px"><img src="${MSG_ICON_DATA[type]}" width="13" height="13" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}"></a>`).join('');
     const tierInfo = CTM[c.tier || 'new'] || CTM.new;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:5px 7px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+    return `<div class="client-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
       <div title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
       <div class="client-row-namephone" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
         <div class="client-row-name" style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
         <div class="client-row-phone" style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
       </div>
-      <button onclick="openClientForm(${c.id})" title="Редагувати" style="font-size:13px;width:28px;height:28px;flex-shrink:0;padding:0;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit">✎</button>
+      <button onclick="openClientForm(${c.id})" class="client-edit-btn" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600"><span class="ceb-icon">✎</span><span class="ceb-text"> Редагувати</span></button>
     </div>`;
   }).join('');
 }
@@ -13556,9 +13564,9 @@ function renderVehiclesPanelList(){
     if(!cat.colorHex) cat.colorHex = defaultPalette[colorIdx % defaultPalette.length]; // stable once assigned
     colorIdx++;
     const tint = hexToRgba(cat.colorHex, .09);
-    return `<div id="veh-cat-block-${CATEGORIES.indexOf(cat)}" data-cat-idx="${CATEGORIES.indexOf(cat)}"
+    return `<div id="veh-cat-block-${CATEGORIES.indexOf(cat)}" data-cat-idx="${CATEGORIES.indexOf(cat)}" class="veh-cat-block"
         ondragover="catRowDragOver(event)" ondrop="catRowDrop(event)" ondragend="catRowDragEnd(event)"
-        style="margin-bottom:16px;padding:9px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
+        style="margin-bottom:16px;padding:14px 16px;border-radius:10px;border:1px solid rgba(0,0,0,.07);box-shadow:inset 3px 0 0 ${cat.colorHex};background:${tint}">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
         <span draggable="true" ondragstart="catRowDragStart(event)"
           onmousedown="this.closest('[data-cat-idx]').draggable=true" onmouseup="this.closest('[data-cat-idx]').draggable=false"
@@ -13574,7 +13582,7 @@ function renderVehiclesPanelList(){
       ${vehicles.length ? vehicles.map((v,idx) => `
         <div class="veh-row" ${q?'':'draggable="true"'} data-cat="${cat.name.replace(/"/g,'&quot;')}" data-idx="${idx}"
           ${q?'':'ondragstart="vehRowDragStart(event)" ondragover="vehRowDragOver(event)" ondrop="vehRowDrop(event)" ondragend="vehRowDragEnd(event)"'}
-          style="display:flex;align-items:center;gap:10px;padding:5px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+          style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <div class="veh-row-line1" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
             <span onclick="openDocsModal(${v.id})" title="Відкрити документи" style="cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
