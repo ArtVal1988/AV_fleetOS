@@ -989,6 +989,7 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-box label{color:#854f0b!important;}
 .ext-cur-display{font-family:var(--font-mono);font-weight:700;font-size:13px;color:#2563eb;padding:4px 8px;}
 @media (min-width:641px){
+  #dash-stale-km-section{display:block!important;}
   #bm-ext-from,#bm-ext-to{width:100px!important;text-align:center;}
   .ext-box:has(#bm-ext-from),.ext-box:has(#bm-ext-days){height:46.5px!important;}
   .ext-box .dep-inline-wrap{align-self:center!important;}
@@ -7181,6 +7182,10 @@ function renderDashboard(){
       const leftB = b.service.nextKm-(b.currentKm??b.service.lastKm??0);
       return leftA - leftB;
     });
+  const msPerDay = 86400000;
+  const daysSinceKmUpdate = v => v.currentKmDate ? Math.floor((new Date() - new Date(v.currentKmDate)) / msPerDay) : Infinity;
+  const staleKmVehicles = ALL_VEHICLES.filter(v => v.category!=='Архів' && daysSinceKmUpdate(v) > 7)
+    .sort((a,b) => daysSinceKmUpdate(b) - daysSinceKmUpdate(a));
 
   const attentionHtml = `
     <div class="msec-b5">
@@ -7192,6 +7197,12 @@ function renderDashboard(){
           ${dashAlertList('🛡 КАСКО спливає (≤30 днів)', kaskoSoon, v => { const p = getKaskoNextPayment(v); return (p?.amount ? `<span style="color:#166534">${fmtMon(p.amount)}</span> · ` : '') + fmtD(p?.date); }, v => `openInsuranceModal(${v.id})`)}
           <div style="margin-top:14px">${dashAlertList('🛡 КАСКО пролонгація (≤30 днів)', kaskoRenewalSoon, v => fmtD(v.kasko.end), v => `openInsuranceModal(${v.id})`)}</div>
         </div>
+      </div>
+    </div>
+    <div id="dash-stale-km-section" style="display:none;margin-top:14px">
+      <div class="msec-b5">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb;margin-bottom:12px">📏 Потрібно актуалізувати пробіг</div>
+        ${dashAlertList('Пробіг не оновлювався понад 7 днів', staleKmVehicles, v => v.currentKmDate ? daysSinceKmUpdate(v)+' дн. тому' : 'ніколи не оновлювався', v => `openToModal(${v.id})`)}
       </div>
     </div>`;
 
