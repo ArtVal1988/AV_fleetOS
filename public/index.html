@@ -3393,6 +3393,25 @@ function calcBookingDebtInfo(b){
 function calcBookingDebt(b){
   return calcBookingDebtInfo(b).debtUSD;
 }
+// Unpaid fines (штрафи) — this is also where damage charges (пошкодження)
+// and other extra/ad-hoc fees live, since they're all recorded generically
+// as a fine entry with a free-text description rather than separate fields.
+function calcFinesDebt(b, fallbackRate){
+  const unpaid = (b.fines||[]).filter(f=>!f.paid && f.amount>0);
+  if(!unpaid.length) return {debt:0, currency:'₴', debtUSD:0};
+  const toUsdAmt = (amount, currency) => {
+    if(!currency || currency==='$') return amount;
+    const rate = fallbackRate || 0;
+    return rate>0 ? amount/rate : amount;
+  };
+  const debtUSD = Math.round(unpaid.reduce((s,f)=>s+toUsdAmt(f.amount,f.currency),0)*100)/100;
+  const currencies = new Set(unpaid.map(f=>f.currency||'₴'));
+  if(currencies.size===1){
+    const total = unpaid.reduce((s,f)=>s+f.amount,0);
+    return {debt: Math.round(total*100)/100, currency: unpaid[0].currency||'₴', debtUSD};
+  }
+  return {debt: debtUSD, currency:'$', debtUSD};
+}
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
   const days=b.daysOverride>0?b.daysOverride:countDays(b.start,b.end);
@@ -7125,13 +7144,17 @@ function renderDashboard(){
   const overdue = bookings
     .filter(b => calcBookingDebt(b) > 0)
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
+  const dashBookingsWithRate = bookings.filter(b => b.currency==='₴' && parseFloat(b.exchangeRate)>0);
+  const dashFallbackRate = dashBookingsWithRate.length
+    ? dashBookingsWithRate.reduce((latest,b) => b.start > latest.start ? b : latest).exchangeRate
+    : 0;
 
   const activityHtml = `
     <div class="msec-b2" style="margin-bottom:18px">
       <div class="dash-activity-cols" style="display:grid;grid-template-columns:1fr 1fr 1fr">
         <div class="dash-activity-col" style="padding-right:12px">${dashActivityCol('↑ Видача', pickupsToday, '#2563eb', 'pickup')}</div>
         <div class="dash-activity-col" style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashActivityCol('↓ Повернення', returnsToday, '#166534', 'ret')}</div>
-        <div class="dash-activity-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626')}</div>
+        <div class="dash-activity-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">${dashDebtList('⚠ Заборгованість на сьогодні', overdue, '#dc2626', dashFallbackRate)}</div>
       </div>
     </div>`;
 
@@ -7224,20 +7247,24 @@ function renderDashboard(){
 
   document.getElementById('dashboard-body').innerHTML = activityHtml + fleetHtml + attentionHtml;
 }
-function dashDebtList(title, list, color){
+function dashDebtList(title, list, color, fallbackRate){
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
     <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
     ${list.length ? list.slice(0,6).map(b => {
       const v = getVehicle(b.vehicleId);
       const { debt, currency: cur } = calcBookingDebtInfo(b);
       const debtColor = cur==='₴' ? '#166534' : color;
+      const finesDebt = calcFinesDebt(b, fallbackRate);
       const displayName = b.customer?.company || b.customer?.name || '';
       return `<div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;cursor:pointer;text-align:left" onclick="expandBooking(${b.id})">
         <span>
           <span style="font-family:var(--font-mono);font-weight:700">${v?v.plate:'?'}</span>
           <div style="color:#6b7280">${displayName}</div>
         </span>
-        <span style="color:${debtColor};font-weight:700;flex-shrink:0;margin-left:8px">${debt.toLocaleString('uk-UA')} ${cur}</span>
+        <span style="flex-shrink:0;margin-left:8px;text-align:right">
+          <div style="color:${debtColor};font-weight:700">${debt.toLocaleString('uk-UA')} ${cur}</div>
+          ${finesDebt.debt>0 ? `<div style="color:#7c3aed;font-weight:700;margin-top:2px">${finesDebt.debt.toLocaleString('uk-UA')} ${finesDebt.currency}</div>` : ''}
+        </span>
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
   </div>`;
