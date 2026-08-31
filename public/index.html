@@ -339,6 +339,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .to-stat-card{padding:3px!important;}
   .client-edit-btn{width:28px!important;height:28px!important;padding:0!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .client-row-date{display:none!important;}
+  .client-row-num{display:none!important;}
   .client-row-phone{display:flex!important;justify-content:space-between;align-items:center;}
   .client-row-phone-date{display:inline!important;font-size:11px;color:#9ca3af;flex-shrink:0;margin-left:8px;}
   .ceb-text{display:none!important;}
@@ -12561,6 +12562,8 @@ function renderClientsPanelList(){
   const matches = c => (!q || (c.name||'').toLowerCase().includes(q) || (digits && (c.phone||'').replace(/\D/g,'').includes(digits)))
     && (!IS_ACCOUNTANT_ROLE || bookings.some(b => b.customer?.clientId===c.id && b.clientType && b.clientType!=='individual'));
   const items = CLIENTS.filter(matches);
+  const chronoOrder = new Map();
+  CLIENTS.slice().sort((a,b)=>a.id-b.id).forEach((c,i)=>chronoOrder.set(c.id, i+1));
   if(!items.length){
     list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Немає клієнтів. Натисніть "+ Додати клієнта".</div>';
     return;
@@ -12570,6 +12573,7 @@ function renderClientsPanelList(){
     const msgIcon = activeMsgs.map(([type,m])=>`<a href="${getMsgUrl(type, m.contact, c.phone, c.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-block;vertical-align:middle;margin-left:5px"><img src="${MSG_ICON_DATA[type]}" width="13" height="13" style="display:block;border-radius:3px" title="${MSG_CONFIG[type]?.label||type}"></a>`).join('');
     const tierInfo = CTM[c.tier || 'new'] || CTM.new;
     return `<div class="client-row" style="display:flex;align-items:center;gap:10px;padding:5px 5px;border:1px solid rgba(0,0,0,.2);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      <div class="client-row-num" style="flex-shrink:0;font-size:11px;color:#9ca3af;font-family:var(--font-mono);width:24px;text-align:right">${chronoOrder.get(c.id)}</div>
       <div class="client-row-icon" title="${tierInfo.label}" style="width:34px;height:34px;border-radius:50%;background:${tierInfo.color}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${tierInfo.icon}</div>
       <div class="client-row-namephone" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
         <div class="client-row-name" style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
