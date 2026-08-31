@@ -3407,19 +3407,17 @@ function calcFinesDebt(b, fallbackRate){
     (ded.damage||[]).forEach(d => { if(d.amount>0) parts.push({amount:d.amount, currency:d.currency||'₴'}); });
     (ded.custom||[]).forEach(d => { if(d.amount>0) parts.push({amount:d.amount, currency:d.currency||'₴'}); });
   }
-  if(!parts.length) return {debt:0, currency:'₴', debtUSD:0};
+  if(!parts.length) return {text:'', debtUSD:0};
   const toUsdAmt = (amount, currency) => {
     if(!currency || currency==='$') return amount;
     const rate = fallbackRate || 0;
     return rate>0 ? amount/rate : amount;
   };
   const debtUSD = Math.round(parts.reduce((s,p)=>s+toUsdAmt(p.amount,p.currency),0)*100)/100;
-  const currencies = new Set(parts.map(p=>p.currency));
-  if(currencies.size===1){
-    const total = parts.reduce((s,p)=>s+p.amount,0);
-    return {debt: Math.round(total*100)/100, currency: parts[0].currency, debtUSD};
-  }
-  return {debt: debtUSD, currency:'$', debtUSD};
+  const byCur = new Map(); // preserves first-seen currency order
+  parts.forEach(p => byCur.set(p.currency, (byCur.get(p.currency)||0) + p.amount));
+  const text = [...byCur.entries()].map(([cur,amt]) => Math.round(amt*100)/100 + ' ' + cur).join(' + ');
+  return {text, debtUSD};
 }
 function calcVatAmount(b){
   if(!b.vatRate)return 0;
@@ -7272,7 +7270,7 @@ function dashDebtList(title, list, color, fallbackRate){
         </span>
         <span style="flex-shrink:0;margin-left:8px;text-align:right">
           <div style="color:${debtColor};font-weight:700">${debt.toLocaleString('uk-UA')} ${cur}</div>
-          ${finesDebt.debt>0 ? `<div style="color:#7c3aed;font-weight:700;margin-top:2px">${finesDebt.debt.toLocaleString('uk-UA')} ${finesDebt.currency}</div>` : ''}
+          ${finesDebt.text ? `<div style="color:#7c3aed;font-weight:700;margin-top:2px">${finesDebt.text}</div>` : ''}
         </span>
       </div>`;
     }).join('') : '<div style="font-size:11px;color:#9ca3af;font-style:italic">Немає</div>'}
