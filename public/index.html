@@ -340,7 +340,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .ceb-text{display:none!important;}
   .ceb-icon{display:inline!important;font-size:13px;}
   .veh-row-line1{flex:1!important;}
-  .veh-row-line2,.veh-row-line3,.veh-col-vin{display:none!important;}
+  .veh-row-line2,.veh-row-line3{display:none!important;}
   .veh-row-actions{display:flex;gap:6px;flex-shrink:0;}
   .veh-row-actions button{width:30px;height:30px;padding:0!important;display:flex;align-items:center;justify-content:center;font-size:13px!important;}
   .vra-text{display:none!important;}
@@ -13586,20 +13586,20 @@ function renderVehiclesPanelList(){
           style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
           <span style="cursor:${q?'default':'grab'};color:#c7c7c7;font-size:13px;flex-shrink:0;user-select:none" title="${q?'':'Перетягніть, щоб змінити порядок'}">⠿</span>
           <div class="veh-row-line1" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-            <span class="veh-col-plate" onclick="openDocsModal(${v.id})" title="Відкрити документи" style="cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
-            <div class="veh-col-name" style="flex:1;min-width:0">
+            <span onclick="openDocsModal(${v.id})" title="Відкрити документи" style="cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:700;background:#fff;border:1px solid #d8dbe2;border-radius:5px;padding:4px 8px;flex-shrink:0">${v.plate}</span>
+            <div style="flex:1;min-width:0">
               <div style="font-size:13px;font-weight:600;color:#1a1d26">${v.name}</div>
-              <div class="veh-col-vin" style="font-size:11px;color:#6b7280;font-family:var(--font-mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.vin||'—'}</div>
             </div>
           </div>
           ${(v.owner?.name || v.owner?.phone || v.owner?.inn) ? `
-          <div class="veh-row-line2" style="flex:1.8;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
-            <div onclick="openDocsModal(${v.id})" title="Відкрити документи" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration=''">${v.owner?.name||'—'}</div>
-            ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
+          <div class="veh-row-line2" style="flex:1.8;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px;display:flex;align-items:center;gap:8px">
+            <div onclick="openDocsModal(${v.id})" title="Відкрити документи" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;flex-shrink:0" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration=''">${v.owner?.name||'—'}</div>
+            ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
           </div>` : ''}
-          ${(v.sts?.number || v.sts?.date) ? `
+          ${(v.vin || v.sts?.number || v.sts?.date) ? `
           <div class="veh-row-line3" style="flex:1;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px;display:flex;align-items:center;gap:8px">
-            <div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>
+            <div style="font-size:13px;font-weight:600;color:#1a1d26;font-family:var(--font-mono);flex-shrink:0">${v.vin||'—'}</div>
+            ${(v.sts?.number || v.sts?.date) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 ${v.sts.number||'—'}${v.sts.date?' від '+fmtCaseDate(v.sts.date):''}</div>` : ''}
           </div>` : ''}
           <div class="veh-row-actions">
           <button onclick="openVehicleForm(${v.id})"
