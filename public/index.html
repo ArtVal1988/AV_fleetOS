@@ -2656,8 +2656,6 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
           <button type="button" id="bm-bank-account-label" style="display:none;width:30px;height:30px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;align-items:center;justify-content:center;cursor:default;padding:0" title="Банківський рахунок"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10.5M20 21V10.5M2.25 10.5h19.5L12 3 2.25 10.5ZM8 21v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6"/></svg></button>
         </div>
-      </div>
-      <div class="fin-row" style="justify-content:space-between;margin-top:8px">
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
           <div class="dep-inline-wrap">
@@ -3252,8 +3250,37 @@ function positionMonthNavForViewport(){
     if(navPicker) monthNav.parentNode.insertBefore(navPicker, monthNav.nextSibling);
   }
 }
+function arrangeFinRowForViewport(){
+  const depositField = document.getElementById('bm-deposit-field');
+  const depositPayField = document.getElementById('bm-deposit-paymethod-field');
+  const mainRow = depositField ? depositField.closest('.fin-row') : null;
+  if(!depositField || !depositPayField || !mainRow) return;
+  if(isMobileViewport()){
+    if(depositField.parentElement === mainRow){
+      let mobileRow = document.getElementById('bm-deposit-mobile-row');
+      if(!mobileRow){
+        mobileRow = document.createElement('div');
+        mobileRow.id = 'bm-deposit-mobile-row';
+        mobileRow.className = 'fin-row';
+        mobileRow.style.cssText = 'justify-content:space-between;margin-top:8px';
+        mainRow.parentNode.insertBefore(mobileRow, mainRow.nextSibling);
+      }
+      mobileRow.appendChild(depositField);
+      mobileRow.appendChild(depositPayField);
+    }
+  } else {
+    const mobileRow = document.getElementById('bm-deposit-mobile-row');
+    if(mobileRow){
+      mainRow.appendChild(depositField);
+      mainRow.appendChild(depositPayField);
+      mobileRow.remove();
+    }
+  }
+}
 window.addEventListener('resize', positionMonthNavForViewport);
 positionMonthNavForViewport();
+window.addEventListener('resize', arrangeFinRowForViewport);
+arrangeFinRowForViewport();
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
