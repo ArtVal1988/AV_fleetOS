@@ -3431,16 +3431,16 @@ function resolveBookingDaySegments(b, nextVehicleBookingStart){
   // base's true end is that extension's own fromDate, not b.end itself.
   const baseToDate = (history.length && history[0].fromDate < b.end) ? history[0].fromDate : b.end;
   let prevEnd = baseToDate;
-  const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: b.baseRateExcel || b.rate, currency: b.currency, exchangeRate: b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
+  const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: b.baseRateExcel || b.rate, currency: b.baseRateExcel ? '$' : b.currency, exchangeRate: b.baseRateExcel ? null : b.exchangeRate, days: b.daysOverride>0 ? b.daysOverride : null }];
   for(const h of history){
     const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
-    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: b.baseRateExcel || h.rate, currency: h.currency, exchangeRate: h.exchangeRate, days: h.days>0 ? h.days : null });
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: b.baseRateExcel || h.rate, currency: b.baseRateExcel ? '$' : h.currency, exchangeRate: b.baseRateExcel ? null : h.exchangeRate, days: h.days>0 ? h.days : null });
     prevEnd = h.toDate;
   }
   if(b.extension && b.extension.active){
     const ext = b.extension;
     const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
-    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: b.baseRateExcel || ext.rate, currency: ext.currency, exchangeRate: ext.exchangeRate, days: ext.days>0 ? ext.days : null });
+    chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: b.baseRateExcel || ext.rate, currency: b.baseRateExcel ? '$' : ext.currency, exchangeRate: b.baseRateExcel ? null : ext.exchangeRate, days: ext.days>0 ? ext.days : null });
   }
 
   const map = new Map();
