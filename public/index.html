@@ -7148,13 +7148,14 @@ function renderDashboard(){
     });
   });
   const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr && !(b.endKm>0)).concat(substituteReturns);
-  const overdue = bookings
-    .filter(b => calcBookingDebt(b) > 0)
-    .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
   const dashBookingsWithRate = bookings.filter(b => b.currency==='₴' && parseFloat(b.exchangeRate)>0);
   const dashFallbackRate = dashBookingsWithRate.length
     ? dashBookingsWithRate.reduce((latest,b) => b.start > latest.start ? b : latest).exchangeRate
     : 0;
+  const totalOwedUSD = b => calcBookingDebt(b) + calcFinesDebt(b, dashFallbackRate).debtUSD;
+  const overdue = bookings
+    .filter(b => totalOwedUSD(b) > 0)
+    .sort((a,b2) => totalOwedUSD(b2) - totalOwedUSD(a));
 
   const activityHtml = `
     <div class="msec-b2" style="margin-bottom:18px">
@@ -7269,7 +7270,7 @@ function dashDebtList(title, list, color, fallbackRate){
           <div style="color:#6b7280">${displayName}</div>
         </span>
         <span style="flex-shrink:0;margin-left:8px;text-align:right">
-          <div style="color:${debtColor};font-weight:700">${debt.toLocaleString('uk-UA')} ${cur}</div>
+          ${debt>0 ? `<div style="color:${debtColor};font-weight:700">${debt.toLocaleString('uk-UA')} ${cur}</div>` : ''}
           ${finesDebt.text ? `<div style="color:#7c3aed;font-weight:700;margin-top:2px">${finesDebt.text}</div>` : ''}
         </span>
       </div>`;
