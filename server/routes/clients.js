@@ -5,7 +5,7 @@ const { auth } = require('./auth');
 // GET /api/clients — all clients
 router.get('/', auth, (req, res) => {
   const rows = db.prepare('SELECT * FROM clients ORDER BY created_at DESC').all();
-  res.json(rows.map(r => ({ ...JSON.parse(r.data), id: r.id })));
+  res.json(rows.map(r => ({ ...JSON.parse(r.data), id: r.id, createdAt: r.created_at })));
 });
 
 // POST /api/clients — create a new client

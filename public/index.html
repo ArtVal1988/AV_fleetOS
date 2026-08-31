@@ -337,6 +337,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .client-row{padding:5px 7px!important;}
   .to-stat-card{padding:3px!important;}
   .client-edit-btn{width:28px!important;height:28px!important;padding:0!important;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .client-row-date{display:none!important;}
   .ceb-text{display:none!important;}
   .ceb-icon{display:inline!important;font-size:13px;}
   .veh-row-line1{flex:1!important;}
@@ -12570,6 +12571,7 @@ function renderClientsPanelList(){
         <div class="client-row-name" style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#1a1d26">${c.name||'—'}</div>
         <div class="client-row-phone" style="flex-shrink:0;font-size:12px;color:#6b7280;white-space:nowrap">${c.phone||''}${msgIcon}</div>
       </div>
+      <div class="client-row-date" style="flex-shrink:0;font-size:11px;color:#9ca3af;white-space:nowrap">${c.createdAt?fmtCaseDate(parseUtcTimestamp(c.createdAt)):''}</div>
       <button onclick="openClientForm(${c.id})" class="client-edit-btn" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600"><span class="ceb-icon">✎</span><span class="ceb-text"> Редагувати</span></button>
     </div>`;
   }).join('');
