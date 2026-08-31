@@ -5655,7 +5655,7 @@ function renderBmEditHistory(entries){
     }
     return `<div style="padding:8px 4px;border-bottom:1px solid #f0f2f5">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${meta.color}15;color:${meta.color};flex-shrink:0">${meta.label}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${meta.color}15;color:${meta.color};flex-shrink:0">${meta.label}${e.action==='create'?' №'+editBid:''}</span>
         <div style="flex:1;min-width:0;font-size:10.5px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dateStr}${e.user_name?' · '+e.user_name:''}</div>
       </div>
       ${diffHtml}
