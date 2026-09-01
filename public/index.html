@@ -2561,7 +2561,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
-          <input type="time" id="bm-pickup-time" step="600" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')">
+          <select id="bm-pickup-time" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
@@ -2570,7 +2570,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
-          <input type="time" id="bm-return-time" step="600" value="09:00" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')">
+          <select id="bm-return-time" class="lr-time" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
@@ -3272,6 +3272,16 @@ function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 // (orientation:landscape)` condition — so JS-driven mobile behavior (sidebar
 // collapse, specs popup mode, etc.) stays in sync with the stylesheet when
 // the phone is rotated to landscape.
+function timeOptionsHtml(){
+  let html = '';
+  for(let h=0; h<24; h++){
+    for(let m=0; m<60; m+=10){
+      const val = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      html += `<option value="${val}">${val}</option>`;
+    }
+  }
+  return html;
+}
 function isMobileViewport(){
   return window.innerWidth <= 640 || (window.innerHeight <= 500 && window.innerWidth > window.innerHeight);
 }
@@ -3331,6 +3341,10 @@ window.addEventListener('resize', positionMonthNavForViewport);
 positionMonthNavForViewport();
 window.addEventListener('resize', arrangeFinRowForViewport);
 arrangeFinRowForViewport();
+['bm-pickup-time','bm-return-time'].forEach(id => {
+  const el = document.getElementById(id);
+  if(el){ el.innerHTML = timeOptionsHtml(); el.value = '09:00'; }
+});
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
