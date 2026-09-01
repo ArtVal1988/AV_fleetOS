@@ -3494,6 +3494,15 @@ arrangeFinRowForViewport();
   const el = document.getElementById(id);
   if(el){ el.innerHTML = timeOptionsHtml(); el.value = '09:00'; }
 });
+function syncDateFieldsReadonlyForViewport(){
+  const mobile = isMobileViewport();
+  ['bm-period-from','bm-period-to'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.readOnly = !mobile;
+  });
+}
+window.addEventListener('resize', syncDateFieldsReadonlyForViewport);
+syncDateFieldsReadonlyForViewport();
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
