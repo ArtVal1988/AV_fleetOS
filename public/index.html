@@ -11756,7 +11756,7 @@ function formatExchangeRateInput(el){
 function updateExtTotalColor(){
   const el = document.getElementById('bm-ext-total');
   const cur = document.getElementById('bm-ext-currency')?.value;
-  if(el && cur) el.style.color = curColor(cur);
+  if(el && cur) el.style.setProperty('color', curColor(cur), 'important');
 }
 function fmt2(n){
   return (Math.round((n||0)*100)/100).toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2});
