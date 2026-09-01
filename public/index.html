@@ -7126,6 +7126,12 @@ function openDashboard(){
 function closeDashboard(){
   document.getElementById('dashboard-panel-overlay').style.display = 'none';
 }
+let dashExpandedSections = new Set();
+function toggleDashSection(key){
+  if(dashExpandedSections.has(key)) dashExpandedSections.delete(key);
+  else dashExpandedSections.add(key);
+  renderDashboard();
+}
 function renderDashboard(){
   const selDate = dashboardSelectedDate || dStr(today.getFullYear(), today.getMonth(), today.getDate());
   const todayStr = selDate;
@@ -7255,9 +7261,12 @@ function renderDashboard(){
   document.getElementById('dashboard-body').innerHTML = activityHtml + fleetHtml + attentionHtml;
 }
 function dashDebtList(title, list, color, fallbackRate){
+  const expanded = dashExpandedSections.has(title);
+  const shown = expanded ? list : list.slice(0,6);
+  const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
-    ${list.length ? list.slice(0,6).map(b => {
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    ${list.length ? shown.map(b => {
       const v = getVehicle(b.vehicleId);
       const { debt, currency: cur } = calcBookingDebtInfo(b);
       const debtColor = cur==='₴' ? '#166534' : color;
@@ -7277,9 +7286,12 @@ function dashDebtList(title, list, color, fallbackRate){
   </div>`;
 }
 function dashActivityCol(title, list, color, locField){
+  const expanded = dashExpandedSections.has(title);
+  const shown = expanded ? list : list.slice(0,6);
+  const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px">${title} (${list.length})</div>
-    ${list.length ? list.slice(0,6).map(b => {
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    ${list.length ? shown.map(b => {
       const v = getVehicle(b.vehicleId);
       const displayName = b.customer?.company || b.customer?.name || '';
       const loc = locField ? b[locField]?.loc : null;
@@ -7304,9 +7316,12 @@ function dashStatCard(value, label, color){
   </div>`;
 }
 function dashAlertList(title, list, detailFn, onClickFn){
+  const expanded = dashExpandedSections.has(title);
+  const shown = expanded ? list : list.slice(0,6);
+  const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px">${title} (${list.length})</div>
-    ${list.length ? list.slice(0,6).map(v => `
+    <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    ${list.length ? shown.map(v => `
       <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;text-align:left${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
         <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
         <span style="color:#dc2626;font-weight:600;flex-shrink:0;margin-left:8px">${detailFn(v)}</span>
