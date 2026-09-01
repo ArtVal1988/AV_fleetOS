@@ -2748,9 +2748,16 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Dual total preview -->
       <div id="bm-dual-total" style="display:none;margin-top:10px">
         <div class="vat-table-row" id="dp-perday-vat-row" style="display:none">
-          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу без ПДВ</span>
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">без ПДВ: Вартість за 1 добу</span>
           <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
           <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
+        </div>
+        <div class="vat-table-row" id="dp-net-total-row" style="display:none">
+          <span class="vat-row-label">
+            <span id="dual-days-net-label">без ПДВ: — діб × —</span>
+          </span>
+          <span class="vat-orig" id="dp-net-total">—</span>
+          <span class="vat-uah" id="dp-net-total-uah">—</span>
         </div>
         <div class="vat-table-row">
           <span class="vat-row-label">
@@ -2760,7 +2767,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-gross-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-tax-row" style="display:none">
-          <span class="vat-row-label">ПДВ <span id="dp-pct-label"></span></span>
+          <span class="vat-row-label">ПДВ - загальна сума</span>
           <span class="vat-orig" id="dp-vat" style="color:#92400e">—</span>
           <span class="vat-uah" id="dp-vat-uah" style="color:#92400e">—</span>
         </div>
@@ -2770,7 +2777,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-extras-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-total-row" style="background:#1faf560f;border:1px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
-          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом:</span>
+          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом з ПДВ:</span>
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
@@ -11913,9 +11920,23 @@ function updateVatPreview(){
   if(isVat){
     document.getElementById('dp-vat').textContent = toForeign(vatTotal)!==null ? '+'+fmtF(toForeign(vatTotal)) : (exRate>0 ? '≈ +'+fmt2(vatTotal/exRate)+' $' : '—');
     document.getElementById('dp-vat-uah').textContent = toUah(vatTotal)!==null?'+'+fmtU(toUah(vatTotal)):'—';
-    document.getElementById('dp-pct-label').textContent = vatPct + '%';
   }
-  document.getElementById('dp-total-label').textContent = 'Загалом:';
+  const netTotalRow = document.getElementById('dp-net-total-row');
+  if(netTotalRow) netTotalRow.style.display = isVat ? '' : 'none';
+  if(isVat){
+    const netTotal = Math.round(netPerDay * days * 100) / 100;
+    const netDaysLabelText = `без ПДВ: ${days} ${pluralDoba(days)} × ${netPerDay.toLocaleString('uk-UA')} ${cur}`;
+    const netUsdEquivSuffix = (cur==='₴' && exRate>0) ? ` <span style="color:#1d4ed8">(${fmt2(netTotal/exRate)} $)</span>` : '';
+    const netLabelEl = document.getElementById('dual-days-net-label');
+    if(netLabelEl){
+      netLabelEl.innerHTML = netDaysLabelText + netUsdEquivSuffix;
+      netLabelEl.style.color = cur==='₴' ? '#166534' : '#1d4ed8';
+      netLabelEl.style.fontWeight = '600';
+    }
+    document.getElementById('dp-net-total').textContent = toForeign(netTotal)!==null ? fmtF(toForeign(netTotal)) : (exRate>0 ? '≈ '+fmt2(netTotal/exRate)+' $' : '—');
+    document.getElementById('dp-net-total-uah').textContent = fmtU(toUah(netTotal));
+  }
+  document.getElementById('dp-total-label').textContent = 'Загалом з ПДВ:';
 
   // Послуги (includes Доплата, since it's now a regular toggleable extra) —
   // both columns always shown; the foreign-currency side derives via the
