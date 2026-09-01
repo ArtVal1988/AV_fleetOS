@@ -3366,7 +3366,7 @@ function openDateDropdown(inputEl){
   dd.style.top = Math.max(8,top) + 'px';
 }
 document.addEventListener('mousedown', e => {
-  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-pickup-date' && e.target.id!=='bm-return-date'){
+  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-pickup-date' && e.target.id!=='bm-return-date' && e.target.id!=='bm-pickup-date-display' && e.target.id!=='bm-return-date-display'){
     closeDateDropdown();
   }
 });
