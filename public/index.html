@@ -3498,7 +3498,14 @@ function syncDateFieldsReadonlyForViewport(){
   const mobile = isMobileViewport();
   ['bm-period-from','bm-period-to'].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.readOnly = !mobile;
+    if(!el) return;
+    if(mobile){
+      if(el.type !== 'date') el.type = 'date';
+      el.readOnly = false;
+    } else {
+      if(el.type !== 'text'){ const v = el.value; el.type = 'text'; el.value = v; }
+      el.readOnly = true;
+    }
   });
 }
 window.addEventListener('resize', syncDateFieldsReadonlyForViewport);
