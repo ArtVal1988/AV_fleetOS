@@ -7256,7 +7256,7 @@ function renderDashboard(){
       <div class="dash-activity-cols" style="display:grid;grid-template-columns:1fr 1fr 1fr">
         <div class="dash-activity-col" style="padding-right:12px">
           ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Перепробіг ТО - '+Math.abs(left).toLocaleString('uk-UA')+' км'; }, v => `openToModal(${v.id})`)}
-          <div id="dash-stale-km-section" style="display:none;margin-top:14px">${dashAlertList('📏 Пробіг не актуалізовано (>'+MILEAGE_STALE_DAYS+' дн)', staleKmVehicles, v => v.currentKmDate ? daysSinceKmUpdate(v)+' дн. тому' : 'ніколи не оновлювався', v => `openToModal(${v.id})`)}</div>
+          <div id="dash-stale-km-section" style="display:none;margin-top:14px">${dashAlertList('Пробіг не актуалізовано (>'+MILEAGE_STALE_DAYS+' дн)', staleKmVehicles, v => v.currentKmDate ? daysSinceKmUpdate(v)+' дн. тому' : 'ніколи не оновлювався', v => `openToModal(${v.id})`)}</div>
         </div>
         <div class="dash-activity-col" style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
         <div class="dash-activity-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">
