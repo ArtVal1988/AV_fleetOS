@@ -971,6 +971,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .lr-label{position:absolute;top:4px;left:10px;font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;}
 .lr-inputs{display:flex;flex:1;gap:6px;align-items:center;min-width:0;width:100%;}
 .lr-date{flex:0 0 118px;min-width:0;}
+.lr-date-display{display:none;}
 .lr-time{flex:0 0 70px;min-width:0;}
 .lr-loc{flex:1;min-width:0;}
 input[type=date]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;width:100%;}
@@ -1006,6 +1007,8 @@ input[type=time]::-webkit-calendar-picker-indicator{opacity:0;position:absolute;
 .ext-box label{color:#854f0b!important;}
 .ext-cur-display{font-family:var(--font-mono);font-weight:700;font-size:13px;color:#2563eb;padding:4px 8px;}
 @media (min-width:641px){
+  #bm-pickup-date,#bm-return-date{display:none!important;}
+  .lr-date-display{display:block!important;}
   .client-row-icon{background:none!important;border-radius:0!important;width:auto!important;height:auto!important;}
   .ext-history-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   #dash-stale-km-section{display:block!important;}
@@ -2561,6 +2564,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
+          <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-pickup-date'))">
           <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
@@ -2570,6 +2574,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
+          <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-return-date'))">
           <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
@@ -3318,9 +3323,16 @@ function shiftDateDropdownMonth(delta){
   if(_dateDropdownViewM > 11){ _dateDropdownViewM = 0; _dateDropdownViewY++; }
   renderDateDropdown();
 }
+function syncDateDisplay(realId){
+  const real = document.getElementById(realId);
+  const disp = document.getElementById(realId+'-display');
+  if(!real || !disp) return;
+  disp.value = real.value ? fmtCaseDate(real.value) : '';
+}
 function pickDateDropdownDay(val){
   const el = _dateDropdownTarget;
   el.value = val;
+  syncDateDisplay(el.id);
   el.dispatchEvent(new Event('input', {bubbles:true}));
   el.dispatchEvent(new Event('change', {bubbles:true}));
   closeDateDropdown();
@@ -3328,6 +3340,7 @@ function pickDateDropdownDay(val){
 function clearDateDropdown(){
   const el = _dateDropdownTarget;
   el.value = '';
+  syncDateDisplay(el.id);
   el.dispatchEvent(new Event('input', {bubbles:true}));
   el.dispatchEvent(new Event('change', {bubbles:true}));
   closeDateDropdown();
@@ -5176,6 +5189,8 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-end').value=defaultEnd;
   document.getElementById('bm-pickup-date').value=defaultStart;
   document.getElementById('bm-return-date').value=defaultEnd;
+  syncDateDisplay('bm-pickup-date');
+  syncDateDisplay('bm-return-date');
   ['bm-name','bm-phone','bm-client-id','bm-pickup-time','bm-pickup-loc','bm-return-time','bm-return-loc','bm-notes'].forEach(id=>{const el=document.getElementById(id);if(el&&el.type!=='time')el.value='';});
   currentOrderCompany = null;
   renderOrderCompanyToggle();
@@ -5296,9 +5311,11 @@ function editBooking(bid){
   setClientType(b.clientType||'individual', false);
   updateClientTypeLock((b.clientType||'individual')==='individual');
   document.getElementById('bm-pickup-date').value=b.pickup?.date||'';
+  syncDateDisplay('bm-pickup-date');
   setTimeSelectValue('bm-pickup-time', b.pickup?.time||'09:00');
   document.getElementById('bm-pickup-loc').value=b.pickup?.loc||'';
   document.getElementById('bm-return-date').value=getEffectiveEnd(b)||b.ret?.date||'';
+  syncDateDisplay('bm-return-date');
   setTimeSelectValue('bm-return-time', b.ret?.time||'09:00');
   document.getElementById('bm-return-loc').value=b.ret?.loc||'';
   updateStatusSelectColor();
