@@ -2546,12 +2546,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
         <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
         <span style="color:#9ca3af;font-size:12px">від</span>
-        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onchange="blurDateFieldOnDesktop(this)" oninput="
+        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="
           document.getElementById('bm-pickup-date').value=this.value;
           document.getElementById('bm-start').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
         <span style="color:#9ca3af;font-size:12px">до</span>
-        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onchange="blurDateFieldOnDesktop(this)" oninput="
+        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="
           document.getElementById('bm-return-date').value=this.value;
           document.getElementById('bm-end').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
@@ -3274,6 +3274,89 @@ function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 // the phone is rotated to landscape.
 let _timeDropdownEl = null;
 let _timeDropdownTarget = null;
+let _dateDropdownEl = null;
+let _dateDropdownTarget = null;
+let _dateDropdownViewY = 0, _dateDropdownViewM = 0;
+function closeDateDropdown(){
+  if(_dateDropdownEl){ _dateDropdownEl.remove(); _dateDropdownEl = null; }
+  _dateDropdownTarget = null;
+}
+function renderDateDropdown(){
+  if(!_dateDropdownEl) return;
+  const MONTHS_UK=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const y = _dateDropdownViewY, m = _dateDropdownViewM;
+  const selVal = _dateDropdownTarget.value; // YYYY-MM-DD
+  const todayVal = dStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  let daysHtml = '';
+  for(let i=0; i<firstDow; i++) daysHtml += '<div></div>';
+  for(let d=1; d<=daysInMonth; d++){
+    const val = dStr(y, m, d);
+    const isSel = val === selVal;
+    const isToday = val === todayVal;
+    daysHtml += `<div data-val="${val}" style="padding:6px 0;text-align:center;cursor:pointer;border-radius:5px;font-size:12px;${isSel?'background:#2563eb;color:#fff;font-weight:700;':isToday?'color:#2563eb;font-weight:700;':'color:#1a1d26;'}" onmouseover="if(this.dataset.val!=='${selVal}')this.style.background='#f0f4ff'" onmouseout="if(this.dataset.val!=='${selVal}')this.style.background='${isToday?'transparent':'transparent'}'" onclick="pickDateDropdownDay('${val}')">${d}</div>`;
+  }
+  _dateDropdownEl.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #f0f2f5">
+      <button type="button" onclick="event.stopPropagation();shiftDateDropdownMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">‹</button>
+      <span style="font-size:12px;font-weight:700;color:#1a1d26">${MONTHS_UK[m]} ${y}</span>
+      <button type="button" onclick="event.stopPropagation();shiftDateDropdownMonth(1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:6px 8px 2px;font-size:10px;color:#9ca3af;text-align:center;font-weight:700">
+      <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Нд</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:0 8px 6px">${daysHtml}</div>
+    <div style="display:flex;justify-content:space-between;padding:6px 10px;border-top:1px solid #f0f2f5">
+      <span style="font-size:11px;color:#6b7280;cursor:pointer" onclick="clearDateDropdown()">Очистити</span>
+      <span style="font-size:11px;color:#2563eb;cursor:pointer;font-weight:600" onclick="pickDateDropdownDay('${todayVal}')">Сьогодні</span>
+    </div>`;
+}
+function shiftDateDropdownMonth(delta){
+  _dateDropdownViewM += delta;
+  if(_dateDropdownViewM < 0){ _dateDropdownViewM = 11; _dateDropdownViewY--; }
+  if(_dateDropdownViewM > 11){ _dateDropdownViewM = 0; _dateDropdownViewY++; }
+  renderDateDropdown();
+}
+function pickDateDropdownDay(val){
+  const el = _dateDropdownTarget;
+  el.value = val;
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+  el.dispatchEvent(new Event('change', {bubbles:true}));
+  closeDateDropdown();
+}
+function clearDateDropdown(){
+  const el = _dateDropdownTarget;
+  el.value = '';
+  el.dispatchEvent(new Event('input', {bubbles:true}));
+  el.dispatchEvent(new Event('change', {bubbles:true}));
+  closeDateDropdown();
+}
+function openDateDropdown(inputEl){
+  if(_dateDropdownTarget === inputEl){ closeDateDropdown(); return; }
+  closeDateDropdown();
+  _dateDropdownTarget = inputEl;
+  const base = inputEl.value ? new Date(inputEl.value+'T00:00:00') : new Date(today);
+  _dateDropdownViewY = base.getFullYear();
+  _dateDropdownViewM = base.getMonth();
+  const dd = document.createElement('div');
+  dd.id = 'date-dropdown';
+  dd.style.cssText = 'position:fixed;z-index:800;background:#fff;border:1px solid #d8dbe2;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);width:230px;font-family:inherit;';
+  document.body.appendChild(dd);
+  _dateDropdownEl = dd;
+  renderDateDropdown();
+  const r = inputEl.getBoundingClientRect();
+  let left = r.left, top = r.bottom + 4;
+  if(left + dd.offsetWidth > window.innerWidth - 8) left = window.innerWidth - dd.offsetWidth - 8;
+  if(top + dd.offsetHeight > window.innerHeight - 8) top = r.top - dd.offsetHeight - 4;
+  dd.style.left = Math.max(8,left) + 'px';
+  dd.style.top = Math.max(8,top) + 'px';
+}
+document.addEventListener('mousedown', e => {
+  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-period-from' && e.target.id!=='bm-period-to'){
+    closeDateDropdown();
+  }
+});
 function closeTimeDropdown(){
   if(_timeDropdownEl){ _timeDropdownEl.remove(); _timeDropdownEl = null; }
   _timeDropdownTarget = null;
