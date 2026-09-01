@@ -2563,7 +2563,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-pickup-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
+          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="onPickupDateChanged(this)">
           <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-pickup-date'), this)">
           <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
@@ -3328,6 +3328,23 @@ function syncDateDisplay(realId){
   const disp = document.getElementById(realId+'-display');
   if(!real || !disp) return;
   disp.value = real.value ? fmtCaseDate(real.value) : '';
+}
+function onPickupDateChanged(el){
+  document.getElementById('bm-start').value = el.value;
+  daysOverrideTouched = false;
+  updateVatPreview();
+  autoDetectExtras('pickup');
+  if(editBid === null && el.value){
+    const d = new Date(el.value+'T00:00:00');
+    d.setDate(d.getDate()+2);
+    const returnEl = document.getElementById('bm-return-date');
+    if(returnEl){
+      returnEl.value = dStr(d.getFullYear(), d.getMonth(), d.getDate());
+      syncDateDisplay('bm-return-date');
+      returnEl.dispatchEvent(new Event('input', {bubbles:true}));
+      returnEl.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+  }
 }
 function pickDateDropdownDay(val){
   const el = _dateDropdownTarget;
