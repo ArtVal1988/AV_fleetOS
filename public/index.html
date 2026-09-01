@@ -1125,10 +1125,15 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b4{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-ext{background:#fffbeb;border-left-color:#fbbf24;}
 .msec-sub{background:#f5f3ff;border-left-color:#a78bfa;}
-.bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:600;padding:8px 4px;background:#f7f8fb;border:1px solid #0055ff;border-radius:8px;cursor:pointer;font-family:inherit;color:#374151;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .15s,border-color .15s}
-.bm-sec-btn:hover{background:#eef1f6}
-.bm-sec-btn.active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
-.bm-sec-btn.locked-active{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;cursor:default}
+.bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
+#bm-sec-btn-ext{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+#bm-sec-btn-sub{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
+#bm-sec-btn-fine{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
+#bm-sec-btn-rep{background:#fff7ed;border-color:#fdba74;color:#c2410c}
+#bm-sec-btn-ded{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.bm-sec-btn:hover{filter:brightness(0.97)}
+.bm-sec-btn.active,.bm-sec-btn.locked-active{box-shadow:0 0 0 2px currentColor inset}
+.bm-sec-btn.locked-active{cursor:default}
 .bm-sec-badge{position:absolute;top:-5px;right:-3px;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;background:#dc2626;color:#fff;display:none}
 #bm-return-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 #bm-pickup-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
@@ -2788,19 +2793,19 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec" id="bm-sections-nav-row" style="margin-top:14px;position:relative">
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')">
-          <span style="font-size:15px">↷</span><span>Продовження</span>
+          <span style="font-size:18px">↷</span><span>Продовження</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')">
-          <span style="font-size:15px">🔄</span><span>Підмінне</span>
+          <span style="font-size:18px">🔄</span><span>Підмінне</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-fine" onclick="activateBmSection('fine')">
-          <span style="font-size:15px">🚔</span><span>Штрафи</span>
+          <span style="font-size:18px">🚔</span><span>Штрафи</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-rep" onclick="activateBmSection('rep')">
-          <span style="font-size:15px">🔧</span><span>Ремонт</span>
+          <span style="font-size:18px">🔧</span><span>Ремонт</span>
         </button>
         <button type="button" class="bm-sec-btn" id="bm-sec-btn-ded" onclick="activateBmSection('ded')">
-          <span style="font-size:15px">💰</span><span>Утримання</span>
+          <span style="font-size:18px">💰</span><span>Утримання</span>
         </button>
       </div>
       <div id="bm-ext-hover-popup" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:40;min-width:260px;padding:10px;font-size:11.5px"></div>
