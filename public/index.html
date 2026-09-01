@@ -8809,7 +8809,7 @@ function onExtCurrencyChange(){
     document.getElementById(id)?.classList.toggle('active', c===cur);
   });
   const extRateField = document.getElementById('bm-ext-rate');
-  if(extRateField) extRateField.style.color = curColor(cur);
+  if(extRateField) extRateField.style.setProperty('color', curColor(cur), 'important');
   updateExtTotalColor();
   // Курс (bm-ext-rate2) is purely informational for extensions, for every
   // client type — a long-running rental can span many extensions, each
