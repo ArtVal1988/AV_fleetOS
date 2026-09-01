@@ -2768,7 +2768,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-perday-gross-uah" style="color:#166534;font-weight:600">—</span>
         </div>
         <div class="vat-table-row" id="dp-net-total-row" style="display:none">
-          <span class="vat-row-label">Загальна вартість (Без ПДВ)</span>
+          <span class="vat-row-label" id="dp-net-total-label">Загалом без ПДВ</span>
           <span class="vat-orig" id="dp-net-total">—</span>
           <span class="vat-uah" id="dp-net-total-uah">—</span>
         </div>
@@ -2780,7 +2780,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-gross-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-tax-row" style="display:none">
-          <span class="vat-row-label">ПДВ</span>
+          <span class="vat-row-label">ПДВ (загальна сума)</span>
           <span class="vat-orig" id="dp-vat" style="color:#92400e">—</span>
           <span class="vat-uah" id="dp-vat-uah" style="color:#92400e">—</span>
         </div>
@@ -2790,7 +2790,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-extras-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-total-row" style="background:#1faf560f;border:1px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
-          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загальна сума з ПДВ:</span>
+          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом з ПДВ:</span>
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
@@ -11945,8 +11945,16 @@ function updateVatPreview(){
     document.getElementById('dp-net-total-uah').textContent = fmtU(toUah(netTotal));
     document.getElementById('dp-perday-gross').textContent = toForeign(rate)!==null ? (rate ? fmtF(toForeign(rate)) : '—') : (exRate>0 ? '≈ '+fmt2(rate/exRate)+' $' : '—');
     document.getElementById('dp-perday-gross-uah').textContent = rate ? fmtU(toUah(rate)) : '—';
+    const netPerDayForeign = toForeign(netPerDay)!==null ? toForeign(netPerDay) : (exRate>0 ? netPerDay/exRate : null);
+    const netTotalForeign = toForeign(netTotal)!==null ? toForeign(netTotal) : (exRate>0 ? netTotal/exRate : null);
+    const netLabelEl = document.getElementById('dp-net-total-label');
+    if(netLabelEl){
+      netLabelEl.textContent = (netPerDayForeign!==null && netTotalForeign!==null)
+        ? `Загалом без ПДВ (${days} ${pluralDoba(days)} × ${fmt2(netPerDayForeign)} ${foreignSym} = ${fmt2(netTotalForeign)} ${foreignSym})`
+        : 'Загалом без ПДВ';
+    }
   }
-  document.getElementById('dp-total-label').textContent = 'Загальна сума з ПДВ:';
+  document.getElementById('dp-total-label').textContent = 'Загалом з ПДВ:';
 
   // Послуги (includes Доплата, since it's now a regular toggleable extra) —
   // both columns always shown; the foreign-currency side derives via the
