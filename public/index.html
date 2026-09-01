@@ -11932,20 +11932,23 @@ function updateVatPreview(){
   }
   const netTotalRow = document.getElementById('dp-net-total-row');
   if(netTotalRow) netTotalRow.style.display = isVat ? '' : 'none';
+  let grossPerDayForeign = null;
   if(isVat){
     const netTotal = Math.round(netPerDay * days * 100) / 100;
     document.getElementById('dp-net-total').textContent = toForeign(netTotal)!==null ? fmtF(toForeign(netTotal)) : (exRate>0 ? '≈ '+fmt2(netTotal/exRate)+' $' : '—');
     document.getElementById('dp-net-total-uah').textContent = fmtU(toUah(netTotal));
     const netPerDayForeign = toForeign(netPerDay)!==null ? toForeign(netPerDay) : (exRate>0 ? netPerDay/exRate : null);
-    const netTotalForeign = toForeign(netTotal)!==null ? toForeign(netTotal) : (exRate>0 ? netTotal/exRate : null);
     const netLabelEl = document.getElementById('dp-net-total-label');
     if(netLabelEl){
-      netLabelEl.textContent = (netPerDayForeign!==null && netTotalForeign!==null)
-        ? `Загалом без ПДВ (${days} ${pluralDoba(days)} × ${fmt2(netPerDayForeign)} ${foreignSym} = ${fmt2(netTotalForeign)} ${foreignSym})`
+      netLabelEl.textContent = (netPerDayForeign!==null)
+        ? `Загалом без ПДВ (${days} ${pluralDoba(days)} × ${fmt2(netPerDayForeign)} ${foreignSym})`
         : 'Загалом без ПДВ';
     }
+    grossPerDayForeign = toForeign(rate)!==null ? toForeign(rate) : (exRate>0 ? rate/exRate : null);
   }
-  document.getElementById('dp-total-label').textContent = 'Загалом з ПДВ:';
+  document.getElementById('dp-total-label').textContent = (isVat && grossPerDayForeign!==null)
+    ? `Загалом з ПДВ (${days} ${pluralDoba(days)} × ${fmt2(grossPerDayForeign)} ${foreignSym})`
+    : 'Загалом з ПДВ:';
 
   // Послуги (includes Доплата, since it's now a regular toggleable extra) —
   // both columns always shown; the foreign-currency side derives via the
