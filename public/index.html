@@ -11853,6 +11853,13 @@ function updateVatPreview(){
   const rateLabel2 = document.getElementById('bm-rate-label2');
   if(rateLabel2) rateLabel2.textContent = nonUah ? 'Курс' : 'Курс $';
 
+  const vatStatusLabelEl = document.getElementById('bm-vat-status-label');
+  if(vatStatusLabelEl && isCompany){
+    const baseText = isVat ? 'з ПДВ' : 'без ПДВ';
+    const usdEquiv = (isVat && cur==='₴' && exRate>0 && rate>0) ? ` (${fmt2(rate/exRate)} $)` : '';
+    vatStatusLabelEl.textContent = baseText + usdEquiv;
+  }
+
   // "Вартість за 1 добу без ПДВ" — only meaningful for VAT payers (ФОП/ТОВ з ПДВ);
   // shows the net per-day rate with VAT extracted out, in both columns.
   const perDayVatRow = document.getElementById('dp-perday-vat-row');
