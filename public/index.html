@@ -2564,7 +2564,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
-          <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-pickup-date'))">
+          <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-pickup-date'), this)">
           <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
@@ -2574,7 +2574,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
-          <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-return-date'))">
+          <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-return-date'), this)">
           <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
@@ -3345,7 +3345,8 @@ function clearDateDropdown(){
   el.dispatchEvent(new Event('change', {bubbles:true}));
   closeDateDropdown();
 }
-function openDateDropdown(inputEl){
+function openDateDropdown(inputEl, positionEl){
+  positionEl = positionEl || inputEl;
   if(_dateDropdownTarget === inputEl){ closeDateDropdown(); return; }
   closeDateDropdown();
   _dateDropdownTarget = inputEl;
@@ -3358,7 +3359,7 @@ function openDateDropdown(inputEl){
   document.body.appendChild(dd);
   _dateDropdownEl = dd;
   renderDateDropdown();
-  const r = inputEl.getBoundingClientRect();
+  const r = positionEl.getBoundingClientRect();
   let left = r.left, top = r.bottom + 4;
   if(left + dd.offsetWidth > window.innerWidth - 8) left = window.innerWidth - dd.offsetWidth - 8;
   if(top + dd.offsetHeight > window.innerHeight - 8) top = r.top - dd.offsetHeight - 4;
