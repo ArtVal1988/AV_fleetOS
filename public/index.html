@@ -1762,6 +1762,13 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="font-size:10.5px;color:#9ca3af">Для фізосіб, ФОП/ТОВ без та з ПДВ — окремо</div>
       </div>
     </div>
+    <div style="padding:0 28px 20px;border-top:1px solid #f0f2f5;margin-top:4px;padding-top:16px">
+      <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">📏 Пробіг: нагадувати через (днів)</label>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+        <input type="number" id="settings-mileage-stale-days" min="1" class="vf-inp no-spinner" style="width:80px" value="${MILEAGE_STALE_DAYS}">
+        <button type="button" onclick="saveMileageStaleDays()" class="btn btn-primary" style="padding:8px 14px">Зберегти</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3129,6 +3136,7 @@ let TARIFF_CLASSES = [
 // Single global VAT rate for all ФОП з ПДВ bookings — no longer editable
 // per-booking, set once here in Тарифи settings instead.
 let DEFAULT_VAT_RATE = 20;
+let MILEAGE_STALE_DAYS = 7;
 const STATUSES=[
   {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
   {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
@@ -7239,7 +7247,7 @@ function renderDashboard(){
     });
   const msPerDay = 86400000;
   const daysSinceKmUpdate = v => v.currentKmDate ? Math.floor((new Date() - new Date(v.currentKmDate)) / msPerDay) : Infinity;
-  const staleKmVehicles = ALL_VEHICLES.filter(v => v.category!=='Архів' && daysSinceKmUpdate(v) > 7)
+  const staleKmVehicles = ALL_VEHICLES.filter(v => v.category!=='Архів' && daysSinceKmUpdate(v) > MILEAGE_STALE_DAYS)
     .sort((a,b) => daysSinceKmUpdate(b) - daysSinceKmUpdate(a));
 
   const attentionHtml = `
@@ -7248,7 +7256,7 @@ function renderDashboard(){
       <div class="dash-activity-cols" style="display:grid;grid-template-columns:1fr 1fr 1fr">
         <div class="dash-activity-col" style="padding-right:12px">
           ${dashAlertList('🔧 Потрібне ТО найближчим часом', serviceSoon, v => { const left = v.service.nextKm-(v.currentKm??v.service.lastKm??0); return left>0? left.toLocaleString('uk-UA')+' км':'Перепробіг ТО - '+Math.abs(left).toLocaleString('uk-UA')+' км'; }, v => `openToModal(${v.id})`)}
-          <div id="dash-stale-km-section" style="display:none;margin-top:14px">${dashAlertList('📏 Пробіг не актуалізовано (>7 днів)', staleKmVehicles, v => v.currentKmDate ? daysSinceKmUpdate(v)+' дн. тому' : 'ніколи не оновлювався', v => `openToModal(${v.id})`)}</div>
+          <div id="dash-stale-km-section" style="display:none;margin-top:14px">${dashAlertList('📏 Пробіг не актуалізовано (>'+MILEAGE_STALE_DAYS+' дн)', staleKmVehicles, v => v.currentKmDate ? daysSinceKmUpdate(v)+' дн. тому' : 'ніколи не оновлювався', v => `openToModal(${v.id})`)}</div>
         </div>
         <div class="dash-activity-col" style="padding:0 12px;border-left:1px solid rgba(0,0,0,.08)">${dashAlertList('🛡 ОСЦПВ спливає (≤30 днів)', osagoSoon, v => fmtD(v.osago.end), v => `openInsuranceModal(${v.id})`)}</div>
         <div class="dash-activity-col" style="padding-left:12px;border-left:1px solid rgba(0,0,0,.08)">
@@ -7265,7 +7273,7 @@ function dashDebtList(title, list, color, fallbackRate){
   const shown = expanded ? list : list.slice(0,6);
   const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲':'▼'}</span>`:''}</div>
     ${list.length ? shown.map(b => {
       const v = getVehicle(b.vehicleId);
       const { debt, currency: cur } = calcBookingDebtInfo(b);
@@ -7290,7 +7298,7 @@ function dashActivityCol(title, list, color, locField){
   const shown = expanded ? list : list.slice(0,6);
   const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    <div style="font-size:10px;font-weight:700;color:${color};margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲':'▼'}</span>`:''}</div>
     ${list.length ? shown.map(b => {
       const v = getVehicle(b.vehicleId);
       const displayName = b.customer?.company || b.customer?.name || '';
@@ -7320,7 +7328,7 @@ function dashAlertList(title, list, detailFn, onClickFn){
   const shown = expanded ? list : list.slice(0,6);
   const toggleable = list.length > 6;
   return `<div style="background:rgb(249,250,251);border:1px solid rgb(229,231,235);border-radius:8px;padding:6px 5px!important;text-align:center">
-    <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲ згорнути':'▼ показати всі'}</span>`:''}</div>
+    <div style="font-size:10px;font-weight:700;color:#991b1b;margin-bottom:6px${toggleable?';cursor:pointer':''}"${toggleable?` onclick="toggleDashSection(${JSON.stringify(title).replace(/"/g,'&quot;')})"`:''}>${title} (${list.length})${toggleable?` <span style="font-size:9px">${expanded?'▲':'▼'}</span>`:''}</div>
     ${list.length ? shown.map(v => `
       <div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid #f3f4f6;text-align:left${onClickFn?';cursor:pointer':''}"${onClickFn?` onclick="${onClickFn(v)}"`:''}>
         <span style="font-family:var(--font-mono);font-weight:700">${v.plate}</span>
@@ -12344,6 +12352,12 @@ function saveDefaultVatRate(){
   apiFetch('PUT','/settings/defaultVatRate',{value:DEFAULT_VAT_RATE});
   alert('Ставку ПДВ збережено');
 }
+function saveMileageStaleDays(){
+  MILEAGE_STALE_DAYS = parseInt(document.getElementById('settings-mileage-stale-days').value) || 7;
+  apiFetch('PUT','/settings/mileageStaleDays',{value:MILEAGE_STALE_DAYS});
+  renderDashboard();
+  alert('Період оновлено');
+}
 function openInsuranceOverviewPanel(){
   document.getElementById('insurance-overview-panel-overlay').style.display='flex';
   document.getElementById('ins-ov-search').value='';
@@ -14377,6 +14391,9 @@ async function syncFromServer(){
   }
   if(sSettings && typeof sSettings.defaultVatRate === 'number'){
     DEFAULT_VAT_RATE = sSettings.defaultVatRate;
+  }
+  if(sSettings && typeof sSettings.mileageStaleDays === 'number'){
+    MILEAGE_STALE_DAYS = sSettings.mileageStaleDays;
   }
   if(sSettings && sSettings.workingHours){
     Object.assign(WORKING_HOURS, sSettings.workingHours);
