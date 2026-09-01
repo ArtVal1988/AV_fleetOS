@@ -2546,12 +2546,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-period-row" style="display:none;align-items:center;gap:8px">
         <div class="lr-label" style="width:auto;flex-shrink:0">Період:</div>
         <span style="color:#9ca3af;font-size:12px">від</span>
-        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" oninput="
+        <input type="date" id="bm-period-from" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onchange="blurDateFieldOnDesktop(this)" oninput="
           document.getElementById('bm-pickup-date').value=this.value;
           document.getElementById('bm-start').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
         <span style="color:#9ca3af;font-size:12px">до</span>
-        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" oninput="
+        <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onchange="blurDateFieldOnDesktop(this)" oninput="
           document.getElementById('bm-return-date').value=this.value;
           document.getElementById('bm-end').value=this.value;
           daysOverrideTouched=false;updateVatPreview();">
@@ -3274,6 +3274,14 @@ function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 // the phone is rotated to landscape.
 function isMobileViewport(){
   return window.innerWidth <= 640 || (window.innerHeight <= 500 && window.innerWidth > window.innerHeight);
+}
+// Desktop-only fix: after picking a date, force the field to release focus so
+// the browser's native calendar popup fully closes before the user can click
+// into the adjacent time field — on some desktop browsers the popup can
+// otherwise linger and visually interfere with opening the time picker.
+// Mobile's native picker behaves correctly already and must stay untouched.
+function blurDateFieldOnDesktop(el){
+  if(!isMobileViewport()) el.blur();
 }
 function positionMonthNavForViewport(){
   const monthNav = document.getElementById('mn-label')?.closest('.month-nav');
