@@ -1761,11 +1761,25 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="font-size:13px;font-weight:700;color:var(--text)">Дані ФОП та шаблони договорів/актів</div>
         <div style="font-size:10.5px;color:#9ca3af">Для фізосіб, ФОП/ТОВ без та з ПДВ — окремо</div>
       </div>
+      <div onclick="openMileageSettingsPanel()" style="cursor:pointer;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
+        <div style="font-size:22px">📏</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Актуалізація пробігу</div>
+        <div style="font-size:10.5px;color:#9ca3af">Період нагадування на дашборді</div>
+      </div>
     </div>
-    <div style="padding:0 28px 20px;border-top:1px solid #f0f2f5;margin-top:4px;padding-top:16px">
-      <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">📏 Пробіг: нагадувати через (днів)</label>
+  </div>
+</div>
+
+<div id="mileage-settings-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:250;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;width:380px;max-width:calc(100vw - 24px);box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:16px;font-weight:700;color:#1a1d26">📏 Актуалізація пробігу</div>
+      <button onclick="closeMileageSettingsPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
+    </div>
+    <div style="padding:20px 28px">
+      <label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.3px">Нагадувати через (днів)</label>
       <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-        <input type="number" id="settings-mileage-stale-days" min="1" class="vf-inp no-spinner" style="width:80px" value="${MILEAGE_STALE_DAYS}">
+        <input type="number" id="settings-mileage-stale-days" min="1" class="vf-inp no-spinner" style="width:80px">
         <button type="button" onclick="saveMileageStaleDays()" class="btn btn-primary" style="padding:8px 14px">Зберегти</button>
       </div>
     </div>
@@ -12304,6 +12318,13 @@ function openTariffsPanel(){
   renderTariffClassList();
   document.getElementById('tf-vat-rate').value = DEFAULT_VAT_RATE;
 }
+function openMileageSettingsPanel(){
+  document.getElementById('mileage-settings-panel-overlay').style.display='flex';
+  document.getElementById('settings-mileage-stale-days').value = MILEAGE_STALE_DAYS;
+}
+function closeMileageSettingsPanel(){
+  document.getElementById('mileage-settings-panel-overlay').style.display='none';
+}
 function closeTariffsPanel(){
   document.getElementById('tariffs-panel-overlay').style.display='none';
 }
@@ -12356,7 +12377,7 @@ function saveMileageStaleDays(){
   MILEAGE_STALE_DAYS = parseInt(document.getElementById('settings-mileage-stale-days').value) || 7;
   apiFetch('PUT','/settings/mileageStaleDays',{value:MILEAGE_STALE_DAYS});
   renderDashboard();
-  alert('Період оновлено');
+  closeMileageSettingsPanel();
 }
 function openInsuranceOverviewPanel(){
   document.getElementById('insurance-overview-panel-overlay').style.display='flex';
@@ -14914,6 +14935,7 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('dashboard-panel-overlay')?.style.display==='flex') closeDashboard();
   // z-index 250
   else if(document.getElementById('working-hours-panel-overlay')?.style.display==='flex') closeWorkingHoursPanel();
+  else if(document.getElementById('mileage-settings-panel-overlay')?.style.display==='flex') closeMileageSettingsPanel();
   else if(document.getElementById('tariffs-panel-overlay')?.style.display==='flex') closeTariffsPanel();
   else if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') closeInsuranceOverviewPanel();
   // z-index 200 — outermost, checked last
