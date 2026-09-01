@@ -947,12 +947,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
 /* FINANCES COMPACT */
 .fin-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
-.fin-row .fin-days{order:1;}
-#bm-base-rate-field{order:2;}
-#bm-rate-row{order:3;}
-#bm-vartist-field{order:4;}
-.fin-row.individual-fin-order #bm-rate-row{order:5;}
-.fin-row.individual-fin-order #bm-vartist-field{order:3;}
 #bm-pickup-row input,#bm-pickup-row select,#bm-return-row input,#bm-return-row select,.fin-row input,.fin-row select,.fin-row .dep-inline-wrap{border-color:#0055ff!important;}
 .fin-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:84px;}
 .fin-rate{flex:2.4;min-width:175px;}
@@ -2698,7 +2692,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" inputmode="decimal" id="bm-exchange-rate" placeholder="00,00" style="width:56px;text-align:center;font-size:14px"
             oninput="formatExchangeRateInput(this);updateVatPreview();autoFillRateFromBase()">
         </div>
-        <div class="fin-field fin-label-style" id="bm-vartist-field" style="flex:0 0 auto">
+        <div class="fin-field fin-label-style" style="flex:0 0 auto">
           <label id="bm-rate-label" style="white-space:nowrap;text-align:center;width:100%;display:flex;align-items:center;justify-content:center;gap:3px">
             <span>Вартість</span>
             <span id="bm-rate-comment-btn" onclick="toggleRateCommentField()" title="Коментар до ставки" style="display:none;cursor:pointer;font-size:8px">ℹ️</span>
@@ -11154,7 +11148,6 @@ function setClientType(type, isUserAction = true){
 
   const isCompany = type !== 'individual';    // показати поля компанії
   const isVat     = type === 'fop' || type === 'tov'; // показати ПДВ
-  document.getElementById('bm-rate-row')?.closest('.fin-row')?.classList.toggle('individual-fin-order', !isCompany);
 
   // За замовчуванням ФОП/ТОВ рахують у гривні — перемикаємо валюту автоматично,
   // але ЛИШЕ якщо ставку ще не вписано (щоб не зачепити вже введені дані при
