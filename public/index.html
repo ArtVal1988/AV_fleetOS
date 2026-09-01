@@ -2560,7 +2560,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-pickup-row">
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
+          <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
           <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
@@ -2569,7 +2569,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
+          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
           <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
@@ -3353,7 +3353,7 @@ function openDateDropdown(inputEl){
   dd.style.top = Math.max(8,top) + 'px';
 }
 document.addEventListener('mousedown', e => {
-  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-period-from' && e.target.id!=='bm-period-to'){
+  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-pickup-date' && e.target.id!=='bm-return-date'){
     closeDateDropdown();
   }
 });
@@ -3496,7 +3496,7 @@ arrangeFinRowForViewport();
 });
 function syncDateFieldsReadonlyForViewport(){
   const mobile = isMobileViewport();
-  ['bm-period-from','bm-period-to'].forEach(id => {
+  ['bm-pickup-date','bm-return-date'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
     if(mobile){
