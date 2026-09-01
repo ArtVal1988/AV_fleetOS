@@ -2561,7 +2561,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-start').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('pickup')">
-          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur()" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
+          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
@@ -2570,7 +2570,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
-          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur()" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
+          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
@@ -3272,6 +3272,54 @@ function daysInMonth(y,m){return new Date(y,m+1,0).getDate();}
 // (orientation:landscape)` condition — so JS-driven mobile behavior (sidebar
 // collapse, specs popup mode, etc.) stays in sync with the stylesheet when
 // the phone is rotated to landscape.
+let _timeDropdownEl = null;
+let _timeDropdownTarget = null;
+function closeTimeDropdown(){
+  if(_timeDropdownEl){ _timeDropdownEl.remove(); _timeDropdownEl = null; }
+  _timeDropdownTarget = null;
+}
+function openTimeDropdown(selectEl){
+  if(_timeDropdownTarget === selectEl){ closeTimeDropdown(); return; }
+  closeTimeDropdown();
+  _timeDropdownTarget = selectEl;
+  const dd = document.createElement('div');
+  dd.id = 'time-dropdown';
+  dd.style.cssText = 'position:fixed;z-index:800;background:#fff;border:1px solid #d8dbe2;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);max-height:280px;overflow-y:auto;min-width:90px;font-family:var(--font-mono);font-size:13px;';
+  [...selectEl.options].forEach(opt => {
+    const row = document.createElement('div');
+    row.textContent = opt.value;
+    row.dataset.value = opt.value;
+    const isSelected = opt.value === selectEl.value;
+    row.style.cssText = 'padding:6px 14px;cursor:pointer;text-align:center;' + (isSelected ? 'background:#2563eb;color:#fff;font-weight:700;' : 'color:#1a1d26;');
+    row.onmouseover = () => { if(!isSelected) row.style.background = '#f0f4ff'; };
+    row.onmouseout = () => { if(!isSelected) row.style.background = ''; };
+    row.onclick = () => {
+      selectEl.value = opt.value;
+      selectEl.dispatchEvent(new Event('input', {bubbles:true}));
+      selectEl.dispatchEvent(new Event('change', {bubbles:true}));
+      closeTimeDropdown();
+    };
+    dd.appendChild(row);
+  });
+  document.body.appendChild(dd);
+  const r = selectEl.getBoundingClientRect();
+  let left = r.left, top = r.bottom + 4;
+  if(left + dd.offsetWidth > window.innerWidth - 8) left = window.innerWidth - dd.offsetWidth - 8;
+  if(top + dd.offsetHeight > window.innerHeight - 8) top = r.top - dd.offsetHeight - 4;
+  dd.style.left = Math.max(8,left) + 'px';
+  dd.style.top = Math.max(8,top) + 'px';
+  _timeDropdownEl = dd;
+  // Scroll so the currently selected value is visible near the top,
+  // instead of the list always starting from 00:00 regardless of the
+  // field's actual current value.
+  const selectedRow = dd.querySelector(`[data-value="${selectEl.value}"]`);
+  if(selectedRow) dd.scrollTop = Math.max(0, selectedRow.offsetTop - dd.clientHeight/2 + selectedRow.offsetHeight/2);
+}
+document.addEventListener('mousedown', e => {
+  if(_timeDropdownEl && !e.target.closest('#time-dropdown') && e.target.id!=='bm-pickup-time' && e.target.id!=='bm-return-time'){
+    closeTimeDropdown();
+  }
+});
 function timeOptionsHtml(){
   let html = '';
   for(let h=0; h<24; h++){
