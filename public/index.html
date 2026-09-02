@@ -13152,6 +13152,7 @@ async function saveClientForm(){
   const id = document.getElementById('cf-id').value;
   const name = document.getElementById('cf-name').value.trim();
   const isCompany = cfCurrentCategory !== 'individual';
+  if(IS_ACCOUNTANT_ROLE && !id && !isCompany){ alert('Бухгалтер може додавати лише юридичних осіб.'); return; }
   if(!name){ alert(isCompany ? 'Вкажіть ПІБ контактної особи' : 'Вкажіть ПІБ клієнта'); return; }
   if(isCompany && !document.getElementById('cf-company-name').value.trim()){ alert('Вкажіть назву компанії'); return; }
   const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
