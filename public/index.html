@@ -13062,17 +13062,17 @@ function setClientFormCategory(cat){
   if(nameInput) nameInput.placeholder = isCompany ? "Прізвище Ім'я контактної особи" : "Іваненко Олена Петрівна";
   if(isCompany){
     applyResidencyLock(false);
-    setClientResidency('resident');
   } else {
     applyResidencyLock(false);
-    const trackedResidency = document.getElementById('cf-res-resident')?.dataset.selected === 'true' ? 'resident' : 'nonresident';
-    setClientResidency(trackedResidency);
+    setClientResidency(cfCurrentResidency);
   }
 }
+let cfCurrentResidency = 'resident';
 let cfResidencyLocked = false;
 function setClientResidency(type){
   if(cfResidencyLocked) return;
   const isResident = type !== 'nonresident';
+  cfCurrentResidency = isResident ? 'resident' : 'nonresident';
   document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
   document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
   const resBtn = document.getElementById('cf-res-resident');
