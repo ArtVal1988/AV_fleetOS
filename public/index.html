@@ -2527,9 +2527,11 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div class="fg-pair" style="grid-template-columns:1.6fr 1fr">
-        <div class="fg fin-label-style" id="bm-company-row" style="display:none">
+        <div class="fg fin-label-style" id="bm-company-row" style="display:none;position:relative">
           <label id="bm-company-label">Назва компанії</label>
-          <input type="text" id="bm-company" placeholder="ТОВ «Назва» або ФОП Іваненко О.В.">
+          <input type="text" id="bm-company" placeholder="ТОВ «Назва» або ФОП Іваненко О.В." autocomplete="off"
+            oninput="onCompanyNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();updateBmExtraContactsInfo(null);" onfocus="onCompanyNameInput(this)" onblur="setTimeout(closeCompanySuggest,150)">
+          <div id="company-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
         </div>
         <div class="fg fin-label-style" id="bm-edrpou-row" style="display:none">
           <label>ЄДРПОУ</label>
@@ -11478,6 +11480,53 @@ function formatPhoneUA(raw){
   return cleaned;
 }
 // ── CLIENT AUTOCOMPLETE (suggests returning clients by name, autofills phone) ──
+function getCompanyClientsIndex(){
+  const map = new Map();
+  (CLIENTS||[]).forEach(c => {
+    if(!c.companyName || !c.companyName.trim() || c.category==='individual') return;
+    const key = c.companyName.trim().toLowerCase();
+    map.set(key, {companyName: c.companyName.trim(), name: c.name||'', phone: c.phone||'', edrpou: c.edrpou||'', clientId: c.id});
+  });
+  return [...map.values()];
+}
+function onCompanyNameInput(el){
+  const q = el.value.trim().toLowerCase();
+  const dd = document.getElementById('company-suggest-dropdown');
+  if(!dd) return;
+  if(!q){ dd.style.display='none'; dd.innerHTML=''; return; }
+  const matches = getCompanyClientsIndex()
+    .filter(c => c.companyName.toLowerCase().includes(q))
+    .slice(0, 8);
+  if(!matches.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML = matches.map(c => `
+    <div onmousedown="selectCompanySuggestion('${c.companyName.replace(/'/g,"\\'")}','${c.name.replace(/'/g,"\\'")}','${(c.phone||'').replace(/'/g,"\\'")}','${(c.edrpou||'').replace(/'/g,"\\'")}',${c.clientId||'null'})"
+      style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6;font-size:12px"
+      onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#fff'">
+      <div style="font-weight:600;color:#1a1d26">${c.companyName}</div>
+      ${c.name?`<div style="font-size:11px;color:#6b7280;margin-top:1px">${c.name}</div>`:''}
+    </div>
+  `).join('');
+  dd.style.display='block';
+}
+function selectCompanySuggestion(companyName, name, phone, edrpou, clientId){
+  document.getElementById('bm-company').value = companyName;
+  if(name) document.getElementById('bm-name').value = name;
+  if(phone) document.getElementById('bm-phone').value = phone;
+  if(edrpou) document.getElementById('bm-edrpou').value = edrpou;
+  const idField = document.getElementById('bm-client-id');
+  if(idField) idField.value = clientId || '';
+  if(clientId){
+    const client = (CLIENTS||[]).find(c=>c.id===clientId);
+    if(client) loadMessengers(client.messengers || {});
+  }
+  updateClientLinkButton();
+  updateBmExtraContactsInfo(clientId);
+  closeCompanySuggest();
+}
+function closeCompanySuggest(){
+  const dd = document.getElementById('company-suggest-dropdown');
+  if(dd){ dd.style.display='none'; dd.innerHTML=''; }
+}
 function getClientsIndex(){
   // Prefer the proper Клієнти database (has passport/license data for
   // documents) — fall back to a de-duplicated list from past bookings for
