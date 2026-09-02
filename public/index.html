@@ -12997,8 +12997,12 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-nr-passport-expiry').value = c?.nrPassportExpiry || '';
   document.getElementById('cf-notes').value = c?.notes || '';
   applyResidencyLock(false); // clear any lock from a previously open client before setting the new one
-  setClientResidency(c?.residency || 'resident');
-  applyResidencyLock(!!(c && c.residency === 'resident'));
+  if(cfCurrentCategory === 'individual'){
+    setClientResidency(c?.residency || 'resident');
+    applyResidencyLock(!!(c && c.residency === 'resident'));
+  } else {
+    cfCurrentResidency = c?.residency || 'resident';
+  }
   loadCfMessengers(c?.messengers||{});
   const hasPassport = !!(c?.passportNum || c?.passportDate || c?.passportIssuer);
   const hasIdcard = !!(c?.idcardNum || c?.idcardRecord || c?.idcardDate || c?.idcardIssuer);
