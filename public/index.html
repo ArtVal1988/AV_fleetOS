@@ -1957,7 +1957,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div id="cf-company-fields" style="display:none">
         <div id="cf-company-rep-fields"></div>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div id="cf-phone-row" style="display:flex;gap:10px;margin-bottom:10px">
         <div style="flex:1.4;position:relative">
           <label class="vf-lbl">Телефон</label>
           <div style="display:flex;align-items:center;gap:4px">
@@ -13036,6 +13036,15 @@ function renderCfCompanyFields(){
   wrap.innerHTML = fieldsHtml;
   _cfCompanyFieldsRendered = true;
 }
+(function(){
+  const companyFields = document.getElementById('cf-company-fields');
+  const phoneRow = document.getElementById('cf-phone-row');
+  const extraContactsSection = document.getElementById('cf-extra-contacts-section');
+  if(companyFields && phoneRow && extraContactsSection){
+    companyFields.parentNode.insertBefore(phoneRow, companyFields);
+    companyFields.parentNode.insertBefore(extraContactsSection, companyFields);
+  }
+})();
 let cfCurrentCategory = 'individual';
 function setClientFormCategory(cat){
   cfCurrentCategory = cat;
