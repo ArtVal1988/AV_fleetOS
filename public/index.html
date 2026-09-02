@@ -1955,16 +1955,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
       <div id="cf-company-fields" style="display:none">
-        <div style="display:flex;gap:10px;margin-bottom:10px">
-          <div style="flex:2">
-            <label class="vf-lbl">Назва компанії</label>
-            <input id="cf-company-name" type="text" class="vf-inp" placeholder="ТОВ «Ромашка»" style="width:100%">
-          </div>
-          <div style="flex:1">
-            <label class="vf-lbl">ЄДРПОУ</label>
-            <input id="cf-edrpou" type="text" class="vf-inp" placeholder="12345678" style="width:100%">
-          </div>
-        </div>
+        <div id="cf-company-rep-fields"></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
         <div id="cf-inn-wrap" class="cf-individual-only" style="flex:0.6">
@@ -12987,8 +12978,15 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
   setClientFormCategory(c?.category || defaultCategory || (IS_ACCOUNTANT_ROLE ? 'fop_no_vat' : 'individual'));
-  document.getElementById('cf-company-name').value = c?.companyName || '';
-  document.getElementById('cf-edrpou').value = c?.edrpou || '';
+  if(cfCurrentCategory !== 'individual'){
+    const rf = c?.repFields || {};
+    const initialsEl = document.getElementById('cf-rep-initials');
+    if(initialsEl) initialsEl.value = rf.initials || '';
+    REP_FIELDS.forEach(f => {
+      const el = document.getElementById('cf-rep-'+f.id);
+      if(el) el.value = rf[f.id] || '';
+    });
+  }
   document.getElementById('cf-name').value = c?.name || '';
   document.getElementById('cf-tier').innerHTML = CLIENT_TIERS.map(t=>`<option value="${t.key}">${t.icon} ${t.label}</option>`).join('');
   document.getElementById('cf-tier').value = c?.tier || 'new';
@@ -13033,10 +13031,30 @@ function openClientForm(id, defaultCategory){
   if(id) renderClientBookingHistory(id);
   document.getElementById('client-form-overlay').style.display='flex';
 }
+let _cfCompanyFieldsRendered = false;
+function renderCfCompanyFields(){
+  if(_cfCompanyFieldsRendered) return;
+  const wrap = document.getElementById('cf-company-rep-fields');
+  if(!wrap) return;
+  let fieldsHtml = `<div style="margin-bottom:10px"><label class="vf-lbl">Ініціали (для номера договору)</label><input id="cf-rep-initials" type="text" class="vf-inp" style="width:100%;text-transform:uppercase" placeholder="СНК" maxlength="6"></div>`;
+  fieldsHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  let lastGroup = null;
+  REP_FIELDS.forEach(f => {
+    if(lastGroup !== null && f.group !== lastGroup){
+      fieldsHtml += `<div style="grid-column:span 2;border-top:1px dashed #e5e7eb;margin:2px 0"></div>`;
+    }
+    lastGroup = f.group;
+    fieldsHtml += `<div${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="cf-rep-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${escAttr(f.placeholder||'')}"></div>`;
+  });
+  fieldsHtml += '</div>';
+  wrap.innerHTML = fieldsHtml;
+  _cfCompanyFieldsRendered = true;
+}
 let cfCurrentCategory = 'individual';
 function setClientFormCategory(cat){
   cfCurrentCategory = cat;
   const isCompany = cat !== 'individual';
+  if(isCompany) renderCfCompanyFields();
   document.querySelectorAll('#cf-category-switcher .ct-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
   document.querySelectorAll('.cf-individual-only').forEach(el => { el.style.display = isCompany ? 'none' : ''; });
   const companyFields = document.getElementById('cf-company-fields');
@@ -13154,13 +13172,21 @@ async function saveClientForm(){
   const isCompany = cfCurrentCategory !== 'individual';
   if(IS_ACCOUNTANT_ROLE && !id && !isCompany){ alert('Бухгалтер може додавати лише юридичних осіб.'); return; }
   if(!name){ alert(isCompany ? 'Вкажіть ПІБ контактної особи' : 'Вкажіть ПІБ клієнта'); return; }
-  if(isCompany && !document.getElementById('cf-company-name').value.trim()){ alert('Вкажіть назву компанії'); return; }
+  if(isCompany && !document.getElementById('cf-rep-name')?.value.trim()){ alert('Вкажіть назву (ПІБ) суб\'єкта'); return; }
   const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
+  const repFields = {};
+  if(isCompany){
+    repFields.initials = document.getElementById('cf-rep-initials')?.value.trim().toUpperCase() || '';
+    REP_FIELDS.forEach(f => {
+      repFields[f.id] = document.getElementById('cf-rep-'+f.id)?.value.trim() || '';
+    });
+  }
   const data = {
     name,
     category: cfCurrentCategory,
-    companyName: document.getElementById('cf-company-name').value.trim(),
-    edrpou: document.getElementById('cf-edrpou').value.trim(),
+    companyName: repFields.name || '',
+    edrpou: repFields.edrpou || '',
+    repFields,
     tier: document.getElementById('cf-tier').value,
     residency,
     phone: document.getElementById('cf-phone').value.trim(),
