@@ -6544,7 +6544,7 @@ function buildKaskoPhotoSection(v){
 // document generation, which stay fully interactive.
 function applyAccountantBookingFormRestrictions(){
   if(!IS_ACCOUNTANT_ROLE) return;
-  const readonlyContainers = ['bm-block-1','bm-block-3','bm-substitute-section','bm-fines-section','bm-repair-section','bm-block-4','bm-block-5'];
+  const readonlyContainers = ['bm-block-1','bm-substitute-section','bm-fines-section','bm-repair-section','bm-block-4','bm-block-5'];
   readonlyContainers.forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
