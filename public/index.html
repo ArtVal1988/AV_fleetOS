@@ -1958,10 +1958,6 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="cf-company-rep-fields"></div>
       </div>
       <div style="display:flex;gap:10px;margin-bottom:10px">
-        <div id="cf-inn-wrap" class="cf-individual-only" style="flex:0.6">
-          <label class="vf-lbl">ІПН</label>
-          <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
-        </div>
         <div style="flex:1.4;position:relative">
           <label class="vf-lbl">Телефон</label>
           <div style="display:flex;align-items:center;gap:4px">
@@ -2015,11 +2011,6 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
         </div>
-      </div>
-
-      <div id="cf-address-wrap" class="cf-individual-only" style="margin-bottom:10px">
-        <label class="vf-lbl" id="cf-address-label">Адреса реєстрації</label>
-        <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
       </div>
 
       <div id="cf-resident-fields" class="cf-individual-only">
@@ -12980,8 +12971,6 @@ function openClientForm(id, defaultCategory){
   setClientFormCategory(c?.category || defaultCategory || (IS_ACCOUNTANT_ROLE ? 'fop_no_vat' : 'individual'));
   if(cfCurrentCategory !== 'individual'){
     const rf = c?.repFields || {};
-    const initialsEl = document.getElementById('cf-rep-initials');
-    if(initialsEl) initialsEl.value = rf.initials || '';
     REP_FIELDS.forEach(f => {
       const el = document.getElementById('cf-rep-'+f.id);
       if(el) el.value = rf[f.id] || '';
@@ -12993,7 +12982,6 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-phone').value = c?.phone || '';
   loadExtraContacts(c?.extraContacts || []);
   document.getElementById('cf-birthdate').value = c?.birthdate || '';
-  document.getElementById('cf-address').value = c?.address || '';
   document.getElementById('cf-passport-num').value = c?.passportNum || '';
   document.getElementById('cf-passport-issuer').value = c?.passportIssuer || '';
   document.getElementById('cf-passport-date').value = c?.passportDate || '';
@@ -13001,7 +12989,6 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-idcard-record').value = c?.idcardRecord || '';
   document.getElementById('cf-idcard-date').value = c?.idcardDate || '';
   document.getElementById('cf-idcard-issuer').value = c?.idcardIssuer || '';
-  document.getElementById('cf-inn').value = c?.inn || '';
   document.getElementById('cf-nr-citizenship').value = c?.nrCitizenship || '';
   document.getElementById('cf-nr-passport-num').value = c?.nrPassportNum || '';
   document.getElementById('cf-nr-passport-date').value = c?.nrPassportDate || '';
@@ -13036,8 +13023,7 @@ function renderCfCompanyFields(){
   if(_cfCompanyFieldsRendered) return;
   const wrap = document.getElementById('cf-company-rep-fields');
   if(!wrap) return;
-  let fieldsHtml = `<div style="margin-bottom:10px"><label class="vf-lbl">Ініціали (для номера договору)</label><input id="cf-rep-initials" type="text" class="vf-inp" style="width:100%;text-transform:uppercase" placeholder="СНК" maxlength="6"></div>`;
-  fieldsHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  let fieldsHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
   let lastGroup = null;
   REP_FIELDS.forEach(f => {
     if(lastGroup !== null && f.group !== lastGroup){
@@ -13076,8 +13062,6 @@ function setClientResidency(type){
   const isResident = type !== 'nonresident';
   document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
   document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
-  document.getElementById('cf-inn-wrap').style.display = isResident ? '' : 'none';
-  document.getElementById('cf-address-wrap').style.display = isResident ? '' : 'none';
   const resBtn = document.getElementById('cf-res-resident');
   const nrBtn = document.getElementById('cf-res-nonresident');
   const baseStyle = 'padding:6px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;';
@@ -13176,7 +13160,6 @@ async function saveClientForm(){
   const residency = document.getElementById('cf-res-resident').dataset.selected === 'true' ? 'resident' : 'nonresident';
   const repFields = {};
   if(isCompany){
-    repFields.initials = document.getElementById('cf-rep-initials')?.value.trim().toUpperCase() || '';
     REP_FIELDS.forEach(f => {
       repFields[f.id] = document.getElementById('cf-rep-'+f.id)?.value.trim() || '';
     });
@@ -13192,7 +13175,6 @@ async function saveClientForm(){
     phone: document.getElementById('cf-phone').value.trim(),
     extraContacts: currentExtraContacts,
     birthdate: document.getElementById('cf-birthdate').value,
-    address: document.getElementById('cf-address').value.trim(),
     passportNum: document.getElementById('cf-passport-num').value.trim(),
     passportIssuer: document.getElementById('cf-passport-issuer').value.trim(),
     passportDate: document.getElementById('cf-passport-date').value,
@@ -13200,7 +13182,6 @@ async function saveClientForm(){
     idcardRecord: document.getElementById('cf-idcard-record').value.trim(),
     idcardDate: document.getElementById('cf-idcard-date').value,
     idcardIssuer: document.getElementById('cf-idcard-issuer').value.trim(),
-    inn: document.getElementById('cf-inn').value.trim(),
     messengers: readMessengersFromCf(),
     nrCitizenship: document.getElementById('cf-nr-citizenship').value.trim(),
     nrPassportNum: document.getElementById('cf-nr-passport-num').value.trim(),
