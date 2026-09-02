@@ -13814,7 +13814,8 @@ function renderDocArchiveList(){
   const list = document.getElementById('docarchive-list');
   const isAdmin = _currentUser && _currentUser.role === 'admin';
   const q = (document.getElementById('da-search')?.value||'').trim().toLowerCase();
-  const matches = d => !q || (d.client_name||'').toLowerCase().includes(q) || (d.vehicle_name||'').toLowerCase().includes(q) || (d.vehicle_plate||'').toLowerCase().includes(q) || (d.contract_number||'').toLowerCase().includes(q);
+  const matches = d => (!q || (d.client_name||'').toLowerCase().includes(q) || (d.vehicle_name||'').toLowerCase().includes(q) || (d.vehicle_plate||'').toLowerCase().includes(q) || (d.contract_number||'').toLowerCase().includes(q))
+    && (!IS_ACCOUNTANT_ROLE || (d.clientType && d.clientType!=='individual'));
   const items = DOC_ARCHIVE.filter(matches);
   if(!items.length){
     list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Ще немає згенерованих документів.</div>';

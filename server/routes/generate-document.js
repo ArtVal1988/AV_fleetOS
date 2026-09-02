@@ -810,11 +810,19 @@ router.delete('/template/:type', auth, adminOnly, (req, res) => {
 router.get('/archive/list', auth, (req, res) => {
   const bookingId = req.query.bookingId;
   const rows = bookingId
-    ? db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label, created_at
-                  FROM generated_documents WHERE booking_id = ? ORDER BY created_at DESC`).all(Number(bookingId))
-    : db.prepare(`SELECT id, booking_id, doc_type, file_name, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label, created_at
-                  FROM generated_documents ORDER BY created_at DESC`).all();
-  res.json(rows);
+    ? db.prepare(`SELECT gd.id, gd.booking_id, gd.doc_type, gd.file_name, gd.client_name, gd.vehicle_name, gd.vehicle_plate, gd.generated_by, gd.contract_number, gd.period_label, gd.created_at, b.data AS booking_data
+                  FROM generated_documents gd LEFT JOIN bookings b ON b.id = gd.booking_id WHERE gd.booking_id = ? ORDER BY gd.created_at DESC`).all(Number(bookingId))
+    : db.prepare(`SELECT gd.id, gd.booking_id, gd.doc_type, gd.file_name, gd.client_name, gd.vehicle_name, gd.vehicle_plate, gd.generated_by, gd.contract_number, gd.period_label, gd.created_at, b.data AS booking_data
+                  FROM generated_documents gd LEFT JOIN bookings b ON b.id = gd.booking_id ORDER BY gd.created_at DESC`).all();
+  const withClientType = rows.map(r => {
+    let clientType = null;
+    if(r.booking_data){
+      try{ clientType = JSON.parse(r.booking_data).clientType || null; }catch(e){}
+    }
+    const { booking_data, ...rest } = r;
+    return { ...rest, clientType };
+  });
+  res.json(withClientType);
 });
 
 // GET /api/generate-document/archive/:id — download a specific archived document
