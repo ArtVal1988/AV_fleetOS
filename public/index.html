@@ -13023,16 +13023,16 @@ function renderCfCompanyFields(){
   if(_cfCompanyFieldsRendered) return;
   const wrap = document.getElementById('cf-company-rep-fields');
   if(!wrap) return;
-  let fieldsHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  let lastGroup = null;
-  REP_FIELDS.forEach(f => {
-    if(lastGroup !== null && f.group !== lastGroup){
-      fieldsHtml += `<div style="grid-column:span 2;border-top:1px dashed #e5e7eb;margin:2px 0"></div>`;
-    }
-    lastGroup = f.group;
-    fieldsHtml += `<div${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="cf-rep-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${escAttr(f.placeholder||'')}"></div>`;
+  const groups = {};
+  REP_FIELDS.forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
+  let fieldsHtml = '';
+  Object.keys(groups).sort((a,b)=>a-b).forEach(g => {
+    fieldsHtml += `<div class="msec msec-b${g}" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
+    groups[g].forEach(f => {
+      fieldsHtml += `<div${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="cf-rep-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${escAttr(f.placeholder||'')}"></div>`;
+    });
+    fieldsHtml += '</div>';
   });
-  fieldsHtml += '</div>';
   wrap.innerHTML = fieldsHtml;
   _cfCompanyFieldsRendered = true;
 }
