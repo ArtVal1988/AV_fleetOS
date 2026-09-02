@@ -12425,6 +12425,8 @@ function applyAccountantRestrictions(){
   if(newBookingBtn) newBookingBtn.style.display='none';
   const cfIndividualBtn = document.querySelector('#cf-category-switcher .ct-btn[data-cat="individual"]');
   if(cfIndividualBtn) cfIndividualBtn.style.display = 'none';
+  const stickersBar = document.querySelector('.stickers-bar');
+  if(stickersBar) stickersBar.style.display = 'none';
 }
 function showSidebarUser(user){
   const topbarName = document.getElementById('topbar-username');
