@@ -13035,7 +13035,7 @@ function renderCfCompanyFields(){
   Object.keys(groups).sort((a,b)=>a-b).forEach(g => {
     fieldsHtml += `<div class="msec msec-b${g}" style="margin-bottom:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">`;
     groups[g].forEach(f => {
-      fieldsHtml += `<div${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="cf-rep-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${escAttr(f.placeholder||'')}"></div>`;
+      fieldsHtml += `<div id="cf-rep-wrap-${f.id}"${f.full?' style="grid-column:span 2"':''}><label class="vf-lbl">${f.label}</label><input id="cf-rep-${f.id}" type="text" class="vf-inp" style="width:100%" placeholder="${escAttr(f.placeholder||'')}"></div>`;
     });
     fieldsHtml += '</div>';
   });
@@ -13056,6 +13056,8 @@ function setClientFormCategory(cat){
   cfCurrentCategory = cat;
   const isCompany = cat !== 'individual';
   if(isCompany) renderCfCompanyFields();
+  const ipnWrap = document.getElementById('cf-rep-wrap-ipn');
+  if(ipnWrap) ipnWrap.style.display = (cat === 'fop_no_vat') ? 'none' : '';
   document.querySelectorAll('#cf-category-switcher .ct-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
   document.querySelectorAll('.cf-individual-only').forEach(el => { el.style.display = isCompany ? 'none' : ''; });
   const companyFields = document.getElementById('cf-company-fields');
