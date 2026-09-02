@@ -13063,6 +13063,10 @@ function setClientFormCategory(cat){
   if(isCompany){
     applyResidencyLock(false);
     setClientResidency('resident');
+  } else {
+    applyResidencyLock(false);
+    const trackedResidency = document.getElementById('cf-res-resident')?.dataset.selected === 'true' ? 'resident' : 'nonresident';
+    setClientResidency(trackedResidency);
   }
 }
 let cfResidencyLocked = false;
