@@ -12441,6 +12441,8 @@ function applyAccountantRestrictions(){
   });
   const newBookingBtn = document.getElementById('new-booking-btn');
   if(newBookingBtn) newBookingBtn.style.display='none';
+  const cfIndividualBtn = document.querySelector('#cf-category-switcher .ct-btn[data-cat="individual"]');
+  if(cfIndividualBtn) cfIndividualBtn.style.display = 'none';
 }
 function showSidebarUser(user){
   const topbarName = document.getElementById('topbar-username');
@@ -12956,7 +12958,7 @@ function renderClientsPanelList(){
   const q = (document.getElementById('cl-search')?.value||'').trim().toLowerCase();
   const digits = q.replace(/\D/g,'');
   const matches = c => (!q || (c.name||'').toLowerCase().includes(q) || (c.companyName||'').toLowerCase().includes(q) || (digits && (c.phone||'').replace(/\D/g,'').includes(digits)))
-    && (!IS_ACCOUNTANT_ROLE || bookings.some(b => b.customer?.clientId===c.id && b.clientType && b.clientType!=='individual'));
+    && (!IS_ACCOUNTANT_ROLE || (c.category ? c.category!=='individual' : bookings.some(b => b.customer?.clientId===c.id && b.clientType && b.clientType!=='individual')));
   const items = CLIENTS.filter(matches);
   const chronoOrder = new Map();
   CLIENTS.slice().sort((a,b)=>a.id-b.id).forEach((c,i)=>chronoOrder.set(c.id, i+1));
@@ -12984,7 +12986,7 @@ function openClientForm(id, defaultCategory){
   const c = id ? CLIENTS.find(x=>x.id===id) : null;
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
-  setClientFormCategory(c?.category || defaultCategory || 'individual');
+  setClientFormCategory(c?.category || defaultCategory || (IS_ACCOUNTANT_ROLE ? 'fop_no_vat' : 'individual'));
   document.getElementById('cf-company-name').value = c?.companyName || '';
   document.getElementById('cf-edrpou').value = c?.edrpou || '';
   document.getElementById('cf-name').value = c?.name || '';
