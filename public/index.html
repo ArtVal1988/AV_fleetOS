@@ -13300,7 +13300,8 @@ function escAttr(s){
 function renderRepSlots(){
   const wrap = document.getElementById('rep-slots');
   if(!wrap) return;
-  wrap.innerHTML = REP_SLOTS.map(slot => {
+  const slots = IS_ACCOUNTANT_ROLE ? REP_SLOTS.filter(s => s.key!=='individual' && s.key!=='nonresident') : REP_SLOTS;
+  wrap.innerHTML = slots.map(slot => {
     const r = REPRESENTATIVES[slot.key] || {};
     let fieldsHtml = '';
     let lastGroup = null;
@@ -13326,7 +13327,8 @@ function renderRepSlots(){
   }).join('');
 }
 async function saveRepresentativeSlots(){
-  REP_SLOTS.forEach(slot => {
+  const slots = IS_ACCOUNTANT_ROLE ? REP_SLOTS.filter(s => s.key!=='individual' && s.key!=='nonresident') : REP_SLOTS;
+  slots.forEach(slot => {
     const rep = { initials: document.getElementById(`rep-${slot.key}-initials`).value.trim().toUpperCase() };
     REP_FIELDS.forEach(f => {
       rep[f.id] = document.getElementById(`rep-${slot.key}-${f.id}`).value.trim();
