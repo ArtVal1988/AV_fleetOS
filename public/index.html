@@ -1957,7 +1957,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div id="cf-company-fields" style="display:none">
         <div id="cf-company-rep-fields"></div>
       </div>
-      <div class="cf-individual-only" id="cf-inn-row" style="margin-bottom:10px;max-width:180px">
+      <div class="cf-individual-only" id="cf-inn-row" style="margin-bottom:10px;max-width:100px;flex:0 0 100px">
         <label class="vf-lbl">ІПН</label>
         <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
       </div>
@@ -13102,9 +13102,14 @@ function renderCfCompanyFields(){
   const extraContactsSection = document.getElementById('cf-extra-contacts-section');
   const innRow = document.getElementById('cf-inn-row');
   if(companyFields && phoneRow && extraContactsSection){
-    companyFields.parentNode.insertBefore(phoneRow, companyFields);
+    const innPhoneWrap = document.createElement('div');
+    innPhoneWrap.style.cssText = 'display:flex;gap:10px;margin-bottom:10px';
+    companyFields.parentNode.insertBefore(innPhoneWrap, companyFields);
+    if(innRow){ innRow.style.marginBottom='0'; innPhoneWrap.appendChild(innRow); }
+    phoneRow.style.marginBottom='0';
+    phoneRow.style.flex='1';
+    innPhoneWrap.appendChild(phoneRow);
     companyFields.parentNode.insertBefore(extraContactsSection, companyFields);
-    if(innRow) phoneRow.parentNode.insertBefore(innRow, phoneRow);
   }
 })();
 let cfCurrentCategory = 'individual';
