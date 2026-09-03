@@ -1957,6 +1957,10 @@ input.dm-pf-val.tel{font-size:14px;}
       <div id="cf-company-fields" style="display:none">
         <div id="cf-company-rep-fields"></div>
       </div>
+      <div class="cf-individual-only" id="cf-inn-row" style="margin-bottom:10px;max-width:180px">
+        <label class="vf-lbl">ІПН</label>
+        <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
+      </div>
       <div id="cf-phone-row" style="display:flex;gap:10px;margin-bottom:10px">
         <div style="flex:1.4;position:relative">
           <label class="vf-lbl">Телефон</label>
@@ -2014,10 +2018,6 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="cf-resident-fields" class="cf-individual-only">
-        <div style="margin-bottom:10px;max-width:180px">
-          <label class="vf-lbl">ІПН</label>
-          <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
-        </div>
         <div class="msec-inner-sep" style="margin-top:0">
           <div style="display:flex;gap:8px">
             <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')" style="flex:1">
@@ -13100,9 +13100,11 @@ function renderCfCompanyFields(){
   const companyFields = document.getElementById('cf-company-fields');
   const phoneRow = document.getElementById('cf-phone-row');
   const extraContactsSection = document.getElementById('cf-extra-contacts-section');
+  const innRow = document.getElementById('cf-inn-row');
   if(companyFields && phoneRow && extraContactsSection){
     companyFields.parentNode.insertBefore(phoneRow, companyFields);
     companyFields.parentNode.insertBefore(extraContactsSection, companyFields);
+    if(innRow) phoneRow.parentNode.insertBefore(innRow, phoneRow);
   }
 })();
 let cfCurrentCategory = 'individual';
