@@ -2014,6 +2014,10 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="cf-resident-fields" class="cf-individual-only">
+        <div style="margin-bottom:10px;max-width:180px">
+          <label class="vf-lbl">ІПН</label>
+          <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
+        </div>
         <div class="msec-inner-sep" style="margin-top:0">
           <div style="display:flex;gap:8px">
             <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')" style="flex:1">
@@ -13040,6 +13044,7 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-idcard-record').value = c?.idcardRecord || '';
   document.getElementById('cf-idcard-date').value = c?.idcardDate || '';
   document.getElementById('cf-idcard-issuer').value = c?.idcardIssuer || '';
+  document.getElementById('cf-inn').value = c?.inn || '';
   document.getElementById('cf-nr-citizenship').value = c?.nrCitizenship || '';
   document.getElementById('cf-nr-passport-num').value = c?.nrPassportNum || '';
   document.getElementById('cf-nr-passport-date').value = c?.nrPassportDate || '';
@@ -13252,6 +13257,7 @@ async function saveClientForm(){
     idcardRecord: document.getElementById('cf-idcard-record').value.trim(),
     idcardDate: document.getElementById('cf-idcard-date').value,
     idcardIssuer: document.getElementById('cf-idcard-issuer').value.trim(),
+    inn: document.getElementById('cf-inn').value.trim(),
     messengers: readMessengersFromCf(),
     nrCitizenship: document.getElementById('cf-nr-citizenship').value.trim(),
     nrPassportNum: document.getElementById('cf-nr-passport-num').value.trim(),
