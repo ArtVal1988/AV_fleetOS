@@ -13024,13 +13024,11 @@ function openClientForm(id, defaultCategory){
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
   setClientFormCategory(c?.category || defaultCategory || (IS_ACCOUNTANT_ROLE ? 'fop_no_vat' : 'individual'));
-  if(cfCurrentCategory !== 'individual'){
-    const rf = c?.repFields || {};
-    REP_FIELDS.forEach(f => {
-      const el = document.getElementById('cf-rep-'+f.id);
-      if(el) el.value = rf[f.id] || '';
-    });
-  }
+  const rf = c?.repFields || {};
+  REP_FIELDS.forEach(f => {
+    const el = document.getElementById('cf-rep-'+f.id);
+    if(el) el.value = rf[f.id] || '';
+  });
   document.getElementById('cf-name').value = c?.name || '';
   document.getElementById('cf-tier').innerHTML = CLIENT_TIERS.map(t=>`<option value="${t.key}">${t.icon} ${t.label}</option>`).join('');
   document.getElementById('cf-tier').value = c?.tier || 'new';
