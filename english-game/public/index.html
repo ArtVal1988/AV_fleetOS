@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Have got / Has got — Монстрик вчить англійську!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF8E7;
+    --monster:#5FD3C4;
+    --monster-dark:#3FB5A6;
+    --coral:#FF7A5C;
+    --purple:#8B7FD6;
+    --green:#4CAF7D;
+    --ink:#3A3358;
+    --paper:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.headline{font-family:'Baloo 2',cursive;}
+
+  /* ---------- Decorative background dots ---------- */
+  .bg-dot{position:absolute;border-radius:50%;opacity:.5;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:44px 20px 60px;
+    text-align:center;
+    overflow:hidden;
+  }
+  .hero h1{
+    font-size:clamp(28px,6vw,44px);
+    font-weight:800;
+    color:var(--ink);
+    margin:18px 0 10px;
+    line-height:1.15;
+  }
+  .hero p{
+    font-size:clamp(15px,3vw,19px);
+    font-weight:700;
+    color:var(--monster-dark);
+    max-width:480px;
+    margin:0 auto;
+  }
+  .monster-wrap{width:180px;height:180px;margin:0 auto;position:relative;}
+
+  /* ---------- Sections ---------- */
+  section{max-width:760px;margin:0 auto;padding:0 20px 56px;}
+  .section-title{
+    font-size:clamp(22px,4.5vw,30px);
+    font-weight:800;
+    text-align:center;
+    margin-bottom:8px;
+  }
+  .section-sub{
+    text-align:center;
+    font-weight:700;
+    color:#8A8399;
+    margin-bottom:30px;
+    font-size:15px;
+  }
+
+  /* ---------- Rule table ---------- */
+  .rule-cards{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:640px){.rule-cards{grid-template-columns:1fr 1fr 1fr;}}
+  .rule-card{
+    background:var(--paper);
+    border-radius:24px;
+    padding:22px 18px;
+    box-shadow:0 6px 0 rgba(58,51,88,.08);
+    border:3px solid transparent;
+  }
+  .rule-card.pos{border-color:var(--green);}
+  .rule-card.neg{border-color:var(--coral);}
+  .rule-card.q{border-color:var(--purple);}
+  .rule-card .tag{
+    display:inline-block;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:13px;
+    padding:4px 12px;
+    border-radius:20px;
+    color:#fff;
+    margin-bottom:12px;
+  }
+  .pos .tag{background:var(--green);}
+  .neg .tag{background:var(--coral);}
+  .q .tag{background:var(--purple);}
+  .rule-card .who{font-size:14px;font-weight:800;color:#8A8399;margin-bottom:4px;}
+  .rule-card .form{font-family:'Baloo 2',cursive;font-size:22px;font-weight:700;margin-bottom:12px;}
+  .rule-card .ex{
+    background:var(--bg);
+    border-radius:14px;
+    padding:10px 14px;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.5;
+  }
+
+  /* ---------- Monster showcase (illustrating examples) ---------- */
+  .showcase{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    background:var(--paper);
+    border-radius:24px;
+    padding:20px;
+    margin-top:22px;
+    box-shadow:0 6px 0 rgba(58,51,88,.08);
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .showcase .mini-monster{width:90px;height:90px;flex-shrink:0;}
+  .showcase-text{flex:1;min-width:180px;}
+  .showcase-text .big{font-family:'Baloo 2',cursive;font-size:18px;font-weight:700;margin-bottom:4px;}
+  .showcase-text .small{font-size:14px;color:#8A8399;font-weight:700;}
+
+  /* ---------- Quiz ---------- */
+  .quiz-box{
+    background:var(--paper);
+    border-radius:28px;
+    padding:28px 22px;
+    box-shadow:0 8px 0 rgba(58,51,88,.08);
+    position:relative;
+  }
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+  .progress-label{font-weight:800;color:#8A8399;font-size:14px;}
+  .stars{font-family:'Baloo 2',cursive;font-weight:700;font-size:18px;color:var(--coral);}
+  .quiz-monster{width:110px;height:110px;margin:0 auto 18px;}
+  .quiz-sentence{
+    text-align:center;
+    font-family:'Baloo 2',cursive;
+    font-size:clamp(19px,4.5vw,25px);
+    font-weight:700;
+    margin-bottom:26px;
+    line-height:1.4;
+  }
+  .quiz-sentence .blank{
+    display:inline-block;
+    min-width:110px;
+    border-bottom:4px dashed var(--purple);
+    color:var(--purple);
+  }
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .opt-btn{
+    font-family:'Baloo 2',cursive;
+    font-size:18px;
+    font-weight:700;
+    padding:16px 10px;
+    border-radius:18px;
+    border:none;
+    background:var(--bg);
+    color:var(--ink);
+    cursor:pointer;
+    box-shadow:0 4px 0 rgba(58,51,88,.12);
+    transition:transform .08s ease;
+  }
+  .opt-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(58,51,88,.12);}
+  .opt-btn.correct{background:var(--green);color:#fff;box-shadow:0 4px 0 #2f8a5c;}
+  .opt-btn.wrong{background:var(--coral);color:#fff;box-shadow:0 4px 0 #d85a3f;}
+  .opt-btn:disabled{cursor:default;}
+  .feedback{
+    text-align:center;
+    margin-top:18px;
+    font-weight:800;
+    font-size:16px;
+    min-height:26px;
+  }
+  .feedback.ok{color:var(--green);}
+  .feedback.bad{color:var(--coral);}
+  .next-btn{
+    display:block;
+    margin:18px auto 0;
+    font-family:'Baloo 2',cursive;
+    font-size:16px;
+    font-weight:700;
+    padding:12px 30px;
+    border-radius:16px;
+    border:none;
+    background:var(--purple);
+    color:#fff;
+    cursor:pointer;
+    box-shadow:0 4px 0 #6a5fb8;
+    display:none;
+  }
+  .next-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #6a5fb8;}
+
+  .finish-screen{text-align:center;display:none;}
+  .finish-screen .headline{font-size:26px;font-weight:800;margin-bottom:8px;}
+  .finish-screen .score{font-family:'Baloo 2',cursive;font-size:42px;font-weight:800;color:var(--coral);margin:12px 0;}
+  .restart-btn{
+    font-family:'Baloo 2',cursive;
+    font-size:16px;
+    font-weight:700;
+    padding:14px 32px;
+    border-radius:16px;
+    border:none;
+    background:var(--green);
+    color:#fff;
+    cursor:pointer;
+    box-shadow:0 4px 0 #2f8a5c;
+    margin-top:10px;
+  }
+  .restart-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #2f8a5c;}
+
+  footer{text-align:center;padding:20px;color:#B7B0C4;font-weight:700;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="monster-wrap" id="heroMonster"></div>
+  <h1>Монстрик і слова<br>Have got / Has got</h1>
+  <p>Дізнаємось, коли казати HAVE, а коли HAS — разом з веселим монстриком!</p>
+</div>
+
+<section id="rules">
+  <div class="section-title">Правило</div>
+  <div class="section-sub">Хто HAVE, а хто HAS?</div>
+  <div class="rule-cards">
+    <div class="rule-card pos">
+      <span class="tag">Так, є!</span>
+      <div class="who">I / You / We / They</div>
+      <div class="form">have got 🟢</div>
+      <div class="ex">I <b>have got</b> a bike.<br>They <b>have got</b> two cats.</div>
+    </div>
+    <div class="rule-card pos" style="border-color:var(--purple)">
+      <span class="tag" style="background:var(--purple)">Так, є!</span>
+      <div class="who">He / She / It</div>
+      <div class="form">has got 🟣</div>
+      <div class="ex">She <b>has got</b> a doll.<br>The monster <b>has got</b> 3 eyes!</div>
+    </div>
+    <div class="rule-card neg">
+      <span class="tag">Ні, немає!</span>
+      <div class="who">He / She / It</div>
+      <div class="form">hasn't got 🔴</div>
+      <div class="ex">He <b>hasn't got</b> a hat.<br>It <b>hasn't got</b> wings.</div>
+    </div>
+  </div>
+
+  <div class="showcase">
+    <div class="mini-monster" id="showMonster1"></div>
+    <div class="showcase-text">
+      <div class="big">The monster has got horns and spots!</div>
+      <div class="small">Монстрик HAS GOT (має) роги та плями</div>
+    </div>
+  </div>
+  <div class="showcase">
+    <div class="mini-monster" id="showMonster2"></div>
+    <div class="showcase-text">
+      <div class="big">The monster hasn't got wings.</div>
+      <div class="small">Монстрик HASN'T GOT (не має) крил</div>
+    </div>
+  </div>
+</section>
+
+<section id="quiz">
+  <div class="section-title">Твоя черга!</div>
+  <div class="section-sub">Обери правильне слово</div>
+
+  <div class="quiz-box" id="quizBox">
+    <div class="quiz-top">
+      <span class="progress-label" id="progressLabel">Питання 1 з 8</span>
+      <span class="stars" id="starsLabel">⭐ 0</span>
+    </div>
+    <div class="quiz-monster" id="quizMonster"></div>
+    <div class="quiz-sentence" id="quizSentence"></div>
+    <div class="options" id="quizOptions"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn">Далі →</button>
+  </div>
+
+  <div class="finish-screen" id="finishScreen">
+    <div class="monster-wrap" id="finishMonster" style="width:150px;height:150px"></div>
+    <div class="headline" id="finishHeadline">Молодець!</div>
+    <div class="score" id="finishScore">0 / 8</div>
+    <div id="finishMsg" style="font-weight:700;color:#8A8399"></div>
+    <button class="restart-btn" onclick="restartQuiz()">Спробувати ще раз</button>
+  </div>
+</section>
+
+<footer>Зроблено з 💛 для вивчення англійської</footer>
+
+<script>
+/* ---------------------------------------------------------
+   Monster SVG builder — draws a friendly blob monster whose
+   features (horns / wings / spots / eyes) can be toggled on
+   or off, so the SAME character can visually demonstrate
+   "has got" (feature shown) vs "hasn't got" (feature hidden).
+--------------------------------------------------------- */
+function monsterSVG(opts){
+  opts = Object.assign({horns:true, wings:false, spots:true, eyes:2, color:'#5FD3C4'}, opts);
+  const dark = '#3FB5A6';
+  let s = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">`;
+
+  // wings (drawn behind body)
+  if(opts.wings){
+    s += `<ellipse cx="35" cy="110" rx="26" ry="40" fill="#FFD976" transform="rotate(-20 35 110)"/>`;
+    s += `<ellipse cx="165" cy="110" rx="26" ry="40" fill="#FFD976" transform="rotate(20 165 110)"/>`;
+  }
+
+  // horns (behind body, poking up)
+  if(opts.horns){
+    s += `<path d="M70 55 L60 15 L85 50 Z" fill="${opts.color}" stroke="${dark}" stroke-width="4" stroke-linejoin="round"/>`;
+    s += `<path d="M130 55 L140 15 L115 50 Z" fill="${opts.color}" stroke="${dark}" stroke-width="4" stroke-linejoin="round"/>`;
+  }
+
+  // body
+  s += `<ellipse cx="100" cy="120" rx="72" ry="66" fill="${opts.color}" stroke="${dark}" stroke-width="5"/>`;
+
+  // spots
+  if(opts.spots){
+    s += `<circle cx="60" cy="140" r="9" fill="${dark}" opacity=".55"/>`;
+    s += `<circle cx="145" cy="150" r="7" fill="${dark}" opacity=".55"/>`;
+    s += `<circle cx="120" cy="165" r="6" fill="${dark}" opacity=".55"/>`;
+  }
+
+  // belly
+  s += `<ellipse cx="100" cy="140" rx="38" ry="30" fill="#FFF8E7" opacity=".9"/>`;
+
+  // eyes
+  if(opts.eyes >= 1){
+    s += `<circle cx="80" cy="105" r="16" fill="#fff"/><circle cx="80" cy="107" r="8" fill="#3A3358"/>`;
+  }
+  if(opts.eyes >= 2){
+    s += `<circle cx="120" cy="105" r="16" fill="#fff"/><circle cx="120" cy="107" r="8" fill="#3A3358"/>`;
+  }
+  if(opts.eyes >= 3){
+    s += `<circle cx="100" cy="80" r="13" fill="#fff"/><circle cx="100" cy="82" r="7" fill="#3A3358"/>`;
+  }
+
+  // mouth (happy)
+  s += `<path d="M82 148 Q100 165 118 148" fill="none" stroke="#3A3358" stroke-width="5" stroke-linecap="round"/>`;
+
+  // little feet
+  s += `<ellipse cx="75" cy="185" rx="14" ry="8" fill="${dark}"/><ellipse cx="125" cy="185" rx="14" ry="8" fill="${dark}"/>`;
+
+  s += `</svg>`;
+  return s;
+}
+
+document.getElementById('heroMonster').innerHTML = monsterSVG({horns:true, wings:true, spots:true, eyes:2});
+document.getElementById('showMonster1').innerHTML = monsterSVG({horns:true, wings:false, spots:true, eyes:2, color:'#8B7FD6'});
+document.getElementById('showMonster2').innerHTML = monsterSVG({horns:false, wings:false, spots:true, eyes:2, color:'#FF7A5C'});
+
+/* ---------------------------------------------------------
+   Quiz data — each question shows a monster with specific
+   features (matching the sentence) so the child can SEE the
+   grammar rule in action, not just read it abstractly.
+--------------------------------------------------------- */
+const QUESTIONS = [
+  { sentence: "I ___ got a red ball.", options: ["have","has"], correct: 0, monster: {eyes:2, horns:false, wings:false, spots:false, color:'#5FD3C4'} },
+  { sentence: "She ___ got a big hat.", options: ["have","has"], correct: 1, monster: {eyes:2, horns:false, wings:false, spots:false, color:'#8B7FD6'} },
+  { sentence: "The monster ___ got 3 eyes.", options: ["have","has"], correct: 1, monster: {eyes:3, horns:false, wings:false, spots:false, color:'#FF7A5C'} },
+  { sentence: "They ___ got two dogs.", options: ["have","has"], correct: 0, monster: {eyes:2, horns:true, wings:false, spots:false, color:'#5FD3C4'} },
+  { sentence: "He ___ got a bike.", options: ["has","have"], correct: 0, monster: {eyes:2, horns:false, wings:false, spots:false, color:'#8B7FD6'} },
+  { sentence: "We ___ got a nice house.", options: ["has","have"], correct: 1, monster: {eyes:2, horns:false, wings:true, spots:false, color:'#5FD3C4'} },
+  { sentence: "It ___ got long horns.", options: ["have","has"], correct: 1, monster: {eyes:2, horns:true, wings:false, spots:false, color:'#FF7A5C'} },
+  { sentence: "The monster ___ got wings.", options: ["hasn't","haven't"], correct: 0, monster: {eyes:2, horns:false, wings:false, spots:false, color:'#8B7FD6'} },
+];
+
+let qIndex = 0;
+let stars = 0;
+let answered = false;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function loadQuestion(){
+  answered = false;
+  const q = QUESTIONS[qIndex];
+  document.getElementById('progressLabel').textContent = `Питання ${qIndex+1} з ${QUESTIONS.length}`;
+  document.getElementById('starsLabel').textContent = `⭐ ${stars}`;
+  document.getElementById('quizMonster').innerHTML = monsterSVG(q.monster);
+  document.getElementById('quizSentence').innerHTML = q.sentence.replace('___','<span class="blank">?</span>');
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const optWrap = document.getElementById('quizOptions');
+  optWrap.innerHTML = '';
+  const order = shuffle(q.options.map((opt,i)=>({opt,i})));
+  order.forEach(({opt,i}) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i, btn);
+    optWrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(i, btn){
+  if(answered) return;
+  answered = true;
+  const q = QUESTIONS[qIndex];
+  const allBtns = document.querySelectorAll('.opt-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  if(i === q.correct){
+    btn.classList.add('correct');
+    stars++;
+    document.getElementById('starsLabel').textContent = `⭐ ${stars}`;
+    document.getElementById('feedback').textContent = 'Так! Молодець! 🎉';
+    document.getElementById('feedback').className = 'feedback ok';
+  } else {
+    btn.classList.add('wrong');
+    allBtns.forEach(b => { if(b.textContent === q.options[q.correct]) b.classList.add('correct'); });
+    document.getElementById('feedback').textContent = `Майже! Правильно: "${q.options[q.correct]}"`;
+    document.getElementById('feedback').className = 'feedback bad';
+  }
+  document.getElementById('nextBtn').style.display = 'block';
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  qIndex++;
+  if(qIndex < QUESTIONS.length){
+    loadQuestion();
+  } else {
+    showFinish();
+  }
+};
+
+function showFinish(){
+  document.getElementById('quizBox').style.display = 'none';
+  document.getElementById('finishScreen').style.display = 'block';
+  document.getElementById('finishScore').textContent = `${stars} / ${QUESTIONS.length}`;
+  document.getElementById('finishMonster').innerHTML = monsterSVG({horns:true, wings:true, spots:true, eyes:2, color:'#5FD3C4'});
+  let msg = '';
+  if(stars === QUESTIONS.length) msg = 'Всі відповіді правильні! Ти справжній чемпіон! 🏆';
+  else if(stars >= QUESTIONS.length*0.6) msg = 'Дуже добре! Ще трошки практики — і буде ідеально!';
+  else msg = 'Гарний початок! Спробуй ще раз — вийде ще краще!';
+  document.getElementById('finishMsg').textContent = msg;
+}
+
+function restartQuiz(){
+  qIndex = 0;
+  stars = 0;
+  document.getElementById('finishScreen').style.display = 'none';
+  document.getElementById('quizBox').style.display = 'block';
+  loadQuestion();
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
