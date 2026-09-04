@@ -14121,7 +14121,7 @@ function renderVehiclesPanelList(){
           </div>
           ${(v.owner?.name || v.owner?.phone || v.owner?.inn) ? `
           <div class="veh-row-line2" style="flex:1.4;min-width:0;border-left:1px solid rgba(0,0,0,.06);padding-left:12px">
-            <div onclick="openDocsModal(${v.id})" title="Відкрити документи" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration=''">${v.owner?.name||'—'}</div>
+            <div style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:text">${v.owner?.name||'—'}</div>
             ${(v.owner?.phone || v.owner?.inn) ? `<div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${[v.owner.phone,v.owner.inn?'ІПН '+v.owner.inn:''].filter(Boolean).join(' · ')}</div>` : ''}
           </div>` : ''}
           ${(v.vin || v.sts?.number) ? `
