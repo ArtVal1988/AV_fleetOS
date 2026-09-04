@@ -2764,12 +2764,12 @@ input.dm-pf-val.tel{font-size:14px;}
       <!-- Dual total preview -->
       <div id="bm-dual-total" style="display:none;margin-top:10px">
         <div class="vat-table-row" id="dp-perday-vat-row" style="display:none">
-          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Вартість за 1 добу (без ПДВ)</span>
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">за 1 добу (без ПДВ)</span>
           <span class="vat-orig" id="dp-perday-vat" style="color:#1d4ed8;font-weight:600">—</span>
           <span class="vat-uah" id="dp-perday-vat-uah" style="color:#166534;font-weight:600">—</span>
         </div>
         <div class="vat-table-row" id="dp-net-total-row" style="display:none">
-          <span class="vat-row-label" id="dp-net-total-label">Загалом без ПДВ</span>
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8" id="dp-net-total-label">Загалом (без ПДВ)</span>
           <span class="vat-orig" id="dp-net-total">—</span>
           <span class="vat-uah" id="dp-net-total-uah">—</span>
         </div>
@@ -2781,7 +2781,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-gross-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-tax-row" style="display:none">
-          <span class="vat-row-label">ПДВ (загальна сума)</span>
+          <span class="vat-row-label" style="font-weight:600;color:#1d4ed8">Загальна сума ПДВ</span>
           <span class="vat-orig" id="dp-vat" style="color:#92400e">—</span>
           <span class="vat-uah" id="dp-vat-uah" style="color:#92400e">—</span>
         </div>
@@ -11899,9 +11899,9 @@ function updateVatPreview(){
 
   const toUah = v => !anchorNonUah ? v : (needsConv ? v * exRate : null);
   const toForeign = v => anchorNonUah ? v : null;
-  const fmtU  = v => v !== null ? (isCompany ? fmt2(v) : Math.round(v).toLocaleString('uk-UA')) + ' ₴' : '—';
-  const fmtF  = v => v !== null ? fmt2(v) + ' ' + foreignSym : '—';
-  const fmtO  = v => isCompany ? fmt2(v) : v;
+  const fmtU  = v => v !== null ? (isCompany ? fmtSmart(v) : Math.round(v).toLocaleString('uk-UA')) + ' ₴' : '—';
+  const fmtF  = v => v !== null ? fmtSmart(v) + ' ' + foreignSym : '—';
+  const fmtO  = v => isCompany ? fmtSmart(v) : v;
 
   const rateLabel2 = document.getElementById('bm-rate-label2');
   if(rateLabel2) rateLabel2.textContent = nonUah ? 'Курс' : 'Курс $';
@@ -11909,7 +11909,7 @@ function updateVatPreview(){
   const vatStatusLabelEl = document.getElementById('bm-vat-status-label');
   if(vatStatusLabelEl && isCompany){
     const baseText = isVat ? 'з ПДВ' : 'без ПДВ';
-    const usdEquiv = (isVat && cur==='₴' && exRate>0 && rate>0) ? ` (${fmt2(rate/exRate)} $)` : '';
+    const usdEquiv = (isVat && cur==='₴' && exRate>0 && rate>0) ? ` (${fmtSmart(rate/exRate)} $)` : '';
     vatStatusLabelEl.textContent = baseText + usdEquiv;
   }
 
@@ -11921,7 +11921,7 @@ function updateVatPreview(){
     const foreignVal = toForeign(netPerDay);
     document.getElementById('dp-perday-vat').textContent = foreignVal !== null
       ? (rate ? fmtF(foreignVal) : '—')
-      : (exRate>0 ? '≈ '+fmt2(netPerDay/exRate)+' $' : '—');
+      : (exRate>0 ? '≈ '+fmtSmart(netPerDay/exRate)+' $' : '—');
     document.getElementById('dp-perday-vat-uah').textContent = rate ? fmtU(toUah(netPerDay)) : '—';
   }
 
@@ -11977,17 +11977,17 @@ function updateVatPreview(){
 
   if(dualTotal){ dualTotal.style.display = ''; }
   const dualDaysLabelText = `${days} ${pluralDoba(days)} × ${rate.toLocaleString('uk-UA')} ${cur}`;
-  const usdEquivSuffix = (cur==='₴' && exRate>0) ? ` <span style="color:#1d4ed8">(${fmt2(rate/exRate)} $)</span>` : '';
+  const usdEquivSuffix = (cur==='₴' && exRate>0) ? ` <span style="color:#1d4ed8">(${fmtSmart(rate/exRate)} $)</span>` : '';
   document.getElementById('dual-days-label').innerHTML = dualDaysLabelText + usdEquivSuffix;
   document.getElementById('dual-days-label').style.color = cur==='₴' ? '#166534' : '#1d4ed8';
   document.getElementById('dual-days-label').style.fontWeight = '600';
-  document.getElementById('dp-gross').textContent = toForeign(gross)!==null ? fmtF(toForeign(gross)) : (exRate>0 ? '≈ '+fmt2(gross/exRate)+' $' : '—');
+  document.getElementById('dp-gross').textContent = toForeign(gross)!==null ? fmtF(toForeign(gross)) : (exRate>0 ? '≈ '+fmtSmart(gross/exRate)+' $' : '—');
   document.getElementById('dp-gross-uah').textContent = fmtU(toUah(gross));
 
   const dpTaxRow = document.getElementById('dp-tax-row');
   if(dpTaxRow) dpTaxRow.style.display = isVat ? '' : 'none';
   if(isVat){
-    document.getElementById('dp-vat').textContent = toForeign(vatTotal)!==null ? '+'+fmtF(toForeign(vatTotal)) : (exRate>0 ? '≈ +'+fmt2(vatTotal/exRate)+' $' : '—');
+    document.getElementById('dp-vat').textContent = toForeign(vatTotal)!==null ? '+'+fmtF(toForeign(vatTotal)) : (exRate>0 ? '≈ +'+fmtSmart(vatTotal/exRate)+' $' : '—');
     document.getElementById('dp-vat-uah').textContent = toUah(vatTotal)!==null?'+'+fmtU(toUah(vatTotal)):'—';
   }
   const netTotalRow = document.getElementById('dp-net-total-row');
@@ -11995,19 +11995,19 @@ function updateVatPreview(){
   let grossPerDayForeign = null;
   if(isVat){
     const netTotal = Math.round(netPerDay * days * 100) / 100;
-    document.getElementById('dp-net-total').textContent = toForeign(netTotal)!==null ? fmtF(toForeign(netTotal)) : (exRate>0 ? '≈ '+fmt2(netTotal/exRate)+' $' : '—');
+    document.getElementById('dp-net-total').textContent = toForeign(netTotal)!==null ? fmtF(toForeign(netTotal)) : (exRate>0 ? '≈ '+fmtSmart(netTotal/exRate)+' $' : '—');
     document.getElementById('dp-net-total-uah').textContent = fmtU(toUah(netTotal));
     const netPerDayForeign = toForeign(netPerDay)!==null ? toForeign(netPerDay) : (exRate>0 ? netPerDay/exRate : null);
     const netLabelEl = document.getElementById('dp-net-total-label');
     if(netLabelEl){
       netLabelEl.textContent = (netPerDayForeign!==null)
-        ? `Загалом без ПДВ (${days} ${pluralDoba(days)} × ${fmt2(netPerDayForeign)} ${foreignSym})`
-        : 'Загалом без ПДВ';
+        ? `Загалом (без ПДВ) ${days} ${pluralDoba(days)} × ${fmtSmart(netPerDayForeign)} ${foreignSym}`
+        : 'Загалом (без ПДВ)';
     }
     grossPerDayForeign = toForeign(rate)!==null ? toForeign(rate) : (exRate>0 ? rate/exRate : null);
   }
-  document.getElementById('dp-total-label').textContent = (isVat && grossPerDayForeign!==null)
-    ? `Загалом з ПДВ (${days} ${pluralDoba(days)} × ${fmt2(grossPerDayForeign)} ${foreignSym})`
+  document.getElementById('dp-total-label').innerHTML = (isVat && grossPerDayForeign!==null)
+    ? `Загалом з ПДВ <span style="font-weight:500;color:#002aa0;font-size:10px">(${days} ${pluralDoba(days)} × ${fmtSmart(grossPerDayForeign)} ${foreignSym})</span>`
     : 'Загалом з ПДВ:';
 
   // Послуги (includes Доплата, since it's now a regular toggleable extra) —
@@ -12018,14 +12018,14 @@ function updateVatPreview(){
   const extrasForeignColumn = anchorNonUah ? extrasTotal : null;
   if(dpExtrasRow) dpExtrasRow.style.display = (extrasTotal > 0 || extrasUahNative > 0) ? '' : 'none';
   if(extrasTotal > 0 || extrasUahNative > 0){
-    document.getElementById('dp-extras').textContent = extrasForeignColumn !== null ? fmtF(extrasForeignColumn) : (exRate>0 && extrasUahColumn>0 ? '≈ '+fmt2(extrasUahColumn/exRate)+' $' : '—');
-    document.getElementById('dp-extras-uah').textContent = extrasUahColumn > 0 ? (isCompany?fmt2(extrasUahColumn):Math.round(extrasUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
+    document.getElementById('dp-extras').textContent = extrasForeignColumn !== null ? fmtF(extrasForeignColumn) : (exRate>0 && extrasUahColumn>0 ? '≈ '+fmtSmart(extrasUahColumn/exRate)+' $' : '—');
+    document.getElementById('dp-extras-uah').textContent = extrasUahColumn > 0 ? (isCompany?fmtSmart(extrasUahColumn):Math.round(extrasUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
   }
 
   const grandTotalUahColumn = (!anchorNonUah ? (gross+extrasOrigNative) : (needsConv ? (gross+extrasOrigNative) * exRate : 0)) + extrasUahNative;
   const grandTotalForeignColumn = anchorNonUah ? grandTotal : null;
-  document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : (exRate>0 && grandTotalUahColumn>0 ? '≈ '+fmt2(grandTotalUahColumn/exRate)+' $' : '—');
-  document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmt2(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
+  document.getElementById('dp-total').textContent = grandTotalForeignColumn !== null ? fmtF(grandTotalForeignColumn) : (exRate>0 && grandTotalUahColumn>0 ? '≈ '+fmtSmart(grandTotalUahColumn/exRate)+' $' : '—');
+  document.getElementById('dp-total-uah').textContent = grandTotalUahColumn > 0 ? (isCompany?fmtSmart(grandTotalUahColumn):Math.round(grandTotalUahColumn).toLocaleString('uk-UA')) + ' ₴' : '—';
   if(document.getElementById('bm-partial-active')?.checked) updateMainPaymentsUI();
 }
 
