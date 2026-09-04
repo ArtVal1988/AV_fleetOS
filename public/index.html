@@ -2956,11 +2956,11 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
             <div>
               <label class="vf-lbl">З</label>
-              <input type="date" id="bm-sub-from" class="vf-inp custom-dp-trigger" style="height:36px">
+              <input type="date" id="bm-sub-from" class="vf-inp custom-dp-trigger" style="height:36px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)">
             </div>
             <div>
               <label class="vf-lbl">По</label>
-              <input type="date" id="bm-sub-to" class="vf-inp custom-dp-trigger" style="height:36px">
+              <input type="date" id="bm-sub-to" class="vf-inp custom-dp-trigger" style="height:36px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)">
             </div>
             <div>
               <label class="vf-lbl">Ціна</label>
@@ -2995,7 +2995,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
             <div>
               <label class="vf-lbl">Дата</label>
-              <input type="date" id="bm-fine-date" class="vf-inp custom-dp-trigger" style="height:36px">
+              <input type="date" id="bm-fine-date" class="vf-inp custom-dp-trigger" style="height:36px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)">
             </div>
             <div style="flex:1;min-width:140px">
               <label class="vf-lbl">Опис / причина</label>
@@ -3037,11 +3037,11 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
             <div>
               <label class="vf-lbl">З</label>
-              <input type="date" id="bm-repair-from" class="vf-inp custom-dp-trigger" style="height:36px">
+              <input type="date" id="bm-repair-from" class="vf-inp custom-dp-trigger" style="height:36px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)">
             </div>
             <div>
               <label class="vf-lbl">По</label>
-              <input type="date" id="bm-repair-to" class="vf-inp custom-dp-trigger" style="height:36px">
+              <input type="date" id="bm-repair-to" class="vf-inp custom-dp-trigger" style="height:36px" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)">
             </div>
             <div style="flex:1;min-width:140px">
               <label class="vf-lbl">Причина</label>
@@ -3420,7 +3420,9 @@ function openDateDropdown(inputEl, positionEl){
   dd.style.top = Math.max(8,top) + 'px';
 }
 document.addEventListener('mousedown', e => {
-  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target.id!=='bm-pickup-date' && e.target.id!=='bm-return-date' && e.target.id!=='bm-pickup-date-display' && e.target.id!=='bm-return-date-display'){
+  const displayPair = {'bm-pickup-date':'bm-pickup-date-display','bm-return-date':'bm-return-date-display'};
+  const targetDisplayId = _dateDropdownTarget && displayPair[_dateDropdownTarget.id];
+  if(_dateDropdownEl && !e.target.closest('#date-dropdown') && e.target !== _dateDropdownTarget && e.target.id !== targetDisplayId){
     closeDateDropdown();
   }
 });
