@@ -15224,7 +15224,7 @@ function renderCustomDatePickerYearGrid(dp){
     </div>`;
 }
 document.addEventListener('mousedown', e => {
-  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
+  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && e.target !== _customDpInput){
     closeCustomDatePicker();
   }
 }, true);
@@ -15234,7 +15234,7 @@ document.addEventListener('mousedown', e => {
 // mousedown listener alone might miss (e.g. a nearby modal/field stopping
 // propagation on the click itself).
 document.addEventListener('focusin', e => {
-  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && !e.target.closest('.custom-dp-trigger')){
+  if(document.getElementById('custom-dp') && !e.target.closest('#custom-dp') && e.target !== _customDpInput){
     closeCustomDatePicker();
   }
 });
@@ -15287,7 +15287,7 @@ function customTpPick(h, m){
   }
 }
 document.addEventListener('mousedown', e => {
-  if(document.getElementById('custom-tp') && !e.target.closest('#custom-tp') && !e.target.closest('.custom-tp-trigger')){
+  if(document.getElementById('custom-tp') && !e.target.closest('#custom-tp') && e.target !== _customTpInput){
     closeCustomTimePicker();
   }
 });
@@ -15303,16 +15303,7 @@ document.addEventListener('click', e => {
   e.preventDefault();
   popup.style.display = 'none';
 }, true);
-document.addEventListener('mousedown', e => {
-  const active = document.activeElement;
-  if(active && active.tagName === 'INPUT' && active.type === 'date' && active !== e.target){
-    const target = e.target.closest('input, select, textarea, button, [tabindex]');
-    if(target && target !== active && typeof target.focus === 'function'){
-      active.blur();
-      setTimeout(()=>target.focus(), 0);
-    }
-  }
-}, true);
+
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if(document.getElementById('attach-viewer')?.classList.contains('open')) return; // handled by the viewer's own Escape listener
