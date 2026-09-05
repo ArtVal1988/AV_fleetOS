@@ -15388,6 +15388,11 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if(document.getElementById('attach-viewer')?.classList.contains('open')) return; // handled by the viewer's own Escape listener
+  // z-index 800 — custom date-picker calendar, appended directly to
+  // document.body (outside any modal's own DOM tree) and can appear on
+  // top of literally anything else that's open — must be checked first,
+  // or it's left visually orphaned even after its parent panel closes.
+  if(document.getElementById('date-dropdown')){ closeDateDropdown(); return; }
   // Priority chain: only the topmost/most specific thing that's actually
   // open should close on a single Escape press — checking each with a
   // plain if() (no else) would close EVERYTHING simultaneously whenever
