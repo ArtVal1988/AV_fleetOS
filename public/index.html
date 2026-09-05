@@ -3318,14 +3318,71 @@ let _timeDropdownTarget = null;
 let _dateDropdownEl = null;
 let _dateDropdownTarget = null;
 let _dateDropdownViewY = 0, _dateDropdownViewM = 0;
+let _dateDropdownMode = 'day';
+let _dateDropdownDecadeStart = 0;
 function closeDateDropdown(){
   if(_dateDropdownEl){ _dateDropdownEl.remove(); _dateDropdownEl = null; }
   _dateDropdownTarget = null;
 }
+function showDateDropdownMonthView(){
+  _dateDropdownMode = 'month';
+  renderDateDropdown();
+}
+function showDateDropdownYearView(){
+  _dateDropdownMode = 'year';
+  _dateDropdownDecadeStart = Math.floor(_dateDropdownViewY / 12) * 12;
+  renderDateDropdown();
+}
+function pickDateDropdownMonth(m){
+  _dateDropdownViewM = m;
+  _dateDropdownMode = 'day';
+  renderDateDropdown();
+}
+function pickDateDropdownYear(y){
+  _dateDropdownViewY = y;
+  _dateDropdownMode = 'month';
+  renderDateDropdown();
+}
+function shiftDateDropdownDecade(delta){
+  _dateDropdownDecadeStart += delta*12;
+  renderDateDropdown();
+}
 function renderDateDropdown(){
   if(!_dateDropdownEl) return;
   const MONTHS_UK=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+  const MONTHS_SHORT=['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
   const y = _dateDropdownViewY, m = _dateDropdownViewM;
+  if(_dateDropdownMode === 'month'){
+    let cellsHtml = '';
+    for(let mi=0; mi<12; mi++){
+      const isCur = mi === m;
+      cellsHtml += `<button type="button" style="padding:10px 4px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-weight:${isCur?'700':'500'};background:${isCur?'#2563eb':'#f7f8fb'};color:${isCur?'#fff':'#1a1d26'}" onmouseover="if(!${isCur})this.style.background='#eef1f6'" onmouseout="if(!${isCur})this.style.background='#f7f8fb'" onclick="event.stopPropagation();pickDateDropdownMonth(${mi})">${MONTHS_SHORT[mi]}</button>`;
+    }
+    _dateDropdownEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #f0f2f5">
+        <button type="button" onclick="event.stopPropagation();_dateDropdownViewY--;renderDateDropdown()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">‹</button>
+        <span style="font-size:12px;font-weight:700;color:#1a1d26;cursor:pointer;padding:2px 8px;border-radius:5px" onclick="event.stopPropagation();showDateDropdownYearView()" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='transparent'">${y}</span>
+        <button type="button" onclick="event.stopPropagation();_dateDropdownViewY++;renderDateDropdown()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:10px">${cellsHtml}</div>`;
+    return;
+  }
+  if(_dateDropdownMode === 'year'){
+    let cellsHtml = '';
+    for(let i=0; i<12; i++){
+      const yr = _dateDropdownDecadeStart + i;
+      const isCur = yr === y;
+      cellsHtml += `<button type="button" style="padding:10px 4px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-weight:${isCur?'700':'500'};background:${isCur?'#2563eb':'#f7f8fb'};color:${isCur?'#fff':'#1a1d26'}" onmouseover="if(!${isCur})this.style.background='#eef1f6'" onmouseout="if(!${isCur})this.style.background='#f7f8fb'" onclick="event.stopPropagation();pickDateDropdownYear(${yr})">${yr}</button>`;
+    }
+    _dateDropdownEl.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #f0f2f5">
+        <button type="button" onclick="event.stopPropagation();shiftDateDropdownDecade(-1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">‹</button>
+        <span style="font-size:12px;font-weight:700;color:#1a1d26">${_dateDropdownDecadeStart} - ${_dateDropdownDecadeStart+11}</span>
+        <button type="button" onclick="event.stopPropagation();shiftDateDropdownDecade(1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:10px">${cellsHtml}</div>`;
+    return;
+  }
   const selVal = _dateDropdownTarget.value; // YYYY-MM-DD
   const todayVal = dStr(today.getFullYear(), today.getMonth(), today.getDate());
   const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // Monday-first
@@ -3341,7 +3398,7 @@ function renderDateDropdown(){
   _dateDropdownEl.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #f0f2f5">
       <button type="button" onclick="event.stopPropagation();shiftDateDropdownMonth(-1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">‹</button>
-      <span style="font-size:12px;font-weight:700;color:#1a1d26">${MONTHS_UK[m]} ${y}</span>
+      <span style="font-size:12px;font-weight:700;color:#1a1d26;cursor:pointer;padding:2px 8px;border-radius:5px" onclick="event.stopPropagation();showDateDropdownMonthView()" onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='transparent'">${MONTHS_UK[m]} ${y}</span>
       <button type="button" onclick="event.stopPropagation();shiftDateDropdownMonth(1)" style="background:none;border:none;cursor:pointer;font-size:13px;color:#6b7280;padding:2px 6px">›</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:6px 8px 2px;font-size:10px;color:#9ca3af;text-align:center;font-weight:700">
@@ -3406,6 +3463,7 @@ function openDateDropdown(inputEl, positionEl){
   const base = inputEl.value ? new Date(inputEl.value+'T00:00:00') : new Date(today);
   _dateDropdownViewY = base.getFullYear();
   _dateDropdownViewM = base.getMonth();
+  _dateDropdownMode = 'day';
   const dd = document.createElement('div');
   dd.id = 'date-dropdown';
   dd.style.cssText = 'position:fixed;z-index:800;background:#fff;border:1px solid #d8dbe2;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);width:230px;font-family:inherit;';
