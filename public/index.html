@@ -3637,6 +3637,27 @@ function syncDateFieldsReadonlyForViewport(){
 }
 window.addEventListener('resize', syncDateFieldsReadonlyForViewport);
 syncDateFieldsReadonlyForViewport();
+function syncOtherDpTriggersReadonlyForViewport(root){
+  const mobile = isMobileViewport();
+  (root || document).querySelectorAll('input[type="date"].custom-dp-trigger').forEach(el => {
+    if(el.id === 'bm-pickup-date' || el.id === 'bm-return-date') return; // handled separately above
+    el.readOnly = !mobile;
+  });
+}
+window.addEventListener('resize', () => syncOtherDpTriggersReadonlyForViewport());
+syncOtherDpTriggersReadonlyForViewport();
+new MutationObserver(mutations => {
+  for(const mut of mutations){
+    for(const node of mut.addedNodes){
+      if(node.nodeType !== 1) continue;
+      if(node.matches && node.matches('input[type="date"].custom-dp-trigger')){
+        syncOtherDpTriggersReadonlyForViewport(node.parentNode);
+      } else if(node.querySelector && node.querySelector('input[type="date"].custom-dp-trigger')){
+        syncOtherDpTriggersReadonlyForViewport(node);
+      }
+    }
+  }
+}).observe(document.body, {childList:true, subtree:true});
 function dStr(y,m,d){return`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
 function colDate(d){const dt=new Date(Date.UTC(viewStartDate.getFullYear(), viewStartDate.getMonth(), viewStartDate.getDate()));dt.setUTCDate(dt.getUTCDate()+(d-1));return dt;}
 function colDateStr(d){const dt=colDate(d);return dStr(dt.getFullYear(),dt.getMonth(),dt.getDate());}
