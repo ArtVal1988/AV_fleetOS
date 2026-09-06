@@ -2506,7 +2506,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <div class="modal-overlay" id="booking-modal">
 <div class="modal">
   <div class="modal-head">
-    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="updateKmDiff()"></select>
+    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="updateKmDiff();updatePartnerPercentVisibility()"></select>
     <div style="display:flex;align-items:center;gap:8px">
       <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af"><span class="bmc-full">TopRent</span><span class="bmc-short">TR</span></button>
       <div class="modal-title" id="bm-title">Замовлення</div>
@@ -2719,6 +2719,10 @@ input.dm-pf-val.tel{font-size:14px;}
             <button type="button" id="fin-cur-btn-uah" class="dep-cur-pill" onclick="setFinCurrency('₴')">₴</button>
             <span id="bm-vat-status-label" style="display:none;font-size:10px;font-weight:700;color:#0891b2;padding:0 6px;white-space:nowrap">без ПДВ</span>
           </div>
+        </div>
+        <div class="fin-field fin-label-style" id="bm-company-percent-field" style="display:none;flex:0 0 60px">
+          <label style="white-space:nowrap;text-align:center;width:100%" title="Відсоток від вартості, що належить компанії — решта належить власнику авто-партнера">% Компанії</label>
+          <input type="text" inputmode="decimal" id="bm-company-percent" placeholder="—" style="width:60px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
         </div>
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
@@ -3824,7 +3828,8 @@ function getPaidThroughDate(b){
 function resolveBookingDaySegments(b, nextVehicleBookingStart){
   const nightsBetween = (from, to) => Math.round((new Date(to) - new Date(from)) / 86400000);
   const isCompanyClient = !!(b.clientType && b.clientType !== 'individual');
-  const baseRate = isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || b.rate);
+  const companyPercentFactor = (!isCompanyClient && b.companyPercent > 0) ? (b.companyPercent/100) : 1;
+  const baseRate = (isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || b.rate)) * companyPercentFactor;
   const usedBaseRateExcel = isCompanyClient || !!b.baseRateExcel;
   const history = (b.extensionHistory || []).slice().sort((a,c)=>(a.fromDate||'').localeCompare(c.fromDate||''));
   // b.end doesn't reliably represent the base period's own (pre-extension)
@@ -3839,14 +3844,14 @@ function resolveBookingDaySegments(b, nextVehicleBookingStart){
   const chain = [{ isBase:true, fromDate: b.start, toDate: baseToDate, rate: baseRate, currency: usedBaseRateExcel ? '$' : b.currency, exchangeRate: usedBaseRateExcel ? null : b.exchangeRate, days: (b.daysOverride>0 && !baseWasShortened) ? b.daysOverride : null, usedBaseRateExcel }];
   for(const h of history){
     const effectiveFrom = h.fromDate === prevEnd ? addOneDayStr(h.fromDate) : h.fromDate;
-    const hRate = isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || h.rate);
+    const hRate = (isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || h.rate)) * companyPercentFactor;
     chain.push({ isBase:false, fromDate: effectiveFrom, toDate: h.toDate, rate: hRate, currency: usedBaseRateExcel ? '$' : h.currency, exchangeRate: usedBaseRateExcel ? null : (h.totalExchangeRate||h.exchangeRate), days: h.days>0 ? h.days : null, usedBaseRateExcel });
     prevEnd = h.toDate;
   }
   if(b.extension && b.extension.active){
     const ext = b.extension;
     const effectiveFrom = ext.fromDate === prevEnd ? addOneDayStr(ext.fromDate) : ext.fromDate;
-    const extRate = isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || ext.rate);
+    const extRate = (isCompanyClient ? (b.baseRateExcel || 0) : (b.baseRateExcel || ext.rate)) * companyPercentFactor;
     chain.push({ isBase:false, fromDate: effectiveFrom, toDate: ext.toDate, rate: extRate, currency: usedBaseRateExcel ? '$' : ext.currency, exchangeRate: usedBaseRateExcel ? null : (ext.totalExchangeRate||ext.exchangeRate), days: ext.days>0 ? ext.days : null, usedBaseRateExcel });
   }
 
@@ -5319,6 +5324,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-doc-history-btn').style.display='none';
   document.getElementById('bm-edit-history-btn').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=(vid?'':'<option value="" selected disabled>Авто</option>')+ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
+  updatePartnerPercentVisibility();
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>Статус</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateStatusSelectColor();
   updateCompanyToggleVisibility();
@@ -5374,6 +5380,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-company').value='';
   document.getElementById('bm-edrpou').value='';
   document.getElementById('bm-base-rate-excel').value='';
+  document.getElementById('bm-company-percent').value='';
   document.getElementById('bm-rate-comment').value='';
   document.getElementById('bm-rate-comment-wrap').style.display='none';
   document.getElementById('bm-exchange-rate').value='';
@@ -5426,6 +5433,7 @@ function editBooking(bid){
   document.getElementById('bm-edit-history-btn').style.display='';
   document.getElementById('bm-edit-history-panel').style.display='none';
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===b.vehicleId?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
+  updatePartnerPercentVisibility();
   document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}"${s.key===b.status?'selected':''} style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
   updateCompanyToggleVisibility();
   updateBookingModalTitle(b.status);
@@ -5442,6 +5450,7 @@ function editBooking(bid){
   document.getElementById('bm-company').value=b.customer?.company||'';
   document.getElementById('bm-edrpou').value=b.customer?.edrpou||'';
   document.getElementById('bm-base-rate-excel').value=b.baseRateExcel||'';
+  document.getElementById('bm-company-percent').value=b.companyPercent||'';
   document.getElementById('bm-rate-comment').value=b.rateComment||'';
   document.getElementById('bm-rate-comment-wrap').style.display=b.rateComment?'block':'none';
   document.getElementById('bm-exchange-rate').value=b.exchangeRate||'';
@@ -5814,6 +5823,7 @@ function saveBooking(){
     vatRate:(()=>{const t=document.getElementById('bm-client-type').value;return(t==='fop'||t==='tov')?DEFAULT_VAT_RATE:0;})(),
     hasVatExempt: document.getElementById('bm-client-type').value === 'fop_no_vat',
     baseRateExcel: parseThousands(document.getElementById('bm-base-rate-excel').value) || null,
+    companyPercent: parseThousands(document.getElementById('bm-company-percent').value) || null,
     rateComment: document.getElementById('bm-rate-comment').value.trim() || null,
     exchangeRate: parseFloat((document.getElementById('bm-exchange-rate').value||'').replace(',','.'))||0,
     pickup:{date:document.getElementById('bm-pickup-date').value,time:document.getElementById('bm-pickup-time').value,loc:document.getElementById('bm-pickup-loc').value.trim()},
@@ -11246,6 +11256,15 @@ function updateClientTypeLock(lock){
     btn.title = '';
   });
 }
+function updatePartnerPercentVisibility(){
+  const type = document.getElementById('bm-client-type').value;
+  const isIndividual = type === 'individual';
+  const vid = parseInt(document.getElementById('bm-vehicle').value) || null;
+  const vehicle = ALL_VEHICLES.find(v => v.id === vid);
+  const isPartnerVehicle = !!(vehicle && (vehicle.category||'').toLowerCase() === 'партнери');
+  const field = document.getElementById('bm-company-percent-field');
+  if(field) field.style.display = (isIndividual && isPartnerVehicle) ? '' : 'none';
+}
 function setClientType(type, isUserAction = true){
   document.getElementById('bm-client-type').value = type;
   // 'tov' still exists as a legacy stored value on old bookings — the
@@ -11255,6 +11274,7 @@ function setClientType(type, isUserAction = true){
   const isCompany = type !== 'individual';    // показати поля компанії
   const isVat     = type === 'fop' || type === 'tov'; // показати ПДВ
   document.getElementById('bm-rate-row')?.closest('.fin-row')?.classList.toggle('company-fin-order', isCompany);
+  updatePartnerPercentVisibility();
 
   // За замовчуванням ФОП/ТОВ рахують у гривні — перемикаємо валюту автоматично,
   // але ЛИШЕ якщо ставку ще не вписано (щоб не зачепити вже введені дані при
