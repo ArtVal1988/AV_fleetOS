@@ -2720,10 +2720,6 @@ input.dm-pf-val.tel{font-size:14px;}
             <span id="bm-vat-status-label" style="display:none;font-size:10px;font-weight:700;color:#0891b2;padding:0 6px;white-space:nowrap">без ПДВ</span>
           </div>
         </div>
-        <div class="fin-field fin-label-style" id="bm-company-percent-field" style="display:none;flex:0 0 60px">
-          <label style="white-space:nowrap;text-align:center;width:100%" title="Відсоток від вартості, що належить компанії — решта належить власнику авто-партнера">% Компанії</label>
-          <input type="text" inputmode="decimal" id="bm-company-percent" placeholder="—" style="width:60px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
-        </div>
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0" id="bm-paymethod-icons-wrap">
@@ -2736,6 +2732,10 @@ input.dm-pf-val.tel{font-size:14px;}
           <label id="bm-rate-label2" style="white-space:nowrap;text-align:center;width:100%">Курс</label>
           <input type="text" inputmode="decimal" id="bm-exchange-rate" placeholder="00,00" style="width:56px;text-align:center;font-size:14px"
             oninput="formatExchangeRateInput(this);updateVatPreview();autoFillRateFromBase()">
+        </div>
+        <div class="fin-field fin-label-style" id="bm-company-percent-field" style="display:none;flex:0 0 60px">
+          <label style="white-space:nowrap;text-align:center;width:100%" title="Відсоток від вартості, що належить компанії — решта належить власнику авто-партнера">% TR</label>
+          <input type="text" inputmode="decimal" id="bm-company-percent" placeholder="—" style="width:60px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
         </div>
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
