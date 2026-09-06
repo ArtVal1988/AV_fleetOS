@@ -7726,6 +7726,7 @@ function toUSD(amount, currency, exchangeRate, fallbackRate){
 }
 let lastReportData = null;
 function openReportPanel(){
+  if(!_currentUser || _currentUser.role !== 'admin'){ alert('Доступ лише для адміністраторів.'); return; }
   document.getElementById('report-panel-overlay').style.display = 'flex';
   const today = new Date();
   const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate() - 29);
@@ -12751,6 +12752,7 @@ async function loadSparePartsFromServer(){
 }
 let insOvKaskoOnly = false;
 function openSettingsHubPanel(){
+  if(!_currentUser || _currentUser.role !== 'admin'){ alert('Доступ лише для адміністраторів.'); return; }
   document.getElementById('settings-hub-panel-overlay').style.display='flex';
 }
 function closeSettingsHubPanel(){
@@ -14103,6 +14105,7 @@ function openBookingModalFromArchive(bookingId){
 // ── ACTIVITY LOG ─────────────────────────────────────────────────
 let ACTIVITY_LOG = [];
 function openActivityLogPanel(){
+  if(!_currentUser || _currentUser.role !== 'admin'){ alert('Доступ лише для адміністраторів.'); return; }
   document.getElementById('activitylog-panel-overlay').style.display='flex';
   loadActivityLog();
 }
