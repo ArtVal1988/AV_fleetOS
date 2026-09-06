@@ -2734,9 +2734,12 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" inputmode="decimal" id="bm-exchange-rate" placeholder="00,00" style="width:56px;text-align:center;font-size:14px"
             oninput="formatExchangeRateInput(this);updateVatPreview();autoFillRateFromBase()">
         </div>
-        <div class="fin-field fin-label-style" id="bm-company-percent-field" style="display:none;flex:0 0 60px">
+        <div class="fin-field fin-label-style" id="bm-company-percent-field" style="display:none;flex:0 0 auto">
           <label style="white-space:nowrap;text-align:center;width:100%" title="Відсоток від вартості, що належить компанії — решта належить власнику авто-партнера">% TR</label>
-          <input type="text" inputmode="decimal" id="bm-company-percent" placeholder="—" style="width:60px;text-align:center;font-size:14px" oninput="formatRateInput(this)">
+          <div class="dep-inline-wrap">
+            <input type="text" inputmode="decimal" id="bm-company-percent" placeholder="—" class="dep-amount-input" style="width:50px;flex:0 0 50px;text-align:center;font-size:14px;padding-left:3px;padding-right:3px" oninput="formatRateInput(this)">
+            <span id="bm-company-percent-cur" style="font-size:12px;font-weight:600;color:#6b7280;padding:0 8px;white-space:nowrap">$</span>
+          </div>
         </div>
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
@@ -11857,6 +11860,8 @@ function onCurrencyChange(){
   if(rateLabel) rateLabel.textContent = 'Курс';
   const rateField = document.getElementById('bm-rate');
   if(rateField) rateField.style.color = curColor(cur);
+  const percentCurEl = document.getElementById('bm-company-percent-cur');
+  if(percentCurEl) percentCurEl.textContent = cur;
   updateExtrasOrigCurLabels();
   updateExtrasTotal();
   updateVatPreview();
