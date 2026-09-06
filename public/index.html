@@ -1645,7 +1645,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- PROFITABILITY REPORT PANEL -->
 <div id="report-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;width:760px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:16px;width:836px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
       <div style="font-size:16px;font-weight:700;color:#1a1d26">📊 Звіт з дохідності</div>
       <button onclick="closeReportPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
@@ -7849,11 +7849,11 @@ function renderReportResults(rows){
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="border-bottom:2px solid #e5e7eb;text-align:left">
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;width:350px">Авто</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Днів в оренді</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Середньодобова вартість</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Валовий дохід</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Прогнозований дохід TR (≈ 30%)</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;width:350px;border-right:1px solid #e2e5eb">Авто</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Днів в оренді</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Середня</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Валовий дохід</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Прогнозований дохід TR (≈ 30%)</th>
         </tr>
       </thead>
       <tbody>
@@ -7867,25 +7867,25 @@ function renderReportResults(rows){
           const trForecast = isPartner ? r.trForecastRaw : (0.30 * r.revenueUSD);
           return `
           <tr style="border-bottom:1px solid #f3f4f6;border-left:4px solid ${catColor};${rowStyle}">
-            <td style="padding:8px 6px">
+            <td style="padding:8px 6px;border-right:1px solid #f0f2f5">
               <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle" title="${cat?.name||''}"></span>
               <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;background:#f0f2f5;border:1px solid #d8dbe2;border-radius:5px;padding:2px 6px;margin-right:6px">${r.v.plate}</span>
               <span style="color:#6b7280">${r.v.name}</span>
             </td>
-            <td style="padding:8px 6px;text-align:center">${Math.round(r.days*100)/100}</td>
-            <td style="padding:8px 6px;text-align:center">${avgDailyRate ? '$'+avgDailyRate.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
-            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenueUSD)}</td>
-            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#1d4ed8">${fmtRevenue(trForecast)}</td>
+            <td style="padding:8px 6px;text-align:center;border-right:1px solid #f0f2f5">${Math.round(r.days*100)/100}</td>
+            <td style="padding:8px 6px;text-align:center;border-right:1px solid #f0f2f5">${avgDailyRate ? '$'+avgDailyRate.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
+            <td style="padding:8px 6px;text-align:center;font-weight:700;color:#166534;border-right:1px solid #f0f2f5">${fmtRevenue(r.revenueUSD)}</td>
+            <td style="padding:8px 6px;text-align:center;font-weight:700;color:#1d4ed8">${fmtRevenue(trForecast)}</td>
           </tr>
         `;}).join('')}
       </tbody>
       <tfoot>
         <tr style="border-top:2px solid #e5e7eb;font-weight:700">
-          <td style="padding:10px 6px">Разом (${rows.length} авто)</td>
-          <td style="padding:10px 6px;text-align:center">${Math.round(totalDays*100)/100}</td>
-          <td style="padding:10px 6px;text-align:center">${(() => { const v = totalDays>0 ? rows.reduce((s,r)=>s+r.revenueUSD,0)/totalDays : 0; return v ? '$'+v.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; })()}</td>
-          <td style="padding:10px 6px;text-align:right;color:#166534">${fmtRevenue(rows.reduce((s,r)=>s+r.revenueUSD,0))}</td>
-          <td style="padding:10px 6px;text-align:right;color:#1d4ed8">${fmtRevenue(rows.reduce((s,r)=>{ const cat = catByVehicleId.get(r.v.id); const isPartner = (cat?.name||'').toLowerCase() === 'партнери'; return s + (isPartner ? r.trForecastRaw : 0.30*r.revenueUSD); },0))}</td>
+          <td style="padding:10px 6px;border-right:1px solid #f0f2f5">Разом (${rows.length} авто)</td>
+          <td style="padding:10px 6px;text-align:center;border-right:1px solid #f0f2f5">${Math.round(totalDays*100)/100}</td>
+          <td style="padding:10px 6px;text-align:center;border-right:1px solid #f0f2f5">${(() => { const v = totalDays>0 ? rows.reduce((s,r)=>s+r.revenueUSD,0)/totalDays : 0; return v ? '$'+v.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; })()}</td>
+          <td style="padding:10px 6px;text-align:center;color:#166534;border-right:1px solid #f0f2f5">${fmtRevenue(rows.reduce((s,r)=>s+r.revenueUSD,0))}</td>
+          <td style="padding:10px 6px;text-align:center;color:#1d4ed8">${fmtRevenue(rows.reduce((s,r)=>{ const cat = catByVehicleId.get(r.v.id); const isPartner = (cat?.name||'').toLowerCase() === 'партнери'; return s + (isPartner ? r.trForecastRaw : 0.30*r.revenueUSD); },0))}</td>
         </tr>
       </tfoot>
     </table>
