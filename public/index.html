@@ -7761,7 +7761,7 @@ function generateProfitabilityReport(){
   // rental activity in the period — the report should reflect the whole
   // fleet, not just vehicles that happened to generate revenue.
   ALL_VEHICLES.forEach(v => {
-    perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:'', countedBookingIds:new Set()});
+    perVehicle.set(v.id, {v, bookingsCount:0, days:0, revenueUSD:0, trForecastRaw:0, statusNote:'', countedBookingIds:new Set()});
   });
   // Substitute vehicles can receive revenue that isn't in ALL_VEHICLES'
   // own fleet listing in edge cases — ensure an entry exists on demand too.
@@ -7769,7 +7769,7 @@ function generateProfitabilityReport(){
     if(perVehicle.has(vehicleId)) return perVehicle.get(vehicleId);
     const v = getVehicle(vehicleId);
     if(!v) return null;
-    const entry = {v, bookingsCount:0, days:0, revenueUSD:0, statusNote:'', countedBookingIds:new Set()};
+    const entry = {v, bookingsCount:0, days:0, revenueUSD:0, trForecastRaw:0, statusNote:'', countedBookingIds:new Set()};
     perVehicle.set(vehicleId, entry);
     return entry;
   }
@@ -7815,6 +7815,7 @@ function generateProfitabilityReport(){
       if(!entry) continue;
       entry.days += info.dayShare;
       entry.revenueUSD += dayRevenue;
+      entry.trForecastRaw += (parseFloat(b.companyPercent) || 0) * info.dayShare;
       entry.countedBookingIds.add(b.id);
     }
   });
@@ -7851,7 +7852,8 @@ function renderReportResults(rows){
           <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;width:350px">Авто</th>
           <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Днів в оренді</th>
           <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Середньодобова вартість</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Дохід за період</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Валовий дохід</th>
+          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:right">Прогнозований дохід TR (≈ 30%)</th>
         </tr>
       </thead>
       <tbody>
@@ -7861,6 +7863,8 @@ function renderReportResults(rows){
           const cat = catByVehicleId.get(r.v.id);
           const catColor = cat?.colorHex || '#d1d5db';
           const avgDailyRate = r.days>0 ? r.revenueUSD/r.days : 0;
+          const isPartner = (cat?.name||'').toLowerCase() === 'партнери';
+          const trForecast = isPartner ? r.trForecastRaw : (0.30 * r.revenueUSD);
           return `
           <tr style="border-bottom:1px solid #f3f4f6;border-left:4px solid ${catColor};${rowStyle}">
             <td style="padding:8px 6px">
@@ -7871,6 +7875,7 @@ function renderReportResults(rows){
             <td style="padding:8px 6px;text-align:center">${Math.round(r.days*100)/100}</td>
             <td style="padding:8px 6px;text-align:center">${avgDailyRate ? '$'+avgDailyRate.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</td>
             <td style="padding:8px 6px;text-align:right;font-weight:700;color:#166534">${fmtRevenue(r.revenueUSD)}</td>
+            <td style="padding:8px 6px;text-align:right;font-weight:700;color:#1d4ed8">${fmtRevenue(trForecast)}</td>
           </tr>
         `;}).join('')}
       </tbody>
@@ -7880,6 +7885,7 @@ function renderReportResults(rows){
           <td style="padding:10px 6px;text-align:center">${Math.round(totalDays*100)/100}</td>
           <td style="padding:10px 6px;text-align:center">${(() => { const v = totalDays>0 ? rows.reduce((s,r)=>s+r.revenueUSD,0)/totalDays : 0; return v ? '$'+v.toLocaleString('uk-UA',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; })()}</td>
           <td style="padding:10px 6px;text-align:right;color:#166534">${fmtRevenue(rows.reduce((s,r)=>s+r.revenueUSD,0))}</td>
+          <td style="padding:10px 6px;text-align:right;color:#1d4ed8">${fmtRevenue(rows.reduce((s,r)=>{ const cat = catByVehicleId.get(r.v.id); const isPartner = (cat?.name||'').toLowerCase() === 'партнери'; return s + (isPartner ? r.trForecastRaw : 0.30*r.revenueUSD); },0))}</td>
         </tr>
       </tfoot>
     </table>
@@ -7891,8 +7897,12 @@ function renderReportResults(rows){
 function exportProfitabilityCSV(){
   if(!lastReportData) return;
   const {rows, fromStr, toStr} = lastReportData;
-  const header = ['Номер','Авто','Днів в оренді','Середньодобова вартість ($)','Дохід ($, еквівалент)'];
-  const csvRows = rows.map(r => [r.v.plate, r.v.name, r.days, Math.round((r.days>0 ? r.revenueUSD/r.days : 0)*100)/100, Math.round(r.revenueUSD)]);
+  const header = ['Номер','Авто','Днів в оренді','Середньодобова вартість ($)','Валовий дохід ($, еквівалент)','Прогнозований дохід TR ($)'];
+  const csvRows = rows.map(r => {
+    const isPartner = (r.v.category||'').toLowerCase() === 'партнери';
+    const trForecast = isPartner ? r.trForecastRaw : (0.30 * r.revenueUSD);
+    return [r.v.plate, r.v.name, r.days, Math.round((r.days>0 ? r.revenueUSD/r.days : 0)*100)/100, Math.round(r.revenueUSD), Math.round(trForecast)];
+  });
   const csv = [header, ...csvRows].map(row => row.map(x=>`"${x}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
