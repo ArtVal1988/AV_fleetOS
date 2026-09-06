@@ -4,10 +4,12 @@ const { auth } = require('./auth');
 const { logActivity } = require('../activityLog');
 
 function vehicleUpdateSummary(before, after) {
+  const plate = (after && after.plate) || (before && before.plate) || '';
+  const prefix = plate ? `${plate} — ` : '';
   if (before && after && before.currentKm !== after.currentKm && after.currentKm != null) {
-    return `Пробіг: ${before.currentKm ?? '—'} → ${after.currentKm} км`;
+    return `${prefix}Пробіг: ${before.currentKm ?? '—'} → ${after.currentKm} км`;
   }
-  return 'Оновлено дані автомобіля';
+  return `${prefix}Оновлено дані автомобіля`;
 }
 
 // GET /api/vehicles — service data for all vehicles
