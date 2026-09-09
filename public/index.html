@@ -8045,7 +8045,12 @@ async function exportProfitabilityStyledXLSX(){
       const isSubstitutedOut = (b.substituteVehicles||[]).some(s => dStr > s.fromDate && dStr <= s.toDate);
       if(isSubstitutedOut) return;
 
-      cell.value = Math.round(toUSD(info.rate, info.currency, info.exchangeRate, fallbackRate) * info.dayShare * 100) / 100;
+      const isPartnerVehicle = (v.category||'').toLowerCase() === 'партнери';
+      if(isPartnerVehicle){
+        cell.value = b.companyPercent > 0 ? b.companyPercent : null;
+      } else {
+        cell.value = Math.round(toUSD(info.rate, info.currency, info.exchangeRate, fallbackRate) * info.dayShare * 100) / 100;
+      }
       cell.alignment = {horizontal:'center'};
       if(info.usedBaseRateExcel){
         cell.font = {bold:true, color:{argb:'FF002AA0'}};
