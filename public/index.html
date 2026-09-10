@@ -6885,8 +6885,17 @@ async function showVehicleSpecs(e, vid){
     // instead of just scrolling within an overflowing-off-screen box.
     // Reuses the SAME captured rect from before the await, rather than
     // re-accessing e.currentTarget (safer against any DOM changes meanwhile).
-    if(!isMobile && popup.dataset.vid == String(vid) && specsPopupRect){
-      repositionSpecsPopupDesktop(popup, specsPopupRect);
+    if(popup.dataset.vid == String(vid)){
+      if(!isMobile && specsPopupRect){
+        repositionSpecsPopupDesktop(popup, specsPopupRect);
+      } else if(isMobile){
+        const stickersBarBottom2 = document.querySelector('.stickers-bar')?.getBoundingClientRect().bottom || 8;
+        const margin2 = 14;
+        const availableTop2 = stickersBarBottom2 + margin2;
+        const availableHeight2 = window.innerHeight - availableTop2 - margin2;
+        const actualHeight2 = Math.min(popup.offsetHeight, availableHeight2);
+        popup.style.top = Math.round(availableTop2 + Math.max(0, (availableHeight2 - actualHeight2) / 2)) + 'px';
+      }
     }
   }
 }
