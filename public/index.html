@@ -1146,6 +1146,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-fines-section{background:#fef2f2!important;border-left-color:#f87171!important;}
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
+.bm-sec-btn.bm-sec-locked{filter:grayscale(.6) opacity(.55);cursor:not-allowed;}
 #bm-sec-btn-ext{background:#ecfdf5;border-color:#6ee7b7;color:#047857}
 #bm-sec-btn-sub{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
 #bm-sec-btn-fine{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
@@ -2526,7 +2527,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af"><span class="bmc-full">RentPlus</span><span class="bmc-short">R+</span></button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor(true);updateCompanyToggleVisibility()"></select>
+      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor(true);updateCompanyToggleVisibility();updateBmSectionAvailability()"></select>
       <button class="modal-x" onclick="closeBookingModal()">✕</button>
     </div>
   </div>
@@ -5342,6 +5343,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-vehicle').innerHTML=(vid?'':'<option value="" selected disabled>Авто</option>')+ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===vid?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   updatePartnerPercentVisibility();
   document.getElementById('bm-status').innerHTML='<option value="" selected disabled>Статус</option>'+STATUSES.map(s=>`<option value="${s.key}" style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
+  updateBmSectionAvailability();
   updateStatusSelectColor();
   updateCompanyToggleVisibility();
   const isGenericCreate = !start && !end;
@@ -5451,6 +5453,7 @@ function editBooking(bid){
   document.getElementById('bm-vehicle').innerHTML=ALL_VEHICLES.map(v=>`<option value="${v.id}"${v.id===b.vehicleId?'selected':''}>${v.plate} · ${stripYear(v.name)}</option>`).join('');
   updatePartnerPercentVisibility();
   document.getElementById('bm-status').innerHTML=STATUSES.map(s=>`<option value="${s.key}"${s.key===b.status?'selected':''} style="color:${s.color}">\u25CF ${s.label}</option>`).join('');
+  updateBmSectionAvailability();
   updateCompanyToggleVisibility();
   updateBookingModalTitle(b.status);
   document.getElementById('bm-start').value=b.start;
@@ -8516,7 +8519,23 @@ function autoOpenBmSectionsWithData(){
   const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
   if(bmDedHasData() !== dedOpen) toggleDedPanel();
 }
+function updateBmSectionAvailability(){
+  const currentStatus = document.getElementById('bm-status')?.value;
+  const isRented = currentStatus === 'rented';
+  ['bm-sec-btn-ext','bm-sec-btn-sub','bm-sec-btn-fine','bm-sec-btn-rep','bm-sec-btn-ded'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('bm-sec-locked', !isRented);
+  });
+  const startKm = document.getElementById('bm-start-km');
+  const endKm = document.getElementById('bm-end-km');
+  if(startKm) startKm.disabled = !isRented;
+  if(endKm) endKm.disabled = !isRented;
+}
 function activateBmSection(id){
+  const currentStatus = document.getElementById('bm-status')?.value;
+  if(currentStatus !== 'rented'){
+    alert('Спочатку встановіть статус "В оренді" — доти ці розділи недоступні.');
+    return;
+  }
   // Close every OTHER section — but never force-close one that already has
   // data in it, only ones that are still empty.
   if(id !== 'sub' && !bmSubHasData() && document.getElementById('bm-substitute-panel')?.style.display !== 'none') toggleSubstituteSection();
