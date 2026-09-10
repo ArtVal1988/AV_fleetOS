@@ -1654,12 +1654,22 @@ input.dm-pf-val.tel{font-size:14px;}
     <div style="padding:20px 28px">
       <div style="display:flex;flex-direction:column;gap:10px;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px">
         <div style="display:flex;align-items:end;gap:10px;flex-wrap:wrap">
-          <div>
+          <div style="position:relative">
             <label class="vf-lbl">Швидкий вибір місяця</label>
             <div class="month-nav" style="width:fit-content">
               <button class="mn-btn" onclick="shiftReportMonth(-1)" title="Попередній місяць">‹</button>
-              <div class="mn-label" id="rep-month-label" style="padding:0 14px;min-width:130px;text-align:center"></div>
+              <div class="mn-label" id="rep-month-label" onclick="toggleRepNavPicker()" title="Оберіть місяць ▾" style="cursor:pointer;user-select:none;padding:0 14px;min-width:130px;text-align:center"></div>
               <button class="mn-btn" onclick="shiftReportMonth(1)" title="Наступний місяць">›</button>
+            </div>
+            <div class="nav-picker" id="rep-nav-picker" style="display:none;min-width:220px">
+              <div class="np-section">
+                <div class="np-year-row">
+                  <button class="np-yr-btn" onclick="shiftRepPickerYear(-1)">‹</button>
+                  <span class="np-year" id="rep-np-year"></span>
+                  <button class="np-yr-btn" onclick="shiftRepPickerYear(1)">›</button>
+                </div>
+                <div class="np-months" id="rep-np-months"></div>
+              </div>
             </div>
           </div>
           <div>
@@ -6265,6 +6275,9 @@ document.addEventListener('click', e => {
   if(navPickerOpen && !e.target.closest('#nav-picker') && !e.target.closest('#mn-label')){
     closeNavPicker();
   }
+  if(repNavPickerOpen && !e.target.closest('#rep-nav-picker') && !e.target.closest('#rep-month-label')){
+    closeRepNavPicker();
+  }
 });
 
 /* ── FILE ATTACHMENTS ── */
@@ -7798,6 +7811,7 @@ function openReportPanel(){
   _repMonthY = today.getFullYear();
   _repMonthM = today.getMonth();
   renderReportMonthLabel();
+  closeRepNavPicker();
 }
 let _repMonthY = 0, _repMonthM = 0;
 const REP_MONTHS_UK = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
@@ -7805,18 +7819,63 @@ function renderReportMonthLabel(){
   const label = document.getElementById('rep-month-label');
   if(label) label.textContent = REP_MONTHS_UK[_repMonthM] + ' ' + _repMonthY;
 }
-function shiftReportMonth(delta){
-  _repMonthM += delta;
-  if(_repMonthM < 0){ _repMonthM = 11; _repMonthY--; }
-  if(_repMonthM > 11){ _repMonthM = 0; _repMonthY++; }
+function setReportMonth(y, m){
+  _repMonthY = y;
+  _repMonthM = m;
   renderReportMonthLabel();
   const pad = n => String(n).padStart(2,'0');
   const lastDay = new Date(_repMonthY, _repMonthM+1, 0).getDate();
   document.getElementById('rep-from').value = `${_repMonthY}-${pad(_repMonthM+1)}-01`;
   document.getElementById('rep-to').value = `${_repMonthY}-${pad(_repMonthM+1)}-${pad(lastDay)}`;
 }
+function shiftReportMonth(delta){
+  let m = _repMonthM + delta, y = _repMonthY;
+  if(m < 0){ m = 11; y--; }
+  if(m > 11){ m = 0; y++; }
+  setReportMonth(y, m);
+}
+// Report month picker (mirrors the main calendar header's nav-picker: click
+// the month label to open a year+month grid and jump straight to a month).
+let repPickerYear = 0, repNavPickerOpen = false;
+function toggleRepNavPicker(){
+  const el = document.getElementById('rep-nav-picker');
+  repNavPickerOpen = !repNavPickerOpen;
+  if(repNavPickerOpen){
+    repPickerYear = _repMonthY;
+    renderRepNavPicker();
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+function closeRepNavPicker(){
+  repNavPickerOpen = false;
+  const el = document.getElementById('rep-nav-picker');
+  if(el) el.style.display = 'none';
+}
+function renderRepNavPicker(){
+  document.getElementById('rep-np-year').textContent = repPickerYear;
+  const SHORT_MONTHS = ['Січ','Лют','Бер','Кві','Тра','Чер','Лип','Сер','Вер','Жов','Лис','Гру'];
+  const td = new Date();
+  const todayM = td.getMonth(), todayY = td.getFullYear();
+  document.getElementById('rep-np-months').innerHTML = SHORT_MONTHS.map((m,i) => {
+    const isCur = repPickerYear === _repMonthY && i === _repMonthM;
+    const isTdy = repPickerYear === todayY && i === todayM;
+    return `<button class="np-month-btn${isCur?' current':isTdy?' today-month':''}"
+      onclick="jumpToReportMonth(${repPickerYear},${i})">${m}</button>`;
+  }).join('');
+}
+function shiftRepPickerYear(dir){
+  repPickerYear += dir;
+  renderRepNavPicker();
+}
+function jumpToReportMonth(y, m){
+  setReportMonth(y, m);
+  closeRepNavPicker();
+}
 function closeReportPanel(){
   document.getElementById('report-panel-overlay').style.display = 'none';
+  closeRepNavPicker();
 }
 function generateProfitabilityReport(){
   const fromStr = document.getElementById('rep-from').value;
