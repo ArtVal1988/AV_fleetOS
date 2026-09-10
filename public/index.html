@@ -6490,6 +6490,42 @@ async function rotateCurrentAttachment(degrees){
     if(btn){ btn.innerHTML = origHtml; btn.disabled = false; }
   }
 }
+async function downloadCurrentAttachment(){
+  const dl = document.getElementById('attach-viewer-download');
+  const url = dl.href;
+  const name = dl.getAttribute('download') || 'file';
+  // Mobile (especially iOS Safari) handles <a download href="data:..."> very
+  // unreliably — it can navigate the page to the raw data URI instead of
+  // downloading, leaving the user stranded on a blank/black screen with no
+  // way back. navigator.share() with a File is the reliable native path —
+  // it includes a proper 'Save to Photos'/'Save to Files' option.
+  if(navigator.share && navigator.canShare){
+    try{
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], name, {type: blob.type || 'application/octet-stream'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:name});
+        return;
+      }
+    }catch(e){
+      if(e.name === 'AbortError') return; // user deliberately cancelled — respect that, don't also trigger the fallback
+      /* genuine failure — fall through to blob-download below */
+    }
+  }
+  try{
+    const blob = await (await fetch(url)).blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+  }catch(e){
+    alert('Не вдалося завантажити файл.');
+  }
+}
 async function shareCurrentAttachment(){
   const dl = document.getElementById('attach-viewer-download');
   const url = dl.href;
@@ -15870,7 +15906,7 @@ function startAutoRefresh(){
       <span class="attach-viewer-name" id="attach-viewer-name"></span>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-left" onclick="rotateCurrentAttachment(-90)" style="display:none">⟲</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-right" onclick="rotateCurrentAttachment(90)" style="display:none">⟳</button>
-      <a class="attach-viewer-btn" id="attach-viewer-download" download>⬇ Завантажити</a>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-download" onclick="downloadCurrentAttachment()">⬇ Завантажити</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-share" onclick="shareCurrentAttachment()">📤 Надіслати</button>
     </div>
   </div>
