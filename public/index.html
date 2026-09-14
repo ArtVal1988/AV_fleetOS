@@ -14121,6 +14121,20 @@ function catRowDrop(e){
 function catRowDragEnd(e){
   catDragSrcIdx = null;
 }
+function moveCategory(idx, dir){
+  // Up/down buttons for reordering category sections — an alternative to
+  // drag-and-drop, which is impractical when a category (e.g. Позашляховики)
+  // has many vehicles and the drop target is far down the scrolled list.
+  const targetIdx = idx + dir;
+  if(targetIdx < 0 || targetIdx >= CATEGORIES.length) return;
+  const [moved] = CATEGORIES.splice(idx, 1);
+  CATEGORIES.splice(targetIdx, 0, moved);
+  // Same persistence pattern as catRowDrop — stamped on every vehicle in
+  // every category, since there's no dedicated categories table.
+  CATEGORIES.forEach((cat,i) => { cat.vehicles.forEach(v => { v.categoryOrder = i; persistVehicle(v); }); });
+  renderVehiclesPanelList();
+  render();
+}
 function onDocFieldSelectChange(sel){
   const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
   const showExtra = sel.value === '__static__' || sel.value === '__path__';
@@ -14406,6 +14420,12 @@ function renderVehiclesPanelList(){
         <span draggable="true" ondragstart="catRowDragStart(event)"
           onmousedown="this.closest('[data-cat-idx]').draggable=true" onmouseup="this.closest('[data-cat-idx]').draggable=false"
           style="cursor:grab;color:#9ca3af;font-size:14px;flex-shrink:0;user-select:none" title="Перетягніть, щоб змінити порядок розділів">⠿</span>
+        <div style="display:flex;flex-direction:column;gap:1px;flex-shrink:0">
+          <button onclick="moveCategory(${CATEGORIES.indexOf(cat)},-1)" ${CATEGORIES.indexOf(cat)===0?'disabled':''} title="Перемістити розділ вгору"
+            style="background:none;border:none;padding:0;margin:0;line-height:1;font-size:11px;color:${CATEGORIES.indexOf(cat)===0?'#d1d5db':'#6b7280'};cursor:${CATEGORIES.indexOf(cat)===0?'default':'pointer'}">▲</button>
+          <button onclick="moveCategory(${CATEGORIES.indexOf(cat)},1)" ${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'disabled':''} title="Перемістити розділ вниз"
+            style="background:none;border:none;padding:0;margin:0;line-height:1;font-size:11px;color:${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'#d1d5db':'#6b7280'};cursor:${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'default':'pointer'}">▼</button>
+        </div>
         <input type="color" value="${cat.colorHex}" onchange="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}',this.value)"
           title="Обрати колір розділу" style="width:22px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;flex-shrink:0">
         <input type="text" value="${cat.name}" onchange="renameVehicleCategory('${cat.name.replace(/'/g,"\\'")}',this.value)"
