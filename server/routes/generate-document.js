@@ -111,6 +111,24 @@ function getExtrasTotal(booking) {
   });
   return total;
 }
+// Same purpose as getExtrasTotal(), but sums every extra straight in ₴ via
+// getExtraFeeUah() instead of getExtraFee(). Use this specifically when
+// building a total that will end up expressed in ₴ (total_amount_uah,
+// debt_amount_uah) — summing getExtrasTotal() (booking-currency amounts)
+// and converting the COMBINED total to ₴ afterward re-introduces the same
+// double-rounding round-trip that getExtraFeeUah() exists to avoid for the
+// single-extra fields, just hidden inside a bigger total. Reported as
+// "30 days × 2025 ₴ + 1500 ₴ pickup fee should be 62 250 ₴, act shows
+// 62 249,85 ₴" — the 0.15 ₴ drift traced back to exactly this.
+function getExtrasTotalUah(booking) {
+  const keys = ['pickup_address', 'pickup_offhours', 'return_address', 'return_offhours'];
+  let total = 0;
+  keys.forEach(k => {
+    const uah = getExtraFeeUah(booking, k);
+    if (uah) total += uah;
+  });
+  return total;
+}
 // Convert a {amount, currency} pair into ₴ using the booking's own
 // exchange rate, regardless of which currency it's already in — for
 // document templates (like acts) that need every amount consistently in
@@ -297,9 +315,10 @@ const FIELD_CATALOG = [
   } },
   { key: 'total_amount_uah', label: 'Загальна вартість оренди + додаткові послуги в грн (конвертовано за курсом замовлення)', get: ctx => {
     const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
-    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
+    const baseAmount = (ctx.booking.rate||0) * days;
     const isUsd = ctx.booking.currency === '$';
-    const uah = isUsd ? total * (Number(ctx.booking.exchangeRate) || 0) : total;
+    const baseUah = isUsd ? baseAmount * (Number(ctx.booking.exchangeRate) || 0) : baseAmount;
+    const uah = baseUah + getExtrasTotalUah(ctx.booking);
     return fmtMoney(Math.round(uah * 100) / 100);
   } },
   { key: 'amount_paid', label: 'Оплачено — сума всіх внесених платежів (з валютою і еквівалентом в $)', get: ctx => {
@@ -329,12 +348,14 @@ const FIELD_CATALOG = [
   } },
   { key: 'debt_amount_uah', label: 'Борг в грн (конвертовано за курсом замовлення)', get: ctx => {
     const days = ctx.booking.daysOverride > 0 ? ctx.booking.daysOverride : countDays(ctx.booking.start, ctx.booking.end);
-    const total = (ctx.booking.rate||0) * days + getExtrasTotal(ctx.booking);
-    const paid = Number(ctx.booking.amountPaid) || 0;
-    const debt = Math.max(0, Math.round((total - paid) * 100) / 100);
+    const baseAmount = (ctx.booking.rate||0) * days;
     const isUsd = ctx.booking.currency === '$';
-    const uah = isUsd ? debt * (Number(ctx.booking.exchangeRate) || 0) : debt;
-    return fmtMoney(Math.round(uah * 100) / 100);
+    const baseUah = isUsd ? baseAmount * (Number(ctx.booking.exchangeRate) || 0) : baseAmount;
+    const totalUah = baseUah + getExtrasTotalUah(ctx.booking);
+    const paid = Number(ctx.booking.amountPaid) || 0;
+    const paidUah = isUsd ? paid * (Number(ctx.booking.exchangeRate) || 0) : paid;
+    const debtUah = Math.max(0, Math.round((totalUah - paidUah) * 100) / 100);
+    return fmtMoney(debtUah);
   } },
   { key: 'deposit', label: 'Сума застави (депозиту) (з валютою і еквівалентом в $)', get: ctx => {
     const deposit = ctx.booking.deposit;
