@@ -4506,11 +4506,21 @@ function showTooltip(e,bid,subContext){
       ? `<div class="tt-divider"></div><div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''} · Офіс</span></div>`
       : `<div class="tt-divider"></div><div class="tt-row"><span class="tt-label">Отримання</span><span class="tt-val">${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</span></div>` +
         `<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.pickup.loc}</div>`;
+  // "Повернення" must match what the calendar grid itself treats as the
+  // booking's last occupied day (getEffectiveEnd — the same function
+  // buildCellMap() uses) — NOT getPaidThroughDate(), which substitutes a
+  // daysOverride-derived date (b.start + daysOverride) that can disagree
+  // with the actual saved return date whenever daysOverride doesn't equal
+  // countDays(b.start,b.end). That mismatch showed up as the tooltip
+  // displaying a return date one day past what the order (and the grid's
+  // own highlighted range) actually has. getEffectiveEnd already folds in
+  // committed extensions/repair-pause shifts, so it stays correct for those
+  // cases too.
   const retRow = isSpecialStatus
     ? ''
     : (!b.ret?.loc || b.ret.loc === BM_DEFAULT_ADDRESS)
-      ? `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(getPaidThroughDate(b))}${b.ret?.time?' · '+b.ret.time:''} · Офіс</span></div>`
-      : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(getPaidThroughDate(b))}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
+      ? `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''} · Офіс</span></div>`
+      : `<div class="tt-row"><span class="tt-label">Повернення</span><span class="tt-val">${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}</span></div>` +
         `<div style="font-size:10px;color:var(--muted);text-align:right;margin:-2px 0 4px">${b.ret.loc}</div>`;
 
   // 4: extras + equipment
