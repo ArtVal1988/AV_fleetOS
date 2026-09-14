@@ -10294,8 +10294,14 @@ function renderInsuranceModal(v){
       '</div>';
     };
     const payRows = paymentType==='quarterly' ?
+      // Grouped into two explicit column-divs (Q1+Q2, then Q3+Q4) rather than
+      // one flat grid of 4 items — a flat 2-column grid auto-flows row-major
+      // (Q1,Q2 on row 1, Q3,Q4 on row 2), which puts Q1/Q3 in the left column
+      // and Q2/Q4 in the right. Grouping like this instead puts Q1/Q2 in the
+      // left column and Q3/Q4 in the right, per request.
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px">' +
-        [1,2,3,4].flatMap(q => payments.filter(p=>p.quarter===q)).map(qRowHtml).join('') +
+        '<div style="display:flex;flex-direction:column;gap:6px">' + [1,2].flatMap(q => payments.filter(p=>p.quarter===q)).map(qRowHtml).join('') + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px">' + [3,4].flatMap(q => payments.filter(p=>p.quarter===q)).map(qRowHtml).join('') + '</div>' +
       '</div>'
       : payments.map(p=>
       '<div class="im-pay-row'+(p.paid?'':' next-pay')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
