@@ -122,6 +122,31 @@ function toUahAlways(feeInfo, booking) {
   if (exRate <= 0) return null;
   return Math.round(feeInfo.amount * exRate * 100) / 100;
 }
+// Same purpose as getExtraFee() + toUahAlways(), but converts the extra's
+// RAW stored price straight to ₴ in a single step, instead of going through
+// getExtraFee()'s own currency conversion first.
+//
+// Bug this avoids: for a ₴-priced extra (e.g. cur:'uah', price:1500) on a
+// $-priced booking, getExtraFee() converts ₴→$ (dividing by exchangeRate,
+// rounded to cents) so it can be added into the booking's own-currency
+// extras total — that's correct for THAT purpose. But feeding that already-
+// rounded $ figure into toUahAlways() converts it $→₴ AGAIN (multiplying by
+// the same exchangeRate, rounded to cents again). Two lossy roundings
+// through a currency round-trip turn an exact 1500 ₴ into something like
+// 1499.85 ₴ on the generated act — reported as "1 500 ₴ on the order shows
+// as 1 499,85 ₴ on the Акт". Converting the raw amount directly (no
+// intermediate currency, at most one rounding) keeps a ₴-priced extra
+// exactly 1500 ₴ regardless of the booking's own currency or exchange rate.
+function getExtraFeeUah(booking, key) {
+  const e = booking.extras?.[key];
+  if (!e || !e.active || !e.price) return null;
+  const rawAmount = e.price * (e.qty || 1);
+  const rawCurrency = e.cur === 'uah' ? '₴' : '$';
+  if (rawCurrency === '₴') return Math.round(rawAmount * 100) / 100;
+  const exRate = Number(booking.exchangeRate) || 0;
+  if (exRate <= 0) return null;
+  return Math.round(rawAmount * exRate * 100) / 100;
+}
 function buildClientLegalDescription(client, fallbackName) {
   if (!client) return fallbackName || '';
   const parts = [client.name || fallbackName || ''];
@@ -198,9 +223,7 @@ const FIELD_CATALOG = [
     return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
   } },
   { key: 'pickup_address_fee_uah', label: 'Тариф «Отримання за адресою» в грн (завжди конвертовано в грн)', get: ctx => {
-    const f = getExtraFee(ctx.booking, 'pickup_address');
-    if (!f) return '';
-    const uah = toUahAlways(f, ctx.booking);
+    const uah = getExtraFeeUah(ctx.booking, 'pickup_address');
     return uah !== null ? fmtMoney(uah) : '';
   } },
   { key: 'return_address_fee', label: 'Тариф «Повернення за адресою»', get: ctx => {
@@ -208,9 +231,7 @@ const FIELD_CATALOG = [
     return f ? `${fmtMoney(f.amount)} ${f.currency}` : '';
   } },
   { key: 'return_address_fee_uah', label: 'Тариф «Повернення за адресою» в грн (завжди конвертовано в грн)', get: ctx => {
-    const f = getExtraFee(ctx.booking, 'return_address');
-    if (!f) return '';
-    const uah = toUahAlways(f, ctx.booking);
+    const uah = getExtraFeeUah(ctx.booking, 'return_address');
     return uah !== null ? fmtMoney(uah) : '';
   } },
   { key: 'offhours_total_fee', label: 'Тариф «Загальний за неробочі години» (отримання + повернення)', get: ctx => {
@@ -227,11 +248,11 @@ const FIELD_CATALOG = [
     return parts.join(' + ');
   } },
   { key: 'offhours_total_fee_uah', label: 'Тариф «Загальний за неробочі години» в грн (завжди конвертовано в грн)', get: ctx => {
-    const pickup = getExtraFee(ctx.booking, 'pickup_offhours');
-    const ret = getExtraFee(ctx.booking, 'return_offhours');
-    if (!pickup && !ret) return '';
-    const pickupUah = pickup ? toUahAlways(pickup, ctx.booking) : 0;
-    const retUah = ret ? toUahAlways(ret, ctx.booking) : 0;
+    const pickupActive = !!(ctx.booking.extras?.pickup_offhours?.active && ctx.booking.extras.pickup_offhours.price);
+    const retActive = !!(ctx.booking.extras?.return_offhours?.active && ctx.booking.extras.return_offhours.price);
+    if (!pickupActive && !retActive) return '';
+    const pickupUah = pickupActive ? getExtraFeeUah(ctx.booking, 'pickup_offhours') : 0;
+    const retUah = retActive ? getExtraFeeUah(ctx.booking, 'return_offhours') : 0;
     if (pickupUah === null || retUah === null) return '';
     return fmtMoney(pickupUah + retUah);
   } },
