@@ -7604,8 +7604,13 @@ function renderDashboard(){
   const realTodayStr = dStr(today.getFullYear(), today.getMonth(), today.getDate());
   const fmtD = s => s ? new Date(s).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
+  // 'Інше' is a catch-all bucket, not a real fleet class — excluded from
+  // every Dashboard section (not just Fleet status) so nothing parked
+  // there shows up in today's activity, alerts, or counts.
+  const otherCatVehicleIds = new Set((CATEGORIES.find(c=>c.name==='Інше')?.vehicles||[]).map(v=>v.id));
+
   // ── 1. Today's activity ──────────────────────────────────────────
-  const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr && !(b.startKm>0));
+  const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr && !(b.startKm>0) && !otherCatVehicleIds.has(b.vehicleId));
   // Substitute-vehicle returns: when a substitution period ends, the
   // client returns THAT vehicle (not necessarily the main booking's own
   // vehicle, which may still be mid-rental) — these don't show up in a
@@ -7614,14 +7619,14 @@ function renderDashboard(){
   const substituteReturns = [];
   bookings.forEach(b => {
     (b.substituteVehicles||[]).forEach(s => {
-      if(s.toDate === todayStr){
+      if(s.toDate === todayStr && !otherCatVehicleIds.has(s.vehicleId)){
         substituteReturns.push(Object.assign({}, b, {vehicleId: s.vehicleId, _isSubReturn: true}));
       }
     });
   });
-  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr && !(b.endKm>0)).concat(substituteReturns);
+  const returnsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && getEffectiveEnd(b)===todayStr && !(b.endKm>0) && !otherCatVehicleIds.has(b.vehicleId)).concat(substituteReturns);
   const overdue = bookings
-    .filter(b => calcBookingDebt(b) > 0)
+    .filter(b => calcBookingDebt(b) > 0 && !otherCatVehicleIds.has(b.vehicleId))
     .sort((a,b2) => calcBookingDebt(b2) - calcBookingDebt(a));
   const dashBookingsWithRate = bookings.filter(b => b.currency==='₴' && parseFloat(b.exchangeRate)>0);
   const dashFallbackRate = dashBookingsWithRate.length
@@ -7646,9 +7651,6 @@ function renderDashboard(){
   if(dateInputEl && dateInputEl.value !== selDate) dateInputEl.value = selDate;
 
   // ── 2. Fleet status ───────────────────────────────────────────────
-  // 'Інше' is a catch-all bucket, not a real fleet class — excluded from
-  // every count in this section so the numbers reflect the actual managed fleet.
-  const otherCatVehicleIds = new Set((CATEGORIES.find(c=>c.name==='Інше')?.vehicles||[]).map(v=>v.id));
   const countedVehicles = ALL_VEHICLES.filter(v => !otherCatVehicleIds.has(v.id));
   const totalVehicles = countedVehicles.length;
   const activeToday = new Set();
@@ -7689,15 +7691,15 @@ function renderDashboard(){
 
   // ── 3. Needs attention ────────────────────────────────────────────
   const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
-  const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
+  const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
   const getKaskoNextPayment = v => {
     const unpaid = (v.kasko?.payments||[]).filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
     return unpaid[0] || (v.kasko?.end ? {date: v.kasko.end, amount: null} : null);
   };
   const getKaskoNextDue = v => getKaskoNextPayment(v)?.date;
-  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
-  const kaskoRenewalSoon = ALL_VEHICLES.filter(v => v.kasko?.end && soon(v.kasko.end, 30)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
-  const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)))
+  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
+  const kaskoRenewalSoon = ALL_VEHICLES.filter(v => v.kasko?.end && soon(v.kasko.end, 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
+  const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)) && !otherCatVehicleIds.has(v.id))
     .sort((a,b) => {
       const leftA = a.service.nextKm-(a.currentKm??a.service.lastKm??0);
       const leftB = b.service.nextKm-(b.currentKm??b.service.lastKm??0);
@@ -7705,7 +7707,7 @@ function renderDashboard(){
     });
   const msPerDay = 86400000;
   const daysSinceKmUpdate = v => v.currentKmDate ? Math.floor((new Date() - new Date(v.currentKmDate)) / msPerDay) : Infinity;
-  const staleKmVehicles = ALL_VEHICLES.filter(v => v.category!=='Архів' && daysSinceKmUpdate(v) > MILEAGE_STALE_DAYS)
+  const staleKmVehicles = ALL_VEHICLES.filter(v => v.category!=='Архів' && daysSinceKmUpdate(v) > MILEAGE_STALE_DAYS && !otherCatVehicleIds.has(v.id))
     .sort((a,b) => daysSinceKmUpdate(b) - daysSinceKmUpdate(a));
 
   const attentionHtml = `
