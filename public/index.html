@@ -9936,6 +9936,14 @@ function setLastServiceKm(vid, value){
   renderToKmBar(v);
   render();
 }
+function setLastServiceDate(vid, value){
+  const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
+  if(!v.service) v.service={};
+  v.service.lastDate = value;
+  persistVehicle(v);
+  renderToKmBar(v);
+  render();
+}
 function renderToKmBar(v){
   const svc = v.service || {};
   const cur  = v.currentKm  ?? svc.lastKm  ?? 0;
@@ -9972,7 +9980,8 @@ function renderToKmBar(v){
     '</div>' +
     '<div class="to-km-track"><div class="to-km-fill" style="width:'+pct+'%;background:'+col+'"></div></div>' +
     '<div class="to-km-meta-row">' +
-      '<div><div class="to-km-meta-lbl">Останнє ТО</div><div class="to-km-meta-val" style="display:flex;align-items:baseline;gap:5px">'+fmtD(lastDate)+
+      '<div><div class="to-km-meta-lbl">Останнє ТО</div><div class="to-km-meta-val" style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap">'+
+        '<input type="date" class="custom-dp-trigger" id="to-km-lastdate-'+v.id+'" value="'+(lastDate||'')+'" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="setLastServiceDate('+v.id+',this.value)" style="font-size:13px;font-weight:700;color:var(--text);border:1px solid #e5e7eb;border-radius:5px;padding:2px 5px;font-family:inherit;background:#fff">'+
         ' · <input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-lastkm-'+v.id+'" value="'+(svc.lastKm?svc.lastKm.toLocaleString('uk-UA'):'')+'" readonly oninput="formatKmInput(this)" onkeydown="if(event.key===\'Enter\')toggleLastKmEdit('+v.id+',this.nextElementSibling.nextElementSibling)"><span style="font-size:11px;color:#6b7280;font-weight:400">км</span><button type="button" id="to-km-lastkm-btn-'+v.id+'" onclick="toggleLastKmEdit('+v.id+',this)" style="background:#2563eb;border:none;border-radius:5px;padding:4px 9px;font-size:13px;cursor:pointer;color:#fff;font-family:inherit;box-shadow:0 1px 3px rgba(37,99,235,.4)">✏</button></div></div>' +
       '<div><div class="to-km-meta-lbl">Інтервал ТО</div>' +
         '<div class="to-km-interval-wrap"><input type="text" inputmode="numeric" class="to-km-interval-input" id="to-km-interval-'+v.id+'" value="'+si.toLocaleString('uk-UA')+'" oninput="formatKmInput(this)" onchange="setServiceInterval('+v.id+',this.value)"><span style="font-size:11px;color:#6b7280">км</span></div>' +
