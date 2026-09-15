@@ -13063,7 +13063,10 @@ function renderInsuranceOverviewPanel(){
   const q = (document.getElementById('ins-ov-search')?.value||'').trim().toLowerCase();
   const matches = v => (!q || v.plate.toLowerCase().includes(q) || v.name.toLowerCase().includes(q)) && (!insOvKaskoOnly || !!v.kasko?.end);
 
-  const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
+  // 'Інше' and 'Партнери' are non-fleet buckets — excluded from the
+  // insurance overview entirely, per request.
+  const insOvExcludedCats = ['Інше', 'Партнери'];
+  const orderedCategories = [...CATEGORIES].filter(c=>!insOvExcludedCats.includes(c.name)).sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
   let rowsHtml = '';
   let kaskoSumTotal = 0, kaskoPremiumTotal = 0;
 
@@ -13164,8 +13167,12 @@ function closeMaintenancePanel(){
 function renderMaintenancePanelList(){
   const q = (document.getElementById('maint-search')?.value||'').trim().toLowerCase();
   const matches = v => !q || v.plate.toLowerCase().includes(q) || v.name.toLowerCase().includes(q);
+  // 'Інше' and 'Партнери' are non-fleet buckets — excluded from the
+  // maintenance overview entirely, per request.
+  const maintExcludedCats = ['Інше', 'Партнери'];
+  const maintExcludedVehicleIds = new Set(CATEGORIES.filter(c=>maintExcludedCats.includes(c.name)).flatMap(c=>c.vehicles).map(v=>v.id));
 
-  const rows = ALL_VEHICLES.filter(matches).map(v => {
+  const rows = ALL_VEHICLES.filter(v => !maintExcludedVehicleIds.has(v.id)).filter(matches).map(v => {
     const svc = v.service || {};
     const cur = v.currentKm ?? svc.lastKm ?? 0;
     const next = v.nextServiceKm ?? svc.nextKm ?? 0;
