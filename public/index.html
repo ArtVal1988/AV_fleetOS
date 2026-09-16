@@ -5646,6 +5646,18 @@ function applyOrderLockState(){
   modal.querySelectorAll('input, select, textarea, button').forEach(el => {
     if(el.matches('.modal-x') || el.matches('[onclick="closeBookingModal()"]')) return;
     if(el.closest('.client-type-switcher') || el.id === 'bm-client-type') return;
+    if(el.id === 'bm-start-km' || el.id === 'bm-end-km'){
+      // These two are governed by updateBmSectionAvailability() (disabled
+      // unless status === 'rented') rather than this blanket lock/unlock —
+      // this loop used to unconditionally set el.disabled = lock for every
+      // field, which for an open (not-closed) order meant lock === false
+      // and force-re-enabled the mileage fields regardless of status,
+      // undoing updateBmSectionAvailability()'s disable. A genuinely
+      // closed order (lock === true) still disables them like everything
+      // else; an open order just leaves whatever status-based state stands.
+      if(lock) el.disabled = true;
+      return;
+    }
     el.disabled = lock;
   });
 
