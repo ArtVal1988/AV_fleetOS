@@ -5916,19 +5916,30 @@ function saveBooking(){
   };
   if(editBid){const idx=bookings.findIndex(b=>b.id===editBid);if(idx!==-1)bookings[idx]={...bookings[idx],...data};}
   else bookings.push({id:nextBid++,...data});
-  // Sync mileage to vehicle — a rental return is NOT a service event, so
-  // this updates only the vehicle's current odometer reading, never
-  // v.service.lastKm/lastDate (those change only when an actual ТО/work
-  // entry is saved in Ремонти).
+  // Sync mileage to vehicle — a rental pickup/return is NOT a service
+  // event, so this only updates the vehicle's current odometer reading
+  // (shown as "Пробіг" in the Ремонти tab), never v.service.lastKm/lastDate
+  // (those change only when an actual ТО/work entry is saved in Ремонти).
+  // Both the pickup (startKm) and return (endKm) figures duplicate into it
+  // — previously only endKm did, so "Пробіг" in Ремонти stayed stale from
+  // the vehicle's last return, ignoring a fresher startKm already entered
+  // at pickup for the current (still open) rental.
   const endKm = parseThousands(document.getElementById('bm-end-km')?.value);
   const startKm = parseThousands(document.getElementById('bm-start-km')?.value);
-  if(endKm>0){
+  const kmCandidates = [
+    {km: startKm, date: document.getElementById('bm-pickup-date')?.value},
+    {km: endKm, date: document.getElementById('bm-return-date')?.value},
+  ].filter(c => c.km > 0);
+  if(kmCandidates.length){
     const veh = ALL_VEHICLES.find(x=>x.id===parseInt(document.getElementById('bm-vehicle')?.value));
     if(veh){
       if(!veh.service) veh.service={};
-      if(endKm>(veh.currentKm||0)){
-        veh.currentKm=endKm;
-        veh.currentKmDate=document.getElementById('bm-return-date')?.value||new Date().toISOString().split('T')[0];
+      // Whichever of the two is the higher reading wins — covers editing a
+      // completed booking where both startKm and endKm are already filled.
+      const best = kmCandidates.reduce((a,b2) => b2.km>a.km ? b2 : a);
+      if(best.km>(veh.currentKm||0)){
+        veh.currentKm=best.km;
+        veh.currentKmDate=best.date||new Date().toISOString().split('T')[0];
         veh.service.status=computeServiceStatus(veh);
         persistVehicle(veh);
       }
