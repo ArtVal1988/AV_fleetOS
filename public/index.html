@@ -2537,7 +2537,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <button type="button" id="bm-company-rentplus" onclick="setOrderCompany('rentplus')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af"><span class="bmc-full">RentPlus</span><span class="bmc-short">R+</span></button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor(true);updateCompanyToggleVisibility();updateBmSectionAvailability()"></select>
+      <select id="bm-status" class="bm-head-select" onchange="updateStatusSelectColor(true);updateCompanyToggleVisibility()"></select>
       <button class="modal-x" onclick="closeBookingModal()">✕</button>
     </div>
   </div>
@@ -11373,11 +11373,22 @@ function updateStatusSelectColor(isUserChange){
   // otherwise every already-rented booking without a recorded start km
   // would have its status silently reset every time it's reopened.
   if(isUserChange && sel.value === 'rented'){
-    const startKm = document.getElementById('bm-start-km')?.value.trim();
+    // The mileage fields are normally locked (via updateBmSectionAvailability)
+    // until the status IS "В оренді" — which would make this requirement
+    // impossible to ever satisfy, since a locked field can't be typed into
+    // in the first place. Unlock bm-start-km right now, on this attempt, so
+    // the operator can actually fill it in.
+    const startKmEl = document.getElementById('bm-start-km');
+    if(startKmEl) startKmEl.disabled = false;
+    const startKm = startKmEl?.value.trim();
     if(!startKm){
       alert('Спочатку вкажіть пробіг на початку оренди — без нього статус "В оренді" встановити не можна.');
       sel.value = sel.dataset.lastValue || '';
-      document.getElementById('bm-start-km')?.focus();
+      startKmEl?.focus();
+      // Deliberately skip updateBmSectionAvailability() here — the status
+      // just reverted, which would otherwise re-lock bm-start-km and
+      // recreate the very deadlock this unlock is meant to avoid. It's left
+      // unlocked so the operator can fill it in, then pick "В оренді" again.
       return;
     }
   }
@@ -11386,6 +11397,7 @@ function updateStatusSelectColor(isUserChange){
   sel.style.color = s ? s.color : '';
   sel.style.fontWeight = '600';
   updateBookingDetailsVisibility();
+  updateBmSectionAvailability();
 }
 // Statuses that don't represent an actual client rental — for these we hide all
 // For repair/investor/storage/personal statuses, the booking isn't a rental
