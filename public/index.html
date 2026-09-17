@@ -5777,6 +5777,15 @@ function saveBooking(){
     errors.push({fields:'bm-deposit', message:'Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)'});
   }
 
+  // Пробіг на початку оренди is required once the status IS "В оренді" —
+  // checked here at save time (not by blocking the status change itself,
+  // which used to deadlock: the field stayed locked until status==='rented',
+  // so it could never already have a value at the moment the status change
+  // was attempted).
+  if(statusVal === 'rented' && !(parseThousands(document.getElementById('bm-start-km')?.value) > 0)){
+    errors.push({fields:'bm-start-km', message:'Вкажіть пробіг на початку оренди — статус замовлення "В оренді"'});
+  }
+
   // Every recorded substitute vehicle period must have its own exchange
   // rate — catches entries saved before this became mandatory, or any
   // other way a period could end up without one, not just the sub-form's
@@ -11379,31 +11388,14 @@ function renderOrderCompanyToggle(){
 function updateStatusSelectColor(isUserChange){
   const sel=document.getElementById('bm-status');
   if(!sel) return;
-  // Require Пробіг на початку оренди before allowing the status to become
-  // "В оренді" — but only when the OPERATOR actively changes it (not when
-  // the form is just loading/displaying an existing booking's status),
-  // otherwise every already-rented booking without a recorded start km
-  // would have its status silently reset every time it's reopened.
-  if(isUserChange && sel.value === 'rented'){
-    // The mileage fields are normally locked (via updateBmSectionAvailability)
-    // until the status IS "В оренді" — which would make this requirement
-    // impossible to ever satisfy, since a locked field can't be typed into
-    // in the first place. Unlock bm-start-km right now, on this attempt, so
-    // the operator can actually fill it in.
-    const startKmEl = document.getElementById('bm-start-km');
-    if(startKmEl) startKmEl.disabled = false;
-    const startKm = startKmEl?.value.trim();
-    if(!startKm){
-      alert('Спочатку вкажіть пробіг на початку оренди — без нього статус "В оренді" встановити не можна.');
-      sel.value = sel.dataset.lastValue || '';
-      startKmEl?.focus();
-      // Deliberately skip updateBmSectionAvailability() here — the status
-      // just reverted, which would otherwise re-lock bm-start-km and
-      // recreate the very deadlock this unlock is meant to avoid. It's left
-      // unlocked so the operator can fill it in, then pick "В оренді" again.
-      return;
-    }
-  }
+  // Пробіг на початку оренди is no longer required just to SET the status
+  // to "В оренді" — that created a deadlock (the field was locked until
+  // status==='rented', but status couldn't become 'rented' without a value
+  // already in the locked field). Requiring it is instead enforced at
+  // saveBooking() time (same collected-errors pattern as every other
+  // required field), so here the status change goes through immediately
+  // and updateBmSectionAvailability() (below) unlocks bm-start-km/bm-end-km
+  // right away for the operator to fill in.
   sel.dataset.lastValue = sel.value;
   const s=SM[sel.value];
   sel.style.color = s ? s.color : '';
