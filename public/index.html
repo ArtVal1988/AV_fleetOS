@@ -5783,7 +5783,7 @@ function saveBooking(){
   // so it could never already have a value at the moment the status change
   // was attempted).
   if(statusVal === 'rented' && !(parseThousands(document.getElementById('bm-start-km')?.value) > 0)){
-    errors.push({fields:'bm-start-km', message:'Вкажіть пробіг на початку оренди — статус замовлення "В оренді"'});
+    errors.push({fields:'bm-start-km', message:'Так як статус було змінено на "В оренді" - необхідно вказати пробіг.'});
   }
 
   // Every recorded substitute vehicle period must have its own exchange
