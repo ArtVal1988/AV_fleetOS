@@ -5357,6 +5357,17 @@ function openBookingModal(vid=null,start=null,end=null){
   if(subPanel0) subPanel0.style.display = 'none';
   if(subIcon0) subIcon0.textContent = '⊕';
   if(subChevron0) subChevron0.style.transform = '';
+  // These panels are static DOM nodes reused across every booking modal open,
+  // so a NEW booking must also force them closed here — otherwise a panel
+  // left open (display:block) by whatever booking was viewed/edited last
+  // (e.g. one with an actual repair pause or fines on it) stays visibly
+  // "active" in the fresh, blank booking form even though it has no data.
+  const finesPanel0 = document.getElementById('bm-fines-panel');
+  if(finesPanel0) finesPanel0.style.display = 'none';
+  const repairPanel0 = document.getElementById('bm-repair-panel');
+  if(repairPanel0) repairPanel0.style.display = 'none';
+  const dedPanel0 = document.getElementById('ded-panel');
+  if(dedPanel0) dedPanel0.style.display = 'none';
 
   editBid=null;
   document.getElementById('bm-title').textContent='Замовлення';
