@@ -8283,15 +8283,22 @@ async function exportProfitabilityStyledXLSX(){
 // Settings → "Перелік авто" — a single-column Excel export of every vehicle
 // in the fleet, grouped by category (in the same order/rows as the
 // Автомобілі panel) with each group tinted a light shade of that category's
-// own colorHex, matching the reference template provided by the operator:
-// header "Автомобіль", one blank row between groups, plate numbers only.
+// own colorHex. Styling (fonts, fills, borders, alignment, column widths,
+// row heights) is reverse-engineered cell-by-cell from the exact reference
+// .xlsx the operator provided, so the output matches it precisely — only
+// the plate numbers/grouping are pulled live from CATEGORIES instead of
+// being that one static sample.
 async function exportVehiclesListXLSX(){
   if(typeof ExcelJS === 'undefined'){ alert('Бібліотека Excel ще завантажується, спробуйте за кілька секунд.'); return; }
   if(!CATEGORIES.some(c => c.vehicles.length)){ alert('Немає авто для формування переліку.'); return; }
 
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Автопарк');
-  ws.getColumn(2).width = 16.5;
+  ws.properties.defaultRowHeight = 13.15;
+  ws.getColumn(1).width = 2.53125;
+  ws.getColumn(2).width = 16.46484375;
+  ws.getColumn(3).width = 17.33203125;
+  ws.getRow(1).height = 14.25;
 
   // Same 9%-opacity-onto-white blend as mixWithWhite() elsewhere, just
   // returning an opaque ARGB hex string (what ExcelJS fills need) instead
@@ -8303,14 +8310,24 @@ async function exportVehiclesListXLSX(){
     const mix = v => Math.round(v*alpha + 255*(1-alpha)).toString(16).padStart(2,'0').toUpperCase();
     return 'FF' + mix(r) + mix(g) + mix(b);
   };
+  // Borders in the reference file are all Excel's "automatic" color, which
+  // renders as black.
+  const BLACK = {argb:'FF000000'};
+  const medium = {style:'medium', color:BLACK};
+  const hair = {style:'hair', color:BLACK};
 
-  const headerCell = ws.getRow(2).getCell(2);
-  headerCell.value = 'Автомобіль';
-  headerCell.font = {bold:true, size:10, color:{argb:'FF6B7280'}};
-  headerCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFECEEF2'}};
-  headerCell.alignment = {horizontal:'center', vertical:'middle'};
-  headerCell.border = {bottom:{style:'medium', color:{argb:'FFD1D5DB'}}};
-  ws.getRow(2).height = 22;
+  const headerRow = ws.getRow(2);
+  headerRow.height = 29.25;
+  [2,3].forEach(col => {
+    const cell = headerRow.getCell(col);
+    if(col===2){
+      cell.value = 'Автомобіль';
+      cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFECEEF2'}};
+    }
+    cell.font = {name:'Verdana', size:10, color:{argb:'FF6B7280'}};
+    cell.alignment = {horizontal:'center', vertical:'middle'};
+    cell.border = {top:medium, bottom:medium, left:medium, right:medium};
+  });
 
   // Same order the Автомобілі panel itself uses — Архів always last.
   const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
@@ -8318,14 +8335,27 @@ async function exportVehiclesListXLSX(){
   orderedCategories.forEach(cat => {
     if(!cat.vehicles.length) return; // skip empty categories rather than printing an empty colored block
     r += 1; // blank separator row before each group (also right under the header)
+    ws.getRow(r).height = 14.25;
     const fillArgb = mixWithWhiteArgb(cat.colorHex, .09);
-    cat.vehicles.forEach(v => {
+    cat.vehicles.forEach((v, i) => {
       r += 1;
-      const cell = ws.getRow(r).getCell(2);
-      cell.value = v.plate;
-      cell.font = {size:10, color:{argb:'FF1A1D26'}};
-      cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:fillArgb}};
-      cell.border = {bottom:{style:'hair', color:{argb:'FFE5E7EB'}}};
+      const isFirst = i===0, isLast = i===cat.vehicles.length-1;
+      const row = ws.getRow(r);
+      row.height = 16.05;
+      [2,3].forEach(col => {
+        const cell = row.getCell(col);
+        if(col===2){
+          cell.value = v.plate;
+          cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:fillArgb}};
+        }
+        cell.font = {name:'Verdana', size:10, color:{argb:'FF1A1D26'}};
+        cell.alignment = {vertical:'middle'};
+        cell.border = {
+          top: isFirst ? medium : hair,
+          bottom: isLast ? medium : hair,
+          left: medium, right: medium,
+        };
+      });
     });
   });
 
