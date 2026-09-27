@@ -1815,6 +1815,11 @@ input.dm-pf-val.tel{font-size:14px;}
         <div style="font-size:13px;font-weight:700;color:var(--text)">Дані ФОП та шаблони договорів/актів</div>
         <div style="font-size:10.5px;color:#9ca3af">Для фізосіб, ФОП/ТОВ без та з ПДВ — окремо</div>
       </div>
+      <div onclick="exportVehiclesListXLSX()" style="cursor:pointer;background:#f7f8fb;border:1px solid #003cb3;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;grid-column:span 2">
+        <div style="font-size:22px">📋</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Перелік авто</div>
+        <div style="font-size:10.5px;color:#9ca3af">Сформувати Excel-документ з повним списком авто по класах</div>
+      </div>
     </div>
   </div>
 </div>
@@ -8273,6 +8278,62 @@ async function exportProfitabilityStyledXLSX(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `dohidnist_${fromStr}_to_${toStr}.xlsx`;
+  a.click();
+}
+// Settings → "Перелік авто" — a single-column Excel export of every vehicle
+// in the fleet, grouped by category (in the same order/rows as the
+// Автомобілі panel) with each group tinted a light shade of that category's
+// own colorHex, matching the reference template provided by the operator:
+// header "Автомобіль", one blank row between groups, plate numbers only.
+async function exportVehiclesListXLSX(){
+  if(typeof ExcelJS === 'undefined'){ alert('Бібліотека Excel ще завантажується, спробуйте за кілька секунд.'); return; }
+  if(!CATEGORIES.some(c => c.vehicles.length)){ alert('Немає авто для формування переліку.'); return; }
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Автопарк');
+  ws.getColumn(2).width = 16.5;
+
+  // Same 9%-opacity-onto-white blend as mixWithWhite() elsewhere, just
+  // returning an opaque ARGB hex string (what ExcelJS fills need) instead
+  // of an rgb() string.
+  const mixWithWhiteArgb = (hex, alpha) => {
+    hex = (hex||'#9ca3af').replace('#','');
+    if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+    const r = parseInt(hex.slice(0,2),16)||0, g = parseInt(hex.slice(2,4),16)||0, b = parseInt(hex.slice(4,6),16)||0;
+    const mix = v => Math.round(v*alpha + 255*(1-alpha)).toString(16).padStart(2,'0').toUpperCase();
+    return 'FF' + mix(r) + mix(g) + mix(b);
+  };
+
+  const headerCell = ws.getRow(2).getCell(2);
+  headerCell.value = 'Автомобіль';
+  headerCell.font = {bold:true, size:10, color:{argb:'FF6B7280'}};
+  headerCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFECEEF2'}};
+  headerCell.alignment = {horizontal:'center', vertical:'middle'};
+  headerCell.border = {bottom:{style:'medium', color:{argb:'FFD1D5DB'}}};
+  ws.getRow(2).height = 22;
+
+  // Same order the Автомобілі panel itself uses — Архів always last.
+  const orderedCategories = [...CATEGORIES].sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
+  let r = 2;
+  orderedCategories.forEach(cat => {
+    if(!cat.vehicles.length) return; // skip empty categories rather than printing an empty colored block
+    r += 1; // blank separator row before each group (also right under the header)
+    const fillArgb = mixWithWhiteArgb(cat.colorHex, .09);
+    cat.vehicles.forEach(v => {
+      r += 1;
+      const cell = ws.getRow(r).getCell(2);
+      cell.value = v.plate;
+      cell.font = {size:10, color:{argb:'FF1A1D26'}};
+      cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:fillArgb}};
+      cell.border = {bottom:{style:'hair', color:{argb:'FFE5E7EB'}}};
+    });
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Perelik_avto_${dStr(today.getFullYear(), today.getMonth(), today.getDate())}.xlsx`;
   a.click();
 }
 function exportCSV(){
