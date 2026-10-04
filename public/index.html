@@ -2783,7 +2783,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <span>Вартість</span>
             <span id="bm-rate-comment-btn" onclick="toggleRateCommentField()" title="Коментар до ставки" style="display:none;cursor:pointer;font-size:8px">ℹ️</span>
           </label>
-          <div class="dep-inline-wrap">
+          <div class="dep-inline-wrap" id="bm-rate-wrap">
             <input type="text" inputmode="decimal" id="bm-rate" placeholder="0" class="dep-amount-input" style="width:65px;flex:0 0 65px;text-align:center;font-size:14px;padding-left:3px;padding-right:3px" oninput="formatRateInput(this);rateCurrencyAnchor=document.getElementById('bm-currency').value;rateManuallyTouched=true;updateVatPreview()">
             <select id="bm-currency" onchange="onCurrencyChange()" style="display:none">
               <option value="$">$</option>
@@ -2816,7 +2816,7 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div class="fin-field fin-deposit fin-label-style" id="bm-deposit-field" style="flex:0 0 auto;min-width:0">
           <label style="white-space:nowrap;text-align:center;width:100%">Депозит</label>
-          <div class="dep-inline-wrap">
+          <div class="dep-inline-wrap" id="bm-deposit-wrap">
             <input type="text" inputmode="numeric" id="bm-deposit" placeholder="0" class="dep-amount-input" style="width:70px;flex:0 0 70px;text-align:center;font-size:14px" oninput="formatThousandsInput(this)">
             <button type="button" id="dep-cur-btn-usd" class="dep-cur-pill active" onclick="setDepositCur('$')">$</button>
             <button type="button" id="dep-cur-btn-uah" class="dep-cur-pill" onclick="setDepositCur('₴')">₴</button>
@@ -5938,20 +5938,10 @@ function saveBooking(){
     }
   }
 
-  // Payment form (Вартість) and deposit payment form are optional while the
-  // order is only a reservation, but must be chosen once the status is «В оренді».
-  // Business clients pay by bank transfer (no cash/card icons), so the main
-  // payment form is skipped for them; the deposit form is only needed when a
-  // deposit amount is actually set (or "mixed" is chosen).
-  if(statusVal === 'rented'){
-    const isCompanyForPay = document.getElementById('bm-client-type').value !== 'individual';
-    if(!isCompanyForPay && !bmPayMethod){
-      errors.push({fields:'bm-paymethod-icons-wrap', message:'Оберіть форму розрахунку (готівка / картка) — обов\'язково для статусу "В оренді".'});
-    }
-    if(!bmDepositPayMethod && parseThousands(document.getElementById('bm-deposit').value) > 0){
-      errors.push({fields:'bm-deposit-paymethod-icons-wrap', message:'Оберіть форму внесення депозиту — обов\'язково для статусу "В оренді".'});
-    }
-  }
+  // Finance fields that become mandatory once the status is «В оренді»
+  // (see rentedRequiredMissing): Вартість, payment form, deposit form (the deposit
+  // AMOUNT is checked just above, for every order-type status).
+  rentedRequiredMissing().forEach(m => errors.push({fields:m.field, message:m.message}));
 
   // Пробіг на початку оренди is required once the status IS "В оренді" —
   // checked here at save time (not by blocking the status change itself,
@@ -11871,6 +11861,21 @@ function renderOrderCompanyToggle(){
   trBtn.style.cssText = currentOrderCompany==='toprent' ? trActive : (currentOrderCompany==='rentplus' ? dimStyle : inactiveStyle);
   rpBtn.style.cssText = currentOrderCompany==='rentplus' ? rpActive : (currentOrderCompany==='toprent' ? dimStyle : inactiveStyle);
 }
+// Fields that must be filled when the booking status is «В оренді».
+// Reservations may leave them empty. Business clients pay by bank transfer
+// (no cash/card icons), so the main payment form is skipped for them.
+function rentedRequiredMissing(){
+  const out = [];
+  if(document.getElementById('bm-status')?.value !== 'rented') return out;
+  const isCompany = document.getElementById('bm-client-type')?.value !== 'individual';
+  if((document.getElementById('bm-rate')?.value || '').trim() === '')
+    out.push({field:'bm-rate-wrap', message:'Вкажіть вартість оренди — обов\'язково для статусу "В оренді".'});
+  if(!isCompany && !bmPayMethod)
+    out.push({field:'bm-paymethod-icons-wrap', message:'Оберіть форму розрахунку (готівка / картка) — обов\'язково для статусу "В оренді".'});
+  if(!bmDepositPayMethod)
+    out.push({field:'bm-deposit-paymethod-icons-wrap', message:'Оберіть форму внесення депозиту — обов\'язково для статусу "В оренді".'});
+  return out;
+}
 function updateStatusSelectColor(isUserChange){
   const sel=document.getElementById('bm-status');
   if(!sel) return;
@@ -11888,13 +11893,11 @@ function updateStatusSelectColor(isUserChange){
   sel.style.fontWeight = '600';
   updateBookingDetailsVisibility();
   updateBmSectionAvailability();
-  // Status just switched to «В оренді»: outline the payment-form fields that
-  // are still empty (they're mandatory for this status; saveBooking enforces it).
+  // Status just switched to «В оренді»: outline every mandatory finance field
+  // that is still empty (saveBooking enforces the same list).
   if(isUserChange === true && sel.value === 'rented'){
-    const missing = [];
-    const isCompanyForPay = document.getElementById('bm-client-type')?.value !== 'individual';
-    if(!isCompanyForPay && !bmPayMethod) missing.push('bm-paymethod-icons-wrap');
-    if(!bmDepositPayMethod && parseThousands(document.getElementById('bm-deposit')?.value) > 0) missing.push('bm-deposit-paymethod-icons-wrap');
+    const missing = rentedRequiredMissing().map(m => m.field);
+    if(bmDepositPayMethod !== 'mixed' && (document.getElementById('bm-deposit')?.value || '').trim() === '') missing.push('bm-deposit-wrap');
     if(missing.length) highlightField(missing);
   }
 }
