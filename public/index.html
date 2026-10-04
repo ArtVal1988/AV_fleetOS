@@ -6576,7 +6576,7 @@ function renderAttachViewerCurrent(){
   document.getElementById('attach-viewer-name').textContent = label;
   const dl = document.getElementById('attach-viewer-download');
   dl.href = item.src;
-  dl.setAttribute('download', item.name||'file');
+  dl.setAttribute('download', item.fileName||item.name||'file');
   document.getElementById('attach-viewer').classList.add('open');
   const prevBtn = document.getElementById('attach-viewer-prev');
   const nextBtn = document.getElementById('attach-viewer-next');
@@ -13843,10 +13843,23 @@ function renderClientDocsList(){
     wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає завантажених фото</div>';
     return;
   }
-  registerAttachGallery('client-docs', CLIENT_DOCS.map(d => ({
-    src: d.url, name: labels[d.doc_type]||d.doc_type, type: d.mime_type,
-    docId: d.id, refreshCallback: renderClientDocsList
-  })));
+  // Download file name: "<client full name> - <Паспорт|ІПН|Водійське|Інше>[ N].<ext>"
+  const clientFullName = ((document.getElementById('cf-name')||{}).value || '').trim().replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const typeCounts = {}, typeTotals = {};
+  CLIENT_DOCS.forEach(d => { typeTotals[d.doc_type] = (typeTotals[d.doc_type]||0) + 1; });
+  const extByMime = {'image/jpeg':'jpg','image/jpg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/heic':'heic','application/pdf':'pdf'};
+  registerAttachGallery('client-docs', CLIENT_DOCS.map(d => {
+    const label = labels[d.doc_type]||d.doc_type;
+    typeCounts[d.doc_type] = (typeCounts[d.doc_type]||0) + 1;
+    const num = typeTotals[d.doc_type] > 1 ? ' ' + typeCounts[d.doc_type] : '';
+    let ext = extByMime[(d.mime_type||'').toLowerCase()];
+    if(!ext){ const m = String(d.url||'').split('?')[0].match(/\.([a-zA-Z0-9]{2,5})$/); ext = m ? m[1].toLowerCase() : 'jpg'; }
+    const fileName = (clientFullName ? clientFullName + ' - ' : '') + label + num + '.' + ext;
+    return {
+      src: d.url, name: label, fileName, type: d.mime_type,
+      docId: d.id, refreshCallback: renderClientDocsList
+    };
+  }));
   wrap.innerHTML = CLIENT_DOCS.map((d,i) => {
     const thumb = d.thumbUrl || (d.mime_type && d.mime_type.startsWith('image/') ? d.url : null);
     const cacheBustThumb = thumb ? thumb + (thumb.includes('?')?'&':'?') + 't=' + (d._rotatedAt||0) : thumb;
