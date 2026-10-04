@@ -5904,7 +5904,10 @@ function saveBooking(){
   if(!start) errors.push({fields:'bm-pickup-date', message:'Вкажіть дату отримання'});
   if(!end) errors.push({fields:'bm-return-date', message:'Вкажіть дату повернення'});
   if(!statusVal) errors.push({fields:'bm-status', message:'Оберіть статус замовлення'});
-  if(currentStatusIsBooking && statusVal && COMPANY_REQUIRED_STATUSES.includes(statusVal) && !currentOrderCompany){
+  // No status chosen yet (fresh form) is treated like «В оренді» for the checklist
+  // below, so one Save click shows every field that still has to be filled in.
+  const strictChecklist = !statusVal || statusVal === 'rented';
+  if(currentStatusIsBooking && (!statusVal || COMPANY_REQUIRED_STATUSES.includes(statusVal)) && !currentOrderCompany){
     errors.push({fields:['bm-company-toprent','bm-company-rentplus'], message:'Оберіть компанію: TopRent або RentPlus'});
   }
 
@@ -5948,8 +5951,8 @@ function saveBooking(){
   // which used to deadlock: the field stayed locked until status==='rented',
   // so it could never already have a value at the moment the status change
   // was attempted).
-  if(statusVal === 'rented' && !(parseThousands(document.getElementById('bm-start-km')?.value) > 0)){
-    errors.push({fields:'bm-start-km', message:'Так як статус було змінено на "В оренді" - необхідно вказати пробіг.'});
+  if(strictChecklist && !(parseThousands(document.getElementById('bm-start-km')?.value) > 0)){
+    errors.push({fields:'bm-start-km', message: statusVal ? 'Так як статус було змінено на "В оренді" - необхідно вказати пробіг.' : 'Вкажіть пробіг на початку'});
   }
 
   // Every recorded substitute vehicle period must have its own exchange
@@ -5967,7 +5970,7 @@ function saveBooking(){
   }
 
   const orderStatuses = ['rented', 'res-docs', 'reserved'];
-  if(statusVal && orderStatuses.includes(statusVal)){
+  if(!statusVal || orderStatuses.includes(statusVal)){
     const clientName = document.getElementById('bm-name').value.trim();
     const clientPhone = document.getElementById('bm-phone').value.trim();
     if(!clientName) errors.push({fields:'bm-name', message:'Вкажіть прізвище клієнта'});
@@ -11866,7 +11869,8 @@ function renderOrderCompanyToggle(){
 // (no cash/card icons), so the main payment form is skipped for them.
 function rentedRequiredMissing(){
   const out = [];
-  if(document.getElementById('bm-status')?.value !== 'rented') return out;
+  const stNow = document.getElementById('bm-status')?.value;
+  if(stNow && stNow !== 'rented') return out; // empty status = fresh form: show the full checklist
   const isCompany = document.getElementById('bm-client-type')?.value !== 'individual';
   if((document.getElementById('bm-rate')?.value || '').trim() === '')
     out.push({field:'bm-rate-wrap', message:'Вкажіть вартість оренди — обов\'язково для статусу "В оренді".'});
