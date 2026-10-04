@@ -2295,6 +2295,18 @@ input.dm-pf-val.tel{font-size:14px;}
 </div>
 
 <!-- ACTIVITY LOG SNAPSHOT VIEWER -->
+<div id="deleted-bookings-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:950;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:14px;width:520px;max-width:calc(100vw - 24px);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="padding:16px 22px 12px;border-bottom:1px solid #e5e7eb;background:#fef2f2">
+      <div style="font-size:15px;font-weight:700;color:#991b1b">🗑 Видалено замовлення</div>
+      <div id="deleted-bookings-sub" style="font-size:11px;color:#6b7280;margin-top:3px">Менеджер видалив замовлення. Ви можете відновити їх.</div>
+    </div>
+    <div id="deleted-bookings-list" style="padding:14px 22px;overflow-y:auto;flex:1"></div>
+    <div style="padding:12px 22px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end">
+      <button onclick="closeDeletedBookingsPopup()" style="background:#fff;border:1px solid #e5e7eb;color:#374151;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Закрити</button>
+    </div>
+  </div>
+</div>
 <div id="al-snapshot-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:620;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
     <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
@@ -13268,10 +13280,12 @@ async function doLogin(){
     if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
     applyAccountantRestrictions();
     await syncFromServer();
+    startDeletedBookingsWatch();
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
 }
 
 function doLogout(){
+  stopDeletedBookingsWatch();
   _token=''; _currentUser=null;
   localStorage.removeItem('av_fleet_token');
   document.getElementById('nav-settings').style.display='none';
@@ -14852,6 +14866,85 @@ async function undoActivityLogEntry(id){
     alert('Не вдалося скасувати дію');
   }
 }
+
+// ── DELETED-BOOKING WATCH (admin only) ──────────────────────────
+// When someone else (e.g. a manager) deletes a booking, the admin gets a
+// popup with a "Відновити" button. Restoring reuses the existing activity-log
+// undo endpoint (re-inserts the booking from the snapshot taken at deletion).
+let _delWatchTimer = null;
+let _pendingDeleted = [];
+let _pendingDeletedMaxId = 0;
+function _delSeenKey(){ return 'av_fleet_del_seen_' + (_currentUser && (_currentUser.id || _currentUser.username) || 'u'); }
+function _delGetSeen(){ try{ const v = localStorage.getItem(_delSeenKey()); return v === null ? null : Number(v); }catch(e){ return null; } }
+function _delSetSeen(id){ try{ localStorage.setItem(_delSeenKey(), String(id)); }catch(e){} }
+function _delEsc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function startDeletedBookingsWatch(){
+  if(_delWatchTimer){ clearInterval(_delWatchTimer); _delWatchTimer = null; }
+  if(!_currentUser || _currentUser.role !== 'admin') return;
+  checkDeletedBookings();
+  _delWatchTimer = setInterval(checkDeletedBookings, 60000);
+}
+function stopDeletedBookingsWatch(){
+  if(_delWatchTimer){ clearInterval(_delWatchTimer); _delWatchTimer = null; }
+}
+async function checkDeletedBookings(){
+  if(!_token || !_currentUser || _currentUser.role !== 'admin') return;
+  const overlay = document.getElementById('deleted-bookings-overlay');
+  if(!overlay || overlay.style.display === 'flex') return;
+  if(isAnyModalOpen()) return; // never interrupt someone mid-edit; try again next tick
+  const rows = await apiFetch('GET', '/activity-log?entityType=booking&action=delete&limit=50');
+  if(!Array.isArray(rows)) return;
+  const maxId = rows.reduce((m, r) => Math.max(m, r.id), 0);
+  const seen = _delGetSeen();
+  if(seen === null){ _delSetSeen(maxId); return; } // first run on this browser: don't flood with old deletions
+  const me = _currentUser.name || _currentUser.username;
+  const pending = rows.filter(r => r.id > seen && !r.undone_at && r.snapshot && r.user_name !== me);
+  if(!pending.length){ if(maxId > seen) _delSetSeen(maxId); return; }
+  _pendingDeleted = pending.sort((a, b) => a.id - b.id);
+  _pendingDeletedMaxId = maxId;
+  renderDeletedBookingsPopup();
+  overlay.style.display = 'flex';
+}
+function renderDeletedBookingsPopup(){
+  const list = document.getElementById('deleted-bookings-list');
+  if(!list) return;
+  list.innerHTML = _pendingDeleted.map(e => {
+    const dt = parseUtcTimestamp(e.created_at);
+    const when = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26;word-break:break-word">№${_delEsc(e.entity_id)}${e.summary ? ' · ' + _delEsc(e.summary) : ''}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">Видалив: ${_delEsc(e.user_name || '—')} · ${when}</div>
+      </div>
+      <button id="del-restore-${e.id}" onclick="restoreDeletedBooking(${e.id})" style="font-size:11px;padding:7px 14px;border-radius:6px;cursor:pointer;border:none;background:#16a34a;color:#fff;font-family:inherit;font-weight:700;flex-shrink:0">↩ Відновити</button>
+    </div>`;
+  }).join('');
+}
+function closeDeletedBookingsPopup(){
+  document.getElementById('deleted-bookings-overlay').style.display = 'none';
+  if(_pendingDeletedMaxId) _delSetSeen(_pendingDeletedMaxId);
+  _pendingDeleted = [];
+}
+async function restoreDeletedBooking(logId){
+  const btn = document.getElementById('del-restore-' + logId);
+  if(btn){ btn.disabled = true; btn.textContent = '⏳'; }
+  try{
+    const res = await fetch(API_BASE + '/activity-log/' + logId + '/undo', {method:'POST', headers:apiHeaders()});
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      alert(data.error || 'Не вдалося відновити замовлення');
+      if(btn){ btn.disabled = false; btn.textContent = '↩ Відновити'; }
+      return;
+    }
+    _pendingDeleted = _pendingDeleted.filter(e => e.id !== logId);
+    await syncFromServer();
+    if(!_pendingDeleted.length) closeDeletedBookingsPopup();
+    else renderDeletedBookingsPopup();
+  } catch(e){
+    alert('Не вдалося відновити замовлення');
+    if(btn){ btn.disabled = false; btn.textContent = '↩ Відновити'; }
+  }
+}
 function viewAlSnapshot(i){
   const entry = ACTIVITY_LOG[i];
   if(!entry) return;
@@ -16197,6 +16290,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     applyAccountantRestrictions();
     await syncFromServer();
     startAutoRefresh();
+    startDeletedBookingsWatch();
   } catch(e){ showLoginOverlay(); }
 })();
 
