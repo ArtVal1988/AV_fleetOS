@@ -2795,8 +2795,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fin-field fin-label-style" id="bm-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0" id="bm-paymethod-icons-wrap">
-            <button type="button" id="pm-btn-cash" class="dep-cur-pill active" onclick="setPayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
-            <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="setPayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
+            <button type="button" id="pm-btn-cash" class="dep-cur-pill" onclick="togglePayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
+            <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="togglePayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
           </div>
           <button type="button" id="bm-bank-account-label" style="display:none;width:30px;height:30px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;align-items:center;justify-content:center;cursor:default;padding:0" title="Банківський рахунок"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10.5M20 21V10.5M2.25 10.5h19.5L12 3 2.25 10.5ZM8 21v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6"/></svg></button>
         </div>
@@ -2824,9 +2824,9 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="fin-field fin-label-style" id="bm-deposit-paymethod-field" style="flex:0 0 auto;min-width:0">
           <label style="opacity:0;white-space:nowrap">·</label>
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0;justify-content:flex-end">
-            <button type="button" id="dep-pm-btn-cash" class="dep-cur-pill active" onclick="setDepositPayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
-            <button type="button" id="dep-pm-btn-card" class="dep-cur-pill" onclick="setDepositPayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
-            <button type="button" id="dep-pm-btn-mixed" class="dep-cur-pill" onclick="setDepositPayMethod('mixed')" title="Змішана оплата (готівка + картка + валюта)">
+            <button type="button" id="dep-pm-btn-cash" class="dep-cur-pill" onclick="toggleDepositPayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
+            <button type="button" id="dep-pm-btn-card" class="dep-cur-pill" onclick="toggleDepositPayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
+            <button type="button" id="dep-pm-btn-mixed" class="dep-cur-pill" onclick="toggleDepositPayMethod('mixed')" title="Змішана оплата (готівка + картка + валюта)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">
                 <path d="M9.5 3h5a1.5 1.5 0 0 1 1.5 1.5a3.5 3.5 0 0 1 -3.5 3.5h-1a3.5 3.5 0 0 1 -3.5 -3.5a1.5 1.5 0 0 1 1.5 -1.5" />
                 <path d="M4 17v-1a8 8 0 1 1 16 0v1a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4" />
@@ -5506,8 +5506,8 @@ function openBookingModal(vid=null,start=null,end=null){
   onCurrencyChange();
   document.getElementById('bm-deposit').value='';
   setDepositCur('$');
-  setPayMethod('cash');
-  setDepositPayMethod('cash');
+  setPayMethod(null);          // no default: manager picks the payment form (mandatory once status = «В оренді»)
+  setDepositPayMethod(null);
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = '';
   document.getElementById('bm-partial-active').checked = false;
   document.getElementById('bm-main-payments-wrap').style.display = 'none';
@@ -5678,8 +5678,8 @@ function editBooking(bid){
   onCurrencyChange();
   document.getElementById('bm-deposit').value=b.deposit?Number(b.deposit).toLocaleString('uk-UA'):'';
   setDepositCur(b.depositCur || b.currency || '$');
-  setPayMethod(b.payMethod || 'cash');
-  setDepositPayMethod(b.depositPayMethod || 'cash');
+  setPayMethod(b.payMethod || null);
+  setDepositPayMethod(b.depositPayMethod || null);
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = b.depositMixedNote || '';
   document.getElementById('bm-partial-active').checked = !!b.partialPaymentActive;
   document.getElementById('bm-main-payments-wrap').style.display = b.partialPaymentActive ? 'block' : 'none';
@@ -5891,6 +5891,21 @@ function saveBooking(){
   // choice meaning "no deposit required"), just not left blank.
   if(currentStatusIsBooking && document.getElementById('bm-deposit').value.trim()===''){
     errors.push({fields:'bm-deposit', message:'Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)'});
+  }
+
+  // Payment form (Вартість) and deposit payment form are optional while the
+  // order is only a reservation, but must be chosen once the status is «В оренді».
+  // Business clients pay by bank transfer (no cash/card icons), so the main
+  // payment form is skipped for them; the deposit form is only needed when a
+  // deposit amount is actually set (or "mixed" is chosen).
+  if(statusVal === 'rented'){
+    const isCompanyForPay = document.getElementById('bm-client-type').value !== 'individual';
+    if(!isCompanyForPay && !bmPayMethod){
+      errors.push({fields:'bm-paymethod-field', message:'Оберіть форму розрахунку (готівка / картка) — обов\'язково для статусу "В оренді".'});
+    }
+    if(!bmDepositPayMethod && parseThousands(document.getElementById('bm-deposit').value) > 0){
+      errors.push({fields:'bm-deposit-paymethod-field', message:'Оберіть форму внесення депозиту — обов\'язково для статусу "В оренді".'});
+    }
   }
 
   // Пробіг на початку оренди is required once the status IS "В оренді" —
@@ -11825,6 +11840,15 @@ function updateStatusSelectColor(isUserChange){
   sel.style.fontWeight = '600';
   updateBookingDetailsVisibility();
   updateBmSectionAvailability();
+  // Status just switched to «В оренді»: outline the payment-form fields that
+  // are still empty (they're mandatory for this status; saveBooking enforces it).
+  if(isUserChange === true && sel.value === 'rented'){
+    const missing = [];
+    const isCompanyForPay = document.getElementById('bm-client-type')?.value !== 'individual';
+    if(!isCompanyForPay && !bmPayMethod) missing.push('bm-paymethod-field');
+    if(!bmDepositPayMethod && parseThousands(document.getElementById('bm-deposit')?.value) > 0) missing.push('bm-deposit-paymethod-field');
+    if(missing.length) highlightField(missing);
+  }
 }
 // Statuses that don't represent an actual client rental — for these we hide all
 // For repair/investor/storage/personal statuses, the booking isn't a rental
@@ -12000,7 +12024,7 @@ function setClientType(type, isUserAction = true){
   const depMixedBtn = document.getElementById('dep-pm-btn-mixed');
   if(depMixedBtn){
     depMixedBtn.style.display = isCompany ? 'none' : '';
-    if(isCompany && bmDepositPayMethod === 'mixed') setDepositPayMethod('cash');
+    if(isCompany && bmDepositPayMethod === 'mixed') setDepositPayMethod(null);
   }
 
   // Extension section: same treatment — business clients always pay
@@ -12468,7 +12492,10 @@ function setDepositCur(currency){
   const depositField = document.getElementById('bm-deposit');
   if(depositField) depositField.style.color = curColor(currency);
 }
-let bmPayMethod = 'cash', bmDepositPayMethod = 'cash', bmExtPayMethod = 'cash';
+let bmPayMethod = null, bmDepositPayMethod = null, bmExtPayMethod = 'cash';
+// Clicking the already-selected icon clears the choice (fields start empty).
+function togglePayMethod(m){ setPayMethod(bmPayMethod === m ? null : m); }
+function toggleDepositPayMethod(m){ setDepositPayMethod(bmDepositPayMethod === m ? null : m); }
 function setExtPayMethod(method){
   bmExtPayMethod = method;
   document.getElementById('ext-pm-btn-cash')?.classList.toggle('active', method==='cash');
