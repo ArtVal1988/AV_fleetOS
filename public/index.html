@@ -2300,7 +2300,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- ACTIVITY LOG SNAPSHOT VIEWER -->
 <div id="deleted-bookings-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:950;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:14px;width:520px;max-width:calc(100vw - 24px);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+  <div style="background:#fff;border-radius:14px;width:820px;max-width:calc(100vw - 24px);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
     <div style="padding:16px 22px 12px;border-bottom:1px solid #e5e7eb;background:#fef2f2">
       <div style="font-size:15px;font-weight:700;color:#991b1b">🗑 Видалено замовлення</div>
       <div id="deleted-bookings-sub" style="font-size:11px;color:#6b7280;margin-top:3px">Менеджер видалив замовлення. Ви можете відновити їх.</div>
@@ -15104,7 +15104,7 @@ function renderDeletedBookingsPopup(){
     const when = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA', {hour:'2-digit', minute:'2-digit'});
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:#1a1d26;word-break:break-word">№${_delEsc(e.entity_id)}${e.summary ? ' · ' + _delEsc(e.summary) : ''}</div>
+        <div title="№${_delEsc(e.entity_id)}${e.summary ? ' · ' + _delEsc(e.summary) : ''}" style="font-size:13px;font-weight:600;color:#1a1d26;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">№${_delEsc(e.entity_id)}${e.summary ? ' · ' + _delEsc(e.summary) : ''}</div>
         <div style="font-size:11px;color:#6b7280;margin-top:2px">Видалив: ${_delEsc(e.user_name || '—')} · ${when}</div>
       </div>
       <button id="del-restore-${e.id}" onclick="restoreDeletedBooking(${e.id})" style="font-size:11px;padding:7px 14px;border-radius:6px;cursor:pointer;border:none;background:#16a34a;color:#fff;font-family:inherit;font-weight:700;flex-shrink:0">↩ Відновити</button>
