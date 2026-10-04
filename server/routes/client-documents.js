@@ -117,6 +117,51 @@ router.post('/:id/rotate', auth, async (req, res) => {
   }
 });
 
+// POST /api/client-documents/:id/crop — body: { x, y, w, h } as fractions (0..1)
+// of the image's width/height, measured on the image as the user sees it.
+// Physically crops and overwrites the file (and regenerates its thumbnail).
+// Like /rotate, it must be registered BEFORE the /:cid/:key upload route.
+router.post('/:id/crop', auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const { x, y, w, h } = req.body || {};
+  const vals = [x, y, w, h].map(Number);
+  if (vals.some(v => !Number.isFinite(v)) || vals[0] < 0 || vals[1] < 0 || vals[2] <= 0 || vals[3] <= 0 || vals[0] + vals[2] > 1.0001 || vals[1] + vals[3] > 1.0001) {
+    return res.status(400).json({ error: 'Некоректна область обрізання' });
+  }
+  const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'Не знайдено' });
+  if (!THUMBNAIL_MIME.has(row.mime_type)) {
+    return res.status(400).json({ error: 'Цей тип файлу не можна обрізати' });
+  }
+  try {
+    const fullPath = path.join(UPLOAD_DIR, row.filename);
+    // Bake EXIF orientation in first so the fractions match what the user saw.
+    const oriented = await sharp(fullPath).rotate().toBuffer();
+    const meta = await sharp(oriented).metadata();
+    const left = Math.max(0, Math.round(vals[0] * meta.width));
+    const top = Math.max(0, Math.round(vals[1] * meta.height));
+    const width = Math.min(meta.width - left, Math.max(1, Math.round(vals[2] * meta.width)));
+    const height = Math.min(meta.height - top, Math.max(1, Math.round(vals[3] * meta.height)));
+    if (width < 20 || height < 20) return res.status(400).json({ error: 'Область обрізання надто мала' });
+    const pipeline = sharp(oriented).extract({ left, top, width, height });
+    const encoded = row.mime_type === 'image/jpeg' ? pipeline.jpeg({ quality: 92, mozjpeg: true })
+      : row.mime_type === 'image/png' ? pipeline.png({ compressionLevel: 9 })
+      : pipeline.webp({ quality: 92 });
+    const buffer = await encoded.toBuffer();
+    await sharp(buffer).toFile(fullPath);
+    if (row.thumb_filename) {
+      const thumbPath = path.join(UPLOAD_DIR, row.thumb_filename);
+      const thumbBuf = await sharp(buffer).resize(400, 400, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 70 }).toBuffer();
+      await sharp(thumbBuf).toFile(thumbPath);
+    }
+    db.prepare('UPDATE client_documents SET size = ? WHERE id = ?').run(buffer.length, id);
+    res.json({ ok: true, size: buffer.length });
+  } catch (e) {
+    console.error('[crop] Failed for document', id, ':', e);
+    res.status(500).json({ error: 'Не вдалося обрізати файл' });
+  }
+});
+
 // POST /api/client-documents/:cid/:key — upload one file (key = passport | license | other)
 // Resizes (only if larger than the cap, never upscales) and re-encodes at a
 // quality setting that's visually indistinguishable for document photos,

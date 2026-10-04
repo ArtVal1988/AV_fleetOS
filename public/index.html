@@ -1430,6 +1430,11 @@ input.dm-pf-val.tel{font-size:14px;}
 .attach-viewer-name{color:#e5e7eb;font-size:12px;font-family:var(--font-mono);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .attach-viewer-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;padding:7px 14px;font-family:var(--font-mono);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none;transition:all .15s;}
 .attach-viewer-btn:hover{background:rgba(255,255,255,.22);}
+.crop-box{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move;touch-action:none;box-sizing:border-box;}
+.crop-box::before,.crop-box::after{content:'';position:absolute;pointer-events:none;background:rgba(255,255,255,.35);}
+.crop-box::before{left:33.33%;right:33.33%;top:0;bottom:0;background:none;border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35);}
+.crop-box::after{top:33.33%;bottom:33.33%;left:0;right:0;background:none;border-top:1px solid rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.35);}
+.crop-handle{position:absolute;width:18px;height:18px;background:#fff;border:2px solid #2563eb;border-radius:50%;box-sizing:border-box;touch-action:none;z-index:2;}
 .attach-viewer-close{position:fixed;top:16px;right:16px;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;opacity:1;z-index:910;display:flex;align-items:center;justify-content:center;}
 .attach-viewer-close:hover{opacity:1;}
 .attach-viewer-nav{position:fixed;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);border:none;color:#fff;font-size:28px;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:910;display:none;align-items:center;justify-content:center;line-height:1;}
@@ -6561,6 +6566,7 @@ function fitAttachViewerImage(img){
   else img.addEventListener('load', fit, { once: true });
 }
 function renderAttachViewerCurrent(){
+  if(_attachCropState) endAttachCropUI();
   const items = _attachGalleries[_attachGalleryId];
   const item = items[_attachGalleryIndex];
   _attachZoomScale = 1;
@@ -6588,9 +6594,15 @@ function renderAttachViewerCurrent(){
   const showRotate = isImg && item.docId;
   if(rotL) rotL.style.display = showRotate ? '' : 'none';
   if(rotR) rotR.style.display = showRotate ? '' : 'none';
+  const cropBtn = document.getElementById('attach-viewer-crop');
+  if(cropBtn) cropBtn.style.display = showRotate ? '' : 'none';
 }
 document.addEventListener('keydown', e => {
   if(!document.getElementById('attach-viewer')?.classList.contains('open')) return;
+  if(_attachCropState){
+    if(e.key === 'Escape') cancelAttachCrop();
+    return;
+  }
   if(e.key === 'ArrowLeft') attachViewerNav(-1);
   if(e.key === 'ArrowRight') attachViewerNav(1);
   if(e.key === 'Escape') closeAttachViewer();
@@ -6598,6 +6610,7 @@ document.addEventListener('keydown', e => {
 let _attachCurrentDocId = null;
 let _attachRefreshCallback = null;
 function viewAttachment(data, name, mimeType, docId, refreshCallback){
+  if(_attachCropState) endAttachCropUI();
   _attachZoomScale = 1;
   _attachCurrentDocId = docId || null;
   _attachRefreshCallback = refreshCallback || null;
@@ -6622,6 +6635,137 @@ function viewAttachment(data, name, mimeType, docId, refreshCallback){
   const showRotate = isImg && docId;
   if(rotL) rotL.style.display = showRotate ? '' : 'none';
   if(rotR) rotR.style.display = showRotate ? '' : 'none';
+  const cropBtn = document.getElementById('attach-viewer-crop');
+  if(cropBtn) cropBtn.style.display = showRotate ? '' : 'none';
+}
+// ── CROP (client document photos) ───────────────────────────────
+// Crop box state is kept as pixel coords relative to the displayed <img>.
+let _attachCropState = null;
+const _ATTACH_BAR_IDS = ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop','attach-viewer-download','attach-viewer-share'];
+function startAttachCrop(){
+  if(!_attachCurrentDocId || _attachCropState) return;
+  const media = document.getElementById('attach-viewer-media');
+  const img = media.querySelector('img');
+  if(!img) return;
+  img.style.transform = '';
+  _attachZoomScale = 1;
+  const W = img.offsetWidth, H = img.offsetHeight;
+  if(!W || !H) return;
+  media.style.position = 'relative';
+  const box = document.createElement('div');
+  box.className = 'crop-box';
+  const handles = {};
+  ['nw','n','ne','e','se','s','sw','w'].forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'crop-handle';
+    el.dataset.h = h;
+    el.style.cursor = h + '-resize';
+    box.appendChild(el);
+    handles[h] = el;
+  });
+  media.appendChild(box);
+  const insetX = Math.round(W * 0.08), insetY = Math.round(H * 0.08);
+  _attachCropState = { img, media, box, W, H, x: insetX, y: insetY, w: W - 2*insetX, h: H - 2*insetY, drag: null };
+  positionAttachCropBox();
+  box.addEventListener('pointerdown', onAttachCropPointerDown);
+  _ATTACH_BAR_IDS.forEach(id => { const b = document.getElementById(id); if(b) b.style.display = 'none'; });
+  document.getElementById('attach-viewer-crop-apply').style.display = '';
+  document.getElementById('attach-viewer-crop-cancel').style.display = '';
+  ['attach-viewer-prev','attach-viewer-next'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = 'none'; });
+}
+function positionAttachCropBox(){
+  const st = _attachCropState; if(!st) return;
+  const left = st.img.offsetLeft, top = st.img.offsetTop;
+  st.box.style.left = (left + st.x) + 'px';
+  st.box.style.top = (top + st.y) + 'px';
+  st.box.style.width = st.w + 'px';
+  st.box.style.height = st.h + 'px';
+  const hs = st.box.querySelectorAll('.crop-handle');
+  hs.forEach(el => {
+    const h = el.dataset.h;
+    const cx = h.includes('w') ? 0 : h.includes('e') ? st.w : st.w/2;
+    const cy = h.includes('n') ? 0 : h.includes('s') ? st.h : st.h/2;
+    el.style.left = (cx - 9 - 2) + 'px'; // -2 compensates the box border
+    el.style.top = (cy - 9 - 2) + 'px';
+  });
+}
+function onAttachCropPointerDown(e){
+  const st = _attachCropState; if(!st) return;
+  e.preventDefault();
+  const handle = e.target.dataset && e.target.dataset.h ? e.target.dataset.h : null;
+  st.drag = { handle, sx: e.clientX, sy: e.clientY, x: st.x, y: st.y, w: st.w, h: st.h };
+  window.addEventListener('pointermove', onAttachCropPointerMove);
+  window.addEventListener('pointerup', onAttachCropPointerUp);
+  window.addEventListener('pointercancel', onAttachCropPointerUp);
+}
+function onAttachCropPointerMove(e){
+  const st = _attachCropState; if(!st || !st.drag) return;
+  const d = st.drag, MIN = 30;
+  const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+  let x = d.x, y = d.y, w = d.w, h = d.h;
+  if(!d.handle){
+    x = Math.min(Math.max(0, d.x + dx), st.W - d.w);
+    y = Math.min(Math.max(0, d.y + dy), st.H - d.h);
+  } else {
+    if(d.handle.includes('w')){ const nx = Math.min(Math.max(0, d.x + dx), d.x + d.w - MIN); w = d.w + (d.x - nx); x = nx; }
+    if(d.handle.includes('e')){ w = Math.min(Math.max(MIN, d.w + dx), st.W - d.x); }
+    if(d.handle.includes('n')){ const ny = Math.min(Math.max(0, d.y + dy), d.y + d.h - MIN); h = d.h + (d.y - ny); y = ny; }
+    if(d.handle.includes('s')){ h = Math.min(Math.max(MIN, d.h + dy), st.H - d.y); }
+  }
+  st.x = x; st.y = y; st.w = w; st.h = h;
+  positionAttachCropBox();
+}
+function onAttachCropPointerUp(){
+  window.removeEventListener('pointermove', onAttachCropPointerMove);
+  window.removeEventListener('pointerup', onAttachCropPointerUp);
+  window.removeEventListener('pointercancel', onAttachCropPointerUp);
+  if(_attachCropState) _attachCropState.drag = null;
+}
+// Removes the crop overlay and restores the viewer's normal buttons.
+function endAttachCropUI(){
+  const st = _attachCropState;
+  onAttachCropPointerUp();
+  if(st){
+    st.box.remove();
+    st.media.style.position = '';
+  }
+  _attachCropState = null;
+  const apply = document.getElementById('attach-viewer-crop-apply');
+  const cancel = document.getElementById('attach-viewer-crop-cancel');
+  if(apply) apply.style.display = 'none';
+  if(cancel) cancel.style.display = 'none';
+  ['attach-viewer-download','attach-viewer-share'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = ''; });
+  const canEdit = !!_attachCurrentDocId && !!document.querySelector('#attach-viewer-media img');
+  ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = canEdit ? '' : 'none'; });
+  const items = _attachGalleryId ? _attachGalleries[_attachGalleryId] : null;
+  const showNav = !!items && items.length > 1;
+  ['attach-viewer-prev','attach-viewer-next'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = showNav ? 'flex' : 'none'; });
+}
+function cancelAttachCrop(){ endAttachCropUI(); }
+async function applyAttachCrop(){
+  const st = _attachCropState;
+  if(!st || !_attachCurrentDocId) return;
+  const payload = { x: st.x / st.W, y: st.y / st.H, w: st.w / st.W, h: st.h / st.H };
+  const btn = document.getElementById('attach-viewer-crop-apply');
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '⏳'; btn.disabled = true;
+  try{
+    const res = await apiFetch('POST', '/client-documents/'+_attachCurrentDocId+'/crop', payload);
+    if(!res || res.error){ alert('Не вдалося обрізати файл'); return; }
+    const img = st.img;
+    endAttachCropUI();
+    const base = img.src.split('?')[0];
+    img.style.width = ''; img.style.height = '';
+    img.src = base + '?t=' + Date.now();
+    fitAttachViewerImage(img);
+    const doc = (typeof CLIENT_DOCS !== 'undefined' ? CLIENT_DOCS : []).find(d => d.id === _attachCurrentDocId);
+    if(doc) doc._rotatedAt = Date.now();
+    if(_attachRefreshCallback) _attachRefreshCallback();
+  } catch(e){
+    alert('Не вдалося обрізати файл. Спробуйте ще раз.');
+  } finally {
+    btn.innerHTML = origHtml; btn.disabled = false;
+  }
 }
 async function rotateCurrentAttachment(degrees){
   if(!_attachCurrentDocId) return;
@@ -6730,6 +6874,7 @@ document.addEventListener('wheel', e => {
   if(img) img.style.transform = 'scale('+_attachZoomScale+')';
 }, {passive:false});
 function closeAttachViewer(){
+  if(_attachCropState) endAttachCropUI();
   document.getElementById('attach-viewer').classList.remove('open');
   document.getElementById('attach-viewer-media').innerHTML='';
   _attachGalleryId = null;
@@ -13860,7 +14005,7 @@ function renderClientDocsList(){
     if(!ext){ const m = String(d.url||'').split('?')[0].match(/\.([a-zA-Z0-9]{2,5})$/); ext = m ? m[1].toLowerCase() : 'jpg'; }
     const fileName = (clientFullName ? clientFullName + ' - ' : '') + label + num + '.' + ext;
     return {
-      src: d.url, name: label, fileName, type: d.mime_type,
+      src: d.url + (d._rotatedAt ? '?t=' + d._rotatedAt : ''), name: label, fileName, type: d.mime_type,
       docId: d.id, refreshCallback: renderClientDocsList
     };
   }));
@@ -16290,6 +16435,9 @@ function startAutoRefresh(){
       <span class="attach-viewer-name" id="attach-viewer-name"></span>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-left" onclick="rotateCurrentAttachment(-90)" style="display:none">⟲</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-right" onclick="rotateCurrentAttachment(90)" style="display:none">⟳</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-crop" onclick="startAttachCrop()" style="display:none">✂ Обрізати</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-crop-apply" onclick="applyAttachCrop()" style="display:none;background:#16a34a;border-color:#16a34a">✓ Застосувати</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-crop-cancel" onclick="cancelAttachCrop()" style="display:none">✕ Скасувати</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-download" onclick="downloadCurrentAttachment()">⬇ Завантажити</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-share" onclick="shareCurrentAttachment()">📤 Надіслати</button>
     </div>
