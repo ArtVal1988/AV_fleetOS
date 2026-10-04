@@ -6566,7 +6566,7 @@ function fitAttachViewerImage(img){
   else img.addEventListener('load', fit, { once: true });
 }
 function renderAttachViewerCurrent(){
-  if(_attachCropState) endAttachCropUI();
+  if(_attachEditing()) endAttachCropUI();
   const items = _attachGalleries[_attachGalleryId];
   const item = items[_attachGalleryIndex];
   _attachZoomScale = 1;
@@ -6596,10 +6596,12 @@ function renderAttachViewerCurrent(){
   if(rotR) rotR.style.display = showRotate ? '' : 'none';
   const cropBtn = document.getElementById('attach-viewer-crop');
   if(cropBtn) cropBtn.style.display = showRotate ? '' : 'none';
+  const strBtn = document.getElementById('attach-viewer-straighten');
+  if(strBtn) strBtn.style.display = showRotate ? '' : 'none';
 }
 document.addEventListener('keydown', e => {
   if(!document.getElementById('attach-viewer')?.classList.contains('open')) return;
-  if(_attachCropState){
+  if(_attachEditing()){
     if(e.key === 'Escape') cancelAttachCrop();
     return;
   }
@@ -6610,7 +6612,7 @@ document.addEventListener('keydown', e => {
 let _attachCurrentDocId = null;
 let _attachRefreshCallback = null;
 function viewAttachment(data, name, mimeType, docId, refreshCallback){
-  if(_attachCropState) endAttachCropUI();
+  if(_attachEditing()) endAttachCropUI();
   _attachZoomScale = 1;
   _attachCurrentDocId = docId || null;
   _attachRefreshCallback = refreshCallback || null;
@@ -6637,11 +6639,15 @@ function viewAttachment(data, name, mimeType, docId, refreshCallback){
   if(rotR) rotR.style.display = showRotate ? '' : 'none';
   const cropBtn = document.getElementById('attach-viewer-crop');
   if(cropBtn) cropBtn.style.display = showRotate ? '' : 'none';
+  const strBtn = document.getElementById('attach-viewer-straighten');
+  if(strBtn) strBtn.style.display = showRotate ? '' : 'none';
 }
 // ── CROP (client document photos) ───────────────────────────────
 // Crop box state is kept as pixel coords relative to the displayed <img>.
 let _attachCropState = null;
-const _ATTACH_BAR_IDS = ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop','attach-viewer-download','attach-viewer-share'];
+const _ATTACH_BAR_IDS = ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop','attach-viewer-straighten','attach-viewer-download','attach-viewer-share'];
+let _attachStraightenState = null;
+function _attachEditing(){ return !!(_attachCropState || _attachStraightenState); }
 function startAttachCrop(){
   if(!_attachCurrentDocId || _attachCropState) return;
   const media = document.getElementById('attach-viewer-media');
@@ -6725,6 +6731,14 @@ function onAttachCropPointerUp(){
 function endAttachCropUI(){
   const st = _attachCropState;
   onAttachCropPointerUp();
+  if(_attachStraightenState){
+    const ss = _attachStraightenState;
+    ss.img.style.transform = '';
+    ss.grid.remove();
+    ss.media.style.position = '';
+    _attachStraightenState = null;
+    ['attach-viewer-str-ctrl','attach-viewer-str-apply','attach-viewer-str-cancel'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = 'none'; });
+  }
   if(st){
     st.box.remove();
     st.media.style.position = '';
@@ -6736,7 +6750,7 @@ function endAttachCropUI(){
   if(cancel) cancel.style.display = 'none';
   ['attach-viewer-download','attach-viewer-share'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = ''; });
   const canEdit = !!_attachCurrentDocId && !!document.querySelector('#attach-viewer-media img');
-  ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = canEdit ? '' : 'none'; });
+  ['attach-viewer-rotate-left','attach-viewer-rotate-right','attach-viewer-crop','attach-viewer-straighten'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = canEdit ? '' : 'none'; });
   const items = _attachGalleryId ? _attachGalleries[_attachGalleryId] : null;
   const showNav = !!items && items.length > 1;
   ['attach-viewer-prev','attach-viewer-next'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = showNav ? 'flex' : 'none'; });
@@ -6763,6 +6777,69 @@ async function applyAttachCrop(){
     if(_attachRefreshCallback) _attachRefreshCallback();
   } catch(e){
     alert('Не вдалося обрізати файл. Спробуйте ще раз.');
+  } finally {
+    btn.innerHTML = origHtml; btn.disabled = false;
+  }
+}
+// ── STRAIGHTEN (level a crooked photo by a small angle) ─────────
+// Live preview = CSS rotate + zoom that hides the empty corners; the server
+// does the same maths (rotate, then crop the centered same-aspect rectangle).
+function _attachStraightenScale(deg, W, H){
+  const rad = Math.abs(deg) * Math.PI / 180;
+  const ratio = Math.max(W / H, H / W);
+  return 1 / (0.995 / (Math.cos(rad) + ratio * Math.sin(rad)));
+}
+function startAttachStraighten(){
+  if(!_attachCurrentDocId || _attachEditing()) return;
+  const media = document.getElementById('attach-viewer-media');
+  const img = media.querySelector('img');
+  if(!img) return;
+  img.style.transform = '';
+  _attachZoomScale = 1;
+  media.style.position = 'relative';
+  const grid = document.createElement('div');
+  grid.style.cssText = 'position:absolute;pointer-events:none;z-index:2;left:'+img.offsetLeft+'px;top:'+img.offsetTop+'px;width:'+img.offsetWidth+'px;height:'+img.offsetHeight+'px;'
+    + 'background-image:linear-gradient(to right,rgba(255,255,255,.35) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.35) 1px,transparent 1px);background-size:10% 10%;';
+  media.appendChild(grid);
+  _attachStraightenState = { img, media, grid, W: img.offsetWidth, H: img.offsetHeight, deg: 0 };
+  _ATTACH_BAR_IDS.forEach(id => { const b = document.getElementById(id); if(b) b.style.display = 'none'; });
+  const range = document.getElementById('attach-viewer-str-range');
+  range.value = 0;
+  document.getElementById('attach-viewer-str-val').textContent = '0.0°';
+  document.getElementById('attach-viewer-str-ctrl').style.display = 'flex';
+  document.getElementById('attach-viewer-str-apply').style.display = '';
+  document.getElementById('attach-viewer-str-cancel').style.display = '';
+  ['attach-viewer-prev','attach-viewer-next'].forEach(id => { const b = document.getElementById(id); if(b) b.style.display = 'none'; });
+}
+function onAttachStraightenInput(v){
+  const st = _attachStraightenState; if(!st) return;
+  const deg = Number(v) || 0;
+  st.deg = deg;
+  document.getElementById('attach-viewer-str-val').textContent = (deg > 0 ? '+' : '') + deg.toFixed(1) + '°';
+  const k = _attachStraightenScale(deg, st.W, st.H);
+  st.img.style.transform = 'rotate(' + deg + 'deg) scale(' + k + ')';
+}
+async function applyAttachStraighten(){
+  const st = _attachStraightenState;
+  if(!st || !_attachCurrentDocId) return;
+  if(Math.abs(st.deg) < 0.05){ endAttachCropUI(); return; }
+  const btn = document.getElementById('attach-viewer-str-apply');
+  const origHtml = btn.innerHTML;
+  btn.innerHTML = '⏳'; btn.disabled = true;
+  try{
+    const res = await apiFetch('POST', '/client-documents/'+_attachCurrentDocId+'/straighten', { angle: st.deg });
+    if(!res || res.error){ alert('Не вдалося вирівняти файл'); return; }
+    const img = st.img;
+    endAttachCropUI();
+    const base = img.src.split('?')[0];
+    img.style.width = ''; img.style.height = '';
+    img.src = base + '?t=' + Date.now();
+    fitAttachViewerImage(img);
+    const doc = (typeof CLIENT_DOCS !== 'undefined' ? CLIENT_DOCS : []).find(d => d.id === _attachCurrentDocId);
+    if(doc) doc._rotatedAt = Date.now();
+    if(_attachRefreshCallback) _attachRefreshCallback();
+  } catch(e){
+    alert('Не вдалося вирівняти файл. Спробуйте ще раз.');
   } finally {
     btn.innerHTML = origHtml; btn.disabled = false;
   }
@@ -6874,7 +6951,7 @@ document.addEventListener('wheel', e => {
   if(img) img.style.transform = 'scale('+_attachZoomScale+')';
 }, {passive:false});
 function closeAttachViewer(){
-  if(_attachCropState) endAttachCropUI();
+  if(_attachEditing()) endAttachCropUI();
   document.getElementById('attach-viewer').classList.remove('open');
   document.getElementById('attach-viewer-media').innerHTML='';
   _attachGalleryId = null;
@@ -16436,6 +16513,14 @@ function startAutoRefresh(){
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-left" onclick="rotateCurrentAttachment(-90)" style="display:none">⟲</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-rotate-right" onclick="rotateCurrentAttachment(90)" style="display:none">⟳</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-crop" onclick="startAttachCrop()" style="display:none">✂ Обрізати</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-straighten" onclick="startAttachStraighten()" style="display:none">📐 Вирівняти</button>
+      <span id="attach-viewer-str-ctrl" style="display:none;align-items:center;gap:8px;color:#fff;font-size:11px;font-family:var(--font-mono)">
+        <span>Нахил</span>
+        <input type="range" id="attach-viewer-str-range" min="-15" max="15" step="0.1" value="0" oninput="onAttachStraightenInput(this.value)" style="width:200px">
+        <span id="attach-viewer-str-val" style="min-width:44px;text-align:right">0.0°</span>
+      </span>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-str-apply" onclick="applyAttachStraighten()" style="display:none;background:#16a34a;border-color:#16a34a">✓ Застосувати</button>
+      <button type="button" class="attach-viewer-btn" id="attach-viewer-str-cancel" onclick="cancelAttachCrop()" style="display:none">✕ Скасувати</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-crop-apply" onclick="applyAttachCrop()" style="display:none;background:#16a34a;border-color:#16a34a">✓ Застосувати</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-crop-cancel" onclick="cancelAttachCrop()" style="display:none">✕ Скасувати</button>
       <button type="button" class="attach-viewer-btn" id="attach-viewer-download" onclick="downloadCurrentAttachment()">⬇ Завантажити</button>

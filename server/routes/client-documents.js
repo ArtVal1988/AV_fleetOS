@@ -162,6 +162,61 @@ router.post('/:id/crop', auth, async (req, res) => {
   }
 });
 
+// POST /api/client-documents/:id/straighten — body: { angle } in degrees
+// (positive = clockwise, |angle| <= 45). Rotates by an arbitrary small angle
+// to level a crooked photo, then crops the centered, same-aspect rectangle that
+// fits entirely inside the rotated picture, so no empty corners are left.
+// Registered before the /:cid/:key upload route, like /rotate and /crop.
+router.post('/:id/straighten', auth, async (req, res) => {
+  const id = Number(req.params.id);
+  const angle = Number(req.body?.angle);
+  if (!Number.isFinite(angle) || Math.abs(angle) > 45) {
+    return res.status(400).json({ error: 'Некоректний кут' });
+  }
+  if (Math.abs(angle) < 0.05) return res.json({ ok: true, unchanged: true });
+  const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
+  if (!row) return res.status(404).json({ error: 'Не знайдено' });
+  if (!THUMBNAIL_MIME.has(row.mime_type)) {
+    return res.status(400).json({ error: 'Цей тип файлу не можна вирівняти' });
+  }
+  try {
+    const fullPath = path.join(UPLOAD_DIR, row.filename);
+    const oriented = await sharp(fullPath).rotate().toBuffer(); // bake EXIF orientation
+    const meta = await sharp(oriented).metadata();
+    const rad = Math.abs(angle) * Math.PI / 180;
+    const ratio = Math.max(meta.width / meta.height, meta.height / meta.width);
+    const k = 0.995 / (Math.cos(rad) + ratio * Math.sin(rad));
+    const rotated = await sharp(oriented)
+      .rotate(angle, { background: { r: 255, g: 255, b: 255, alpha: 1 } })
+      .toBuffer();
+    const rmeta = await sharp(rotated).metadata();
+    const cw = Math.max(20, Math.floor(meta.width * k));
+    const ch = Math.max(20, Math.floor(meta.height * k));
+    const left = Math.max(0, Math.round((rmeta.width - cw) / 2));
+    const top = Math.max(0, Math.round((rmeta.height - ch) / 2));
+    const pipeline = sharp(rotated).extract({
+      left, top,
+      width: Math.min(cw, rmeta.width - left),
+      height: Math.min(ch, rmeta.height - top),
+    });
+    const encoded = row.mime_type === 'image/jpeg' ? pipeline.jpeg({ quality: 92, mozjpeg: true })
+      : row.mime_type === 'image/png' ? pipeline.png({ compressionLevel: 9 })
+      : pipeline.webp({ quality: 92 });
+    const buffer = await encoded.toBuffer();
+    await sharp(buffer).toFile(fullPath);
+    if (row.thumb_filename) {
+      const thumbPath = path.join(UPLOAD_DIR, row.thumb_filename);
+      const thumbBuf = await sharp(buffer).resize(400, 400, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 70 }).toBuffer();
+      await sharp(thumbBuf).toFile(thumbPath);
+    }
+    db.prepare('UPDATE client_documents SET size = ? WHERE id = ?').run(buffer.length, id);
+    res.json({ ok: true, size: buffer.length });
+  } catch (e) {
+    console.error('[straighten] Failed for document', id, ':', e);
+    res.status(500).json({ error: 'Не вдалося вирівняти файл' });
+  }
+});
+
 // POST /api/client-documents/:cid/:key — upload one file (key = passport | license | other)
 // Resizes (only if larger than the cap, never upscales) and re-encodes at a
 // quality setting that's visually indistinguishable for document photos,
