@@ -39,6 +39,7 @@ router.put('/:id', auth, (req, res) => {
 
 // DELETE /api/clients/:id
 router.delete('/:id', auth, (req, res) => {
+  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'Видаляти клієнтів може лише адміністратор' });
   const row = db.prepare('SELECT id, data FROM clients WHERE id = ?').get(req.params.id);
   const deletedData = row ? { ...JSON.parse(row.data), id: row.id } : null;
   db.prepare('DELETE FROM clients WHERE id = ?').run(req.params.id);

@@ -2133,6 +2133,33 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
+      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
+      <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
+      <div id="cf-docs-active" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Паспорт
+            <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadClientDoc('passport', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 ІПН
+            <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadClientDoc('inn', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Водійське
+            <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadClientDoc('license', this)">
+          </label>
+          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
+            📷 Інше
+            <input type="file" accept="image/*,.pdf" multiple style="display:none" onchange="uploadClientDoc('other', this)">
+          </label>
+        </div>
+        <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+      <div id="cf-history-section" style="display:none">
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Історія замовлень</div>
+        <div id="cf-history-list"></div>
+      </div>
       <div class="msec-inner-sep">
         <button type="button" class="extras-toggle" id="cf-notes-toggle-btn" onclick="toggleCfNotesPanel()">
           <span id="cf-notes-toggle-icon">⊕</span>
@@ -2142,29 +2169,6 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="extras-panel" id="cf-notes-panel" style="display:none">
           <textarea id="cf-notes" class="vf-inp" style="width:100%;min-height:56px;margin:12px 0" placeholder="Додаткова інформація про клієнта..."></textarea>
         </div>
-      </div>
-      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
-      <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
-      <div id="cf-docs-active" style="display:none">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
-            📷 Паспорт
-            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('passport', this)">
-          </label>
-          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
-            📷 Посвідчення водія
-            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('license', this)">
-          </label>
-          <label style="background:#f7f8fb;border:1px dashed #d1d5db;border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;font-size:10px;color:#6b7280">
-            📷 Інше
-            <input type="file" accept="image/*,.pdf" style="display:none" onchange="uploadClientDoc('other', this)">
-          </label>
-        </div>
-        <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
-      </div>
-      <div id="cf-history-section" style="display:none">
-        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Історія замовлень</div>
-        <div id="cf-history-list"></div>
       </div>
     </div>
     <div style="padding:14px 28px 22px;display:flex;gap:8px;justify-content:space-between;position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -4px 12px rgba(0,0,0,.06);z-index:5">
@@ -13591,7 +13595,7 @@ function openClientForm(id, defaultCategory){
     if(chevron) chevron.style.transform = hasData ? 'rotate(180deg)' : '';
   });
   updateCfDocLock();
-  document.getElementById('cf-delete-btn').style.display = id ? '' : 'none';
+  document.getElementById('cf-delete-btn').style.display = (id && _currentUser && _currentUser.role === 'admin') ? '' : 'none'; // delete is admin-only
   document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
   document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
   if(id) loadClientDocs(id);
@@ -13739,7 +13743,6 @@ function renderClientBookingHistory(clientId){
       <span style="width:8px;height:8px;border-radius:50%;background:${st?.color||'#9ca3af'};flex-shrink:0"></span>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;color:#1a1d26">${fmt(b.start)}–${fmt(b.end)} · ${v?.plate||''} ${stripYear(v?.name||'')}</div>
-        <div style="font-size:10px;color:#9ca3af;margin-top:1px">${st?.label||b.status||''}</div>
       </div>
     </div>`;
   }).join('');
@@ -13803,6 +13806,7 @@ async function saveClientForm(){
 async function deleteClientFromForm(){
   const id = document.getElementById('cf-id').value;
   if(!id) return;
+  if(!(_currentUser && _currentUser.role === 'admin')){ alert('Видаляти клієнтів може лише адміністратор.'); return; }
   if(!confirm('Видалити цього клієнта?')) return;
   await apiFetch('DELETE', '/clients/'+id);
   await loadClientsFromServer();
@@ -13820,7 +13824,7 @@ async function loadClientDocs(clientId){
 function renderClientDocsList(){
   const wrap = document.getElementById('cf-docs-list');
   if(!wrap) return;
-  const labels = {passport:'Паспорт', license:'Посвідчення водія', other:'Інше'};
+  const labels = {passport:'Паспорт', inn:'ІПН', license:'Водійське', other:'Інше'};
   if(!CLIENT_DOCS.length){
     wrap.innerHTML = '<div style="font-size:11px;color:#9ca3af;font-style:italic">Ще немає завантажених фото</div>';
     return;
@@ -13841,19 +13845,25 @@ function renderClientDocsList(){
   }).join('');
 }
 async function uploadClientDoc(key, input){
-  const file = input.files[0];
-  if(!file) return;
+  const files = Array.from(input.files || []); // copy first: clearing input.value below empties the live FileList
+  input.value = '';
+  if(!files.length) return;
   const clientId = document.getElementById('cf-id').value;
   if(!clientId) return;
-  const formData = new FormData();
-  formData.append('file', file);
-  const res = await fetch(API_BASE + '/client-documents/' + clientId + '/' + key, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + _token },
-    body: formData,
-  });
-  input.value = '';
-  if(!res.ok){ alert('Не вдалося завантажити фото'); return; }
+  const failed = [];
+  for(const file of files){
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(API_BASE + '/client-documents/' + clientId + '/' + key, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + _token },
+        body: formData,
+      });
+      if(!res.ok) failed.push(file.name);
+    } catch(e){ failed.push(file.name); }
+  }
+  if(failed.length) alert('Не вдалося завантажити: ' + failed.join(', '));
   await loadClientDocs(clientId);
 }
 async function deleteClientDoc(id){
