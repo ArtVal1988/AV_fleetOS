@@ -70,3 +70,71 @@ Notes:
   `git config credential.helper store` were both tried and do **not** work
   here — only the `http.extraheader` approach gets past the proxy's
   first-request block.
+
+## Working with the user (Artem)
+
+- Always answer in **Ukrainian** (he is learning English). Refer to yourself in
+  the **masculine** form ("зробив", "перевірив", "запушив") — he asked to keep the
+  earlier manner. He is not a developer: short, concrete steps; every server
+  command in its own copyable code block.
+- Never commit/print the GitHub token (see section above).
+- Before saying something works, test it (Playwright is available at
+  `/opt/pw-browsers/chromium`; open `public/index.html` via `file://` and hide
+  `#login-overlay`, or serve it on a local port).
+
+## Environments
+
+| | Production | Test (TEMP) |
+|---|---|---|
+| Address | av-fcs.com (port 3000) | http://173.242.58.173:3003 |
+| Folder | `/var/www/AV_fleetOS-server` | `/var/www/AV_fleetOS-temp` |
+| Database | real data | **separate** database |
+| pm2 process | `AV_fleetOS` | `AV_fleetOS-temp` |
+| Update | `/root/update.sh` (+ `pm2 restart AV_fleetOS` for backend changes) | `/root/update-temp.sh` (restarts itself) |
+
+- `/var/www/AV_fleetOS` is only the git clone both sites copy from.
+- `deploy/update-temp-ref.sh <branch|tag|commit>` puts any git version on TEMP
+  (code only; DB/.env/uploads untouched) and verifies the index.html md5.
+  `... main` returns TEMP to the current main.
+- `PROJECT_NOTES.md` still describes an older "staging :3001" setup — outdated;
+  TEMP :3003 replaced it.
+- **One code line**: both sites run the same `main`. Test-only behaviour is
+  decided at run time by `location.port === '3003'` (never by branches), so
+  bug fixes reach production unchanged and nothing has to be stripped on release.
+
+## Run-time test-site features (port 3003 only)
+
+- Striped bar + "🧪 ТЕСТОВИЙ САЙТ" tag + title prefix (script at the end of
+  `index.html`).
+- **Early return (ДП, "Дострокове повернення")** — individuals only, lives in the
+  «Утримання» panel of the booking modal. Gated by `earlyReturnEnabled()`; on
+  production it is dormant (user wants to test it first). To launch it for
+  everyone, remove the port condition in `earlyReturnEnabled()`.
+  Model: `b.end` = actual return date; `b.daysOverride` = billed days (frozen,
+  editable for partial refunds); `b.earlyReturn = {active, plannedEnd,
+  plannedDays}`. Calendar shows paid-but-free days as hatched empty cells
+  (`buildEarlyReturnCellMap`). Reports need no change
+  (`resolveBookingDaySegments` already bills days past the recorded end).
+  Branches `early-return-test` / `early-return-full` are old snapshots (backup).
+
+## Other features added in this period (so they are not re-invented)
+
+- Client card is split into 4 coloured blocks (`.cf-block .cf-b1..b4`);
+  address field sits at the bottom of the Passport block; delete button is
+  admin-only (UI + server 403 → backend change needs `pm2 restart`).
+- Client documents: multi-file upload, download name
+  "ПІБ - Паспорт|ІПН|Водійське|Інше[ N].ext", desktop download without the OS share
+  sheet, **crop** (`POST /api/client-documents/:id/crop`) and **straighten**
+  (`.../straighten`) tools in the attachment viewer — server side, so they need
+  `pm2 restart`. Uploads are compressed on the server (max 2400 px, quality 85) — kept as is.
+- Admin popup when another user deletes a booking, with "Відновити" (reuses
+  `POST /api/activity-log/:id/undo`); frontend polls every 60 s; seen-state is per
+  admin in localStorage.
+- Booking payment form / deposit form start **empty** (no cash default);
+  mandatory only for status «В оренді» (main form skipped for business clients,
+  deposit form required only if a deposit amount is set). Mixed-payment icon
+  uses `#749190`.
+- Notes are stored as one string; a note starts with `[Автор · дата]`, extra
+  lines (Shift+Enter) belong to the previous note (`splitNotesEntries`).
+- Date/time fields: manual typing works site-wide; New-booking date display
+  fields accept digits only and auto-insert dots.
