@@ -1151,6 +1151,14 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b4{background:#f9fafb;border-left-color:#d1d5db;}
 .msec-ext{background:#ecfdf5;border-left-color:#34d399;}
 .msec-sub{background:#f5f3ff;border-left-color:#c4b5fd;}
+/* Client card: 4 visual blocks */
+.cf-block{border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid rgba(0,0,0,.07);border-left:4px solid transparent;}
+.cf-block-title{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:700;margin:0 0 8px;}
+.cf-b1{background:#eff6ff;border-left-color:#60a5fa;}
+.cf-b2{background:#fffbeb;border-left-color:#fbbf24;}
+.cf-b3{background:#f0fdf4;border-left-color:#4ade80;}
+.cf-b4{background:#f5f3ff;border-left-color:#a78bfa;}
+.cf-block .cf-b-last{margin-bottom:0 !important;}
 #bm-fines-section{background:#fef2f2!important;border-left-color:#f87171!important;}
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
@@ -1969,6 +1977,7 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div style="padding:16px 24px">
       <input type="hidden" id="cf-id">
+      <div class="cf-block cf-b1" id="cf-block-main">
       <div class="client-type-switcher" id="cf-category-switcher" style="margin-bottom:12px">
         <button type="button" class="ct-btn active" data-cat="individual" onclick="setClientFormCategory('individual')">ФІЗ особа</button>
         <button type="button" class="ct-btn" data-cat="fop_no_vat" onclick="setClientFormCategory('fop_no_vat')">ФОП / ТОВ без ПДВ</button>
@@ -2051,12 +2060,15 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
+      <div id="cf-address-wrap" class="cf-individual-only" style="margin-bottom:0">
+        <label class="vf-lbl">Місце проживання/прописки</label>
+        <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
+      </div>
+      </div><!-- /cf-block-main (блок 1) -->
+
+      <div class="cf-block cf-b2 cf-individual-only" id="cf-block-passport">
       <div id="cf-resident-fields" class="cf-individual-only">
-        <div style="margin-bottom:10px">
-          <label class="vf-lbl">Місце проживання/прописки</label>
-          <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
-        </div>
-        <div class="msec-inner-sep" style="margin-top:0">
+        <div style="margin-top:0">
           <div style="display:flex;gap:8px">
             <button type="button" class="extras-toggle" id="cf-passport-toggle-btn" onclick="toggleCfDocPanel('passport')" style="flex:1">
               <span id="cf-passport-toggle-icon">⊕</span>
@@ -2110,7 +2122,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
 
       <div id="cf-nonresident-fields" class="cf-individual-only" style="display:none">
-        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Закордонний паспорт</div>
+        <div class="cf-block-title">Закордонний паспорт</div>
         <div style="display:flex;gap:10px;margin-bottom:10px">
           <div style="flex:1">
             <label class="vf-lbl">Громадянство</label>
@@ -2132,8 +2144,10 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
       </div>
+      </div><!-- /cf-block-passport (блок 2) -->
 
-      <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Фото документів</div>
+      <div class="cf-block cf-b3" id="cf-block-docs">
+      <div class="cf-block-title">Фото документів</div>
       <div id="cf-docs-wrap" style="display:none;font-size:11px;color:#9ca3af;font-style:italic;margin-bottom:8px">Спершу збережіть клієнта, щоб додати фото документів</div>
       <div id="cf-docs-active" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
@@ -2156,8 +2170,9 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
         <div id="cf-docs-list" style="display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
-      <div id="cf-history-section" style="display:none">
-        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin:12px 0 7px;border-top:1px solid #f0f2f5;padding-top:14px">Історія замовлень</div>
+      </div><!-- /cf-block-docs (блок 3) -->
+      <div id="cf-history-section" class="cf-block cf-b4" style="display:none">
+        <div class="cf-block-title">Історія замовлень</div>
         <div id="cf-history-list"></div>
       </div>
       <div class="msec-inner-sep">
@@ -13668,6 +13683,8 @@ function setClientResidency(type){
   const isResident = type !== 'nonresident';
   cfCurrentResidency = isResident ? 'resident' : 'nonresident';
   document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
+  const _addrWrap = document.getElementById('cf-address-wrap');
+  if(_addrWrap) _addrWrap.style.display = isResident ? '' : 'none';
   document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
   const resBtn = document.getElementById('cf-res-resident');
   const nrBtn = document.getElementById('cf-res-nonresident');
