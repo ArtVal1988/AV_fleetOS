@@ -4089,6 +4089,7 @@ let bookingsById = new Map();
 // hatched empty cells. Only filled where no booking occupies the cell.
 function buildEarlyReturnCellMap(){
   const map = new Map();
+  if(!earlyReturnEnabled()) return map;
   bookings.forEach(b => {
     if(!b.earlyReturn || !b.earlyReturn.active || !(b.daysOverride > 0)) return;
     if(IS_ACCOUNTANT_ROLE && (!b.clientType || b.clientType==='individual')) return;
@@ -4492,7 +4493,7 @@ function renderCalendar(){
         // index rather than requiring the whole visible span to exactly
         // equal Math.ceil(daysOverride) — a booking can span more calendar
         // days than its billed day count.
-        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && !(booking.earlyReturn && booking.earlyReturn.active);
+        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && !(earlyReturnEnabled() && booking.earlyReturn && booking.earlyReturn.active);
         const repairSplitHtml = isPaidDuringRepair
           ? `<div class="split-half split-top" style="background:${cellColor}"></div><div class="split-half split-bot" style="background:${SM['repair']?.color||'#f09060'}"></div>`
           : '';
@@ -4892,7 +4893,7 @@ function showTooltip(e,bid,subContext){
     ${nameRow}
     ${pickupRow}
     ${retRow}
-    ${(b.earlyReturn&&b.earlyReturn.active)?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Дострокове повернення</span><span class="tt-val" style="color:#475569">план до ${fmt(b.earlyReturn.plannedEnd)} · оплачено ${b.daysOverride||''} діб</span></div>`:''}
+    ${(earlyReturnEnabled()&&b.earlyReturn&&b.earlyReturn.active)?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Дострокове повернення</span><span class="tt-val" style="color:#475569">план до ${fmt(b.earlyReturn.plannedEnd)} · оплачено ${b.daysOverride||''} діб</span></div>`:''}
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
@@ -6092,7 +6093,9 @@ function saveBooking(){
     depositPayMethod: bmDepositPayMethod,
     depositMixedNote: document.getElementById('bm-deposit-mixed-note')?.value.trim() || '',
     daysOverride:parseFloat(document.getElementById('bm-days-override')?.value)||0,
-    earlyReturn: (isEarlyReturnActive() && earlyReturnPlannedEnd) ? {active:true, plannedEnd: earlyReturnPlannedEnd, plannedDays: earlyReturnPlannedDays} : null,
+    earlyReturn: earlyReturnEnabled()
+      ? ((isEarlyReturnActive() && earlyReturnPlannedEnd) ? {active:true, plannedEnd: earlyReturnPlannedEnd, plannedDays: earlyReturnPlannedDays} : null)
+      : ((editBid && bookings.find(x=>x.id===editBid)?.earlyReturn) || null), // flag off: keep whatever is already stored, never lose it
     discount:parseFloat(document.getElementById('bm-discount').value)||0,
 
     startKm:parseThousands(document.getElementById('bm-start-km')?.value),
@@ -12704,7 +12707,11 @@ function fmtSmart(n){
 // the planned count, editable for partial refunds), b.earlyReturn = {active,
 // plannedEnd, plannedDays} for display (hatched "paid, car free" cells).
 let earlyReturnPlannedEnd = null, earlyReturnPlannedDays = 0;
-function isEarlyReturnActive(){ return !!document.getElementById('bm-early-return')?.checked; }
+// ДП is switched on only on the test site (port 3003) for now. The code is the
+// same everywhere; on production it stays dormant, so it can be tested without
+// affecting daily work — remove this one condition to launch it for everyone.
+function earlyReturnEnabled(){ return location.port === '3003'; }
+function isEarlyReturnActive(){ return earlyReturnEnabled() && !!document.getElementById('bm-early-return')?.checked; }
 function onEarlyReturnToggle(){
   const cb = document.getElementById('bm-early-return');
   if(!cb) return;
@@ -12745,6 +12752,7 @@ function loadEarlyReturnState(b){
 function updateEarlyReturnUI(){
   const wrap = document.getElementById('bm-early-return-wrap');
   if(!wrap) return;
+  if(!earlyReturnEnabled()){ wrap.style.display = 'none'; return; }
   const type = document.getElementById('bm-client-type')?.value;
   const statusVal = document.getElementById('bm-status')?.value;
   const isOrder = statusVal ? (SM[statusVal]?.isBooking !== false) : true;
