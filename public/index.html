@@ -11893,12 +11893,19 @@ function updateStatusSelectColor(isUserChange){
   sel.style.fontWeight = '600';
   updateBookingDetailsVisibility();
   updateBmSectionAvailability();
-  // Status just switched to «В оренді»: outline every mandatory finance field
-  // that is still empty (saveBooking enforces the same list).
+  // Status just switched to «В оренді»: outline EVERY mandatory field that is
+  // still empty (the same set saveBooking checks), so nothing is a surprise on save.
   if(isUserChange === true && sel.value === 'rented'){
-    const missing = rentedRequiredMissing().map(m => m.field);
+    const missing = [];
+    if(!parseInt(document.getElementById('bm-vehicle')?.value)) missing.push('bm-vehicle');
+    if(COMPANY_REQUIRED_STATUSES.includes('rented') && !currentOrderCompany) missing.push('bm-company-toprent', 'bm-company-rentplus');
+    if(!(document.getElementById('bm-name')?.value || '').trim()) missing.push('bm-name');
+    if(!(document.getElementById('bm-phone')?.value || '').trim()) missing.push('bm-phone');
+    if(!(parseFloat((document.getElementById('bm-exchange-rate')?.value || '').replace(',', '.')) > 0)) missing.push('bm-exchange-rate');
     if(bmDepositPayMethod !== 'mixed' && (document.getElementById('bm-deposit')?.value || '').trim() === '') missing.push('bm-deposit-wrap');
-    if(missing.length) highlightField(missing);
+    if(!(parseThousands(document.getElementById('bm-start-km')?.value) > 0)) missing.push('bm-start-km');
+    rentedRequiredMissing().forEach(m => missing.push(m.field));
+    highlightField(missing);
   }
 }
 // Statuses that don't represent an actual client rental — for these we hide all
