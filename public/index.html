@@ -6660,7 +6660,11 @@ async function downloadCurrentAttachment(){
   // downloading, leaving the user stranded on a blank/black screen with no
   // way back. navigator.share() with a File is the reliable native path —
   // it includes a proper 'Save to Photos'/'Save to Files' option.
-  if(navigator.share && navigator.canShare){
+  // Desktop browsers (Windows/macOS) also expose navigator.share, but it opens the OS
+  // share sheet (with an image-size/quality picker) instead of a plain download —
+  // so use the native share path on phones/tablets only.
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if(isMobileDevice && navigator.share && navigator.canShare){
     try{
       const blob = await (await fetch(url)).blob();
       const file = new File([blob], name, {type: blob.type || 'application/octet-stream'});
