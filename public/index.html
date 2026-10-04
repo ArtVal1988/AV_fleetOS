@@ -16689,5 +16689,24 @@ function startAutoRefresh(){
     </div>
   </div>
 </div>
+<script>
+// ── TEST-SITE MARKER ────────────────────────────────────────────
+// The SAME index.html is deployed to the test site (port 3003) and to
+// production, so the marker is decided at run time from the address:
+// it only appears when the page is opened on port 3003. On the real site it
+// does nothing, which means nothing has to be removed when a change is
+// promoted from the test site to production.
+(function(){
+  if(location.port !== '3003') return;
+  document.title = '🧪 ТЕСТ · ' + document.title;
+  const bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;height:5px;background:repeating-linear-gradient(135deg,#f59e0b 0 12px,#1f2937 12px 24px);z-index:100000;pointer-events:none';
+  const tag = document.createElement('div');
+  tag.textContent = '🧪 ТЕСТОВИЙ САЙТ';
+  tag.style.cssText = 'position:fixed;top:5px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#1f2937;font:700 11px/1 Verdana,sans-serif;letter-spacing:1px;padding:4px 14px;border-radius:0 0 8px 8px;z-index:100000;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.25)';
+  const add = () => { document.body.appendChild(bar); document.body.appendChild(tag); };
+  if(document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
+</script>
 </body>
 </html>
