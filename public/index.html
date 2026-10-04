@@ -2060,10 +2060,6 @@ input.dm-pf-val.tel{font-size:14px;}
         </div>
       </div>
 
-      <div id="cf-address-wrap" class="cf-individual-only" style="margin-bottom:0">
-        <label class="vf-lbl">Місце проживання/прописки</label>
-        <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
-      </div>
       </div><!-- /cf-block-main (блок 1) -->
 
       <div class="cf-block cf-b2 cf-individual-only" id="cf-block-passport">
@@ -2117,6 +2113,10 @@ input.dm-pf-val.tel{font-size:14px;}
               </div>
             </div>
           </div>
+        </div>
+        <div style="margin-top:12px">
+          <label class="vf-lbl">Місце проживання/прописки</label>
+          <input id="cf-address" type="text" class="vf-inp" placeholder="м. Київ, вул. ..." style="width:100%">
         </div>
 
       </div>
@@ -13683,8 +13683,6 @@ function setClientResidency(type){
   const isResident = type !== 'nonresident';
   cfCurrentResidency = isResident ? 'resident' : 'nonresident';
   document.getElementById('cf-resident-fields').style.display = isResident ? 'block' : 'none';
-  const _addrWrap = document.getElementById('cf-address-wrap');
-  if(_addrWrap) _addrWrap.style.display = isResident ? '' : 'none';
   document.getElementById('cf-nonresident-fields').style.display = isResident ? 'none' : 'block';
   const resBtn = document.getElementById('cf-res-resident');
   const nrBtn = document.getElementById('cf-res-nonresident');
