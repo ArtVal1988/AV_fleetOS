@@ -2625,8 +2625,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-pickup-label">↑ Отримання</div>
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="onPickupDateChanged(this)">
-          <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-pickup-date'), this)">
-          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
+          <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" onmousedown="openDateDropdown(document.getElementById('bm-pickup-date'), this)" onblur="commitTypedDateDisplay(this,'bm-pickup-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
@@ -2635,8 +2635,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){event.preventDefault();openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
-          <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" readonly onmousedown="event.preventDefault();openDateDropdown(document.getElementById('bm-return-date'), this)">
-          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
+          <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" onmousedown="openDateDropdown(document.getElementById('bm-return-date'), this)" onblur="commitTypedDateDisplay(this,'bm-return-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
+          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
@@ -3458,6 +3458,41 @@ function syncDateDisplay(realId){
   const disp = document.getElementById(realId+'-display');
   if(!real || !disp) return;
   disp.value = real.value ? fmtCaseDate(real.value) : '';
+}
+// Lets an operator type a date directly (дд.мм.рррр, also accepts / or -
+// as separators) instead of being forced to click through the calendar
+// dropdown month by month — painful for a date far from today (an old
+// birthdate, an early pickup, etc). Returns the ISO "YYYY-MM-DD" string
+// the rest of the app expects, or null if the text isn't a complete,
+// valid date.
+function parseTypedUkDate(str){
+  if(!str) return null;
+  const m = str.trim().match(/^(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{2,4})$/);
+  if(!m) return null;
+  const d = parseInt(m[1],10), mo = parseInt(m[2],10);
+  let y = parseInt(m[3],10);
+  if(m[3].length <= 2) y += (y < 70 ? 2000 : 1900);
+  if(mo<1||mo>12||d<1||d>31) return null;
+  const dt = new Date(y, mo-1, d);
+  if(dt.getFullYear()!==y || dt.getMonth()!==mo-1 || dt.getDate()!==d) return null; // e.g. 31.02
+  return dStr(y, mo-1, d);
+}
+// Commits whatever the operator typed into a "-display" date field: if it
+// parses to a valid date, writes it into the real underlying field and
+// fires input/change on it (same as picking a day in the dropdown does,
+// so every existing side effect — autofill, totals, validation — still
+// runs); either way, reformats the display field back to the canonical
+// dd.mm.yyyy look, which also quietly discards unparseable text.
+function commitTypedDateDisplay(displayEl, realId){
+  const real = document.getElementById(realId);
+  if(!real) return;
+  const parsed = parseTypedUkDate(displayEl.value);
+  if(parsed && parsed !== real.value){
+    real.value = parsed;
+    real.dispatchEvent(new Event('input', {bubbles:true}));
+    real.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+  syncDateDisplay(realId);
 }
 function onPickupDateChanged(el){
   document.getElementById('bm-start').value = el.value;
