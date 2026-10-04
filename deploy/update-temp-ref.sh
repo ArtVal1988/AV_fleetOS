@@ -13,7 +13,10 @@ TEMP_DIR="${TEMP_DIR:-/var/www/AV_fleetOS-temp}"
 REF="${1:-main}"
 
 cd "$REPO_DIR"
-git fetch origin --tags --prune
+git fetch origin --tags --prune || true
+# Клон на сервері може відстежувати лише main — тоді інші гілки треба
+# отримати явно (інакше origin/<гілка> не існує).
+git fetch origin "+refs/heads/$REF:refs/remotes/origin/$REF" 2>/dev/null || true
 if git rev-parse --verify -q "origin/$REF" >/dev/null; then REF_FULL="origin/$REF"; else REF_FULL="$REF"; fi
 if ! git rev-parse --verify -q "$REF_FULL^{commit}" >/dev/null; then
     echo "❌ Не знайдено версію: $REF"; exit 1
