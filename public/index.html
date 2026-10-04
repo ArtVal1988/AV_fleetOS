@@ -2684,13 +2684,6 @@ input.dm-pf-val.tel{font-size:14px;}
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
-      <div id="bm-early-return-wrap" style="display:none;margin-top:8px;padding:8px 10px;border:1px dashed #94a3b8;border-radius:8px;background:rgba(148,163,184,.10)">
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;margin:0">
-          <input type="checkbox" id="bm-early-return" onchange="onEarlyReturnToggle()" style="width:16px;height:16px;margin:0;cursor:pointer">
-          <span>Дострокове повернення (оплата за невикористані доби залишається у нас)</span>
-        </label>
-        <div id="bm-early-return-info" style="display:none;margin-top:6px;font-size:11px;line-height:1.5;color:#475569"></div>
-      </div>
       <div id="bm-return-anchor-normal"></div>
       </div><!-- /bm-normal-dates-wrap -->
     <div class="msec-inner-sep" id="bm-block-extras">
@@ -3189,6 +3182,13 @@ input.dm-pf-val.tel{font-size:14px;}
               <div class="ded-cur-btns"><button type="button" class="ded-cur-btn active" id="ded-cur-refund-uah" onclick="setDedCur('refund','₴')">₴</button><button type="button" class="ded-cur-btn" id="ded-cur-refund-usd" onclick="setDedCur('refund','$')">$</button></div>
             </div>
           </div>
+        </div>
+        <div id="bm-early-return-wrap" style="display:none;margin-top:6px">
+          <label class="ded-row" style="cursor:pointer;margin:0">
+            <input type="checkbox" id="bm-early-return" onchange="onEarlyReturnToggle()" style="width:16px;height:16px;margin:0;cursor:pointer;flex-shrink:0">
+            <span class="ded-icon">⏪</span><span class="ded-name">Дострокове повернення <span style="font-weight:400;color:#94a3b8">(оплата за невикористані доби залишається у нас)</span></span>
+          </label>
+          <div id="bm-early-return-info" style="display:none;margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(148,163,184,.12);font-size:11px;line-height:1.5;color:#475569"></div>
         </div>
         <div id="ded-damage-list" style="display:none;margin:8px 0 4px 0"></div>
         <div id="bm-ded-custom-list" style="margin-top:6px"></div>
@@ -9086,7 +9086,7 @@ function bmFineHasData(){ return (currentFines||[]).length > 0; }
 function bmRepHasData(){ return !!currentRepairPause; }
 function bmDedHasData(){
   const countEl = document.getElementById('ded-active-count');
-  return !!(countEl && countEl.style.display !== 'none');
+  return !!(countEl && countEl.style.display !== 'none') || isEarlyReturnActive();
 }
 // Auto-open any section that already has data when a booking is loaded,
 // so it's visible right away rather than needing a click every time —
@@ -12729,6 +12729,7 @@ function onEarlyReturnToggle(){
     daysOverrideTouched = false;
   }
   updateVatPreview();
+  if(typeof updateBmSectionButtons === 'function') updateBmSectionButtons();
 }
 function resetEarlyReturnState(){
   earlyReturnPlannedEnd = null; earlyReturnPlannedDays = 0;
@@ -12766,7 +12767,7 @@ function updateEarlyReturnUI(){
   let html = `Заплановано: до <b>${fmt(earlyReturnPlannedEnd)}</b> (${earlyReturnPlannedDays} діб). Фактично користувались: <b>${used}</b> діб. `
     + `Оплата залишається за <b>${billed}</b> діб → без повернення <b>${kept}</b> діб${money(kept)}.`;
   if(refundDays > 0) html += ` Повернуто клієнту: <b>${refundDays}</b> діб${money(refundDays)}.`;
-  html += `<br><span style="color:#94a3b8">Вкажіть фактичну дату у полі «Повернення». Якщо частину коштів повертаєте — зменште «Кільк.» (діб до оплати).</span>`;
+  html += `<br><span style="color:#94a3b8">Вкажіть фактичну дату у полі «Повернення». Якщо частину коштів повертаєте — зменште «Кільк.» (діб до оплати) або додайте «Повернення клієнту» вище.</span>`;
   if(earlyReturnPlannedEnd && end && end >= earlyReturnPlannedEnd) html += `<br><span style="color:#dc2626;font-weight:600">Фактична дата повернення має бути раніше запланованої (${fmt(earlyReturnPlannedEnd)}).</span>`;
   info.innerHTML = html;
   info.style.display = 'block';
