@@ -96,6 +96,9 @@ Notes:
 - `deploy/update-temp-ref.sh <branch|tag|commit>` puts any git version on TEMP
   (code only; DB/.env/uploads untouched) and verifies the index.html md5.
   `... main` returns TEMP to the current main.
+- `deploy/copy-prod-db-to-temp.sh` replaces the TEMP database with a full copy of the PROD database
+  (VACUUM INTO; PROD untouched; old TEMP db kept as `.bak-<time>`; uploads not copied).
+  Run: `bash /var/www/AV_fleetOS/deploy/copy-prod-db-to-temp.sh` (after `bash /root/update-temp.sh` so the clone is current).
 - `PROJECT_NOTES.md` still describes an older "staging :3001" setup — outdated;
   TEMP :3003 replaced it.
 - **One code line**: both sites run the same `main`. Test-only behaviour is
