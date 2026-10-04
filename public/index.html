@@ -488,6 +488,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .td-day.today-col .cell-date-num{color:#0055ff;font-weight:700;opacity:1;}
 .day-cell{height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;position:relative;}
 .day-cell.empty{background:transparent;color:transparent;}
+.td-day.early-paid .day-cell.empty{background:repeating-linear-gradient(135deg,rgba(100,116,139,.28) 0 3px,transparent 3px 7px);}
 .td-day.substitute-covered .day-cell::after{content:'🔄';position:absolute;top:1px;right:1px;font-size:8px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.6));}
 .td-day.repair-pause-day .day-cell::after{content:'🔧';position:absolute;top:1px;right:1px;font-size:8px;line-height:1;filter:drop-shadow(0 0 1px rgba(0,0,0,.6));}
 .day-cell.empty:hover{background:var(--surface2);color:var(--muted);}
@@ -2677,11 +2678,18 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
+          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;if(!isEarlyReturnActive())daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
           <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" oninput="filterTypedDateChars(this)" maxlength="10" inputmode="numeric" autocomplete="off" onmousedown="openDateDropdown(document.getElementById('bm-return-date'), this)" onblur="commitTypedDateDisplay(this,'bm-return-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
           <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
+      </div>
+      <div id="bm-early-return-wrap" style="display:none;margin-top:8px;padding:8px 10px;border:1px dashed #94a3b8;border-radius:8px;background:rgba(148,163,184,.10)">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;margin:0">
+          <input type="checkbox" id="bm-early-return" onchange="onEarlyReturnToggle()" style="width:16px;height:16px;margin:0;cursor:pointer">
+          <span>Дострокове повернення (оплата за невикористані доби залишається у нас)</span>
+        </label>
+        <div id="bm-early-return-info" style="display:none;margin-top:6px;font-size:11px;line-height:1.5;color:#475569"></div>
       </div>
       <div id="bm-return-anchor-normal"></div>
       </div><!-- /bm-normal-dates-wrap -->
@@ -4077,6 +4085,25 @@ function getDayExtension(b, dateStr){
   return null;
 }
 let bookingsById = new Map();
+// Days that were paid for but the car is already back (early return): shown as
+// hatched empty cells. Only filled where no booking occupies the cell.
+function buildEarlyReturnCellMap(){
+  const map = new Map();
+  bookings.forEach(b => {
+    if(!b.earlyReturn || !b.earlyReturn.active || !(b.daysOverride > 0)) return;
+    if(IS_ACCOUNTANT_ROLE && (!b.clientType || b.clientType==='individual')) return;
+    const paidThrough = addDaysStr(b.start, Math.ceil(b.daysOverride - 1e-9));
+    const lastDay = b.earlyReturn.plannedEnd && b.earlyReturn.plannedEnd < paidThrough ? b.earlyReturn.plannedEnd : paidThrough;
+    let cur = addOneDayStr(getEffectiveEnd(b));
+    let guard = 0;
+    while(cur <= lastDay && guard++ < 60){
+      const dt = new Date(cur);
+      map.set(`${b.vehicleId}_${dt.getUTCFullYear()}_${dt.getUTCMonth()}_${dt.getUTCDate()}`, b);
+      cur = addOneDayStr(cur);
+    }
+  });
+  return map;
+}
 function buildCellMap(){
   const map=new Map();
   bookingsById = new Map();
@@ -4336,6 +4363,7 @@ function removeSticker(id){
 function renderCalendar(){
   const cellMap=buildCellMap();
   const subMap=buildSubstituteCellMap();
+  const earlyMap=buildEarlyReturnCellMap();
   const total=VIEW_DAYS;
   const days=Array.from({length:total},(_,i)=>i+1);
   const isToday=d=>{const dt=colDate(d);return dt.getFullYear()===today.getFullYear()&&dt.getMonth()===today.getMonth()&&dt.getDate()===today.getDate();};
@@ -4377,9 +4405,10 @@ function renderCalendar(){
                 <span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span>
               </div></td>`;
           }
-          return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
+          const earlyB = earlyMap.get(k);
+          return`<td class="td-day${earlyB?' early-paid':''}${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
             data-vid="${v.id}" data-day="${d}" data-empty="1"
-            onmouseenter="showTooltipEmpty(event)"
+            onmouseenter="${earlyB?`if(!isMobileViewport())showTooltip(event,${earlyB.id})`:'showTooltipEmpty(event)'}"
             onmouseleave="hideTooltip()"
             onclick="onEmptyClick(event,${v.id},${d})">
             <div class="day-cell empty"><span class="cell-date-num">${String(colDate(d).getDate()).padStart(2,'0')}</span></div></td>`;
@@ -4463,7 +4492,7 @@ function renderCalendar(){
         // index rather than requiring the whole visible span to exactly
         // equal Math.ceil(daysOverride) — a booking can span more calendar
         // days than its billed day count.
-        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride);
+        const isHalfLastDay = isEnd && booking.daysOverride > 0 && !Number.isInteger(booking.daysOverride) && !(booking.earlyReturn && booking.earlyReturn.active);
         const repairSplitHtml = isPaidDuringRepair
           ? `<div class="split-half split-top" style="background:${cellColor}"></div><div class="split-half split-bot" style="background:${SM['repair']?.color||'#f09060'}"></div>`
           : '';
@@ -4863,6 +4892,7 @@ function showTooltip(e,bid,subContext){
     ${nameRow}
     ${pickupRow}
     ${retRow}
+    ${(b.earlyReturn&&b.earlyReturn.active)?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Дострокове повернення</span><span class="tt-val" style="color:#475569">план до ${fmt(b.earlyReturn.plannedEnd)} · оплачено ${b.daysOverride||''} діб</span></div>`:''}
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
@@ -5517,6 +5547,7 @@ function openBookingModal(vid=null,start=null,end=null){
   loadMainPayments([]);
   updatePartialPaymentAvailability();
   document.getElementById('bm-days-override').value='';
+  resetEarlyReturnState();
   if(document.getElementById('bm-note-author')) document.getElementById('bm-note-author').value='';
   daysOverrideTouched = false;
   rateManuallyTouched = false;
@@ -5692,6 +5723,7 @@ function editBooking(bid){
   const liveCur = document.getElementById('bm-currency').value||'$';
   document.getElementById('bm-days-override').value=b.daysOverride||'';
   daysOverrideTouched = !!(b.daysOverride>0);
+  loadEarlyReturnState(b);
   updateVatPreview();
   updateKmDiff();
   document.getElementById('bm-discount').value=b.discount||0;
@@ -5896,6 +5928,15 @@ function saveBooking(){
     errors.push({fields:'bm-deposit', message:'Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)'});
   }
 
+  if(isEarlyReturnActive() && earlyReturnPlannedEnd){
+    if(end && end >= earlyReturnPlannedEnd){
+      errors.push({fields:'bm-return-date', message:'Дострокове повернення: фактична дата повернення має бути раніше запланованої (' + fmt(earlyReturnPlannedEnd) + ').'});
+    }
+    if(!(parseFloat(document.getElementById('bm-days-override')?.value) > 0)){
+      errors.push({fields:'bm-days-override', message:'Дострокове повернення: вкажіть кількість діб, за які залишається оплата.'});
+    }
+  }
+
   // Payment form (Вартість) and deposit payment form are optional while the
   // order is only a reservation, but must be chosen once the status is «В оренді».
   // Business clients pay by bank transfer (no cash/card icons), so the main
@@ -6051,6 +6092,7 @@ function saveBooking(){
     depositPayMethod: bmDepositPayMethod,
     depositMixedNote: document.getElementById('bm-deposit-mixed-note')?.value.trim() || '',
     daysOverride:parseFloat(document.getElementById('bm-days-override')?.value)||0,
+    earlyReturn: (isEarlyReturnActive() && earlyReturnPlannedEnd) ? {active:true, plannedEnd: earlyReturnPlannedEnd, plannedDays: earlyReturnPlannedDays} : null,
     discount:parseFloat(document.getElementById('bm-discount').value)||0,
 
     startKm:parseThousands(document.getElementById('bm-start-km')?.value),
@@ -12655,7 +12697,82 @@ function fmt1(n){
 function fmtSmart(n){
   return (n||0).toLocaleString('uk-UA',{minimumFractionDigits:0,maximumFractionDigits:2});
 }
+// ── EARLY RETURN (individuals only) ─────────────────────────────
+// The client brings the car back before the planned end, but we keep the
+// payment for the unused days. Model: b.end = ACTUAL return date (so the
+// calendar frees the car right away), b.daysOverride = BILLED days (frozen at
+// the planned count, editable for partial refunds), b.earlyReturn = {active,
+// plannedEnd, plannedDays} for display (hatched "paid, car free" cells).
+let earlyReturnPlannedEnd = null, earlyReturnPlannedDays = 0;
+function isEarlyReturnActive(){ return !!document.getElementById('bm-early-return')?.checked; }
+function onEarlyReturnToggle(){
+  const cb = document.getElementById('bm-early-return');
+  if(!cb) return;
+  if(cb.checked){
+    const end = document.getElementById('bm-end').value || document.getElementById('bm-return-date').value;
+    const start = document.getElementById('bm-start').value;
+    if(!start || !end){ cb.checked = false; alert('Спершу вкажіть дати отримання та повернення.'); return; }
+    const daysInput = document.getElementById('bm-days-override');
+    const billed = parseFloat(daysInput?.value) || Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+    earlyReturnPlannedEnd = end;
+    earlyReturnPlannedDays = billed;
+    if(daysInput) daysInput.value = billed;
+    daysOverrideTouched = true; // freeze billed days — changing the return date must not shrink the price
+  } else {
+    if(earlyReturnPlannedEnd){
+      document.getElementById('bm-return-date').value = earlyReturnPlannedEnd;
+      document.getElementById('bm-end').value = earlyReturnPlannedEnd;
+      syncDateDisplay('bm-return-date');
+    }
+    earlyReturnPlannedEnd = null;
+    earlyReturnPlannedDays = 0;
+    daysOverrideTouched = false;
+  }
+  updateVatPreview();
+}
+function resetEarlyReturnState(){
+  earlyReturnPlannedEnd = null; earlyReturnPlannedDays = 0;
+  const cb = document.getElementById('bm-early-return'); if(cb) cb.checked = false;
+}
+function loadEarlyReturnState(b){
+  const er = b && b.earlyReturn && b.earlyReturn.active ? b.earlyReturn : null;
+  const cb = document.getElementById('bm-early-return');
+  if(cb) cb.checked = !!er;
+  earlyReturnPlannedEnd = er ? er.plannedEnd : null;
+  earlyReturnPlannedDays = er ? (er.plannedDays || 0) : 0;
+}
+function updateEarlyReturnUI(){
+  const wrap = document.getElementById('bm-early-return-wrap');
+  if(!wrap) return;
+  const type = document.getElementById('bm-client-type')?.value;
+  const statusVal = document.getElementById('bm-status')?.value;
+  const isOrder = statusVal ? (SM[statusVal]?.isBooking !== false) : true;
+  const eligible = type === 'individual' && isOrder;
+  const cb = document.getElementById('bm-early-return');
+  if(!eligible && cb && cb.checked){ cb.checked = false; earlyReturnPlannedEnd = null; earlyReturnPlannedDays = 0; } // e.g. client switched to a business type
+  wrap.style.display = eligible ? 'block' : 'none';
+  const info = document.getElementById('bm-early-return-info');
+  if(!info) return;
+  if(!eligible || !cb || !cb.checked){ info.style.display = 'none'; return; }
+  const start = document.getElementById('bm-start').value;
+  const end = document.getElementById('bm-end').value;
+  const billed = parseFloat(document.getElementById('bm-days-override')?.value) || 0;
+  const used = (start && end) ? Math.max(0, Math.round((new Date(end) - new Date(start)) / 86400000)) : 0;
+  const kept = Math.max(0, billed - used);
+  const refundDays = Math.max(0, earlyReturnPlannedDays - billed);
+  const rate = parseThousands(document.getElementById('bm-rate')?.value) || 0;
+  const cur = document.getElementById('bm-currency')?.value || '$';
+  const money = d => rate ? ' ≈ ' + fmtSmart(Math.round(d * rate * 100) / 100) + ' ' + cur : '';
+  let html = `Заплановано: до <b>${fmt(earlyReturnPlannedEnd)}</b> (${earlyReturnPlannedDays} діб). Фактично користувались: <b>${used}</b> діб. `
+    + `Оплата залишається за <b>${billed}</b> діб → без повернення <b>${kept}</b> діб${money(kept)}.`;
+  if(refundDays > 0) html += ` Повернуто клієнту: <b>${refundDays}</b> діб${money(refundDays)}.`;
+  html += `<br><span style="color:#94a3b8">Вкажіть фактичну дату у полі «Повернення». Якщо частину коштів повертаєте — зменште «Кільк.» (діб до оплати).</span>`;
+  if(earlyReturnPlannedEnd && end && end >= earlyReturnPlannedEnd) html += `<br><span style="color:#dc2626;font-weight:600">Фактична дата повернення має бути раніше запланованої (${fmt(earlyReturnPlannedEnd)}).</span>`;
+  info.innerHTML = html;
+  info.style.display = 'block';
+}
 function updateVatPreview(){
+  try{ updateEarlyReturnUI(); }catch(e){ console.error(e); }
   const type = document.getElementById('bm-client-type').value;
   const isCompany = type !== 'individual';
   const isVat = type === 'fop' || type === 'tov';
