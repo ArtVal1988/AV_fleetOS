@@ -2020,7 +2020,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div id="cf-msg-popup" class="msg-popup" style="display:none"></div>
         </div>
       </div>
-      <div class="msec msec-sub" id="cf-extra-contacts-section" style="margin-top:10px;margin-bottom:10px">
+      <div class="msec msec-sub" id="cf-extra-contacts-section" style="margin-top:10px;margin-bottom:0">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <button type="button" onclick="toggleExtraContactsSection()" style="flex:1;display:flex;align-items:center;gap:8px;background:none;border:none;padding:0;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:#6b7280;letter-spacing:.3px;text-align:left">
             <span id="cf-extra-contacts-toggle-icon">⊕</span>
@@ -2172,7 +2172,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div><!-- /cf-block-docs (блок 3) -->
       <div id="cf-history-section" class="cf-block cf-b4" style="display:none">
         <div class="cf-block-title">Історія замовлень</div>
-        <div id="cf-history-list"></div>
+        <div id="cf-history-list" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
       <div class="msec-inner-sep">
         <button type="button" class="extras-toggle" id="cf-notes-toggle-btn" onclick="toggleCfNotesPanel()">
@@ -13753,7 +13753,7 @@ function renderClientBookingHistory(clientId){
   list.innerHTML = matches.map(b => {
     const v = getVehicle(b.vehicleId);
     const st = SM[b.status];
-    return `<div onclick="gotoBookingFromClient(${b.id})" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:6px;cursor:pointer;background:#fff" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+    return `<div onclick="gotoBookingFromClient(${b.id})" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;margin-bottom:0;cursor:pointer;background:#fff" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
       <span style="width:8px;height:8px;border-radius:50%;background:${st?.color||'#9ca3af'};flex-shrink:0"></span>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;color:#1a1d26">${fmt(b.start)}–${fmt(b.end)} · ${v?.plate||''} ${stripYear(v?.name||'')}</div>
