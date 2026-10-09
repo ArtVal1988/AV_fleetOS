@@ -2877,7 +2877,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-extras-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-total-row" style="background:#1faf560f;border:1px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
-          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом з ПДВ:</span>
+          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом:</span>
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
@@ -12962,7 +12962,7 @@ function updateVatPreview(){
   }
   document.getElementById('dp-total-label').innerHTML = (isVat && grossPerDayForeign!==null)
     ? `Загалом з ПДВ <span style="font-weight:500;color:#002aa0;font-size:10px">(${days} ${pluralDoba(days)} × ${fmtSmart(grossPerDayForeign)} ${foreignSym})</span>`
-    : 'Загалом з ПДВ:';
+    : (isVat ? 'Загалом з ПДВ:' : 'Загалом:'); // no VAT (individual) -> plain «Загалом»
 
   // Послуги (includes Доплата, since it's now a regular toggleable extra) —
   // both columns always shown; the foreign-currency side derives via the
