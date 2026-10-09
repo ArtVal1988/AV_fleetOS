@@ -2672,7 +2672,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-inputs">
           <input type="date" id="bm-pickup-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="onPickupDateChanged(this)">
           <input type="text" id="bm-pickup-date-display" class="lr-date lr-date-display" oninput="filterTypedDateChars(this)" maxlength="10" inputmode="numeric" autocomplete="off" onmousedown="openDateDropdown(document.getElementById('bm-pickup-date'), this)" onblur="commitTypedDateDisplay(this,'bm-pickup-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
-          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
+          <select id="bm-pickup-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();this.focus();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('pickup')"></select>
           <input type="text" id="bm-pickup-loc" placeholder="Місце отримання" class="lr-loc" oninput="autoDetectExtras('pickup')">
         </div>
       </div>
@@ -2682,7 +2682,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="lr-inputs">
           <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;if(!isEarlyReturnActive())daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
           <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" oninput="filterTypedDateChars(this)" maxlength="10" inputmode="numeric" autocomplete="off" onmousedown="openDateDropdown(document.getElementById('bm-return-date'), this)" onblur="commitTypedDateDisplay(this,'bm-return-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
-          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
+          <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();this.focus();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
         </div>
       </div>
@@ -3629,13 +3629,13 @@ function openTimeDropdown(selectEl){
   _timeDropdownTarget = selectEl;
   const dd = document.createElement('div');
   dd.id = 'time-dropdown';
-  dd.style.cssText = 'position:fixed;z-index:800;background:#fff;border:1px solid #d8dbe2;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);max-height:280px;overflow-y:auto;min-width:90px;font-family:var(--font-mono);font-size:13px;';
+  dd.style.cssText = 'position:fixed;z-index:800;background:#fff;border:1px solid #d8dbe2;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.18);max-height:300px;overflow-y:auto;min-width:90px;font-family:var(--font-mono);font-size:13px;';
   [...selectEl.options].forEach(opt => {
     const row = document.createElement('div');
     row.textContent = opt.value;
     row.dataset.value = opt.value;
     const isSelected = opt.value === selectEl.value;
-    row.style.cssText = 'padding:6px 14px;cursor:pointer;text-align:center;' + (isSelected ? 'background:#2563eb;color:#fff;font-weight:700;' : 'color:#1a1d26;');
+    row.style.cssText = 'height:30px;line-height:30px;box-sizing:border-box;padding:0 14px;cursor:pointer;text-align:center;' + (isSelected ? 'background:#2563eb;color:#fff;font-weight:700;' : 'color:#1a1d26;');
     row.onmouseover = () => { if(!isSelected) row.style.background = '#f0f4ff'; };
     row.onmouseout = () => { if(!isSelected) row.style.background = ''; };
     row.onclick = () => {
@@ -3658,13 +3658,17 @@ function openTimeDropdown(selectEl){
   // instead of the list always starting from 00:00 regardless of the
   // field's actual current value.
   const selectedRow = dd.querySelector(`[data-value="${selectEl.value}"]`);
-  if(selectedRow) dd.scrollTop = Math.max(0, selectedRow.offsetTop - dd.clientHeight/2 + selectedRow.offsetHeight/2);
+  // The selected value goes to the TOP of the visible window (10 rows of 30px).
+  if(selectedRow) dd.scrollTop = selectedRow.offsetTop;
 }
 document.addEventListener('mousedown', e => {
   if(_timeDropdownEl && !e.target.closest('#time-dropdown') && e.target.id!=='bm-pickup-time' && e.target.id!=='bm-return-time'){
     closeTimeDropdown();
   }
 });
+window.addEventListener('scroll', e => {
+  if(_timeDropdownEl && !(e.target && e.target.nodeType===1 && e.target.closest && e.target.closest('#time-dropdown'))) closeTimeDropdown();
+}, true);
 function timeOptionsHtml(){
   let html = '';
   for(let h=0; h<24; h++){
@@ -16399,6 +16403,7 @@ document.addEventListener('keydown', e => {
   // top of literally anything else that's open — must be checked first,
   // or it's left visually orphaned even after its parent panel closes.
   if(document.getElementById('date-dropdown')){ closeDateDropdown(); return; }
+  if(document.getElementById('time-dropdown')){ closeTimeDropdown(); return; }
   // Priority chain: only the topmost/most specific thing that's actually
   // open should close on a single Escape press — checking each with a
   // plain if() (no else) would close EVERYTHING simultaneously whenever
