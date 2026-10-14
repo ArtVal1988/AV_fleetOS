@@ -45,6 +45,7 @@ app.use('/api/stickers', require('./routes/stickers'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/generate-document', require('./routes/generate-document'));
 app.use('/api/client-documents', require('./routes/client-documents'));
+app.use('/api/case-files', require('./routes/case-files'));
 app.use('/api/activity-log', require('./routes/activity-log'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/price-check', require('./routes/price-check'));

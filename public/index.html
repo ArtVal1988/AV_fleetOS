@@ -763,6 +763,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .case-add-btn:hover{border-color:#7c3aed;color:#7c3aed;background:#f5f3ff;}
 .cm-file-row{display:flex;align-items:center;gap:7px;padding:6px 8px;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:5px;margin-bottom:5px;}
 .cm-file-icon{font-size:14px;flex-shrink:0;}
+.cm-file-thumb{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:6px;overflow:hidden;background:#f3f4f6;border:1px solid #e5e7eb;flex-shrink:0;cursor:pointer;text-decoration:none;}
 .cm-file-title{flex:1;min-width:0;border:1px solid transparent;background:transparent;font-size:11px;padding:3px 5px;border-radius:3px;font-family:var(--font-mono);outline:none;}
 .cm-file-title:hover{border-color:#e5e7eb;}
 .cm-file-title:focus{border-color:#2563eb;background:#fff;}
@@ -10973,6 +10974,7 @@ function openCaseModal(vid, caseId){
   if(!v.insuranceCases) v.insuranceCases = [];
   const c = caseId ? v.insuranceCases.find(x=>x.id===caseId) : null;
   caseFilesTemp = c ? JSON.parse(JSON.stringify(c.files||[])) : [];
+  caseFilesAdded = []; caseFilesRemoved = []; caseFilesUploading = 0; _caseSaved = false;
 
   document.getElementById('cm-title').textContent = c ? 'Редагування випадку' : 'Новий страховий випадок';
   document.getElementById('cm-category').innerHTML = CASE_CATEGORIES.map(cat=>'<option value="'+cat.key+'"'+(c&&c.category===cat.key?' selected':'')+'>'+cat.icon+' '+cat.label+'</option>').join('');
@@ -10990,6 +10992,11 @@ function openCaseModal(vid, caseId){
 }
 function closeCaseModal(){
   document.getElementById('cal-case-modal').classList.remove('open');
+  if(!_caseSaved){
+    // cancelled: files uploaded during this session were never attached to a saved case — remove them
+    caseFilesAdded.forEach(id => fetch(API_BASE + '/case-files/' + id, { method:'DELETE', headers:{ 'Authorization':'Bearer ' + _token } }).catch(()=>{}));
+  }
+  caseFilesAdded = []; caseFilesRemoved = [];
   caseEditingVid = null; caseEditingId = null; caseFilesTemp = [];
 }
 function saveCase(){
@@ -11016,6 +11023,9 @@ function saveCase(){
     const maxId = v.insuranceCases.reduce((m,x)=>Math.max(m,x.id||0),0);
     v.insuranceCases.push({id:maxId+1, ...data});
   }
+  // the case now owns the newly uploaded files; files the user removed can really be deleted
+  caseFilesRemoved.forEach(id => fetch(API_BASE + '/case-files/' + id, { method:'DELETE', headers:{ 'Authorization':'Bearer ' + _token } }).catch(()=>{}));
+  _caseSaved = true;
   closeCaseModal();
   persistVehicle(v);
   renderInsuranceModal(v);
@@ -11023,51 +11033,116 @@ function saveCase(){
 function deleteCase(){
   const v = ALL_VEHICLES.find(x=>x.id===caseEditingVid); if(!v) return;
   if(!confirm('Видалити цей страховий випадок?')) return;
+  const gone = (v.insuranceCases||[]).find(x=>x.id===caseEditingId);
+  (gone?.files||[]).forEach(f => { if(f.fileId) fetch(API_BASE + '/case-files/' + f.fileId, { method:'DELETE', headers:{ 'Authorization':'Bearer ' + _token } }).catch(()=>{}); });
   v.insuranceCases = (v.insuranceCases||[]).filter(x=>x.id!==caseEditingId);
   closeCaseModal();
+  persistVehicle(v);
   renderInsuranceModal(v);
 }
+const CASE_FILE_ACCEPT = 'image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.7z,.tar,.gz,.tgz';
+let caseFilesAdded = [];   // server file ids uploaded while this modal is open (removed again if the modal is cancelled)
+let caseFilesRemoved = []; // server file ids of already-saved files the user removed (deleted on save)
+let caseFilesUploading = 0;
+let _caseSaved = false;
 function openCaseFileInput(){
   const inp = document.createElement('input');
   inp.type='file'; inp.multiple=true;
-  inp.accept='image/*,.pdf,.doc,.docx';
+  inp.accept=CASE_FILE_ACCEPT;
   inp.onchange = handleCaseFileSelect;
   inp.click();
 }
-function handleCaseFileSelect(e){
-  const files = Array.from(e.target.files);
-  let loaded = 0;
-  files.forEach(file=>{
-    if(file.size > 10*1024*1024){ alert(file.name+': файл понад 10 МБ'); return; }
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      const defaultTitle = file.name.replace(/\.[^.]+$/,'');
-      caseFilesTemp.push({title:defaultTitle, name:file.name, type:file.type, data:ev.target.result});
-      loaded++;
-      if(loaded===files.length) renderCaseFilesList();
-    };
-    reader.readAsDataURL(file);
-  });
+async function handleCaseFileSelect(e){
+  const files = Array.from(e.target.files || []); // copy first: the live FileList empties when the input is reset
+  e.target.value = '';
+  if(!files.length || !caseEditingVid) return;
+  const vid = caseEditingVid;
+  const failed = [];
+  caseFilesUploading += files.length;
+  renderCaseFilesList();
+  for(const file of files){
+    if(file.size > 25*1024*1024){ failed.push(file.name+' (понад 25 МБ)'); caseFilesUploading--; continue; }
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(API_BASE + '/case-files/' + vid, { method:'POST', headers:{ 'Authorization':'Bearer ' + _token }, body: fd });
+      const j = await res.json().catch(()=>({}));
+      if(!res.ok || !j.fileId){ failed.push(file.name + (j.error ? ' — '+j.error : '')); }
+      else if(caseEditingVid === vid){
+        caseFilesTemp.push({ fileId:j.fileId, title:file.name.replace(/\.[^.]+$/,''), name:j.name, type:j.type, size:j.size, url:j.url, thumbUrl:j.thumbUrl });
+        caseFilesAdded.push(j.fileId);
+      } else {
+        fetch(API_BASE + '/case-files/' + j.fileId, { method:'DELETE', headers:{ 'Authorization':'Bearer ' + _token } }).catch(()=>{}); // modal was closed meanwhile
+      }
+    } catch(err){ failed.push(file.name); }
+    caseFilesUploading--;
+    renderCaseFilesList();
+  }
+  if(failed.length) alert('Не вдалося завантажити:\n' + failed.join('\n'));
 }
 function updateCaseFileTitle(idx, value){
   if(caseFilesTemp[idx]) caseFilesTemp[idx].title = value;
 }
 function removeCaseFile(idx){
+  const f = caseFilesTemp[idx];
+  if(!f) return;
+  if(f.fileId){
+    if(caseFilesAdded.includes(f.fileId)){
+      // uploaded in this very session and never saved — drop it from the server right away
+      caseFilesAdded = caseFilesAdded.filter(x=>x!==f.fileId);
+      fetch(API_BASE + '/case-files/' + f.fileId, { method:'DELETE', headers:{ 'Authorization':'Bearer ' + _token } }).catch(()=>{});
+    } else {
+      caseFilesRemoved.push(f.fileId); // physically deleted only when the case is saved
+    }
+  }
   caseFilesTemp.splice(idx,1);
   renderCaseFilesList();
+}
+function caseFileSrc(f){ return f.url || f.data || ''; }
+function caseFileIsViewable(f){
+  const t = (f.type||'').toLowerCase();
+  return t.startsWith('image/') || t === 'application/pdf' || /\.pdf$/i.test(f.name||'');
+}
+function caseFileIcon(f){
+  const n = (f.name||'').toLowerCase();
+  if(/\.(zip|rar|7z|tar|gz|tgz)$/.test(n)) return '🗜';
+  if(/\.(xls|xlsx)$/.test(n)) return '📊';
+  if(/\.(doc|docx)$/.test(n)) return '📝';
+  return '📄';
+}
+function openCaseFile(idx){
+  const f = caseFilesTemp[idx];
+  if(!f) return;
+  if(caseFileIsViewable(f)){
+    const viewable = caseFilesTemp.filter(caseFileIsViewable);
+    registerAttachGallery('case-files', viewable.map(x => ({
+      src: caseFileSrc(x), name: x.title || x.name, fileName: x.name, type: (x.type || (/\.pdf$/i.test(x.name||'') ? 'application/pdf' : ''))
+    })));
+    viewAttachmentGallery('case-files', viewable.indexOf(f));
+  } else {
+    // archives / Word / Excel can't be previewed in the browser — download them
+    const a = document.createElement('a');
+    a.href = caseFileSrc(f); a.download = f.name || 'file';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
 }
 function renderCaseFilesList(){
   const el = document.getElementById('cm-files-list');
   if(!el) return;
-  if(!caseFilesTemp.length){ el.innerHTML = ''; return; }
-  el.innerHTML = caseFilesTemp.map((f,i)=>
-    '<div class="cm-file-row">'+
-      '<span class="cm-file-icon" style="cursor:pointer" onclick="viewAttachment(\''+f.data+'\',\''+f.name+'\',\''+(f.type||'')+'\')" title="Переглянути">'+(f.type&&f.type.startsWith('image/')?'🖼':'📄')+'</span>'+
-      '<input type="text" class="cm-file-title" value="'+(f.title||'').replace(/"/g,'&quot;')+'" placeholder="Назва файлу" oninput="updateCaseFileTitle('+i+',this.value)">'+
-      '<span class="cm-file-name" title="'+f.name+'">'+f.name+'</span>'+
-      '<button class="cm-file-del" onclick="removeCaseFile('+i+')">✕</button>'+
-    '</div>'
-  ).join('');
+  if(!caseFilesTemp.length && !caseFilesUploading){ el.innerHTML = ''; return; }
+  el.innerHTML = caseFilesTemp.map((f,i)=>{
+    const thumb = f.thumbUrl || ((f.type||'').startsWith('image/') ? caseFileSrc(f) : null);
+    const preview = thumb
+      ? '<img src="'+String(thumb).replace(/"/g,'&quot;')+'" style="width:100%;height:100%;object-fit:cover">'
+      : '<span style="font-size:20px">'+caseFileIcon(f)+'</span>';
+    const safeName = escAttr(f.name||'');
+    return '<div class="cm-file-row">'+
+      '<a href="javascript:void(0)" class="cm-file-thumb" onclick="openCaseFile('+i+')" title="'+(caseFileIsViewable(f)?'Переглянути':'Завантажити')+'">'+preview+'</a>'+
+      '<input type="text" class="cm-file-title" value="'+escAttr(f.title||'')+'" placeholder="Назва файлу" oninput="updateCaseFileTitle('+i+',this.value)">'+
+      '<span class="cm-file-name" title="'+safeName+'">'+safeName+'</span>'+
+      '<button class="cm-file-del" onclick="removeCaseFile('+i+')" title="Видалити">✕</button>'+
+    '</div>';
+  }).join('') + (caseFilesUploading ? '<div style="font-size:11px;color:#6b7280;padding:4px 2px">⏳ Завантаження файлів: '+caseFilesUploading+'…</div>' : '');
 }
 
 /* ОСЦПВ edit */
