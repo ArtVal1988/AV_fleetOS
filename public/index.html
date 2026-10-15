@@ -3342,6 +3342,8 @@ function initials(name){if(!name)return'?';const p=name.trim().split(' ');return
 function daysFromNow(s){if(!s)return null;const d=new Date(s);d.setHours(0,0,0,0);const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
 
 const CATEGORIES=[];
+// Category names are typed by users ("ПАРТНЕРИ", "Партнери", ...) — compare case-insensitively.
+function catNameIn(name, list){ const n = String(name||'').trim().toLowerCase(); return list.some(x => x.toLowerCase() === n); }
 const ALL_VEHICLES=CATEGORIES.flatMap(c=>c.vehicles);
 function getVehicle(id){return ALL_VEHICLES.find(v=>v.id===id);}
 
@@ -8041,7 +8043,7 @@ function renderDashboard(){
   // 'Інше' is a catch-all bucket, not a real fleet class — excluded from
   // every Dashboard section (not just Fleet status) so nothing parked
   // there shows up in today's activity, alerts, or counts.
-  const otherCatVehicleIds = new Set((CATEGORIES.find(c=>c.name==='Інше')?.vehicles||[]).map(v=>v.id));
+  const otherCatVehicleIds = new Set(CATEGORIES.filter(c=>catNameIn(c.name,['Інше'])).flatMap(c=>c.vehicles||[]).map(v=>v.id));
 
   // ── 1. Today's activity ──────────────────────────────────────────
   const pickupsToday = bookings.filter(b => SM[b.status]?.isBooking !== false && b.start===todayStr && !(b.startKm>0) && !otherCatVehicleIds.has(b.vehicleId));
@@ -8088,8 +8090,8 @@ function renderDashboard(){
   // Fleet size and every fleet-status count ignore the non-fleet buckets
   // 'Інше', 'Партнери' and 'Архів' (archived cars) entirely — their cars are
   // neither counted in "Всього" nor in "В оренді" / "Вільні" / ...
-  const nonFleetVehicleIds = new Set(CATEGORIES.filter(c=>['Інше','Партнери','Архів'].includes(c.name)).flatMap(c=>(c.vehicles||[]).map(v=>v.id)));
-  ALL_VEHICLES.forEach(v => { if(['Інше','Партнери','Архів'].includes(v.category)) nonFleetVehicleIds.add(v.id); });
+  const nonFleetVehicleIds = new Set(CATEGORIES.filter(c=>catNameIn(c.name,['Інше','Партнери','Архів'])).flatMap(c=>(c.vehicles||[]).map(v=>v.id)));
+  ALL_VEHICLES.forEach(v => { if(catNameIn(v.category,['Інше','Партнери','Архів'])) nonFleetVehicleIds.add(v.id); });
   const countedVehicles = ALL_VEHICLES.filter(v => !nonFleetVehicleIds.has(v.id));
   const totalVehicles = countedVehicles.length;
   const activeToday = new Set();
@@ -13812,7 +13814,7 @@ function renderInsuranceOverviewPanel(){
   // 'Інше' and 'Партнери' are non-fleet buckets — excluded from the
   // insurance overview entirely, per request.
   const insOvExcludedCats = ['Інше', 'Партнери'];
-  const orderedCategories = [...CATEGORIES].filter(c=>!insOvExcludedCats.includes(c.name)).sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
+  const orderedCategories = [...CATEGORIES].filter(c=>!catNameIn(c.name,insOvExcludedCats)).sort((a,b)=>(a.name==='Архів')-(b.name==='Архів'));
   let rowsHtml = '';
   let kaskoSumTotal = 0, kaskoPremiumTotal = 0;
 
@@ -13916,7 +13918,7 @@ function renderMaintenancePanelList(){
   // 'Інше' and 'Партнери' are non-fleet buckets — excluded from the
   // maintenance overview entirely, per request.
   const maintExcludedCats = ['Інше', 'Партнери'];
-  const maintExcludedVehicleIds = new Set(CATEGORIES.filter(c=>maintExcludedCats.includes(c.name)).flatMap(c=>c.vehicles).map(v=>v.id));
+  const maintExcludedVehicleIds = new Set(CATEGORIES.filter(c=>catNameIn(c.name,maintExcludedCats)).flatMap(c=>c.vehicles).map(v=>v.id));
 
   const rows = ALL_VEHICLES.filter(v => !maintExcludedVehicleIds.has(v.id)).filter(matches).map(v => {
     const svc = v.service || {};
