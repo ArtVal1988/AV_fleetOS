@@ -8085,24 +8085,30 @@ function renderDashboard(){
   if(dateInputEl && dateInputEl.value !== selDate) dateInputEl.value = selDate;
 
   // ── 2. Fleet status ───────────────────────────────────────────────
-  const countedVehicles = ALL_VEHICLES.filter(v => !otherCatVehicleIds.has(v.id));
+  // Fleet size and every fleet-status count ignore the non-fleet buckets
+  // 'Інше' and 'Партнери' entirely (their cars are neither counted in "Всього"
+  // nor in "В оренді" / "Вільні" / ...).
+  const nonFleetVehicleIds = new Set(CATEGORIES.filter(c=>c.name==='Інше' || c.name==='Партнери').flatMap(c=>(c.vehicles||[]).map(v=>v.id)));
+  const countedVehicles = ALL_VEHICLES.filter(v => !nonFleetVehicleIds.has(v.id));
   const totalVehicles = countedVehicles.length;
   const activeToday = new Set();
   bookings.forEach(b => {
-    if(otherCatVehicleIds.has(b.vehicleId) || !(b.start<=todayStr && getEffectiveEnd(b)>=todayStr)) return;
+    if(nonFleetVehicleIds.has(b.vehicleId) || !(b.start<=todayStr && getEffectiveEnd(b)>=todayStr)) return;
     const effectiveStatus = getDayRepairPause(b, todayStr) ? 'repair' : b.status;
     activeToday.add(b.vehicleId+'|'+effectiveStatus);
   });
   const countByStatus = {};
   activeToday.forEach(key => { const st = key.split('|')[1]; countByStatus[st] = (countByStatus[st]||0)+1; });
-  const inRental = countByStatus['rented']||0; // only the exact 'В оренді' status counts here, nothing else
+  // "В оренді" = cars currently with a client: status 'В оренді' plus 'Пролонгація без $' (extension without payment).
+  // Counted per car (a car whose rental and extension bookings touch on the same day is still one car).
+  const inRental = new Set([...activeToday].filter(k => /\|(rented|extension)$/.test(k)).map(k => k.split('|')[0])).size;
   const reserved = (countByStatus['reserved']||0) + (countByStatus['res-docs']||0);
   const inRepair = countByStatus['repair']||0;
   // На Ямській is a user-created custom status (not hardcoded) — look up
   // its key by label match rather than assuming a fixed key string.
   const yamskaKey = STATUSES.find(s => s.label === 'На Ямській')?.key;
   const onYamska = yamskaKey ? (countByStatus[yamskaKey]||0) : 0;
-  const busyTotal = Object.values(countByStatus).reduce((a,b)=>a+b,0);
+  const busyTotal = new Set([...activeToday].map(k => k.split('|')[0])).size; // cars busy with anything today, each counted once
   const available = Math.max(0, totalVehicles - busyTotal);
   const utilization = totalVehicles ? Math.round(inRental/totalVehicles*100) : 0;
 
