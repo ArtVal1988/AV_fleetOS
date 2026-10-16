@@ -5185,6 +5185,10 @@ function selectBooking(bid,e){
   if(isMobileViewport()){
     tt.classList.add('mobile-tap');
     document.getElementById('tooltip-mobile-backdrop').classList.add('visible');
+    // Force a fresh build: showTooltip() skips rebuilding (and never re-adds
+    // .visible) when the same booking is still remembered as "shown" — that
+    // left a dark backdrop with an invisible card on the 2nd tap of a booking.
+    ttShownBid=null; ttShownSubMode=false;
     showTooltip(e||window.event,bid);
     return;
   }
@@ -5192,6 +5196,7 @@ function selectBooking(bid,e){
 }
 function closeMobileTooltip(){
   tt.classList.remove('visible','mobile-tap');
+  ttShownBid=null; ttShownSubMode=false;
   document.getElementById('tooltip-mobile-backdrop').classList.remove('visible');
 }
 document.addEventListener('click', e => {
