@@ -1632,6 +1632,13 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Список статусів</div>
       <div id="statuses-list"></div>
       <button onclick="addNewStatus()" style="width:100%;margin-top:8px;padding:10px;border:1px dashed #d1d5db;border-radius:8px;background:none;font-family:inherit;font-size:12px;font-weight:600;color:#6b7280;cursor:pointer">+ Додати статус</button>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#6b7280;margin:22px 0 10px">Колір у графіку</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+        <input type="color" id="rented-company-color-input" value="#9d0100" oninput="setRentedCompanyColor(this.value)" style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
+        <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:#1a1d26">Колір «В оренді» для ЮР осіб <span style="font-weight:400;color:#9ca3af">(ТОВ, ФОП)</span><div style="font-size:10px;font-weight:400;color:#9ca3af;margin-top:2px">Лише в графіку зайнятості. Для фіз осіб колір береться зі статусу «В оренді» вище.</div></div>
+        <span id="rented-company-color-hex" style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0"></span>
+        <button onclick="resetRentedCompanyColor()" title="Повернути #9d0100" style="flex-shrink:0;padding:6px 10px;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280">Скинути</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3317,6 +3324,16 @@ function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
   apiFetch('PUT','/settings/statuses',{value:STATUSES});
 }
+// Calendar colour of the "В оренді" status for company clients (ТОВ/ФОП).
+// Individuals keep the normal status colour; this one is a separate admin
+// setting (server key rentedCompanyColor) and is NOT a status of its own, so
+// it never shows in the legend, status dropdown or counters.
+const RENTED_COMPANY_COLOR_DEFAULT = '#9d0100';
+let RENTED_COMPANY_COLOR = RENTED_COMPANY_COLOR_DEFAULT;
+function rentedColorFor(b){
+  if(b && b.clientType && b.clientType !== 'individual') return RENTED_COMPANY_COLOR;
+  return SM['rented']?.color || '#f06060';
+}
 const DOW=['нд','пн','вт','ср','чт','пт','сб'];
 const MONTHS=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const CASE_CATEGORIES=[
@@ -4445,7 +4462,7 @@ function renderCalendar(){
           const b1DayExt = getDayExtension(b1, ds);
           const b1ExtStatus = b1DayExt ? getExtStatus(b1DayExt) : null;
           const b1StatusKey = (b1ExtStatus === 'unpaid' || b1ExtStatus === 'partial') ? 'extension' : b1.status;
-          const c1=SM[b1StatusKey]?.color||'#888', c2=SM[b2.status]?.color||'#888';
+          const c1=(b1StatusKey==='rented'?rentedColorFor(b1):SM[b1StatusKey]?.color)||'#888', c2=(b2.status==='rented'?rentedColorFor(b2):SM[b2.status]?.color)||'#888';
           const isSel=b1.id===selectedBid||b2.id===selectedBid;
           return`<td class="td-day${isWE(d)?' weekend-col':''}${isToday(d)?' today-col':''}${isMonthStart(d)?' month-start-col':''}"
             onmouseenter="showTooltipSplit(event,${b1.id},${b2.id})"
@@ -4501,7 +4518,7 @@ function renderCalendar(){
           isPaidPortion = dayIdx < darkCount;
           progressStripHtml = `<div class="ext-cell-progress ${isPaidPortion ? 'dark' : 'light'}"></div>`;
         }
-        const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : (SM[cellStatus]?.color || '#c7c7c7'));
+        const cellColor = isPaidPortion ? '#dc2626' : (cellStatus==='ext-partial' ? '#f0a830' : ((cellStatus==='rented' ? rentedColorFor(booking) : SM[cellStatus]?.color) || '#c7c7c7'));
         // Half-day booking (e.g. 2.5 діб): the calendar cell at position
         // Math.ceil(daysOverride) from the start shows diagonally
         // half-colored to reflect the fractional day. Identified by day
@@ -15624,6 +15641,26 @@ function saveVehicleForm(){
 function openStatusesPanel(){
   document.getElementById('statuses-panel-overlay').style.display='flex';
   renderStatusesPanelList();
+  renderRentedCompanyColorUI();
+}
+function renderRentedCompanyColorUI(){
+  const inp = document.getElementById('rented-company-color-input');
+  const hex = document.getElementById('rented-company-color-hex');
+  if(inp) inp.value = RENTED_COMPANY_COLOR;
+  if(hex) hex.textContent = RENTED_COMPANY_COLOR;
+}
+let _rentedColorSaveTimer = null;
+function setRentedCompanyColor(v){
+  if(!/^#[0-9a-fA-F]{6}$/.test(v||'')) return;
+  RENTED_COMPANY_COLOR = v.toLowerCase();
+  renderRentedCompanyColorUI();
+  render();
+  // The colour picker fires continuously while dragging — save once it settles.
+  clearTimeout(_rentedColorSaveTimer);
+  _rentedColorSaveTimer = setTimeout(()=>{ apiFetch('PUT','/settings/rentedCompanyColor',{value:RENTED_COMPANY_COLOR}); }, 500);
+}
+function resetRentedCompanyColor(){
+  setRentedCompanyColor(RENTED_COMPANY_COLOR_DEFAULT);
 }
 function closeStatusesPanel(){
   document.getElementById('statuses-panel-overlay').style.display='none';
@@ -16043,6 +16080,9 @@ async function syncFromServer(){
   }
   if(sSettings && typeof sSettings.defaultVatRate === 'number'){
     DEFAULT_VAT_RATE = sSettings.defaultVatRate;
+  }
+  if(sSettings && typeof sSettings.rentedCompanyColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(sSettings.rentedCompanyColor)){
+    RENTED_COMPANY_COLOR = sSettings.rentedCompanyColor;
   }
   if(sSettings && typeof sSettings.mileageStaleDays === 'number'){
     MILEAGE_STALE_DAYS = sSettings.mileageStaleDays;
