@@ -9340,7 +9340,7 @@ function renderFinesList(){
       <div style="display:flex;align-items:center;gap:10px">
         ${f.paid
           ? '<span style="font-size:14px;flex-shrink:0;line-height:1">✅</span>'
-          : '<span style="flex-shrink:0;background:#fee2e2;border:1px solid #fca5a5;color:#dc2626;border-radius:5px;height:22px;line-height:20px;padding:0 8px;font-size:10px;font-weight:700;white-space:nowrap;box-sizing:border-box">Очікуємо на компенсацію</span>'}
+          : '<span style="flex-shrink:0;background:#ff0000;border:1px solid #ff0000;color:#ffffff;border-radius:5px;height:22px;line-height:20px;padding:0 8px;font-size:10px;font-weight:700;white-space:nowrap;box-sizing:border-box">Очікуємо на компенсацію</span>'}
         <span style="font-size:11px;flex-shrink:0;font-family:var(--font-mono)">${fmt(f.date)}</span>
         <span style="font-size:11px;color:#6b7280;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.description||'—'}</span>
         <span style="font-size:11px;font-weight:700;color:${curColor(f.currency)};flex-shrink:0">${fmtSmart(f.amount)} ${f.currency}</span>
