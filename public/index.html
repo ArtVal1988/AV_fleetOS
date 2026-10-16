@@ -3763,28 +3763,32 @@ function positionMonthNavForViewport(){
 function arrangeFinRowForViewport(){
   const depositField = document.getElementById('bm-deposit-field');
   const depositPayField = document.getElementById('bm-deposit-paymethod-field');
-  const mainRow = depositField ? depositField.closest('.fin-row') : null;
-  if(!depositField || !depositPayField || !mainRow) return;
+  if(!depositField || !depositPayField) return;
+  let mobileRow = document.getElementById('bm-deposit-mobile-row');
+  const arranged = !!mobileRow && depositField.parentElement === mobileRow;
   if(isMobileViewport()){
-    if(depositField.parentElement === mainRow){
-      let mobileRow = document.getElementById('bm-deposit-mobile-row');
-      if(!mobileRow){
-        mobileRow = document.createElement('div');
-        mobileRow.id = 'bm-deposit-mobile-row';
-        mobileRow.className = 'fin-row';
-        mobileRow.style.cssText = 'justify-content:space-between;margin-top:8px';
-        mainRow.parentNode.insertBefore(mobileRow, mainRow.nextSibling);
-      }
-      mobileRow.appendChild(depositField);
-      mobileRow.appendChild(depositPayField);
+    // Already in the mobile row — do nothing. Re-appending the nodes on every
+    // resize (the on-screen keyboard fires one) moved the focused deposit
+    // input in the DOM, which blurred it and instantly closed the keyboard.
+    if(arranged) return;
+    const mainRow = depositField.closest('.fin-row');
+    if(!mainRow) return;
+    if(!mobileRow){
+      mobileRow = document.createElement('div');
+      mobileRow.id = 'bm-deposit-mobile-row';
+      mobileRow.className = 'fin-row';
+      mobileRow.style.cssText = 'justify-content:space-between;margin-top:8px';
+      mainRow.parentNode.insertBefore(mobileRow, mainRow.nextSibling);
     }
-  } else {
-    const mobileRow = document.getElementById('bm-deposit-mobile-row');
-    if(mobileRow){
+    mobileRow.appendChild(depositField);
+    mobileRow.appendChild(depositPayField);
+  } else if(mobileRow){
+    const mainRow = mobileRow.previousElementSibling;
+    if(mainRow){
       mainRow.appendChild(depositField);
       mainRow.appendChild(depositPayField);
-      mobileRow.remove();
     }
+    mobileRow.remove();
   }
 }
 window.addEventListener('resize', positionMonthNavForViewport);
