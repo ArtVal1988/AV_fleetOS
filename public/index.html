@@ -2930,6 +2930,8 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec msec-ext" id="bm-block-ext-section">
       <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()" style="display:none">
 
+      <button type="button" id="bm-ext-add-btn" onclick="openExtensionForNewEntry()" style="width:100%;background:#d1fae5;border:1px dashed #6ee7b7;color:#047857;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px">+ Додати продовження</button>
+
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
 
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none;position:relative">
@@ -3942,6 +3944,10 @@ function calcVatAmount(b){
 
 /* ── CELL MAP ── */
 let currentExtHistory = [];
+// Panel-open state for the Продовження section, separate from the form-active
+// checkbox: clicking the nav icon opens the panel with a "+ Додати продовження"
+// button (like "+ Додати штраф"); the form appears only after pressing it.
+let extPanelOpen = false;
 let editingExtHistoryIndex = null; // set when an existing history entry is pulled back for editing, so it can be reinserted at the same position instead of appended to the end
 
 function getEffectiveEnd(b){
@@ -5479,6 +5485,7 @@ function openBookingModal(vid=null,start=null,end=null){
   closeMiniPicker();
   clearTimeout(ttHideTimer); tt.classList.remove('visible'); ttShownBid=null;
   document.getElementById('bm-ext-active').checked=false;
+  extPanelOpen=false;
   document.getElementById('bm-ext-fields').style.display='none';
   document.getElementById('bm-ext-gen-act-btn').style.display='none';
   loadExtPayments([]);
@@ -9143,12 +9150,12 @@ function activateBmSection(id){
   if(id !== 'rep' && !bmRepHasData() && document.getElementById('bm-repair-panel')?.style.display !== 'none') toggleRepairSection();
   if(id !== 'ded' && !bmDedHasData() && document.getElementById('ded-panel')?.style.display !== 'none') toggleDedPanel();
 
+  if(id !== 'ext' && !bmExtHasData()) extPanelOpen = false;
+
   if(id === 'ext'){
-    if(!document.getElementById('bm-ext-active').checked){
-      openExtensionForNewEntry();
-    } else {
-      document.getElementById('bm-block-ext-section').scrollIntoView({behavior:'smooth', block:'nearest'});
-    }
+    if(!extPanelOpen) extPanelOpen = true;
+    else if(!bmExtHasData()) extPanelOpen = false; // second click on an empty panel closes it
+    else document.getElementById('bm-block-ext-section').scrollIntoView({behavior:'smooth', block:'nearest'});
   } else if(id === 'sub'){
     // Clicking the same button again: close it if it's still empty
     // (an accidental click shouldn't trap an empty panel open), but leave
@@ -9173,7 +9180,8 @@ function activateBmSection(id){
 }
 function updateBmSectionButtons(){
   const isExtLocked = bmExtHasData();
-  const extOpen = document.getElementById('bm-ext-active')?.checked;
+  const extFormOpen = document.getElementById('bm-ext-active')?.checked;
+  const extOpen = extFormOpen || extPanelOpen || currentExtHistory.length > 0;
   const btnExt = document.getElementById('bm-sec-btn-ext');
   if(btnExt){
     btnExt.classList.toggle('locked-active', !!isExtLocked);
@@ -9215,7 +9223,7 @@ function updateBmSectionButtons(){
   // Badges — quick summary visible even while the section itself is closed
   const badgeExt = document.getElementById('bm-sec-badge-ext');
   if(badgeExt){
-    if(extOpen){
+    if(extFormOpen){
       const d = parseInt(document.getElementById('bm-ext-days')?.value) || 0;
       badgeExt.textContent = d ? d+'дн' : '';
       badgeExt.style.display = d ? 'block' : 'none';
@@ -9509,6 +9517,7 @@ function toggleExtensionSection(preserveExistingData){
   const block = document.getElementById('bm-ext-fields');
   if(!block) return;
   block.style.display = active ? '' : 'none';
+  if(active) extPanelOpen = true;
   if(active){
     block.querySelectorAll('.ext-fin-row').forEach(row => {
       row.style.setProperty('display', 'flex', 'important');
@@ -12062,6 +12071,7 @@ function updateBookingDetailsVisibility(){
   if(hide){
     const extCb=document.getElementById('bm-ext-active');
     if(extCb) extCb.checked=false;
+    extPanelOpen=false;
   }
 
   if(closedLabel) closedLabel.style.display = 'none';
