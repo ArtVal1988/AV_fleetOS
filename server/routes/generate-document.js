@@ -831,6 +831,20 @@ router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res
   else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(infoKey, JSON.stringify(info));
   res.json({ ok: true, info });
 });
+// Download the template currently in use for a slot (the representative's own
+// file, or the shared default it falls back to) so an admin can edit it in Word
+// and upload it back. Must stay above the generic /:bookingId/:type route.
+router.get('/template/:type', auth, adminOnly, (req, res) => {
+  const { type } = req.params;
+  const repKey = (req.query.repKey || '').trim();
+  if (!ALL_DOC_TYPE_KEYS.includes(type)) return res.status(400).json({ error: 'Невідомий тип шаблону' });
+  const fileName = templateFileName(type, repKey);
+  const filePath = path.join(TEMPLATES_DIR, fileName);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Файл шаблону відсутній' });
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  res.setHeader('Content-Disposition', "attachment; filename*=UTF-8''" + encodeURIComponent(fileName));
+  res.send(fs.readFileSync(filePath));
+});
 // DELETE a representative-specific template, reverting that rep back to the shared default
 router.delete('/template/:type', auth, adminOnly, (req, res) => {
   const { type } = req.params;

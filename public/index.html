@@ -14599,6 +14599,7 @@ function renderDocTemplatesSection(){
           <div style="font-size:11.5px;font-weight:700;color:var(--text)">${t.label}</div>
           <div style="display:flex;gap:6px;flex-shrink:0">
             <button type="button" onclick="openTemplateFields('${slot.key}','${t.key}')" style="background:${isActive?'#2563eb':'#eff6ff'};border:1px solid #bfdbfe;color:${isActive?'#fff':'#1d4ed8'};border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap">⚙️ Змінні${info?` (${phCount})`:''}</button>
+            <button type="button" onclick="downloadDocTemplate('${t.key}','${slot.key}')" title="Скачати поточний шаблон, відредагувати у Word і завантажити назад" style="background:#fff;border:1px solid ${slot.border};color:${slot.accent};border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap">⬇ Скачати</button>
             <label style="background:${slot.bg};border:1px solid ${slot.border};color:${slot.accent};border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap">
               ⬆ Завантажити
               <input type="file" accept=".docx" style="display:none" onchange="uploadDocTemplate('${t.key}','${slot.key}', this)">
@@ -14958,6 +14959,21 @@ function onDocFieldSelectChange(sel){
   const showExtra = sel.value === '__static__' || sel.value === '__path__';
   extra.style.display = showExtra ? 'block' : 'none';
   extra.placeholder = sel.value === '__path__' ? 'наприклад: booking.rate або vehicle.specs.color' : 'текст, який завжди буде тут';
+}
+async function downloadDocTemplate(type, slotKey){
+  const qs = slotKey ? '?repKey='+encodeURIComponent(slotKey) : '';
+  try{
+    const res = await fetch(API_BASE + '/generate-document/template/' + type + qs, { headers: { 'Authorization': 'Bearer ' + _token } });
+    if(!res.ok){ alert(res.status===404 ? 'Файл шаблону ще не завантажено.' : 'Не вдалося скачати шаблон'); return; }
+    const blob = await res.blob();
+    const info = currentDocSlots?.[slotKey]?.[type]?.info;
+    const name = (info && info.originalName) ? info.originalName : (type + (slotKey?'_'+slotKey:'') + '.docx');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  }catch(e){ alert('Не вдалося скачати шаблон'); }
 }
 async function uploadDocTemplate(type, slotKey, input){
   const file = input.files[0];
