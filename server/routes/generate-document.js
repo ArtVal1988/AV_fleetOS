@@ -974,8 +974,14 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
   const mapping = getMappingForFile(templateFile);
   const placeholders = await scanTemplatePlaceholders(templatePath);
   const values = {};
+  const generalVars = getGeneralVariables();
   placeholders.forEach(ph => {
-    values[ph] = getFieldValue(mapping[ph], ctx);
+    // A placeholder with no mapping of its own automatically uses the created
+    // variable (Створені змінні) of the same name, if one exists. Choosing
+    // "(порожньо …)" explicitly in the template keeps the field blank.
+    let key = mapping[ph];
+    if (!key && Object.prototype.hasOwnProperty.call(generalVars, ph) && generalVars[ph]) key = 'general:' + ph;
+    values[ph] = getFieldValue(key, ctx);
   });
 
   try {

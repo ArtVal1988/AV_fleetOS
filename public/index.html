@@ -14767,7 +14767,8 @@ function renderTemplateFields(){
   const options = DOC_FIELDS.map(f=>`<option value="${f.key}">${f.label}</option>`).join('');
   const rowsHtml = !placeholders.length ? '<div style="font-size:11px;color:#9ca3af;font-style:italic;padding:10px 4px">У завантаженому шаблоні не знайдено полів формату #назва_поля. Додайте змінну вручну нижче.</div>' :
     placeholders.map((ph, idx) => {
-    const current = DOC_MAPPING[ph] || '';
+    // No mapping yet + a created variable with the same name → linked automatically (same rule the server uses when generating).
+    const current = DOC_MAPPING[ph] || (GENERAL_VARIABLES[ph] ? 'general:'+ph : '');
     const isStatic = current.startsWith('static:');
     const isPath = current.startsWith('path:');
     const isCustom = DOC_CUSTOM.includes(ph);
@@ -14807,7 +14808,7 @@ function renderTemplateFields(){
   wrap.innerHTML = rowsHtml + hiddenNote + addPickerHtml;
   wrap.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
-    const val = DOC_MAPPING[ph] || '';
+    const val = DOC_MAPPING[ph] || (GENERAL_VARIABLES[ph] ? 'general:'+ph : '');
     if(val.startsWith('static:')) sel.value = '__static__';
     else if(val.startsWith('path:')) sel.value = '__path__';
     else sel.value = val;
@@ -14999,7 +15000,11 @@ async function saveDocTemplateMapping(){
   const newMapping = {};
   document.querySelectorAll('.dt-field-select').forEach(sel => {
     const ph = sel.dataset.placeholder;
-    if(!sel.value) return;
+    if(!sel.value){
+      // Explicit "не заповнювати" must survive the automatic same-name link to a created variable.
+      if(GENERAL_VARIABLES[ph]) newMapping[ph] = 'blank';
+      return;
+    }
     if(sel.value === '__static__' || sel.value === '__path__'){
       const extra = sel.closest('div').parentElement.querySelector('.dt-field-extra');
       const extraVal = (extra?.value || '').trim();
