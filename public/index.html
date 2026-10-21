@@ -1151,6 +1151,23 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-b1{background:#f5f3ff;border-left-color:#a78bfa;}
 .msec-b2{background:#eff6ff;border-left-color:#60a5fa;}
 .msec-b3{background:#f0fdf4;border-left-color:#4ade80;}
+.dash-day-btn{width:30px;height:30px;border-radius:50%;border:1px solid #bfdbfe;background:#fff;color:#2563eb;font-size:18px;line-height:1;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.dash-day-btn:hover{background:#eff6ff}
+.dash-date-pill{position:relative;display:flex;align-items:center;gap:9px;padding:6px 16px 6px 12px;border-radius:999px;background:#eff6ff;border:1px solid #bfdbfe;box-shadow:0 1px 3px rgba(37,99,235,.10);cursor:pointer;transition:background .15s,border-color .15s}
+.dash-date-pill:hover{background:#dbeafe}
+.dash-date-pill .dash-date-icon{font-size:18px}
+.dash-date-pill .dash-date-label{font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#2563eb}
+.dash-date-pill .dash-date-text{font-size:13px;font-weight:700;color:#1a1d26;white-space:nowrap}
+.dash-date-pill.not-today{background:#fffbeb;border-color:#fde68a;box-shadow:0 1px 3px rgba(217,119,6,.12)}
+.dash-date-pill.not-today:hover{background:#fef3c7}
+.dash-date-pill.not-today .dash-date-label{color:#b45309}
+@media (max-width:640px){
+  #dash-head{padding:12px 14px!important;gap:8px 6px!important}
+  #dash-head .dash-title{order:1;flex:1}
+  #dash-head .dash-close{order:2}
+  #dash-head .dash-date-ctrl{order:3;flex:1 1 100%;margin-left:0!important;justify-content:center;flex-wrap:wrap}
+  .dash-date-pill .dash-date-text{font-size:12px}
+}
 /* Dashboard (Стан парку зараз) uses its own colours; the vehicle form's .msec-b3 stays green. */
 #dashboard-body .msec-b3{background:#e3f1f1;border-left-color:#317978;}
 #dashboard-body .msec-b2{background:#e6f3ff;border-left-color:#0a4174;}
@@ -1665,18 +1682,24 @@ input.dm-pf-val.tel{font-size:14px;}
 <!-- DASHBOARD PANEL -->
 <div id="dashboard-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:290;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:900px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
-    <div style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
-      <div style="font-size:16px;font-weight:700;color:#1a1d26">◈ Дашборд</div>
-      <button onclick="closeDashboard()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
-    </div>
-    <div style="padding:20px 28px 0" id="dashboard-date-header">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-        <div id="dash-date-label" style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#2563eb">📅 Сьогодні</div>
-        <input type="date" id="dash-date-picker" class="custom-dp-trigger" oninput="setDashboardDate(this.value)" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="font-size:11px;padding:4px 6px;border:1px solid #bfdbfe;border-radius:5px;font-family:var(--font-mono);width:118px">
-        <button id="dash-date-reset-btn" onclick="setDashboardDate(null)" style="display:none;font-size:10px;padding:4px 8px;border:1px solid #bfdbfe;background:#eff6ff;color:#2563eb;border-radius:5px;cursor:pointer;font-weight:700">↺ Сьогодні</button>
+    <div id="dash-head" style="padding:16px 22px 16px 28px;border-bottom:1px solid #dbeafe;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;background:linear-gradient(135deg,#eaf2ff 0%,#ffffff 65%);z-index:2;border-radius:16px 16px 0 0">
+      <div class="dash-title" style="font-size:16px;font-weight:700;color:#1a1d26">◈ Дашборд</div>
+      <div class="dash-date-ctrl" style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button type="button" onclick="shiftDashboardDay(-1)" title="Попередній день" class="dash-day-btn">‹</button>
+        <div id="dash-date-pill" class="dash-date-pill">
+          <span class="dash-date-icon">📅</span>
+          <div style="line-height:1.15;text-align:left">
+            <div id="dash-date-label" class="dash-date-label">Сьогодні</div>
+            <div id="dash-date-text" class="dash-date-text"></div>
+          </div>
+          <input type="date" id="dash-date-picker" class="custom-dp-trigger" oninput="setDashboardDate(this.value)" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" title="Обрати дату" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0;margin:0">
+        </div>
+        <button type="button" onclick="shiftDashboardDay(1)" title="Наступний день" class="dash-day-btn">›</button>
+        <button id="dash-date-reset-btn" onclick="setDashboardDate(null)" style="display:none;font-size:11px;padding:7px 12px;border:1px solid #bfdbfe;background:#fff;color:#2563eb;border-radius:999px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">↺ Сьогодні</button>
       </div>
+      <button class="dash-close" onclick="closeDashboard()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af">✕</button>
     </div>
-    <div style="padding:0 28px 20px" id="dashboard-body"></div>
+    <div style="padding:20px 28px" id="dashboard-body"></div>
   </div>
 </div>
 
@@ -8056,6 +8079,13 @@ function setDashboardDate(value){
   dashboardSelectedDate = value || null;
   renderDashboard();
 }
+function shiftDashboardDay(delta){
+  const t = new Date();
+  const cur = dashboardSelectedDate || dStr(t.getFullYear(), t.getMonth(), t.getDate());
+  const next = addDaysStr(cur, delta);
+  const todayIso = dStr(t.getFullYear(), t.getMonth(), t.getDate());
+  setDashboardDate(next === todayIso ? null : next);
+}
 function openDashboard(){
   dashboardSelectedDate = null;
   document.getElementById('dashboard-panel-overlay').style.display = 'flex';
@@ -8118,7 +8148,14 @@ function renderDashboard(){
   const dateResetBtn = document.getElementById('dash-date-reset-btn');
   const dateInputEl = document.getElementById('dash-date-picker');
   const isRealToday = todayStr===realTodayStr;
-  if(dateLabelEl) dateLabelEl.textContent = isRealToday ? '📅 Сьогодні' : '📅 На дату';
+  if(dateLabelEl) dateLabelEl.textContent = isRealToday ? 'Сьогодні' : 'На дату';
+  { const dtEl = document.getElementById('dash-date-text');
+    if(dtEl){
+      const MONTHS_GEN = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+      const [yy,mm,dd] = selDate.split('-').map(Number);
+      dtEl.textContent = dd+' '+MONTHS_GEN[mm-1]+' '+yy+' · '+DOW[new Date(yy,mm-1,dd).getDay()];
+    }
+    document.getElementById('dash-date-pill')?.classList.toggle('not-today', !isRealToday); }
   if(dateResetBtn) dateResetBtn.style.display = isRealToday ? 'none' : '';
   if(dateInputEl && dateInputEl.value !== selDate) dateInputEl.value = selDate;
 
