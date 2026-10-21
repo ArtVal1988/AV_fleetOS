@@ -6353,25 +6353,7 @@ async function diagnoseDocument(){
     '',
     ...r.fields.map(f => '#' + f.name + ' ← ' + (f.mapping || '(не налаштовано)') + (f.via ? ' → ' + f.via : '') + (f.source ? ' [' + f.source + ']' : '') + ' = «' + f.value + '»'),
   ].filter(x => x !== undefined);
-  const text = lines.join('\n');
-  let ov = document.getElementById('diag-overlay');
-  if(ov) ov.remove();
-  ov = document.createElement('div');
-  ov.id = 'diag-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:12px;font-family:Verdana,sans-serif';
-  ov.innerHTML = '<div style="background:#fff;border-radius:12px;width:760px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)">'
-    + '<div style="padding:14px 18px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:10px"><b style="font-size:14px">🔍 Діагностика договору</b>'
-    + '<div style="display:flex;gap:8px"><button id="diag-copy" type="button" style="background:#2563eb;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">Копіювати</button>'
-    + '<button type="button" onclick="document.getElementById(\'diag-overlay\').remove()" style="background:#f3f4f6;border:none;border-radius:6px;padding:7px 12px;font-size:12px;cursor:pointer">✕</button></div></div>'
-    + '<textarea id="diag-text" readonly style="flex:1;min-height:320px;margin:12px 18px 18px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:var(--font-mono),monospace;font-size:12px;line-height:1.5;resize:none;user-select:text"></textarea></div>';
-  document.body.appendChild(ov);
-  const ta = document.getElementById('diag-text');
-  ta.value = text;
-  document.getElementById('diag-copy').onclick = async () => {
-    try{ await navigator.clipboard.writeText(text); }catch(e){ ta.focus(); ta.select(); document.execCommand('copy'); }
-    document.getElementById('diag-copy').textContent = '✓ Скопійовано';
-  };
-  ta.focus(); ta.select();
+  alert(lines.join('\n'));
 }
 async function generateDocument(type){
   if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
