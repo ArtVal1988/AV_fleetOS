@@ -3269,6 +3269,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <div id="bm-doc-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:340px;max-height:320px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
       </div>
       <button class="btn" id="bm-gen-contract-btn" onclick="generateDocument('contract')" style="display:none;color:#2563eb;border:none;background:none">📄 Договір</button>
+      <button class="btn" id="bm-diag-btn" onclick="diagnoseDocument()" title="Діагностика договору (лише адмін)" style="display:none;color:#6b7280;border:none;background:none">🔍</button>
       <button class="btn" id="bm-gen-act-btn" onclick="generateDocument('act')" style="display:none;color:#2563eb;border:none;background:none">📄 Акт</button>
     </div>
     <button class="btn btn-primary" onclick="saveBooking()" style="margin-left:auto">Зберегти замовлення</button>
@@ -5549,6 +5550,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='none';
   document.getElementById('bm-gen-contract-btn').style.display='none';
+  { const d=document.getElementById('bm-diag-btn'); if(d) d.style.display='none'; }
   document.getElementById('bm-gen-act-btn').style.display='none';
   document.getElementById('bm-doc-history-btn').style.display='none';
   document.getElementById('bm-edit-history-btn').style.display='none';
@@ -5658,6 +5660,7 @@ function editBooking(bid){
   document.getElementById('bm-title').textContent='Замовлення';
   document.getElementById('bm-delete-btn').style.display='';
   document.getElementById('bm-gen-contract-btn').style.display='';
+  { const d=document.getElementById('bm-diag-btn'); if(d) d.style.display = (_currentUser && _currentUser.role==='admin') ? '' : 'none'; }
   document.getElementById('bm-gen-act-btn').style.display='';
   document.getElementById('bm-doc-history-btn').style.display='';
   document.getElementById('bm-doc-history-panel').style.display='none'; // reset from any previous booking's open panel
@@ -6334,6 +6337,23 @@ function renderBmEditHistory(entries){
       ${diffHtml}
     </div>`;
   }).join('');
+}
+// Admin only (temporary): explains what each #field of the contract resolves to
+// for the open booking (template file, client link, address, values).
+async function diagnoseDocument(){
+  if(!editBid){ alert('Спочатку відкрийте збережене замовлення'); return; }
+  const r = await apiFetch('GET', '/generate-document/diagnose/' + editBid + '/contract');
+  if(!r){ alert('Не вдалося отримати діагностику'); return; }
+  const lines = [
+    'Шаблон: ' + r.templateFile + (r.templateExists ? '' : ' (ФАЙЛУ НЕМАЄ)') + ' · слот: ' + r.repSlot,
+    'Клієнт у замовленні (clientId): ' + (r.clientIdOnBooking || 'НЕ ПРИВ\'ЯЗАНИЙ'),
+    'Картку знайдено: ' + (r.clientFound ? 'так, №' + r.clientId + ' ' + r.clientName : 'НІ'),
+    'Адреса в картці: ' + (r.clientAddress || '(порожньо)'),
+    r.clientAddressLikeKeys.length ? 'Ключі з "addr/prop/reg": ' + r.clientAddressLikeKeys.join(', ') : '',
+    '',
+    ...r.fields.map(f => '#' + f.name + ' ← ' + (f.mapping || '(не налаштовано)') + (f.via ? ' → ' + f.via : '') + (f.source ? ' [' + f.source + ']' : '') + ' = «' + f.value + '»'),
+  ].filter(x => x !== undefined);
+  alert(lines.join('\n'));
 }
 async function generateDocument(type){
   if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
