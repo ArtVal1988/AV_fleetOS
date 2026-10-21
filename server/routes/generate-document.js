@@ -902,37 +902,6 @@ router.delete('/archive/:id', auth, adminOnly, (req, res) => {
   res.json({ ok: true });
 });
 
-// Admin diagnostics: shows, for one booking and document type, which template
-// file is used, whether the booking is linked to a client card, and what every
-// #field in the template resolves to (and from where). Must stay above the
-// generic /:bookingId/:type route.
-router.get('/diagnose/:bookingId/:type', auth, adminOnly, async (req, res) => {
-  const { bookingId, type } = req.params;
-  if (!ALL_DOC_TYPE_KEYS.includes(type)) return res.status(400).json({ error: 'Невідомий тип документа' });
-  const ctx = getBookingContext(bookingId);
-  if (!ctx) return res.status(404).json({ error: 'Замовлення не знайдено' });
-  const templateFile = templateFileName(type, ctx.repSlot);
-  const templatePath = path.join(TEMPLATES_DIR, templateFile);
-  const mapping = getMappingForFile(templateFile);
-  const generalVars = getGeneralVariables();
-  const placeholders = await scanTemplatePlaceholders(templatePath);
-  const fields = placeholders.map(ph => {
-    let key = mapping[ph];
-    let source = key ? 'шаблон' : '';
-    if (!key && Object.prototype.hasOwnProperty.call(generalVars, ph) && generalVars[ph]) { key = 'general:' + ph; source = 'створена змінна (за назвою)'; }
-    const value = getFieldValue(key, ctx);
-    return { name: ph, mapping: key || '', via: key && key.startsWith('general:') ? (generalVars[key.slice(8)] || '(порожньо)') : '', source, value: String(value).slice(0, 80) };
-  });
-  const c = ctx.client;
-  res.json({
-    templateFile, repSlot: ctx.repSlot, templateExists: fs.existsSync(templatePath),
-    clientIdOnBooking: ctx.booking.customer?.clientId || null,
-    clientFound: !!c, clientId: c?.id || null,
-    clientName: c?.name || '', clientAddress: c?.address || '',
-    clientAddressLikeKeys: c ? Object.keys(c).filter(k => /addr|адрес|prop|reg/i.test(k)) : [],
-    fields,
-  });
-});
 router.get('/:bookingId/:type', auth, async (req, res) => {
   const { bookingId, type } = req.params;
   if (!ALL_DOC_TYPE_KEYS.includes(type)) {
