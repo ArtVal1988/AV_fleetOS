@@ -4031,7 +4031,15 @@ function getEffectiveEnd(b){
 // b.end to match repairPause.toDate, which would otherwise make this
 // function wrongly report the ENTIRE repair period as still paid-for.
 function getPaidThroughDate(b){
-  let maxEnd = (b.daysOverride > 0) ? addDaysStr(b.start, b.daysOverride) : b.end;
+  // When an extension starts BEFORE b.end, b.end has been moved forward
+  // (repair return-date shift) and daysOverride may have been recalculated to
+  // the whole span — then the base period really ends where the first
+  // extension begins (same rule as resolveBookingDaySegments' baseToDate).
+  let firstExtFrom = null;
+  (b.extensionHistory||[]).forEach(h => { if(h.fromDate && (!firstExtFrom || h.fromDate < firstExtFrom)) firstExtFrom = h.fromDate; });
+  if(b.extension && b.extension.active && b.extension.fromDate && (!firstExtFrom || b.extension.fromDate < firstExtFrom)) firstExtFrom = b.extension.fromDate;
+  let maxEnd = (firstExtFrom && firstExtFrom < b.end) ? firstExtFrom
+    : (b.daysOverride > 0) ? addDaysStr(b.start, b.daysOverride) : b.end;
   (b.extensionHistory||[]).forEach(h => { if(h.toDate > maxEnd) maxEnd = h.toDate; });
   if(b.extension && b.extension.active && b.extension.toDate > maxEnd) maxEnd = b.extension.toDate;
   return maxEnd;
