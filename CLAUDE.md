@@ -157,3 +157,9 @@ Notes:
 - Change-password verifies the old password via `POST /auth/check-password`
   (never `/auth/login`, which would send a code).
 - Columns `users.tg_chat_id`, `users.tg_username` (added by `ensureColumn`).
+- **Owner mode** (`TG_OWNER_USERNAME=<login>` in `.env`, used on prod): every login
+  code (for all users) is sent to the OWNER's Telegram only, with the name/login/IP of
+  whoever is logging in; the owner passes the code on. Only the owner links Telegram
+  (mandatory overlay for him). While the owner has no linked chat, only the owner can log in
+  (503 for everybody else) so the check is never silently skipped. Only the owner can reset
+  his own link. Without this variable each user gets codes in their own Telegram.

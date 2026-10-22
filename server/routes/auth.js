@@ -42,11 +42,26 @@ function issueToken(user) {
     { expiresIn: EXPIRES }
   );
 }
+// Owner mode (TG_OWNER_USERNAME=<login> in .env): every login code goes to the
+// OWNER's Telegram only, and the owner passes it on to the person logging in.
+// Without it, each user receives the code in their own linked Telegram.
+function ownerLogin() { return (process.env.TG_OWNER_USERNAME || '').trim(); }
+function ownerRow() {
+  const login = ownerLogin();
+  return login ? db.prepare('SELECT id, username, name, tg_chat_id FROM users WHERE username = ? AND active = 1').get(login) : null;
+}
+// Does this user have to link a Telegram chat to their own account?
+function needsLink(user) {
+  if (!telegram.enabled() || user.tg_chat_id) return false;
+  return ownerLogin() ? user.username === ownerLogin() : true;
+}
 function publicUser(user) {
   return {
     id: user.id, username: user.username, name: user.name, role: user.role,
     tgEnabled: telegram.enabled(),
     tgLinked: !!user.tg_chat_id,
+    tgNeedsLink: needsLink(user),
+    tgOwnerMode: !!ownerLogin(),
   };
 }
 
@@ -72,13 +87,31 @@ router.post('/login', async (req, res) => {
   if (!user || !bcrypt.compareSync(password, user.password))
     return res.status(401).json({ error: 'Невірний логін або пароль' });
 
-  if (telegram.enabled() && user.tg_chat_id) {
+  // Who receives the code: the owner (owner mode) or the user themselves.
+  let recipientChat = null, ownerMode = false;
+  if (telegram.enabled()) {
+    if (ownerLogin()) {
+      ownerMode = true;
+      const owner = ownerRow();
+      recipientChat = owner && owner.tg_chat_id;
+      // The owner has to be able to log in without a code to link his Telegram;
+      // everybody else waits until that is done (never silently skipped).
+      if (!recipientChat && user.username !== ownerLogin())
+        return res.status(503).json({ error: 'Вхід тимчасово недоступний: адміністратор ще не налаштував підтвердження через Telegram.' });
+    } else {
+      recipientChat = user.tg_chat_id;
+    }
+  }
+
+  if (recipientChat) {
     const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
     const challengeId = crypto.randomBytes(24).toString('hex');
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0].trim();
+    const text = ownerMode
+      ? `🔐 AV_fleetOS: запит на вхід\n\nКористувач: ${user.name} (@${user.username})${ip ? '\nIP: ' + ip : ''}\n\nКод: ${code}\n\nДійсний 5 хвилин. Передайте код лише цій людині, якщо ви очікуєте її вхід.`
+      : `🔐 AV_fleetOS: код входу ${code}\n\nДійсний 5 хвилин. Вхід для «${user.name}»${ip ? ' з IP ' + ip : ''}.\nЯкщо це не ви — нікому не повідомляйте код і змініть пароль.`;
     try {
-      await telegram.sendMessage(user.tg_chat_id,
-        `🔐 AV_fleetOS: код входу ${code}\n\nДійсний 5 хвилин. Вхід для «${user.name}»${ip ? ' з IP ' + ip : ''}.\nЯкщо це не ви — нікому не повідомляйте код і змініть пароль.`);
+      await telegram.sendMessage(recipientChat, text);
     } catch (e) {
       console.error('[auth] telegram send failed:', e.message);
       return res.status(502).json({ error: 'Не вдалося надіслати код у Telegram. Спробуйте ще раз або зверніться до адміністратора.' });
@@ -124,14 +157,17 @@ router.post('/check-password', auth, (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', auth, (req, res) => {
-  const row = db.prepare('SELECT tg_chat_id FROM users WHERE id = ?').get(req.user.id);
-  res.json({ ...req.user, tgEnabled: telegram.enabled(), tgLinked: !!(row && row.tg_chat_id) });
+  const row = db.prepare('SELECT username, tg_chat_id FROM users WHERE id = ?').get(req.user.id);
+  res.json({ ...req.user, tgEnabled: telegram.enabled(), tgLinked: !!(row && row.tg_chat_id), tgNeedsLink: !!row && needsLink(row), tgOwnerMode: !!ownerLogin() });
 });
 
 // ── Telegram linking (for the logged-in user) ────────────────────
 // POST /api/auth/telegram/link-code
 router.post('/telegram/link-code', auth, async (req, res) => {
   if (!telegram.enabled()) return res.status(400).json({ error: 'Підтвердження через Telegram не увімкнено' });
+  const me = db.prepare('SELECT username, tg_chat_id FROM users WHERE id = ?').get(req.user.id);
+  if (ownerLogin() && me.username !== ownerLogin())
+    return res.status(403).json({ error: 'Прив\'язка Telegram потрібна лише власнику.' });
   const code = telegram.createLinkCode(req.user.id);
   const bot = await telegram.getBotUsername();
   res.json({ code, bot, url: bot ? `https://t.me/${bot}?start=${code}` : null, expiresInMin: 10 });
@@ -147,7 +183,10 @@ router.get('/telegram/status', auth, (req, res) => {
 // GET /api/auth/users
 router.get('/users', auth, adminOnly, (req, res) => {
   const users = db.prepare('SELECT id, username, name, role, active, created_at, tg_chat_id, tg_username FROM users').all()
-    .map(({ tg_chat_id, ...u }) => ({ ...u, tgLinked: !!tg_chat_id }));
+    .map(({ tg_chat_id, ...u }) => ({
+      ...u, tgLinked: !!tg_chat_id,
+      tgRole: !telegram.enabled() ? 'off' : (ownerLogin() ? (u.username === ownerLogin() ? 'owner' : 'none') : 'self'),
+    }));
   res.json(users);
 });
 
@@ -177,6 +216,11 @@ router.put('/users/:id', auth, (req, res) => {
   const isAdmin = req.user.role === 'admin';
   if (!isSelf && !isAdmin) return res.status(403).json({ error: 'Немає доступу' });
   const { name, role, active, password, tgReset } = req.body;
+  if (tgReset && isAdmin) {
+    const owner = ownerRow();
+    if (owner && owner.id === targetId && req.user.id !== owner.id)
+      return res.status(403).json({ error: 'Прив\'язку власника може скинути лише він сам.' });
+  }
   if (password) db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), targetId);
   if (name && isAdmin) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, targetId);
   if (role && isAdmin) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, targetId);
