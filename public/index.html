@@ -4168,6 +4168,20 @@ function getDayExtension(b, dateStr){
   }
   return null;
 }
+// First calendar day that really belongs to a period: its fromDate, or the next
+// day when fromDate is just the previous period's last day. Same chain as
+// getDayExtension().
+function getExtEffectiveFrom(b, target){
+  let prevEnd = b.end;
+  const history = (b.extensionHistory || []).slice().sort((a,c)=>(a.fromDate||'').localeCompare(c.fromDate||''));
+  const chain = history.slice();
+  if(b.extension && b.extension.active) chain.push(b.extension);
+  for(const e of chain){
+    if(e === target) return e.fromDate === prevEnd ? addOneDayStr(e.fromDate) : e.fromDate;
+    prevEnd = e.toDate;
+  }
+  return target.fromDate;
+}
 let bookingsById = new Map();
 // Days that were paid for but the car is already back (early return): shown as
 // hatched empty cells. Only filled where no booking occupies the cell.
@@ -4556,8 +4570,13 @@ function renderCalendar(){
         let progressStripHtml = '';
         let isPaidPortion = false;
         if(extStatus === 'partial'){
-          const extDays = countDays(dayExt.fromDate, dayExt.toDate);
-          const dayIdx = countDays(dayExt.fromDate, ds) - 1;
+          // Count from the extension's EFFECTIVE first day (the boundary day
+          // shared with the previous period belongs to that one), the same
+          // way getDayExtension() assigns days — otherwise the paid (dark)
+          // part ends one day too early.
+          const extFrom = getExtEffectiveFrom(booking, dayExt);
+          const extDays = countDays(extFrom, dayExt.toDate);
+          const dayIdx = countDays(extFrom, ds) - 1;
           const pct = dayExt.cost > 0 ? (dayExt.amountPaid||0) / dayExt.cost : 0;
           const darkCount = Math.min(extDays - 1, Math.floor(extDays * pct));
           isPaidPortion = dayIdx < darkCount;
