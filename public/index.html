@@ -7563,7 +7563,7 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
 
     const tierRows = PERIOD_ORDER.map(key => `
       ${cell(trTiers[key], '#1d4ed8', uahOf(trTiers[key], trUah[key], trRate))}
-      <div style="text-align:center;color:#9ca3af;font-size:9px;white-space:nowrap">${PERIOD_LABELS[key]}</div>
+      <div style="text-align:center;color:#9ca3af;font-size:9px;white-space:nowrap">${isMobileViewport() ? key : PERIOD_LABELS[key]}</div>
       ${cell(rpTiers[key], '#166534', uahOf(rpTiers[key], rpUah[key], rpRate))}`).join('');
 
     const depositRow = (trData?.deposit || rpData?.deposit) ? `
