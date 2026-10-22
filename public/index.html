@@ -2700,7 +2700,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <input type="date" id="bm-period-to" class="lr-date custom-dp-trigger" style="flex:0 0 140px" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="
           document.getElementById('bm-return-date').value=this.value;
           document.getElementById('bm-end').value=this.value;
-          daysOverrideTouched=false;updateVatPreview();">
+          onReturnDateInput();updateVatPreview();">
       </div>
       <div id="bm-normal-dates-wrap">
       <div class="logistics-row" id="bm-pickup-row">
@@ -2716,7 +2716,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div class="logistics-row" id="bm-return-row" style="margin-top:8px">
         <div class="lr-label" id="bm-return-label">↓ Повернення</div>
         <div class="lr-inputs">
-          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;if(!isEarlyReturnActive())daysOverrideTouched=false;updateVatPreview();autoDetectExtras('return')">
+          <input type="date" id="bm-return-date" class="lr-date custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" oninput="document.getElementById('bm-end').value=this.value;onReturnDateInput();updateVatPreview();autoDetectExtras('return')">
           <input type="text" id="bm-return-date-display" class="lr-date lr-date-display" oninput="filterTypedDateChars(this)" maxlength="10" inputmode="numeric" autocomplete="off" onmousedown="openDateDropdown(document.getElementById('bm-return-date'), this)" onblur="commitTypedDateDisplay(this,'bm-return-date')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">
           <select id="bm-return-time" class="lr-time" onmousedown="document.activeElement!==this&&document.activeElement.blur&&document.activeElement.blur();if(!isMobileViewport()){event.preventDefault();this.focus();openTimeDropdown(this);}" oninput="updateVatPreview();updateKmDiff();autoDetectExtras('return')"></select>
           <input type="text" id="bm-return-loc" placeholder="Місце повернення" class="lr-loc" oninput="autoDetectExtras('return')">
@@ -3437,6 +3437,18 @@ function recalcTotalCost(){
 let stickers=[], nextStickerId=1, stickerColorDraft='red';
 function addSticker(o){ stickers.push({id:nextStickerId++, ...o}); }
 let daysOverrideTouched = false;
+// Called when the return date is edited. Normally the billed-days field then
+// follows the dates again. It must NOT while a repair pause is set: the return
+// date is pushed forward to compensate the client for repair days, and those
+// days are not paid-for rental. Re-calculating would turn the whole extended
+// repair span into "paid" days (split paid+repair cells in the calendar).
+// Early return keeps the same freeze.
+function onReturnDateInput(){
+  const frozen = parseFloat(document.getElementById('bm-days-override')?.value) > 0;
+  const hasRepair = !!(currentRepairPause && currentRepairPause.fromDate && currentRepairPause.toDate);
+  if(isEarlyReturnActive() || (hasRepair && frozen)) return;
+  daysOverrideTouched = false;
+}
 let rateCurrencyAnchor = '$';
 let extRateCurrencyAnchor = '$';
 let hiddenStatuses=new Set(), tooltipTimer=null;
