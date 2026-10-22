@@ -141,3 +141,19 @@ Notes:
   lines (Shift+Enter) belong to the previous note (`splitNotesEntries`).
 - Date/time fields: manual typing works site-wide; New-booking date display
   fields accept digits only and auto-insert dots.
+
+## Telegram two-step login (server/telegram.js, routes/auth.js)
+
+- Needs `TELEGRAM_BOT_TOKEN` in the site's `.env` (prod: `/var/www/AV_fleetOS-server/.env`,
+  test: `/var/www/AV_fleetOS-temp/.env`). **Use a different bot per site** — the server
+  long-polls `getUpdates`, and two processes polling one bot conflict (409).
+- Without a token (or with `TG_2FA_DISABLED=1` — emergency switch, then
+  `pm2 restart`) login works as before. Requires a pm2 restart after editing `.env`.
+- Flow: password OK → if the user has a linked chat, a 6-digit code (5 min, 5 attempts,
+  in memory) goes to Telegram and `POST /auth/login/verify` issues the token. Users
+  without a linked chat get a mandatory "link Telegram" overlay after login
+  (`/auth/telegram/link-code` + deep link `t.me/<bot>?start=<code>`); admin can reset a
+  user's link in «Користувачі» (`PUT /auth/users/:id {tgReset:true}`).
+- Change-password verifies the old password via `POST /auth/check-password`
+  (never `/auth/login`, which would send a code).
+- Columns `users.tg_chat_id`, `users.tg_username` (added by `ensureColumn`).

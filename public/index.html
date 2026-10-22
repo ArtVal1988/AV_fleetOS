@@ -1531,6 +1531,7 @@ input.dm-pf-val.tel{font-size:14px;}
       <div style="font-weight:800;color:#2563eb;font-size:15px;letter-spacing:.3px">+38 098 333 66 99</div>
       <div style="color:#6b7280;font-size:11px;margin-top:2px">Artem Valentinovich</div>
     </div>
+    <div id="login-step1">
     <div style="margin-bottom:14px">
       <label style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6b7280;font-weight:600">Логін</label>
       <input id="login-username" type="text" autocomplete="username" placeholder="Введіть логін"
@@ -1543,6 +1544,25 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div id="login-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
     <button onclick="doLogin()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px">Увійти</button>
+    </div>
+    <div id="login-step2" style="display:none">
+      <div style="text-align:center;font-size:13px;color:#1a1d26;font-weight:700;margin-bottom:6px">📲 Підтвердження входу</div>
+      <div style="text-align:center;font-size:12px;color:#6b7280;margin-bottom:16px;line-height:1.4">Ми надіслали 6-значний код у ваш Telegram. Введіть його нижче.</div>
+      <input id="login-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000"
+        style="width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-family:var(--font-mono,monospace);font-size:24px;letter-spacing:8px;text-align:center;box-sizing:border-box;outline:none;margin-bottom:12px">
+      <div id="login-code-error" style="display:none;color:#dc2626;font-size:11px;margin-bottom:12px;padding:8px 10px;background:#fee2e2;border-radius:6px"></div>
+      <button onclick="submitLoginCode()" style="width:100%;background:#2563eb;color:#fff;border:none;border-radius:8px;padding:11px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px">Підтвердити</button>
+      <button onclick="cancelLoginCode()" style="width:100%;background:none;color:#6b7280;border:none;padding:10px;font-family:inherit;font-size:12px;cursor:pointer;margin-top:4px">← Назад</button>
+    </div>
+  </div>
+</div>
+<!-- Mandatory Telegram linking (shown while the logged-in user has no Telegram linked) -->
+<div id="tg-link-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.75);z-index:9000;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:16px;padding:32px 34px;width:380px;max-width:calc(100vw - 24px);box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center">
+    <div style="font-size:18px;font-weight:800;color:#1a1d26;margin-bottom:10px">📲 Прив'яжіть Telegram</div>
+    <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:18px">Для безпеки кожен вхід підтверджується кодом, який надсилає наш Telegram-бот. Прив'язка займає хвилину.</div>
+    <div id="tg-link-body" style="font-size:12px;color:#374151"></div>
+    <button onclick="doLogout();closeTgLinkOverlay()" style="background:none;border:none;color:#9ca3af;font-family:inherit;font-size:11px;cursor:pointer;margin-top:18px">Вийти з облікового запису</button>
   </div>
 </div>
 <div id="user-badge" style="display:none"></div>
@@ -13688,6 +13708,18 @@ function showSidebarUser(user){
   if(sbInitials) sbInitials.textContent = initials;
 }
 
+let _loginChallenge = null;
+async function finishLogin(data){
+  _token=data.token; _currentUser=data.user;
+  localStorage.setItem('av_fleet_token',_token);
+  hideLoginOverlay();
+  showSidebarUser(_currentUser);
+  if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
+  applyAccountantRestrictions();
+  maybeRequireTelegramLink();
+  await syncFromServer();
+  startDeletedBookingsWatch();
+}
 async function doLogin(){
   const username = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
@@ -13698,15 +13730,78 @@ async function doLogin(){
     const res = await fetch(API_BASE+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
     const data = await res.json();
     if(!res.ok){ errEl.textContent=data.error||'Помилка входу'; errEl.style.display='block'; return; }
-    _token=data.token; _currentUser=data.user;
-    localStorage.setItem('av_fleet_token',_token);
-    hideLoginOverlay();
-    showSidebarUser(_currentUser);
-    if(_currentUser && _currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
-    applyAccountantRestrictions();
-    await syncFromServer();
-    startDeletedBookingsWatch();
+    if(data.needs2fa){
+      _loginChallenge = data.challengeId;
+      document.getElementById('login-step1').style.display='none';
+      document.getElementById('login-step2').style.display='block';
+      document.getElementById('login-code-error').style.display='none';
+      const codeEl = document.getElementById('login-code');
+      codeEl.value=''; codeEl.focus();
+      return;
+    }
+    await finishLogin(data);
   } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
+}
+async function submitLoginCode(){
+  const codeEl = document.getElementById('login-code');
+  const errEl = document.getElementById('login-code-error');
+  errEl.style.display='none';
+  const code = codeEl.value.trim();
+  if(!/^\d{6}$/.test(code)){ errEl.textContent='Введіть 6 цифр з Telegram'; errEl.style.display='block'; return; }
+  try{
+    const res = await fetch(API_BASE+'/auth/login/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({challengeId:_loginChallenge, code})});
+    const data = await res.json();
+    if(!res.ok){
+      errEl.textContent = data.error || 'Невірний код'; errEl.style.display='block';
+      if(data.expired) setTimeout(cancelLoginCode, 1800);
+      else { codeEl.value=''; codeEl.focus(); }
+      return;
+    }
+    _loginChallenge = null;
+    document.getElementById('login-password').value='';
+    cancelLoginCode();
+    await finishLogin(data);
+  } catch(e){ errEl.textContent='Сервер недоступний'; errEl.style.display='block'; }
+}
+function cancelLoginCode(){
+  _loginChallenge = null;
+  document.getElementById('login-step2').style.display='none';
+  document.getElementById('login-step1').style.display='block';
+  document.getElementById('login-password').value='';
+}
+
+// ── Mandatory Telegram linking ───────────────────────────────────
+let _tgLinkTimer = null;
+function closeTgLinkOverlay(){
+  const el = document.getElementById('tg-link-overlay');
+  if(el) el.style.display='none';
+  if(_tgLinkTimer){ clearInterval(_tgLinkTimer); _tgLinkTimer=null; }
+}
+async function maybeRequireTelegramLink(){
+  if(!(_currentUser && _currentUser.tgEnabled && !_currentUser.tgLinked)) return;
+  const overlay = document.getElementById('tg-link-overlay');
+  const body = document.getElementById('tg-link-body');
+  overlay.style.display='flex';
+  body.innerHTML = 'Готую посилання…';
+  const r = await apiFetch('POST','/auth/telegram/link-code');
+  if(!r || !r.code){ body.innerHTML = '<span style="color:#dc2626">Не вдалося отримати код. Оновіть сторінку.</span>'; return; }
+  body.innerHTML = `
+    ${r.url ? `<a href="${r.url}" target="_blank" rel="noopener" style="display:block;background:#229ed9;color:#fff;text-decoration:none;border-radius:8px;padding:12px;font-weight:700;font-size:13px">Відкрити Telegram</a>
+    <div style="margin:8px 0 14px;font-size:11px;color:#6b7280">У Telegram натисніть «Start» (або «Почати»).</div>` : ''}
+    <div style="font-size:11px;color:#6b7280">Або надішліть боту${r.bot ? ' @'+r.bot : ''} цей код:</div>
+    <div style="font-family:var(--font-mono,monospace);font-size:18px;font-weight:800;letter-spacing:2px;margin:6px 0 4px;user-select:all">${r.code}</div>
+    <div style="font-size:10px;color:#9ca3af">Код дійсний ${r.expiresInMin} хв.</div>
+    <div id="tg-link-wait" style="margin-top:14px;font-size:11px;color:#6b7280">⏳ Очікую підтвердження…</div>`;
+  if(_tgLinkTimer) clearInterval(_tgLinkTimer);
+  _tgLinkTimer = setInterval(async () => {
+    const st = await apiFetch('GET','/auth/telegram/status');
+    if(st && st.linked){
+      _currentUser.tgLinked = true;
+      document.getElementById('tg-link-wait').innerHTML = '<span style="color:#16a34a;font-weight:700">✅ Telegram прив\'язано</span>';
+      clearInterval(_tgLinkTimer); _tgLinkTimer=null;
+      setTimeout(closeTgLinkOverlay, 1200);
+    }
+  }, 3000);
 }
 
 function doLogout(){
@@ -15960,6 +16055,7 @@ async function loadUsersList(){
       <div style="font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-weight:600;color:${u.active?'#1a1d26':'#9ca3af'}">${u.name}</span>
         <span style="color:#9ca3af;font-size:11px">@${u.username} · ${u.role==='admin'?'👑 Адмін':u.role==='accountant'?'🧾 Бухгалтер':'👤 Менеджер'}</span>
+        <span style="font-size:10px;font-weight:600;color:${u.tgLinked?'#166534':'#b45309'}">${u.tgLinked?'📲 Telegram ✓':'📲 не прив\'язано'}</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
       ${u.id !== _currentUser?.id ? `
@@ -15971,6 +16067,10 @@ async function loadUsersList(){
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid ${u.active?'#fca5a5':'#86efac'};background:${u.active?'#fee2e2':'#dcfce7'};color:${u.active?'#991b1b':'#166534'};font-family:inherit;font-weight:600">
           ${u.active?'Деактивувати':'Активувати'}
         </button>
+        ${u.tgLinked ? `<button onclick="resetUserTelegram(${u.id}, '${u.name.replace(/'/g,"\\'")}')"
+          style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #fde68a;background:#fffbeb;color:#92400e;font-family:inherit;font-weight:600">
+          📲 Скинути Telegram
+        </button>` : ''}
         <button onclick="resetUserPassword(${u.id}, '${u.name}')"
           style="font-size:10px;padding:5px 10px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-family:inherit;font-weight:600">
           🔑 Змінити пароль
@@ -16017,6 +16117,11 @@ async function addNewUser(){
   }
 }
 
+async function resetUserTelegram(id, name){
+  if(!confirm(`Скинути прив'язку Telegram для "${name}"? Користувач зможе прив'язати Telegram заново при наступному вході.`)) return;
+  await apiFetch('PUT','/auth/users/'+id, {tgReset: true});
+  await loadUsersList();
+}
 async function toggleUserActive(id, isActive){
   await apiFetch('PUT','/auth/users/'+id, {active: !isActive});
   await loadUsersList();
@@ -16101,7 +16206,7 @@ async function doChangePassword(){
 
   // Verify old password by logging in
   try{
-    const check = await fetch(API_BASE+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:_currentUser.username, password:oldPwd})});
+    const check = await fetch(API_BASE+'/auth/check-password',{method:'POST',headers:apiHeaders(),body:JSON.stringify({password:oldPwd})});
     if(!check.ok){ errEl.textContent='Поточний пароль невірний'; errEl.style.display='block'; return; }
   } catch(e){ errEl.textContent='Помилка з\'єднання'; errEl.style.display='block'; return; }
 
@@ -16746,6 +16851,11 @@ document.addEventListener('keydown', e => {
 
 // Init
 document.getElementById('login-password')?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('login-code')?.addEventListener('input',e=>{
+  e.target.value = e.target.value.replace(/\D/g,'').slice(0,6);
+  if(e.target.value.length===6) submitLoginCode();
+});
+document.getElementById('login-code')?.addEventListener('keydown',e=>{ if(e.key==='Enter') submitLoginCode(); });
 document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('login-password')?.focus(); });
 
 (async function init(){
@@ -16758,6 +16868,7 @@ document.getElementById('login-username')?.addEventListener('keydown',e=>{ if(e.
     showSidebarUser(_currentUser);
     if(_currentUser.role==='admin'){ document.getElementById('nav-settings').style.display='flex'; document.getElementById('nav-reports').style.display='flex'; document.getElementById('nav-docarchive').style.display='flex'; document.getElementById('nav-activitylog').style.display='flex'; }
     applyAccountantRestrictions();
+    maybeRequireTelegramLink();
     await syncFromServer();
     startAutoRefresh();
     startDeletedBookingsWatch();

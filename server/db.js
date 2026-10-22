@@ -142,6 +142,8 @@ function ensureColumn(table, column, definition) {
     if (!/duplicate column name/i.test(e.message || '')) throw e;
   }
 }
+ensureColumn('users', 'tg_chat_id', 'TEXT');
+ensureColumn('users', 'tg_username', 'TEXT');
 ensureColumn('documents', 'uploaded_by', 'INTEGER');
 ensureColumn('documents', 'created_at', 'TEXT');
 ensureColumn('documents', 'thumb_filename', 'TEXT');
