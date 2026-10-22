@@ -7372,12 +7372,14 @@ async function showVehicleSpecs(e, vid){
     if(s.engine || s.power){
       specsForRows.engineCombined = `${s.engine ? s.engine+' л' : ''}${s.engine && s.power ? ' ' : ''}${s.power ? '('+s.power+' к.с.)' : ''}`.trim();
     }
-    const rows = SPEC_ROWS
+    // Two compact columns: small grey label on top, value under it.
+    const rowCells = SPEC_ROWS
       .filter(([key]) => specsForRows[key])
-      .map(([key, icon, suffix]) => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f3f4f6">
-        <span style="color:#6b7280">${icon} ${VEHICLE_SPEC_LABELS[key]}</span>
-        <span style="font-weight:600;color:#1a1d26">${specsForRows[key]}${suffix||''}</span>
+      .map(([key, icon, suffix]) => `<div style="min-width:0;padding:2px 0;border-bottom:1px solid #f3f4f6">
+        <div style="font-size:9px;color:#9ca3af;line-height:1.2">${icon} ${VEHICLE_SPEC_LABELS[key]}</div>
+        <div style="font-size:11px;font-weight:600;color:#1a1d26;line-height:1.25;overflow-wrap:anywhere">${specsForRows[key]}${suffix||''}</div>
       </div>`).join('');
+    const rows = rowCells ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px">${rowCells}</div>` : '';
     const optionsHtml = (s.options && s.options.length)
       ? `<div style="margin-top:8px">
           <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
