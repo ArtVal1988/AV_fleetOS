@@ -10258,14 +10258,16 @@ function renderExtDebtAtDate(){
     } else {
       // The boundary day: fullDaysCovered days are fully settled, this
       // next one is where the payment runs out partway through.
-      const boundaryD = new Date(from+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered+1);
+      // The calendar cell of this day (first non-red one) is from + fullDaysCovered;
+      // label it with that same date so the widget and the grid agree.
+      const boundaryD = new Date(from+'T00:00:00'); boundaryD.setDate(boundaryD.getDate()+fullDaysCovered);
       const boundaryStr = dStr(boundaryD.getFullYear(), boundaryD.getMonth(), boundaryD.getDate());
       const [by,bm,bd] = boundaryStr.split('-');
       const paidTowardDay = Math.round((paid - fullDaysCovered*dailyRate)*100)/100;
       const dayRemaining = Math.round((dailyRate - paidTowardDay)*100)/100;
       check1El.innerHTML = paidTowardDay>0.005
-        ? `<span style="color:#374151">На ${bd}.${bm} оплачено = ${amtSpan(paidTowardDay,cur)} з ${amtSpan(Math.round(dailyRate*100)/100,cur)}. Залишок боргу = ${amtSpan(dayRemaining,cur)}</span>`
-        : `<span style="color:#374151">На ${bd}.${bm} залишок боргу = ${amtSpan(Math.round(dailyRate*100)/100,cur)}</span>`;
+        ? `<span style="color:#374151">Доба ${bd}.${bm}: оплачено лише ${amtSpan(paidTowardDay,cur)} з ${amtSpan(Math.round(dailyRate*100)/100,cur)}, не вистачає ${amtSpan(dayRemaining,cur)}</span>`
+        : `<span style="color:#374151">Доба ${bd}.${bm} — перша неоплачена: ${amtSpan(Math.round(dailyRate*100)/100,cur)}</span>`;
     }
   }
 
