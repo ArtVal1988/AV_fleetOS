@@ -7522,7 +7522,7 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
     const rpUah = {}; (rpData?.tiers||[]).forEach(t=>{ if(t.uah) rpUah[t.label]=t.uah; });
     const anyRate = trData?.rate || rpData?.rate || null;
     const trRate = trData?.rate || anyRate, rpRate = rpData?.rate || anyRate;
-    const uahSpan = (uah, color) => uah ? ` <span style="font-size:9px;color:${color||'#166534'}">(${Math.round(uah).toLocaleString('uk-UA')})</span>` : '';
+    const uahSpan = (uah, color) => uah ? ` <span style="color:${color||'#166534'}">(${Math.round(uah).toLocaleString('uk-UA')})</span>` : '';
     const uahOf = (usd, exact, rate) => exact || (usd!=null && rate ? usd*rate : null);
 
     const cell = (val, color, uah) => val!=null
