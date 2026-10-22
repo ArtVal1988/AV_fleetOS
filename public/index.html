@@ -7522,11 +7522,11 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
     const rpUah = {}; (rpData?.tiers||[]).forEach(t=>{ if(t.uah) rpUah[t.label]=t.uah; });
     const anyRate = trData?.rate || rpData?.rate || null;
     const trRate = trData?.rate || anyRate, rpRate = rpData?.rate || anyRate;
-    const uahSpan = (uah) => uah ? ` <span style="font-size:9px;color:#166534">(${Math.round(uah).toLocaleString('uk-UA')})</span>` : '';
+    const uahSpan = (uah, color) => uah ? ` <span style="font-size:9px;color:${color||'#166534'}">(${Math.round(uah).toLocaleString('uk-UA')})</span>` : '';
     const uahOf = (usd, exact, rate) => exact || (usd!=null && rate ? usd*rate : null);
 
     const cell = (val, color, uah) => val!=null
-      ? `<div style="text-align:center;font-weight:400;color:${color}">${val} $${uahSpan(uah)}</div>`
+      ? `<div style="text-align:center;font-weight:400;color:${color}">${val} $${uahSpan(uah, color)}</div>`
       : `<div style="text-align:center;color:#d1d5db">—</div>`;
 
     const headerRow = `
@@ -7540,7 +7540,7 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       ${cell(rpTiers[key], '#166534', uahOf(rpTiers[key], rpUah[key], rpRate))}`).join('');
 
     const depositRow = (trData?.deposit || rpData?.deposit) ? `
-      <div style="text-align:center;font-weight:700;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $'+uahSpan(uahOf(trData.deposit, null, trRate)) : '—'}</div>
+      <div style="text-align:center;font-weight:700;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $'+uahSpan(uahOf(trData.deposit, null, trRate), '#1d4ed8') : '—'}</div>
       <div style="text-align:center;color:#9ca3af;font-size:9px;background:#fef3c7;border-radius:4px;padding:2px 0">Застава</div>
       <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $'+uahSpan(uahOf(rpData.deposit, null, rpRate)) : '—'}</div>` : '';
 
