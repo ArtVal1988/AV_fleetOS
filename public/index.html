@@ -416,6 +416,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 
   /* Vehicle specs / price popup — never let it run off the right edge. */
   #vehicle-specs-popup{width:min(260px, calc(100vw - 24px))!important;}
+  /* The generic mobile rule above collapses every 1fr 1fr grid to one column —
+     keep the specs in two columns, and the link buttons on one line. */
+  #vehicle-specs-popup .vs-specs-grid{grid-template-columns:1fr 1fr!important;gap:2px 8px!important;}
+  #vehicle-specs-popup .vs-link-btn{padding:3px 4px!important;white-space:nowrap;}
 
   /* Custom (non-.modal) overlay panels — vehicle form, docs, insurance, ТО —
      all use this same inline padding convention; shrink it uniformly. */
@@ -7379,7 +7383,7 @@ async function showVehicleSpecs(e, vid){
         <div style="font-size:9px;color:#9ca3af;line-height:1.2">${icon} ${VEHICLE_SPEC_LABELS[key]}</div>
         <div style="font-size:11px;font-weight:600;color:#1a1d26;line-height:1.25;overflow-wrap:anywhere">${specsForRows[key]}${suffix||''}</div>
       </div>`).join('');
-    const rows = rowCells ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px">${rowCells}</div>` : '';
+    const rows = rowCells ? `<div class="vs-specs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:2px 12px">${rowCells}</div>` : '';
     const optionsHtml = (s.options && s.options.length)
       ? `<div style="margin-top:8px">
           <div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
@@ -7545,9 +7549,9 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $'+uahSpan(uahOf(rpData.deposit, null, rpRate)) : '—'}</div>` : '';
 
     const footerRow = `
-      <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 16px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>
+      <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' class="vs-link-btn" style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 16px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>
       <div></div>
-      <div style="text-align:center">${priceLink2 ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink2)}, this)' style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px 16px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>`;
+      <div style="text-align:center">${priceLink2 ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink2)}, this)' class="vs-link-btn" style="display:inline-block;font-size:10px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:5px;padding:3px 16px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>`;
 
     section.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:4px 8px;align-items:center;font-size:11px">
