@@ -7438,7 +7438,7 @@ async function showVehicleSpecs(e, vid){
     });
   } else {
     popup.style.transform = '';
-    popup.style.width = '260px';
+    popup.style.width = '310px';
     var specsPopupRect = e.currentTarget.getBoundingClientRect();
     repositionSpecsPopupDesktop(popup, specsPopupRect);
   }
@@ -7474,7 +7474,7 @@ function repositionSpecsPopupDesktop(popup, rect){
   let top = rect.bottom + 6;
   const actualHeight = popup.offsetHeight || 320;
   // Keep it on-screen
-  const popupWidth = 260;
+  const popupWidth = 310;
   if(left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
   if(top + actualHeight > window.innerHeight) top = Math.max(8, rect.top - actualHeight);
   if(top < 8) top = 8;
@@ -7514,9 +7514,17 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
 
     const trTiers = {}; (trData?.tiers||[]).forEach(t=>trTiers[t.label]=t.usd);
     const rpTiers = {}; (rpData?.tiers||[]).forEach(t=>rpTiers[t.label]=t.usd);
+    // UAH equivalent: the exact UAH figure when the page quotes one, else $ x the
+    // USD rate shown on that page (falling back to the other site's rate).
+    const trUah = {}; (trData?.tiers||[]).forEach(t=>{ if(t.uah) trUah[t.label]=t.uah; });
+    const rpUah = {}; (rpData?.tiers||[]).forEach(t=>{ if(t.uah) rpUah[t.label]=t.uah; });
+    const anyRate = trData?.rate || rpData?.rate || null;
+    const trRate = trData?.rate || anyRate, rpRate = rpData?.rate || anyRate;
+    const uahSpan = (uah) => uah ? ` <span style="font-size:9px;color:#166534">(${Math.round(uah).toLocaleString('uk-UA')} ₴)</span>` : '';
+    const uahOf = (usd, exact, rate) => exact || (usd!=null && rate ? usd*rate : null);
 
-    const cell = (val, color) => val!=null
-      ? `<div style="text-align:center;font-weight:400;color:${color}">${val} $</div>`
+    const cell = (val, color, uah) => val!=null
+      ? `<div style="text-align:center;font-weight:400;color:${color}">${val} $${uahSpan(uah)}</div>`
       : `<div style="text-align:center;color:#d1d5db">—</div>`;
 
     const headerRow = `
@@ -7525,14 +7533,14 @@ async function loadPriceIntoSpecsPopup(vid, priceLink, priceLink2){
       <div style="text-align:center;font-weight:800;font-size:10px;color:#166534">RentPlus</div>`;
 
     const tierRows = PERIOD_ORDER.map(key => `
-      ${cell(trTiers[key], '#1d4ed8')}
+      ${cell(trTiers[key], '#1d4ed8', uahOf(trTiers[key], trUah[key], trRate))}
       <div style="text-align:center;color:#9ca3af;font-size:9px;white-space:nowrap">${PERIOD_LABELS[key]}</div>
-      ${cell(rpTiers[key], '#166534')}`).join('');
+      ${cell(rpTiers[key], '#166534', uahOf(rpTiers[key], rpUah[key], rpRate))}`).join('');
 
     const depositRow = (trData?.deposit || rpData?.deposit) ? `
-      <div style="text-align:center;font-weight:700;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $' : '—'}</div>
+      <div style="text-align:center;font-weight:700;color:#1d4ed8;background:#fef3c7;border-radius:4px;padding:2px 0">${trData?.deposit!=null ? trData.deposit+' $'+uahSpan(uahOf(trData.deposit, null, trRate)) : '—'}</div>
       <div style="text-align:center;color:#9ca3af;font-size:9px;background:#fef3c7;border-radius:4px;padding:2px 0">Застава</div>
-      <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $' : '—'}</div>` : '';
+      <div style="text-align:center;font-weight:700;color:#166534;background:#fef3c7;border-radius:4px;padding:2px 0">${rpData?.deposit!=null ? rpData.deposit+' $'+uahSpan(uahOf(rpData.deposit, null, rpRate)) : '—'}</div>` : '';
 
     const footerRow = `
       <div style="text-align:center">${priceLink ? `<button type="button" onclick='copyVehicleLink(${JSON.stringify(priceLink)}, this)' style="display:inline-block;font-size:10px;color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:3px;font-family:inherit;cursor:pointer">📋 Посилання</button>` : ''}</div>

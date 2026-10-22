@@ -77,7 +77,9 @@ function extractTiersGrouped(text, uahRate) {
   return found.map((f, i) => {
     const raw = prices[i];
     const usd = uahRate ? Math.round(raw / uahRate) : raw;
-    return { label: f.key, usd };
+    // The page itself quotes this tier in UAH — keep the exact figure so the
+    // UI can show it instead of re-multiplying a rounded USD value.
+    return uahRate ? { label: f.key, usd, uah: raw } : { label: f.key, usd };
   });
 }
 
@@ -97,7 +99,7 @@ function extractTiers(text) {
     const raw = extractNumberAfter(text, dm.index + dm[0].length);
     if (raw) deposit = (tiers === interleaved) ? raw : (uahRate ? Math.round(raw / uahRate) : raw);
   }
-  return { tiers, deposit };
+  return { tiers, deposit, rate: uahRate };
 }
 
 const BODY_TYPE_WORDS = 'хетчбек|hatchback|седан|sedan|позашляховик|suv|кросовер|crossover|мінівен|minivan|кабріолет|cabrio|універсал|wagon|купе|coupe|пікап|pickup';
@@ -153,9 +155,9 @@ router.get('/', auth, async (req, res) => {
     if (!r.ok) return res.status(502).json({ error: 'Upstream fetch failed', status: r.status });
     const html = await r.text();
     const text = stripTags(html);
-    const { tiers, deposit } = extractTiers(text);
+    const { tiers, deposit, rate } = extractTiers(text);
     const specs = extractSpecs(text);
-    res.json({ tiers, deposit, specs });
+    res.json({ tiers, deposit, rate, specs });
   } catch (err) {
     res.status(502).json({ error: 'Fetch error', message: String(err.message || err) });
   }
