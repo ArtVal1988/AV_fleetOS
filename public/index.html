@@ -7375,7 +7375,7 @@ async function showVehicleSpecs(e, vid){
     // Two compact columns: small grey label on top, value under it.
     const rowCells = SPEC_ROWS
       .filter(([key]) => specsForRows[key])
-      .map(([key, icon, suffix]) => `<div style="min-width:0;padding:2px 0;border-bottom:1px solid #f3f4f6">
+      .map(([key, icon, suffix]) => `<div style="min-width:0;padding:2px 0;border-bottom:1px solid #f3f4f6;text-align:center">
         <div style="font-size:9px;color:#9ca3af;line-height:1.2">${icon} ${VEHICLE_SPEC_LABELS[key]}</div>
         <div style="font-size:11px;font-weight:600;color:#1a1d26;line-height:1.25;overflow-wrap:anywhere">${specsForRows[key]}${suffix||''}</div>
       </div>`).join('');
