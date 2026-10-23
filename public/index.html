@@ -4517,8 +4517,11 @@ function renderCalendar(){
       const cells=days.map(d=>{
         const k=cellKey(v.id,d);
         const bookingArr=cellMap.get(k);
-        const visibleArr=bookingArr?bookingArr.filter(b=>!hiddenStatuses.has(b.status)):[];
         const subInfo = subMap.get(k);
+        // While the car works as a substitute, a «Лише статус» entry on the same
+        // day must not hide the substitute cell.
+        const subActive = !!(subInfo && subInfo.type==='active');
+        const visibleArr=bookingArr?bookingArr.filter(b=>!hiddenStatuses.has(b.status) && !(subActive && isStatusOnlyBooking(b))):[];
         const cellHtml = (()=>{
         if(!visibleArr.length){
           if(subInfo && subInfo.type==='active'){
@@ -9036,6 +9039,10 @@ function populateSubVehicleDropdown(){
   const currentVid = parseInt(document.getElementById('bm-vehicle')?.value);
   sel.innerHTML = ALL_VEHICLES.filter(v=>v.id!==currentVid).map(v=>`<option value="${v.id}">${v.plate}</option>`).join('');
 }
+function isStatusOnlyBooking(b){
+  const st = SM[b.status];
+  return st ? st.isBooking === false : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
+}
 function addSubstitutePeriod(){
   const vehicleId = parseInt(document.getElementById('bm-sub-vehicle').value);
   const fromDate = document.getElementById('bm-sub-from').value;
@@ -9048,8 +9055,10 @@ function addSubstitutePeriod(){
   if(toDate < fromDate){ alert('Дата "По" не може бути раніше дати "З"'); return; }
   if(!(exchangeRate>0)){ alert('Вкажіть курс обміну для підмінного авто'); return; }
 
+  // «Лише статус» entries (storage, investor, ...) are just a label on the car,
+  // not a rental — they must not block using that car as a substitute.
   const conflict = bookings.find(b =>
-    b.vehicleId === vehicleId && b.id !== editBid &&
+    b.vehicleId === vehicleId && b.id !== editBid && !isStatusOnlyBooking(b) &&
     fromDate <= getEffectiveEnd(b) && b.start <= toDate
   );
   if(conflict){
