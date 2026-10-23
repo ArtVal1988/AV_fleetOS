@@ -6050,7 +6050,7 @@ function saveBooking(){
   }
 
   const clientType = document.getElementById('bm-client-type').value;
-  if(['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
+  if(currentStatusIsBooking && ['tov','fop','fop_no_vat'].includes(clientType) && !document.getElementById('bm-edrpou').value.trim()){
     errors.push({fields:'bm-edrpou', message:'Вкажіть ЄДРПОУ'});
   }
 
@@ -6070,7 +6070,7 @@ function saveBooking(){
     errors.push({fields:'bm-deposit-wrap', message:'Вкажіть суму депозиту (можна 0, якщо депозит не потрібен)'});
   }
 
-  if(isEarlyReturnActive() && earlyReturnPlannedEnd){
+  if(currentStatusIsBooking && isEarlyReturnActive() && earlyReturnPlannedEnd){
     if(end && end >= earlyReturnPlannedEnd){
       errors.push({fields:'bm-return-date', message:'Дострокове повернення: фактична дата повернення має бути раніше запланованої (' + fmt(earlyReturnPlannedEnd) + ').'});
     }
@@ -6097,7 +6097,7 @@ function saveBooking(){
   // rate — catches entries saved before this became mandatory, or any
   // other way a period could end up without one, not just the sub-form's
   // own + Додати button (which only guards new/edited entries).
-  const subMissingCourse = currentSubstitutes.find(s => !(s.exchangeRate>0));
+  const subMissingCourse = currentStatusIsBooking ? currentSubstitutes.find(s => !(s.exchangeRate>0)) : null;
   if(subMissingCourse){
     const subV = getVehicle(subMissingCourse.vehicleId);
     errors.push({
@@ -6116,13 +6116,14 @@ function saveBooking(){
   }
 
   for(const e of EXTRAS_CONFIG){
+    if(!currentStatusIsBooking) break; // «Лише статус» has no order details to check
     if(!extrasActive[e.key]) continue;
     const rawVal = (document.getElementById('ex-price-' + e.key)?.value || '').trim();
     if(!rawVal) errors.push({fields:'ex-price-' + e.key, message:'Вкажіть суму для послуги «' + e.label + '» (можна 0, якщо безкоштовно)'});
   }
 
   const isCompanyClient = document.getElementById('bm-client-type').value !== 'individual';
-  if(isCompanyClient && document.getElementById('bm-ext-active')?.checked){
+  if(currentStatusIsBooking && isCompanyClient && document.getElementById('bm-ext-active')?.checked){
     const extRate2 = (document.getElementById('bm-ext-rate2')?.value || '').trim();
     if(!extRate2) errors.push({fields:'bm-ext-rate2', message:'Вкажіть курс для продовження оренди'});
   }
@@ -6132,7 +6133,7 @@ function saveBooking(){
   // other bookings on the same vehicle before the whole booking gets saved.
   // Not a missing-field error (no single field to highlight), so this one
   // still short-circuits on its own rather than joining the collected list.
-  if(vid && document.getElementById('bm-ext-active')?.checked){
+  if(vid && currentStatusIsBooking && document.getElementById('bm-ext-active')?.checked){
     const extFrom = getExtDateField('bm-ext-from');
     const extTo = getExtDateField('bm-ext-to');
     if(extFrom && extTo){
