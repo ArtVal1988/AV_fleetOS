@@ -7,15 +7,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <style>
 html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f7f6;color:#333;}
-/* Сайт на весь екран */
-#siteFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;}
+/* Фонова картинка на весь екран */
+#siteBg{position:fixed;inset:0;background:#2b2b2b url('/lab-bg.jpg') no-repeat center top / cover;}
 #testTag{position:fixed;left:8px;bottom:8px;z-index:9000;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;
   border:1px solid #f59e0b;padding:4px 9px;border-radius:12px;cursor:pointer;opacity:.85;}
 #testTag:hover{opacity:1}
 
 /* Заставка вибору мови */
 .language-splash{position:fixed;top:0;left:0;width:100%;height:100%;
-  background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);
+  background:linear-gradient(135deg,rgba(30,60,114,.72) 0%,rgba(42,82,152,.72) 100%);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
   display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;
   transition:opacity .5s ease,transform .5s ease;color:#fff;}
 .language-splash.hidden{opacity:0;pointer-events:none;transform:scale(1.05);}
@@ -32,8 +33,8 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans
 </head>
 <body>
 
-<!-- САЙТ (показується під заставкою) -->
-<iframe id="siteFrame" title="TopRent" allow="geolocation; fullscreen"></iframe>
+<!-- ФОН (картинка, без посилань) -->
+<div id="siteBg" role="img" aria-label="TopRent"></div>
 <div id="testTag" title="Показати вибір мови знову">🧪 тест · змінити мову</div>
 
 <!-- ЗАСТАВКА (SPLASH SCREEN) -->
@@ -53,28 +54,15 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans
 </div>
 
 <script>
-  // Адреса сайту для кожної мови. Якщо в toprent.ua англійська версія має іншу адресу
-  // (наприклад https://toprent.ua/en/), змініть її тут.
-  const SITE_URLS = {
-    uk: 'https://toprent.ua/',
-    en: 'https://toprent.ua/'
-  };
   const STORE_KEY = 'userLanguage';
 
   function store(lang){ try{ localStorage.setItem(STORE_KEY, lang); }catch(e){} }
   function read(){ try{ return localStorage.getItem(STORE_KEY); }catch(e){ return null; } }
   function clear(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
 
-  function openSite(lang){
-    const frame = document.getElementById('siteFrame');
-    const url = SITE_URLS[lang] || SITE_URLS.uk;
-    if(frame.getAttribute('src') !== url) frame.setAttribute('src', url);
-  }
-
   function selectLanguage(lang){
     document.getElementById('languageSplash').classList.add('hidden');
     document.documentElement.lang = lang;
-    openSite(lang);
     store(lang); // запам'ятовуємо вибір — заставка не з'явиться знову
   }
 
@@ -90,13 +78,9 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans
     if(/[?&]reset=1/.test(location.search)) clear();
     const saved = read();
     if(saved){
-      // Вже обирав мову раніше — заставки немає, одразу сайт
+      // Вже обирав мову раніше — заставки немає
       document.getElementById('languageSplash').style.display = 'none';
       document.documentElement.lang = saved;
-      openSite(saved);
-    } else {
-      // Новий відвідувач: сайт вантажиться під заставкою
-      openSite('uk');
     }
   });
 </script>
