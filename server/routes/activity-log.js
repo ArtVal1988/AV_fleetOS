@@ -8,7 +8,15 @@ router.get('/', auth, adminOnly, (req, res) => {
   const { entityType, entityId, action, date, limit, offset, user, q } = req.query;
   let sql = 'SELECT * FROM activity_log WHERE 1=1';
   const params = [];
-  if (entityType) { sql += ' AND entity_type = ?'; params.push(entityType); }
+  if (entityType === 'repairs') {
+    // «Ремонти і ТО»: own entries + older/booking entries that mention repairs or maintenance
+    sql += ` AND (entity_type = 'maintenance' OR (entity_type IN ('booking','vehicle') AND (
+      details LIKE '%ремонт%' OR details LIKE '%Ремонт%' OR details LIKE '%ТО / ремонт%' OR details LIKE '%"ТО:%'
+      OR details LIKE '%Інтервал ТО%' OR summary LIKE '%ремонт%' OR summary LIKE '%Ремонт%')))`;
+  } else if (entityType === 'insurance') {
+    sql += ` AND (entity_type IN ('insurance','case_file') OR (entity_type = 'vehicle' AND (
+      details LIKE '%Страхов%' OR details LIKE '%ОСЦПВ%' OR details LIKE '%КАСКО%')))`;
+  } else if (entityType) { sql += ' AND entity_type = ?'; params.push(entityType); }
   if (entityId) { sql += ' AND entity_id = ?'; params.push(Number(entityId)); }
   if (action) {
     if (action === 'auth') { sql += " AND action IN ('login','logout','login_failed')"; }

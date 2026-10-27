@@ -2360,10 +2360,12 @@ input.dm-pf-val.tel{font-size:14px;}
         <option value="undo">Скасування</option>
       </select>
       <select id="al-filter-entity" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
-        <option value="">Все (розділи)</option>
+        <option value="">Усі розділи</option>
         <option value="booking">Замовлення</option>
         <option value="client">Клієнти</option>
-        <option value="vehicle">Авто</option>
+        <option value="vehicle">Авто (правки даних)</option>
+        <option value="repairs">Ремонти і ТО</option>
+        <option value="insurance">Страхування (випадки, ОСЦПВ, КАСКО)</option>
         <option value="vehicle_doc">Документи авто</option>
         <option value="client_doc">Документи клієнтів</option>
         <option value="case_file">Страхові випадки</option>
@@ -15402,7 +15404,7 @@ function closeActivityLogPanel(){
 const AL_PAGE = 100;
 let alHasMore = false, alLoading = false, _alQTimer = null;
 const AL_ENTITY = {
-  booking:'Замовлення', client:'Клієнт', vehicle:'Авто', vehicle_doc:'Документ авто', client_doc:'Документ клієнта',
+  booking:'Замовлення', client:'Клієнт', vehicle:'Авто', maintenance:'ТО / ремонт', insurance:'Страхування', vehicle_doc:'Документ авто', client_doc:'Документ клієнта',
   case_file:'Страховий випадок', spare_part:'Запчастина', sticker:'Стікер', generated_doc:'Договір / акт',
   template:'Шаблон документа', setting:'Налаштування', user:'Користувач', auth:'Вхід', other:'Інше',
 };

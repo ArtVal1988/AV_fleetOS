@@ -34,11 +34,27 @@ router.put('/:id', auth, (req, res) => {
       summary: `${prefix}Додано автомобіль${req.body.name ? ' ' + req.body.name : ''}`, snapshot: { before, after: req.body },
     });
   } else {
-    const changes = diffData(before, req.body, VEHICLE_DIFF_LABELS);
-    if (changes.length) {
+    // One save can touch several areas — each gets its own log entry so the
+    // log can be filtered by «Ремонти і ТО» / «Страхування» / «Авто (дані)».
+    const MAINT = ['works', 'service', 'serviceInterval', 'currentKm', 'nextServiceKm', 'currentKmDate'];
+    const INSUR = ['insuranceCases', 'osago', 'kasko', 'insurance'];
+    const pick = (o, keys, invert) => {
+      const r = {};
+      Object.keys(o || {}).forEach(k => { if (keys.includes(k) !== !!invert) r[k] = o[k]; });
+      return r;
+    };
+    const parts = [
+      { type: 'maintenance', keys: MAINT, invert: false },
+      { type: 'insurance', keys: INSUR, invert: false },
+      { type: 'vehicle', keys: [...MAINT, ...INSUR], invert: true },
+    ];
+    for (const part of parts) {
+      const b = pick(before, part.keys, part.invert), a = pick(req.body, part.keys, part.invert);
+      const changes = diffData(b, a, VEHICLE_DIFF_LABELS);
+      if (!changes.length) continue;
       logReq(req, {
-        action: 'update', entityType: 'vehicle', entityId: id,
-        summary: `${prefix}${changedLabels(changes)}`, snapshot: { before, after: req.body },
+        action: 'update', entityType: part.type, entityId: id,
+        summary: `${prefix}${changedLabels(changes)}`, snapshot: { before: b, after: a },
         details: changes,
       });
     }
