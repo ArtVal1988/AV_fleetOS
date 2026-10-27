@@ -2,39 +2,103 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AV Lab — тестова сторінка</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TopRent — вибір мови (тест)</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--text:#1a1d26;--muted:#6b7280;--accent:#0a4174;--line:#e5e7eb;}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
-.stripe{height:6px;background:repeating-linear-gradient(45deg,#f59e0b 0 10px,#1a1d26 10px 20px);}
-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line);}
-header img{height:32px}
-header h1{font-size:16px;margin:0;font-weight:700}
-header .tag{margin-left:auto;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;padding:3px 8px;border-radius:10px}
-main{max-width:960px;margin:24px auto;padding:0 16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
-.card h2{margin:0 0 8px;font-size:15px}
-.card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
-#sandbox{margin-top:16px;min-height:240px;border:2px dashed var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center;padding:16px}
-a{color:var(--accent)}
+html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f7f6;color:#333;}
+/* Сайт на весь екран */
+#siteFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;}
+#testTag{position:fixed;left:8px;bottom:8px;z-index:9000;font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;
+  border:1px solid #f59e0b;padding:4px 9px;border-radius:12px;cursor:pointer;opacity:.85;}
+#testTag:hover{opacity:1}
+
+/* Заставка вибору мови */
+.language-splash{position:fixed;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;
+  transition:opacity .5s ease,transform .5s ease;color:#fff;}
+.language-splash.hidden{opacity:0;pointer-events:none;transform:scale(1.05);}
+.splash-logo{font-size:3rem;margin-bottom:10px;font-weight:bold;letter-spacing:2px;}
+.splash-title{font-size:1.4rem;margin-bottom:40px;opacity:.9;text-align:center;max-width:90%;line-height:1.6;}
+.lang-buttons{display:flex;gap:25px;flex-wrap:wrap;justify-content:center;}
+.lang-btn{display:flex;align-items:center;justify-content:center;gap:15px;min-width:200px;padding:15px 30px;
+  font-size:1.2rem;font-weight:600;color:#1e3c72;background:#fff;border:none;border-radius:30px;cursor:pointer;
+  box-shadow:0 4px 15px rgba(0,0,0,.2);transition:all .3s ease;}
+.flag-icon{width:28px;height:28px;border-radius:50%;object-fit:cover;box-shadow:0 2px 5px rgba(0,0,0,.15);}
+.lang-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.3);background:#f8f9fa;}
+.lang-btn:active{transform:translateY(-1px);}
 </style>
 </head>
 <body>
-<div class="stripe"></div>
-<header>
-  <img src="/logo.png" alt="AV" onerror="this.style.display='none'">
-  <h1>AV Lab</h1>
-  <span class="tag">🧪 ТЕСТОВИЙ САЙТ</span>
-</header>
-<main>
-  <div class="card">
-    <h2>Експериментальна сторінка</h2>
-    <p>Окрема сторінка тестового сайту. Вона не пов'язана з основною програмою, не потребує входу й не торкається бази даних. На основному сайті її немає. <a href="/">← До програми</a></p>
+
+<!-- САЙТ (показується під заставкою) -->
+<iframe id="siteFrame" title="TopRent" allow="geolocation; fullscreen"></iframe>
+<div id="testTag" title="Показати вибір мови знову">🧪 тест · змінити мову</div>
+
+<!-- ЗАСТАВКА (SPLASH SCREEN) -->
+<div id="languageSplash" class="language-splash">
+  <div class="splash-logo">ВІТАЄМО</div>
+  <div class="splash-title" id="splashTitle">Будь ласка, оберіть мову для відображення сайту</div>
+  <div class="lang-buttons">
+    <button class="lang-btn" onclick="selectLanguage('uk')">
+      <img class="flag-icon" src="https://flagcdn.com/w80/ua.png" alt="Прапор України">
+      Українська
+    </button>
+    <button class="lang-btn" onclick="selectLanguage('en')">
+      <img class="flag-icon" src="https://flagcdn.com/w80/gb.png" alt="Flag of the United Kingdom">
+      English
+    </button>
   </div>
-  <div id="sandbox">Тут буде наш експеримент</div>
-</main>
+</div>
+
+<script>
+  // Адреса сайту для кожної мови. Якщо в toprent.ua англійська версія має іншу адресу
+  // (наприклад https://toprent.ua/en/), змініть її тут.
+  const SITE_URLS = {
+    uk: 'https://toprent.ua/',
+    en: 'https://toprent.ua/'
+  };
+  const STORE_KEY = 'userLanguage';
+
+  function store(lang){ try{ localStorage.setItem(STORE_KEY, lang); }catch(e){} }
+  function read(){ try{ return localStorage.getItem(STORE_KEY); }catch(e){ return null; } }
+  function clear(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+
+  function openSite(lang){
+    const frame = document.getElementById('siteFrame');
+    const url = SITE_URLS[lang] || SITE_URLS.uk;
+    if(frame.getAttribute('src') !== url) frame.setAttribute('src', url);
+  }
+
+  function selectLanguage(lang){
+    document.getElementById('languageSplash').classList.add('hidden');
+    document.documentElement.lang = lang;
+    openSite(lang);
+    store(lang); // запам'ятовуємо вибір — заставка не з'явиться знову
+  }
+
+  function showSplash(){
+    const s = document.getElementById('languageSplash');
+    s.style.display = 'flex';
+    requestAnimationFrame(() => s.classList.remove('hidden'));
+  }
+
+  document.getElementById('testTag').addEventListener('click', () => { clear(); showSplash(); });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if(/[?&]reset=1/.test(location.search)) clear();
+    const saved = read();
+    if(saved){
+      // Вже обирав мову раніше — заставки немає, одразу сайт
+      document.getElementById('languageSplash').style.display = 'none';
+      document.documentElement.lang = saved;
+      openSite(saved);
+    } else {
+      // Новий відвідувач: сайт вантажиться під заставкою
+      openSite('uk');
+    }
+  });
+</script>
 </body>
 </html>
