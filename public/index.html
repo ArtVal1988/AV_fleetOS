@@ -1228,7 +1228,11 @@ select option{background:var(--surface2);}
 /* Activity log filters: compact controls in one wrapping row */
 #al-panel-filters{flex:1 1 auto;min-width:0;}
 #al-panel-filters>select,#al-panel-filters>input,#al-panel-filters>button{width:auto!important;flex:0 0 auto!important;height:34px;box-sizing:border-box;}
-#al-panel-filters>input[type=text]{width:150px!important;}
+#al-panel-filters>input[type=text]{width:96px!important;}
+#al-panel-filters>select{width:112px!important;max-width:112px!important;padding:8px 6px!important;text-overflow:ellipsis;}
+#al-panel-filters>input[type=date]{width:112px!important;padding:8px 6px!important;}
+#al-panel-header{gap:10px!important;padding-left:22px!important;padding-right:22px!important;}
+#al-panel-header>div:first-child{white-space:nowrap;}
 textarea{resize:vertical;min-height:56px;}
 .modal-footer{padding:0 26px 22px;display:flex;align-items:center;gap:8px;justify-content:space-between;position:sticky;bottom:0;background:#ffffff;padding-top:12px;box-shadow:0 -4px 12px rgba(0,0,0,.06);z-index:20;}
 /* Messenger icons */
@@ -2349,10 +2353,10 @@ input.dm-pf-val.tel{font-size:14px;}
   <div style="background:#fff;border-radius:16px;width:960px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div id="al-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">📜 Журнал дій</div>
-      <div id="al-panel-filters" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <input type="text" id="al-filter-q" placeholder="Пошук…" oninput="alQueryDebounced()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;width:150px">
-      <select id="al-filter-action" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
-        <option value="">Всі дії</option>
+      <div id="al-panel-filters" style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+      <input type="text" id="al-filter-q" placeholder="Пошук…" oninput="alQueryDebounced()" style="padding:8px 8px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;width:96px">
+      <select id="al-filter-action" onchange="loadActivityLog()" style="padding:8px 6px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
+        <option value="">Усі дії</option>
         <option value="create">Створення</option>
         <option value="update">Редагування</option>
         <option value="delete">Видалення</option>
@@ -2379,10 +2383,10 @@ input.dm-pf-val.tel{font-size:14px;}
         <option value="other">Інше</option>
       </select>
       <select id="al-filter-user" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:150px">
-        <option value="">Всі користувачі</option>
+        <option value="">Усі автори</option>
       </select>
       <input type="date" id="al-filter-date" class="custom-dp-trigger" onchange="loadActivityLog();blurDateFieldOnDesktop(this)" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
-      <button onclick="document.getElementById('al-filter-date').value='';loadActivityLog()" title="Скинути дату" style="background:none;border:1px solid #e5e7eb;border-radius:7px;padding:8px 12px;cursor:pointer;color:#6b7280;font-size:12px;font-family:inherit;white-space:nowrap">Скинути дату</button>
+      <button onclick="document.getElementById('al-filter-date').value='';loadActivityLog()" title="Скинути дату" style="background:none;border:1px solid #e5e7eb;border-radius:7px;padding:8px 10px;cursor:pointer;color:#6b7280;font-size:12px;font-family:inherit;white-space:nowrap">Скинути</button>
       </div>
       <button onclick="closeActivityLogPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9ca3af;margin-left:auto">✕</button>
     </div>
@@ -15427,7 +15431,7 @@ async function loadActivityUsers(){
   const names = await apiFetch('GET', '/activity-log/users');
   if(!Array.isArray(names)) return;
   const cur = sel.value;
-  sel.innerHTML = '<option value="">Всі користувачі</option>' + names.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+  sel.innerHTML = '<option value="">Усі автори</option>' + names.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
   sel.value = cur;
   sel.dataset.loaded = '1';
 }
