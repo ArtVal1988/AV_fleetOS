@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
-const { logReq, diffData, changedLabels, VEHICLE_LABELS } = require('../activityLog');
+const { logReq, diffData, changedLabels, VEHICLE_DIFF_LABELS } = require('../activityLog');
 
 function vehiclePlatePrefix(before, after) {
   const plate = (after && after.plate) || (before && before.plate) || '';
@@ -34,7 +34,7 @@ router.put('/:id', auth, (req, res) => {
       summary: `${prefix}Додано автомобіль${req.body.name ? ' ' + req.body.name : ''}`, snapshot: { before, after: req.body },
     });
   } else {
-    const changes = diffData(before, req.body, VEHICLE_LABELS);
+    const changes = diffData(before, req.body, VEHICLE_DIFF_LABELS);
     if (changes.length) {
       logReq(req, {
         action: 'update', entityType: 'vehicle', entityId: id,

@@ -72,6 +72,11 @@ const VEHICLE_DOC_LABELS = {
   poa_owner: 'Довіреність від власника', poa_company: 'Довіреність на компанію', agency_contract: 'Агентський договір',
   insurance: 'Страховка', osago: 'ОСЦПВ', kasko: 'КАСКО', photos: 'Фото',
 };
+function vehicleDocLabel(key) {
+  if (VEHICLE_DOC_LABELS[key]) return VEHICLE_DOC_LABELS[key];
+  const m = /^work_(\d+)$/.exec(String(key));
+  return m ? `Файл до роботи ТО №${m[1]}` : key;
+}
 const CLIENT_DOC_LABELS = { passport: 'Паспорт', inn: 'ІПН', license: 'Водійське', other: 'Інше' };
 
 // ── Field labels used by the change lists ────────────────────────
@@ -124,6 +129,57 @@ const VEHICLE_LABELS = {
 };
 const STICKER_LABELS = { title: 'Заголовок', text: 'Текст', color: 'Колір', pinned: 'Закріплено', comments: 'Коментарі' };
 
+// Maintenance (ТО) works, stored in vehicle.works
+const WORK_TYPE_LABELS = { planned: 'Планове ТО', unplanned: 'Позапланове / Ремонт', parts_purchase: 'Закупка запчастин' };
+const WORK_STATUS_LABELS = { done: 'виконано', planned: 'заплановано' };
+const WORK_LABELS = {
+  type: 'Тип', status: 'Статус', name: 'Назва', desc: 'Опис', date: 'Дата', mileage: 'Пробіг, км',
+  labor: 'Вартість робіт', garage: 'СТО / майстер', materials: 'Запчастини',
+  qty: 'к-сть', partNumber: 'артикул', price: 'ціна',
+};
+const CASE_LABELS = {
+  date: 'Дата', policy: 'Поліс', category: 'Категорія', status: 'Статус', title: 'Назва', description: 'Опис',
+  damageAmount: 'Збиток', deductible: 'Франшиза', payoutAmount: 'Виплата',
+};
+const POLICY_LABELS = {
+  insurer: 'Страховик', policyNum: 'Поліс №', contractDate: 'Дата договору', start: 'Початок', end: 'Діє до',
+  insuredSum: 'Страхова сума', tariff: 'Тариф', paymentType: 'Тип оплати', totalPremium: 'Премія',
+  deductiblePct: 'Франшиза, %', deductible: 'Франшиза', notes: 'Нотатки', reqRecipient: 'Отримувач платежу',
+  reqCode: 'Код отримувача', reqAccount: 'Рахунок', reqPurpose: 'Призначення платежу', payments: 'Платежі',
+};
+for (const [pol, name] of [['osago', 'ОСЦПВ'], ['kasko', 'КАСКО'], ['insurance', 'Страховка']]) {
+  for (const [k, lab] of Object.entries(POLICY_LABELS)) VEHICLE_LABELS[`${pol}.${k}`] = `${name}: ${lab}`;
+}
+Object.assign(VEHICLE_LABELS, {
+  serviceInterval: 'Інтервал ТО, км', 'service.interval': 'Інтервал ТО, км',
+  insuranceCases: 'Страхові випадки', 'trusted.passport': 'Довірена особа: паспорт', 'trusted.inn': 'Довірена особа: ІПН',
+  mileageNote: 'Примітка до пробігу',
+});
+
+// Arrays whose items have an `id`: compared item by item instead of as a blob.
+const BY_ID = {
+  works: {
+    noun: 'ТО / ремонт', itemLabels: WORK_LABELS,
+    title: w => w.name || 'без назви',
+    describe: w => {
+      const parts = [w.name || 'без назви', WORK_TYPE_LABELS[w.type] || w.type, w.date, w.mileage ? `${w.mileage} км` : null,
+        w.labor ? `робота: ${w.labor}` : null, w.garage ? `СТО: ${w.garage}` : null,
+        (w.materials && w.materials.length) ? 'запчастини: ' + w.materials.map(m => `${m.name}${m.qty ? ' ×' + m.qty : ''}`).join(', ') : null];
+      return parts.filter(Boolean).join(' · ');
+    },
+    valueMaps: { 'Тип': v => WORK_TYPE_LABELS[v] || v, 'Статус': v => WORK_STATUS_LABELS[v] || v },
+  },
+  insuranceCases: {
+    noun: 'Страховий випадок', itemLabels: CASE_LABELS, skip: ['files'],
+    title: c => c.title || c.category || c.date || 'без назви',
+    describe: c => [c.date, c.title, c.category, c.status ? `статус: ${c.status}` : null,
+      c.damageAmount ? `збиток: ${c.damageAmount}` : null, c.payoutAmount ? `виплата: ${c.payoutAmount}` : null].filter(Boolean).join(' · '),
+  },
+};
+// Derived / cosmetic fields that change automatically or are not a user's real edit.
+const SKIP_PATHS = new Set(['nextServiceKm', 'service.nextKm', 'service.status', 'currentKmDate', 'sortOrder',
+  'categoryOrder', 'categoryColor', 'docs.activeFile', 'docs.missingCount']);
+
 const SKIP_KEYS = new Set(['id', '_createdAt', '_updatedAt', '_createdBy', 'createdAt', 'updatedAt', 'author', 'createdBy', 'edited', 'editedBy', 'editedAt']);
 
 // ── Diffing ──────────────────────────────────────────────────────
@@ -151,6 +207,28 @@ function fmtItem(it, labels, pathPrefix) {
 
 const MAX_CHANGES = 60;
 
+// Item-by-item diff for arrays of records with an id. Returns false when the
+// items have no ids (caller then falls back to the generic list comparison).
+function diffById(ba, aa, cfg, out) {
+  const ok = arr => arr.every(x => isObj(x) && x.id != null);
+  if (!ok(ba) || !ok(aa)) return false;
+  const clean = it => { if (!cfg.skip) return it; const c = { ...it }; cfg.skip.forEach(k => delete c[k]); return c; };
+  const bm = new Map(ba.map(x => [String(x.id), x])), am = new Map(aa.map(x => [String(x.id), x]));
+  for (const [id, it] of am) {
+    if (out.length >= MAX_CHANGES) break;
+    const old = bm.get(id);
+    if (!old) { out.push({ label: `${cfg.noun}: додано`, to: cfg.describe(it) }); continue; }
+    if (JSON.stringify(clean(old)) === JSON.stringify(clean(it))) continue;
+    const sub = diffCore(clean(old), clean(it), cfg.itemLabels, '', []);
+    for (const [lab, fn] of Object.entries(cfg.valueMaps || {})) mapValues(sub, lab, fn);
+    sub.forEach(c => out.push({ ...c, label: `${cfg.noun} «${cfg.title(it)}»: ${c.label}` }));
+  }
+  for (const [id, it] of bm) {
+    if (!am.has(id) && out.length < MAX_CHANGES) out.push({ label: `${cfg.noun}: видалено`, to: cfg.describe(it) });
+  }
+  return true;
+}
+
 function diffCore(before, after, labels = {}, path = '', out = []) {
   const b = isObj(before) ? before : {};
   const a = isObj(after) ? after : {};
@@ -158,11 +236,13 @@ function diffCore(before, after, labels = {}, path = '', out = []) {
   for (const k of keys) {
     if (SKIP_KEYS.has(k) || out.length >= MAX_CHANGES) continue;
     const p = path ? path + '.' + k : k;
+    if (labels.__vehicle && SKIP_PATHS.has(p)) continue;
     const label = labels[p] || labels[k] || p;
     const bv = b[k], av = a[k];
 
     if (Array.isArray(bv) || Array.isArray(av)) {
       const ba = Array.isArray(bv) ? bv : [], aa = Array.isArray(av) ? av : [];
+      if (labels.__vehicle && BY_ID[p] && diffById(ba, aa, BY_ID[p], out)) continue;
       const bs = ba.map(x => JSON.stringify(x)), as = aa.map(x => JSON.stringify(x));
       if (JSON.stringify(ba) === JSON.stringify(aa)) continue;
       const removed = ba.filter((x, i) => !as.includes(bs[i]));
@@ -224,10 +304,11 @@ const STATUS_LABELS = {
 const PAY_LABELS = { cash: 'готівка', card: 'картка', mixed: 'змішана' };
 
 module.exports = {
+  VEHICLE_DIFF_LABELS: Object.assign({}, VEHICLE_LABELS, { __vehicle: true }),
   mapValues, STATUS_LABELS, PAY_LABELS,
   logActivity, logReq, reqUserName, reqIp,
   vehicleLabel, clientLabel,
-  VEHICLE_DOC_LABELS, CLIENT_DOC_LABELS,
+  VEHICLE_DOC_LABELS, CLIENT_DOC_LABELS, vehicleDocLabel,
   BOOKING_LABELS, CLIENT_LABELS, VEHICLE_LABELS, STICKER_LABELS,
   diffData, changedLabels,
 };

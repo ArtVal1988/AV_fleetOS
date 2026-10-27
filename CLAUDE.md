@@ -180,3 +180,7 @@ Notes:
 - Entity types: booking, client, vehicle, vehicle_doc, client_doc, case_file, spare_part, sticker,
   generated_doc, template, setting, user, auth, other (UI labels in `AL_ENTITY` in index.html).
 - Undo exists only for `booking` entries (needs `snapshot`).
+- Vehicle updates are diffed with `VEHICLE_DIFF_LABELS`: arrays with ids (`works` = ТО / repairs,
+  `insuranceCases`) are compared item by item (`BY_ID` in activityLog.js: added / removed / per-field
+  changes); derived or cosmetic fields (`SKIP_PATHS`: nextServiceKm, service.status, sortOrder, ...)
+  are not logged. Documents attached to a ТО work have doc_type `work_<id>`.
