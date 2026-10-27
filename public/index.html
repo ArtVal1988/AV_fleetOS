@@ -2415,7 +2415,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <label class="vf-lbl">ПІБ власника</label><input id="vf-owner-name" type="text" class="vf-inp" placeholder="Прізвище Ім'я По-батькові">
       </div>
       <div class="vf-keep-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-        <div><label class="vf-lbl">Телефон власника</label><input id="vf-owner-phone" type="text" class="vf-inp" placeholder="+380..."></div>
+        <div><label class="vf-lbl">Телефон власника</label><input id="vf-owner-phone" type="text" class="vf-inp" placeholder="+38 067 000 00 00" oninput="onPhoneInput(this)"></div>
         <div><label class="vf-lbl">ІПН власника</label><input id="vf-owner-inn" type="text" class="vf-inp no-spinner" placeholder="1234567890"></div>
       </div>
       <div class="vf-keep-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
@@ -12598,6 +12598,17 @@ function formatPhoneUA(raw){
   const digits = raw.replace(/\D/g,'').slice(0,15); // E.164 max length
   if(!digits) return hadPlus ? '+' : '';
   const cleaned = (hadPlus ? '+' : '') + digits;
+
+  // Ukrainian numbers: typed locally as "099 999 99 99" (leading 0) or as "380..."/"+380...".
+  // Always shown as "+38 0XX XXX XX XX" — the "+38" prefix is added automatically.
+  let uaNational = null;
+  if(!hadPlus && digits[0]==='0' && digits[1]!=='0') uaNational = digits;
+  else if(digits.startsWith('380') && (hadPlus || digits.length>=12)) uaNational = digits.slice(2);
+  if(uaNational!==null){
+    const d = uaNational.slice(0,10);
+    const g = [d.slice(0,3), d.slice(3,6), d.slice(6,8), d.slice(8,10)].filter(Boolean).join(' ');
+    return '+38 ' + g;
+  }
 
   // Use Google's libphonenumber (via libphonenumber-js) for proper, per-country
   // "as you type" formatting — this is the real standard used for every country,
