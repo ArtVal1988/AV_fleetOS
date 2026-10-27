@@ -54,16 +54,9 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans
 </div>
 
 <script>
-  const STORE_KEY = 'userLanguage';
-
-  function store(lang){ try{ localStorage.setItem(STORE_KEY, lang); }catch(e){} }
-  function read(){ try{ return localStorage.getItem(STORE_KEY); }catch(e){ return null; } }
-  function clear(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
-
   function selectLanguage(lang){
     document.getElementById('languageSplash').classList.add('hidden');
     document.documentElement.lang = lang;
-    store(lang); // запам'ятовуємо вибір — заставка не з'явиться знову
   }
 
   function showSplash(){
@@ -72,17 +65,8 @@ html,body{margin:0;height:100%;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans
     requestAnimationFrame(() => s.classList.remove('hidden'));
   }
 
-  document.getElementById('testTag').addEventListener('click', () => { clear(); showSplash(); });
-
-  window.addEventListener('DOMContentLoaded', () => {
-    if(/[?&]reset=1/.test(location.search)) clear();
-    const saved = read();
-    if(saved){
-      // Вже обирав мову раніше — заставки немає
-      document.getElementById('languageSplash').style.display = 'none';
-      document.documentElement.lang = saved;
-    }
-  });
+  document.getElementById('testTag').addEventListener('click', showSplash);
+  // Заставка показується при кожному заході на сторінку (вибір не пропускає її наступного разу).
 </script>
 </body>
 </html>
