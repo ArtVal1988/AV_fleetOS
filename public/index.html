@@ -12831,7 +12831,27 @@ function updateAllMsgIconStates(ctx='bm'){
 function onPhoneInput(el){
   const target = el || document.getElementById('bm-phone');
   if(!target) return;
-  target.value = formatPhoneUA(target.value);
+  const old = target.value;
+  const formatted = formatPhoneUA(old);
+  if(formatted === old) return;
+  // Keep the caret where the user is editing (otherwise it jumps to the end
+  // when a digit is changed in the middle of the number).
+  const focused = document.activeElement === target;
+  const caret = focused ? target.selectionStart : null;
+  target.value = formatted;
+  if(caret === null || caret >= old.length) return;
+  const oldDigits = old.replace(/\D/g,'');
+  // "+38" is added automatically when a local "0XX…" number is typed -> shift by those 2 digits
+  const prefixAdd = (!old.trim().startsWith('+') && /^\+38/.test(formatted) && !oldDigits.startsWith('38')) ? 2 : 0;
+  const total = formatted.replace(/\D/g,'').length;
+  const want = Math.min(total, old.slice(0,caret).replace(/\D/g,'').length + prefixAdd); // digits that must stay before the caret
+  let pos = 0, seen = 0;
+  if(want > 0){
+    for(pos = 0; pos < formatted.length && seen < want; pos++){
+      if(/\d/.test(formatted[pos])) seen++;
+    }
+  }
+  try{ target.setSelectionRange(pos, pos); }catch(e){}
 }
 
 function setDepositCur(currency){
