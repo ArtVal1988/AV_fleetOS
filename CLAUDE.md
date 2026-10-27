@@ -163,3 +163,20 @@ Notes:
   (mandatory overlay for him). While the owner has no linked chat, only the owner can log in
   (503 for everybody else) so the check is never silently skipped. Only the owner can reset
   his own link. Without this variable each user gets codes in their own Telegram.
+
+## Activity log («Журнал дій», admin only)
+
+- Table `activity_log` (+ columns `details` JSON = list of changes, `ip`). Written ONLY via
+  `server/activityLog.js`: `logReq(req, {action, entityType, entityId, summary, snapshot, details})`.
+  `logReq`/`diffData` never throw — logging must never break the real operation.
+- `diffData(before, after, labels)` produces `{label, from, to}` / `{label, added[], removed[]}`;
+  label maps per entity (`BOOKING_LABELS`, `CLIENT_LABELS`, `VEHICLE_LABELS`, ...). An update with
+  no real change is NOT logged. Noise keys are in `SKIP_KEYS`.
+- Logged: bookings (incl. repair pause, payments, notes), clients, vehicles (incl. `works` = repairs),
+  vehicle/client documents, insurance-case files, spare parts, stickers, settings, users, document
+  templates/mapping, generated contracts/acts, login / logout / failed login, Telegram link.
+  `server.js` has a safety net for any future mutating `/api` route that does not log itself
+  (add the new router prefix to `SELF_LOGGING` there once it logs explicitly).
+- Entity types: booking, client, vehicle, vehicle_doc, client_doc, case_file, spare_part, sticker,
+  generated_doc, template, setting, user, auth, other (UI labels in `AL_ENTITY` in index.html).
+- Undo exists only for `booking` entries (needs `snapshot`).

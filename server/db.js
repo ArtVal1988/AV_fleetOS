@@ -152,6 +152,8 @@ ensureColumn('spare_parts', 'manufacturer', 'TEXT');
 ensureColumn('generated_documents', 'contract_number', 'TEXT');
 ensureColumn('generated_documents', 'period_label', 'TEXT');
 ensureColumn('activity_log', 'undone_at', 'TEXT');
+ensureColumn('activity_log', 'details', 'TEXT');
+ensureColumn('activity_log', 'ip', 'TEXT');
 
 // ── Seed admin ───────────────────────────────────────────────────
 const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(

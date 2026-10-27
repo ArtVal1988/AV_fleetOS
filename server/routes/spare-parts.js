@@ -1,6 +1,9 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
+const { logReq, diffData, changedLabels } = require('../activityLog');
+const PART_LABELS = { name: 'Назва', part_number: 'Артикул', quantity: 'Кількість', price: 'Ціна', supplier: 'Постачальник', manufacturer: 'Виробник' };
+const partLabel = r => [r.name, r.part_number].filter(Boolean).join(' · ');
 
 // GET /api/spare-parts — list all parts, newest-name-first is unhelpful, sort by name
 router.get('/', auth, (req, res) => {
@@ -17,6 +20,11 @@ router.post('/', auth, (req, res) => {
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
   ).run(String(name).trim(), partNumber ? String(partNumber).trim() : null, Number(quantity) || 0, Number(price) || 0, supplier ? String(supplier).trim() : null, manufacturer ? String(manufacturer).trim() : null);
   const row = db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(info.lastInsertRowid);
+  logReq(req, {
+    action: 'create', entityType: 'spare_part', entityId: row.id,
+    summary: partLabel(row), snapshot: row,
+    details: [{ label: 'Кількість', to: String(row.quantity) }, { label: 'Ціна', to: String(row.price) }],
+  });
   res.json(row);
 });
 
@@ -37,15 +45,25 @@ router.put('/:id', auth, (req, res) => {
     manufacturer != null ? String(manufacturer).trim() : existing.manufacturer,
     id
   );
-  res.json(db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(id));
+  const updated = db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(id);
+  const changes = diffData(existing, updated, PART_LABELS);
+  if (changes.length) {
+    logReq(req, {
+      action: 'update', entityType: 'spare_part', entityId: id,
+      summary: `${partLabel(updated)} — ${changedLabels(changes)}`, snapshot: { before: existing, after: updated },
+      details: changes,
+    });
+  }
+  res.json(updated);
 });
 
 // DELETE /api/spare-parts/:id
 router.delete('/:id', auth, (req, res) => {
   const id = Number(req.params.id);
-  const existing = db.prepare('SELECT id FROM spare_parts WHERE id = ?').get(id);
+  const existing = db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Не знайдено' });
   db.prepare('DELETE FROM spare_parts WHERE id = ?').run(id);
+  logReq(req, { action: 'delete', entityType: 'spare_part', entityId: id, summary: partLabel(existing), snapshot: existing });
   res.json({ ok: true });
 });
 
@@ -59,6 +77,11 @@ router.post('/:id/deduct', auth, (req, res) => {
   if (!existing) return res.status(404).json({ error: 'Не знайдено' });
   const newQty = existing.quantity - amount;
   db.prepare(`UPDATE spare_parts SET quantity=?, updated_at=datetime('now') WHERE id=?`).run(newQty, id);
+  logReq(req, {
+    action: 'update', entityType: 'spare_part', entityId: id,
+    summary: `${partLabel(existing)} — ${amount >= 0 ? 'списано зі складу' : 'повернуто на склад'}: ${Math.abs(amount)}`,
+    details: [{ label: 'Залишок', from: String(existing.quantity), to: String(newQty) }],
+  });
   res.json(db.prepare('SELECT * FROM spare_parts WHERE id = ?').get(id));
 });
 

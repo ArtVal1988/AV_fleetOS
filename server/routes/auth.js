@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const db = require('../db');
+const { logReq, logActivity, reqIp } = require('../activityLog');
 const telegram = require('../telegram');
 
 const SECRET = process.env.JWT_SECRET || 'av_fleetos_2026_08_17_force_relogin';
@@ -68,6 +69,7 @@ function publicUser(user) {
 // ── Two-step login: after a correct password the server sends a 6-digit code
 // to the user's linked Telegram chat; the session token is issued only once
 // that code is entered. Challenges live in memory (5 min, 5 attempts).
+const ROLE_LABELS = { admin: 'Адміністратор', manager: 'Менеджер', accountant: 'Бухгалтер' };
 const challenges = new Map(); // id -> { userId, codeHash, expires, attempts }
 const CHALLENGE_TTL = 5 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
@@ -84,8 +86,10 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Введіть логін та пароль' });
 
   const user = db.prepare('SELECT * FROM users WHERE username = ? AND active = 1').get(username);
-  if (!user || !bcrypt.compareSync(password, user.password))
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    logActivity({ action: 'login_failed', entityType: 'auth', summary: `Невдала спроба входу: «${String(username).slice(0, 60)}»`, ip: reqIp(req) });
     return res.status(401).json({ error: 'Невірний логін або пароль' });
+  }
 
   // Who receives the code: the owner (owner mode) or the user themselves.
   let recipientChat = null, ownerMode = false;
@@ -120,6 +124,7 @@ router.post('/login', async (req, res) => {
     return res.json({ needs2fa: true, challengeId });
   }
 
+  logActivity({ action: 'login', entityType: 'auth', summary: 'Вхід у систему', userName: user.name || user.username, ip: reqIp(req) });
   res.json({ token: issueToken(user), user: publicUser(user) });
 });
 
@@ -138,12 +143,21 @@ router.post('/login/verify', (req, res) => {
       challenges.delete(challengeId);
       return res.status(401).json({ error: 'Забагато невірних спроб. Увійдіть заново.', expired: true });
     }
+    logActivity({ action: 'login_failed', entityType: 'auth', summary: 'Невірний код підтвердження', userName: (db.prepare('SELECT name FROM users WHERE id = ?').get(c.userId) || {}).name, ip: reqIp(req) });
     return res.status(401).json({ error: `Невірний код (залишилось спроб: ${MAX_ATTEMPTS - c.attempts})` });
   }
   challenges.delete(challengeId);
   const user = db.prepare('SELECT * FROM users WHERE id = ? AND active = 1').get(c.userId);
   if (!user) return res.status(401).json({ error: 'Обліковий запис недоступний' });
+  logActivity({ action: 'login', entityType: 'auth', summary: 'Вхід у систему (підтверджено через Telegram)', userName: user.name || user.username, ip: reqIp(req) });
   res.json({ token: issueToken(user), user: publicUser(user) });
+});
+
+// POST /api/auth/logout — only records the event in the activity log
+// (tokens are stateless, the client simply discards its token).
+router.post('/logout', auth, (req, res) => {
+  logReq(req, { action: 'logout', entityType: 'auth', summary: 'Вихід із системи' });
+  res.json({ ok: true });
 });
 
 // POST /api/auth/check-password — verifies the current user's own password
@@ -206,6 +220,11 @@ router.post('/users', auth, adminOnly, (req, res) => {
     'INSERT INTO users (username, password, name, role) VALUES (?, ?, ?, ?)'
   ).run(username, hash, name, role);
 
+  logReq(req, {
+    action: 'create', entityType: 'user', entityId: result.lastInsertRowid,
+    summary: `${name} (@${username}) — ${ROLE_LABELS[role] || role}`,
+    details: [{ label: 'Роль', to: ROLE_LABELS[role] || role }],
+  });
   res.status(201).json({ id: result.lastInsertRowid, username, name, role });
 });
 
@@ -221,12 +240,26 @@ router.put('/users/:id', auth, (req, res) => {
     if (owner && owner.id === targetId && req.user.id !== owner.id)
       return res.status(403).json({ error: 'Прив\'язку власника може скинути лише він сам.' });
   }
+  const userBefore = db.prepare('SELECT username, name, role, active FROM users WHERE id = ?').get(targetId);
   if (password) db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), targetId);
   if (name && isAdmin) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name, targetId);
   if (role && isAdmin) db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, targetId);
   if (tgReset && isAdmin) db.prepare('UPDATE users SET tg_chat_id = NULL, tg_username = NULL WHERE id = ?').run(targetId);
   if (active !== undefined && isAdmin) db.prepare('UPDATE users SET active = ? WHERE id = ?').run(active ? 1 : 0, targetId);
 
+  const userChanges = [];
+  if (password) userChanges.push({ label: 'Пароль', to: 'змінено' });
+  if (name && isAdmin && userBefore && name !== userBefore.name) userChanges.push({ label: 'Ім\'я', from: userBefore.name, to: name });
+  if (role && isAdmin && userBefore && role !== userBefore.role) userChanges.push({ label: 'Роль', from: ROLE_LABELS[userBefore.role] || userBefore.role, to: ROLE_LABELS[role] || role });
+  if (active !== undefined && isAdmin && userBefore && (active ? 1 : 0) !== userBefore.active) userChanges.push({ label: 'Доступ', from: userBefore.active ? 'активний' : 'вимкнений', to: active ? 'активний' : 'вимкнений' });
+  if (tgReset && isAdmin) userChanges.push({ label: 'Telegram', to: 'прив\'язку скинуто' });
+  if (userChanges.length) {
+    logReq(req, {
+      action: 'update', entityType: 'user', entityId: targetId,
+      summary: `${userBefore ? userBefore.name + ' (@' + userBefore.username + ')' : 'користувач №' + targetId} — ${userChanges.map(c => c.label).join(', ')}`,
+      details: userChanges,
+    });
+  }
   res.json({ ok: true });
 });
 
@@ -234,7 +267,12 @@ router.put('/users/:id', auth, (req, res) => {
 router.delete('/users/:id', auth, adminOnly, (req, res) => {
   if (parseInt(req.params.id) === req.user.id)
     return res.status(400).json({ error: 'Не можна видалити власний акаунт' });
+  const delUser = db.prepare('SELECT username, name, role FROM users WHERE id = ?').get(req.params.id);
   db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+  logReq(req, {
+    action: 'delete', entityType: 'user', entityId: req.params.id,
+    summary: delUser ? `${delUser.name} (@${delUser.username})` : `користувач №${req.params.id}`, snapshot: delUser || undefined,
+  });
   res.json({ ok: true });
 });
 

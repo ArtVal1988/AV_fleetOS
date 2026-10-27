@@ -38,6 +38,29 @@ app.get('/api/app-version', (req, res) => {
 
 // ── Routes ───────────────────────────────────────────────────────
 const { router: authRouter } = require('./routes/auth');
+// Safety net for the activity log: a successful POST/PUT/PATCH/DELETE on an API
+// route that does not log itself (e.g. one added in the future) still leaves a
+// generic entry, so nothing a user changes can go completely unrecorded.
+const SELF_LOGGING = ['/api/auth', '/api/bookings', '/api/vehicles', '/api/stickers', '/api/clients',
+  '/api/generate-document', '/api/client-documents', '/api/case-files', '/api/activity-log',
+  '/api/settings', '/api/documents', '/api/spare-parts', '/api/price-check'];
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const full = req.baseUrl + req.path;
+    if (!SELF_LOGGING.some(p => full === p || full.startsWith(p + '/'))) {
+      res.on('finish', () => {
+        if (res.statusCode < 400) {
+          require('./activityLog').logReq(req, {
+            action: req.method === 'DELETE' ? 'delete' : (req.method === 'POST' ? 'create' : 'update'),
+            entityType: 'other', entityId: null, summary: `${req.method} ${full}`,
+          });
+        }
+      });
+    }
+  }
+  next();
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/vehicles', require('./routes/vehicles'));

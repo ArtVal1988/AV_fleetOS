@@ -1,15 +1,11 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
-const { logActivity } = require('../activityLog');
+const { logReq, diffData, changedLabels, VEHICLE_LABELS } = require('../activityLog');
 
-function vehicleUpdateSummary(before, after) {
+function vehiclePlatePrefix(before, after) {
   const plate = (after && after.plate) || (before && before.plate) || '';
-  const prefix = plate ? `${plate} — ` : '';
-  if (before && after && before.currentKm !== after.currentKm && after.currentKm != null) {
-    return `${prefix}Пробіг: ${before.currentKm ?? '—'} → ${after.currentKm} км`;
-  }
-  return `${prefix}Оновлено дані автомобіля`;
+  return plate ? `${plate} — ` : '';
 }
 
 // GET /api/vehicles — service data for all vehicles
@@ -31,11 +27,22 @@ router.put('/:id', auth, (req, res) => {
   } else {
     db.prepare('INSERT INTO vehicles (id, service_data) VALUES (?, ?)').run(id, data);
   }
-  logActivity({
-    action: existing ? 'update' : 'create', entityType: 'vehicle', entityId: id,
-    summary: vehicleUpdateSummary(before, req.body), snapshot: { before, after: req.body },
-    userName: req.user?.name || req.user?.username,
-  });
+  const prefix = vehiclePlatePrefix(before, req.body);
+  if (!existing) {
+    logReq(req, {
+      action: 'create', entityType: 'vehicle', entityId: id,
+      summary: `${prefix}Додано автомобіль${req.body.name ? ' ' + req.body.name : ''}`, snapshot: { before, after: req.body },
+    });
+  } else {
+    const changes = diffData(before, req.body, VEHICLE_LABELS);
+    if (changes.length) {
+      logReq(req, {
+        action: 'update', entityType: 'vehicle', entityId: id,
+        summary: `${prefix}${changedLabels(changes)}`, snapshot: { before, after: req.body },
+        details: changes,
+      });
+    }
+  }
   res.json({ ok: true });
 });
 

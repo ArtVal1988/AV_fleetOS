@@ -64,6 +64,13 @@ function linkChat(code, chat) {
   if (other) return { ok: false, reason: 'Цей Telegram уже прив\'язано до іншого користувача.' };
   db.prepare('UPDATE users SET tg_chat_id = ?, tg_username = ? WHERE id = ?').run(chatId, chat.username || null, user.id);
   linkCodes.delete(String(code).toUpperCase());
+  try {
+    require('./activityLog').logActivity({
+      action: 'update', entityType: 'user', entityId: user.id,
+      summary: `${user.name} — Telegram прив'язано${chat.username ? ' (@' + chat.username + ')' : ''}`,
+      details: [{ label: 'Telegram', to: "прив'язано" }], userName: user.name,
+    });
+  } catch (e) { /* logging must never break linking */ }
   return { ok: true, name: user.name };
 }
 

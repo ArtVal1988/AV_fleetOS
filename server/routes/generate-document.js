@@ -6,6 +6,7 @@ const JSZip = require('jszip');
 const multer = require('multer');
 const db = require('../db');
 const { auth, adminOnly } = require('./auth');
+const { logReq } = require('../activityLog');
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
 const GENERATED_DOCS_DIR = path.join(__dirname, '..', 'uploads', 'Згенеровані документи');
@@ -698,6 +699,28 @@ router.get('/mapping', auth, adminOnly, async (req, res) => {
   }
   res.json({ slots, needsMigration, generalVariables: getGeneralVariables() });
 });
+// Admin edits of document variables / placeholder mapping are recorded as one
+// generic entry per successful request (the payload itself can be large).
+const MAPPING_ACTIONS = {
+  'PUT /general-variables': 'Змінено загальні змінні документів',
+  'POST /general-variables/collect-from-templates': 'Зібрано змінні з усіх шаблонів',
+  'PUT /mapping': 'Змінено відповідність полів шаблону',
+  'PUT /mapping/removed': 'Змінено список прихованих змінних шаблону',
+  'PUT /mapping/custom': 'Змінено власні змінні шаблону',
+  'POST /mapping/migrate-to-per-template': 'Виконано міграцію відповідності полів по шаблонах',
+};
+router.use((req, res, next) => {
+  const text = MAPPING_ACTIONS[req.method + ' ' + req.path];
+  if (text) {
+    res.on('finish', () => {
+      if (res.statusCode < 400) {
+        const file = req.body && req.body.file;
+        logReq(req, { action: 'update', entityType: 'template', entityId: null, summary: text + (file ? ` — ${file}` : '') });
+      }
+    });
+  }
+  next();
+});
 router.put('/general-variables', auth, adminOnly, (req, res) => {
   const { value } = req.body;
   if (!value || typeof value !== 'object' || Array.isArray(value)) return res.status(400).json({ error: 'Очікується об\'єкт' });
@@ -829,6 +852,11 @@ router.post('/template/:type', auth, adminOnly, upload.single('file'), (req, res
   const existing = db.prepare('SELECT key FROM settings WHERE key = ?').get(infoKey);
   if (existing) db.prepare('UPDATE settings SET value = ?, updated_at = datetime(\'now\') WHERE key = ?').run(JSON.stringify(info), infoKey);
   else db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(infoKey, JSON.stringify(info));
+  logReq(req, {
+    action: 'update', entityType: 'template', entityId: null,
+    summary: `Шаблон «${type}»${repKey ? ' (' + repKey + ')' : ''}: завантажено ${fixedOriginalName}`,
+    details: [{ label: 'Шаблон', to: fixedOriginalName }],
+  });
   res.json({ ok: true, info });
 });
 // Download the template currently in use for a slot (the representative's own
@@ -854,6 +882,7 @@ router.delete('/template/:type', auth, adminOnly, (req, res) => {
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   const infoKey = 'template_info_' + type + '_' + repKey;
   db.prepare('DELETE FROM settings WHERE key = ?').run(infoKey);
+  logReq(req, { action: 'delete', entityType: 'template', entityId: null, summary: `Шаблон «${type}» (${repKey}) видалено, повернуто типовий` });
   res.json({ ok: true });
 });
 
@@ -899,6 +928,10 @@ router.delete('/archive/:id', auth, adminOnly, (req, res) => {
     try { fs.unlinkSync(path.join(GENERATED_DOCS_DIR, row.file_path)); } catch { /* file already gone — fine */ }
   }
   db.prepare('DELETE FROM generated_documents WHERE id = ?').run(req.params.id);
+  if (row) logReq(req, {
+    action: 'delete', entityType: 'generated_doc', entityId: row.booking_id,
+    summary: `${row.file_name} (архів)`, details: [{ label: 'Видалено з архіву', to: row.file_name }],
+  });
   res.json({ ok: true });
 });
 
@@ -1014,6 +1047,11 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
       db.prepare(`INSERT INTO generated_documents (booking_id, doc_type, file_name, file_path, client_name, vehicle_name, vehicle_plate, generated_by, contract_number, period_label)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(Number(bookingId), type, fileName, diskName, clientName, vehicleName, vehiclePlate, req.user?.name || req.user?.username || '', contractNumber, periodLabel);
+      logReq(req, {
+        action: 'create', entityType: 'generated_doc', entityId: Number(bookingId),
+        summary: `${type === 'contract' ? 'Договір' : (periodLabel || 'Акт')} · ${clientName || ''} · ${vehiclePlate || vehicleName || ''}`.trim(),
+        details: [{ label: 'Згенеровано документ', to: fileName }],
+      });
     } catch (archiveErr) {
       console.error('Failed to archive generated document (continuing anyway):', archiveErr);
     }

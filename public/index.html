@@ -466,8 +466,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .al-body{order:2;width:100%;margin-top:4px;}
   .al-actions{order:3;width:100%;margin-top:6px;}
   #al-panel-header{flex-wrap:wrap!important;}
-  #al-panel-filters{order:3;flex:1 1 100%!important;flex-wrap:nowrap!important;overflow-x:auto;}
-  #al-panel-filters select,#al-panel-filters input,#al-panel-filters button{height:30px!important;box-sizing:border-box;}
+  #al-panel-filters{order:3;flex:1 1 100%!important;flex-wrap:wrap!important;}
+  #al-panel-filters>select,#al-panel-filters>input,#al-panel-filters>button{height:32px!important;padding-top:0!important;padding-bottom:0!important;font-size:12px!important;}
+  #al-panel-filters>select{max-width:calc(50% - 5px)!important;}
 }
 .tdveh-b1{background:#f5f3ff!important;box-shadow:inset 3px 0 0 #a78bfa;}
 .tdveh-b2{background:#eff6ff!important;box-shadow:inset 3px 0 0 #60a5fa;}
@@ -1224,6 +1225,10 @@ label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--m
 input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;transition:border-color .15s;width:100%;}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 select option{background:var(--surface2);}
+/* Activity log filters: compact controls in one wrapping row */
+#al-panel-filters{flex:1 1 auto;min-width:0;}
+#al-panel-filters>select,#al-panel-filters>input,#al-panel-filters>button{width:auto!important;flex:0 0 auto!important;height:34px;box-sizing:border-box;}
+#al-panel-filters>input[type=text]{width:150px!important;}
 textarea{resize:vertical;min-height:56px;}
 .modal-footer{padding:0 26px 22px;display:flex;align-items:center;gap:8px;justify-content:space-between;position:sticky;bottom:0;background:#ffffff;padding-top:12px;box-shadow:0 -4px 12px rgba(0,0,0,.06);z-index:20;}
 /* Messenger icons */
@@ -2341,15 +2346,38 @@ input.dm-pf-val.tel{font-size:14px;}
 
 <!-- ACTIVITY LOG PANEL -->
 <div id="activitylog-panel-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.55);z-index:500;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
-  <div style="background:#fff;border-radius:16px;width:860px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+  <div style="background:#fff;border-radius:16px;width:960px;max-width:calc(100vw - 24px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">
     <div id="al-panel-header" style="padding:24px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2;gap:14px">
       <div style="font-size:16px;font-weight:700;color:#1a1d26;flex-shrink:0">📜 Журнал дій</div>
-      <div id="al-panel-filters" style="display:flex;align-items:center;gap:14px">
+      <div id="al-panel-filters" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <input type="text" id="al-filter-q" placeholder="Пошук…" oninput="alQueryDebounced()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;width:150px">
       <select id="al-filter-action" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
         <option value="">Всі дії</option>
         <option value="create">Створення</option>
         <option value="update">Редагування</option>
         <option value="delete">Видалення</option>
+        <option value="auth">Вхід / вихід</option>
+        <option value="undo">Скасування</option>
+      </select>
+      <select id="al-filter-entity" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
+        <option value="">Все (розділи)</option>
+        <option value="booking">Замовлення</option>
+        <option value="client">Клієнти</option>
+        <option value="vehicle">Авто</option>
+        <option value="vehicle_doc">Документи авто</option>
+        <option value="client_doc">Документи клієнтів</option>
+        <option value="case_file">Страхові випадки</option>
+        <option value="spare_part">Запчастини</option>
+        <option value="sticker">Стікери</option>
+        <option value="generated_doc">Договори та акти</option>
+        <option value="template">Шаблони документів</option>
+        <option value="setting">Налаштування</option>
+        <option value="user">Користувачі</option>
+        <option value="auth">Входи</option>
+        <option value="other">Інше</option>
+      </select>
+      <select id="al-filter-user" onchange="loadActivityLog()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none;max-width:150px">
+        <option value="">Всі користувачі</option>
       </select>
       <input type="date" id="al-filter-date" class="custom-dp-trigger" onchange="loadActivityLog();blurDateFieldOnDesktop(this)" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:12px;outline:none">
       <button onclick="document.getElementById('al-filter-date').value='';loadActivityLog()" title="Скинути дату" style="background:none;border:1px solid #e5e7eb;border-radius:7px;padding:8px 12px;cursor:pointer;color:#6b7280;font-size:12px;font-family:inherit;white-space:nowrap">Скинути дату</button>
@@ -13839,6 +13867,7 @@ async function maybeRequireTelegramLink(){
 }
 
 function doLogout(){
+  try{ if(_token) fetch(API_BASE+'/auth/logout', {method:'POST', headers:apiHeaders(), keepalive:true}).catch(()=>{}); }catch(e){}
   stopDeletedBookingsWatch();
   _token=''; _currentUser=null;
   localStorage.removeItem('av_fleet_token');
@@ -15364,26 +15393,83 @@ let ACTIVITY_LOG = [];
 function openActivityLogPanel(){
   if(!_currentUser || _currentUser.role !== 'admin'){ alert('Доступ лише для адміністраторів.'); return; }
   document.getElementById('activitylog-panel-overlay').style.display='flex';
+  const _alUs=document.getElementById('al-filter-user'); if(_alUs) delete _alUs.dataset.loaded;
   loadActivityLog();
 }
 function closeActivityLogPanel(){
   document.getElementById('activitylog-panel-overlay').style.display='none';
 }
-async function loadActivityLog(){
-  const action = document.getElementById('al-filter-action').value;
-  const date = document.getElementById('al-filter-date').value;
+const AL_PAGE = 100;
+let alHasMore = false, alLoading = false, _alQTimer = null;
+const AL_ENTITY = {
+  booking:'Замовлення', client:'Клієнт', vehicle:'Авто', vehicle_doc:'Документ авто', client_doc:'Документ клієнта',
+  case_file:'Страховий випадок', spare_part:'Запчастина', sticker:'Стікер', generated_doc:'Договір / акт',
+  template:'Шаблон документа', setting:'Налаштування', user:'Користувач', auth:'Вхід', other:'Інше',
+};
+function alQueryDebounced(){ clearTimeout(_alQTimer); _alQTimer = setTimeout(()=>loadActivityLog(), 350); }
+function alParams(offset){
   const params = new URLSearchParams();
-  if(action) params.set('action', action);
-  if(date) params.set('date', date);
-  const qs = params.toString() ? '?'+params.toString() : '';
-  const rows = await apiFetch('GET', '/activity-log' + qs);
-  ACTIVITY_LOG = Array.isArray(rows) ? rows : [];
+  const g = id => document.getElementById(id)?.value || '';
+  if(g('al-filter-action')) params.set('action', g('al-filter-action'));
+  if(g('al-filter-entity')) params.set('entityType', g('al-filter-entity'));
+  if(g('al-filter-user')) params.set('user', g('al-filter-user'));
+  if(g('al-filter-date')) params.set('date', g('al-filter-date'));
+  if(g('al-filter-q').trim()) params.set('q', g('al-filter-q').trim());
+  params.set('limit', AL_PAGE);
+  params.set('offset', offset || 0);
+  return params.toString();
+}
+async function loadActivityUsers(){
+  const sel = document.getElementById('al-filter-user');
+  if(!sel || sel.dataset.loaded) return;
+  const names = await apiFetch('GET', '/activity-log/users');
+  if(!Array.isArray(names)) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Всі користувачі</option>' + names.map(n=>`<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+  sel.value = cur;
+  sel.dataset.loaded = '1';
+}
+async function loadActivityLog(append){
+  if(alLoading) return;
+  alLoading = true;
+  try{
+    const offset = append === true ? ACTIVITY_LOG.length : 0;
+    const rows = await apiFetch('GET', '/activity-log?' + alParams(offset));
+    const list = Array.isArray(rows) ? rows : [];
+    ACTIVITY_LOG = append === true ? ACTIVITY_LOG.concat(list) : list;
+    alHasMore = list.length >= AL_PAGE;
+    renderActivityLogList();
+    loadActivityUsers();
+  } finally { alLoading = false; }
+}
+function alDetailsHtml(entry, i){
+  const det = Array.isArray(entry.details) ? entry.details : [];
+  if(!det.length) return '';
+  const line = c => {
+    const label = `<span style="color:#6b7280">${escHtml(c.label)}:</span> `;
+    if(Array.isArray(c.added) || Array.isArray(c.removed)){
+      const rem = (c.removed||[]).map(x=>`<div style="color:#991b1b">− ${escHtml(x)}</div>`).join('');
+      const add = (c.added||[]).map(x=>`<div style="color:#166534">+ ${escHtml(x)}</div>`).join('');
+      return `<div>${label}</div><div style="margin-left:12px">${rem}${add}</div>`;
+    }
+    if(c.from != null) return `<div>${label}<span style="color:#991b1b">${escHtml(c.from)}</span> → <span style="color:#166534;font-weight:600">${escHtml(c.to)}</span></div>`;
+    return `<div>${label}<span style="color:#374151">${escHtml(c.to)}</span></div>`;
+  };
+  const open = !!entry._open;
+  const shown = open ? det : det.slice(0, 3);
+  const more = det.length > 3
+    ? `<button onclick="toggleAlDetails(${i})" style="background:none;border:none;color:#1d4ed8;font-size:11px;cursor:pointer;padding:2px 0;font-family:inherit">${open ? 'Згорнути ▴' : `Показати всі зміни (${det.length}) ▾`}</button>` : '';
+  return `<div class="al-details" style="margin-top:6px;padding:6px 10px;background:#f9fafb;border-radius:6px;font-size:11.5px;line-height:1.55;color:#374151;word-break:break-word">${shown.map(line).join('')}${more}</div>`;
+}
+function toggleAlDetails(i){
+  if(!ACTIVITY_LOG[i]) return;
+  ACTIVITY_LOG[i]._open = !ACTIVITY_LOG[i]._open;
   renderActivityLogList();
 }
 function renderActivityLogList(){
   const list = document.getElementById('activitylog-list');
   if(!ACTIVITY_LOG.length){
-    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Записів ще немає.</div>';
+    list.innerHTML = '<div style="font-size:12px;color:#9ca3af;font-style:italic;padding:20px 4px;text-align:center">Записів не знайдено.</div>';
     return;
   }
   const actionMeta = {
@@ -15391,24 +15477,35 @@ function renderActivityLogList(){
     update: {label:'✎ Змінено', color:'#92400e', bg:'#fffbeb'},
     delete: {label:'✕ Видалено', color:'#991b1b', bg:'#fef2f2'},
     undo: {label:'↩ Скасування', color:'#1d4ed8', bg:'#eff6ff'},
+    login: {label:'→ Вхід', color:'#0f766e', bg:'#f0fdfa'},
+    logout: {label:'← Вихід', color:'#475569', bg:'#f1f5f9'},
+    login_failed: {label:'⚠ Невдалий вхід', color:'#9a3412', bg:'#fff7ed'},
   };
-  list.innerHTML = ACTIVITY_LOG.map((entry,i) => {
+  const rowsHtml = ACTIVITY_LOG.map((entry,i) => {
     const meta = actionMeta[entry.action] || {label:entry.action, color:'#6b7280', bg:'#f9fafb'};
     const dt = parseUtcTimestamp(entry.created_at);
-    const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
-    return `<div class="al-row" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
-      <span class="al-badge" style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${meta.bg};color:${meta.color};flex-shrink:0;white-space:nowrap">${meta.label}</span>
+    const dateStr = dt.toLocaleDateString('uk-UA') + ' ' + dt.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const ent = AL_ENTITY[entry.entity_type] || entry.entity_type;
+    const idPart = entry.entity_id != null ? ' №'+entry.entity_id : '';
+    const isAuth = entry.entity_type === 'auth';
+    const hasData = !!entry.snapshot;
+    const canUndo = entry.snapshot && entry.entity_type==='booking' && ['create','update','delete'].includes(entry.action);
+    return `<div class="al-row" style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid rgba(0,0,0,.06);border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,.75)">
+      <span class="al-badge" style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:${meta.bg};color:${meta.color};flex-shrink:0;white-space:nowrap;margin-top:1px">${meta.label}</span>
       <div class="al-body" style="flex:1;min-width:0">
-        <div class="al-title" style="font-size:13px;font-weight:600;color:#1a1d26">№${entry.entity_id||'—'}${entry.summary?' · '+entry.summary:''}</div>
-        <div class="al-meta" style="font-size:11px;color:#6b7280;margin-top:2px">${dateStr}${entry.user_name?' · '+entry.user_name:''}</div>
+        <div class="al-title" style="font-size:13px;font-weight:600;color:#1a1d26;word-break:break-word">${isAuth ? '' : `<span style="font-size:10px;font-weight:700;color:#6b7280;background:#f3f4f6;border-radius:4px;padding:1px 6px;margin-right:6px;white-space:nowrap">${escHtml(ent)}${idPart}</span>`}${escHtml(entry.summary||'')}</div>
+        <div class="al-meta" style="font-size:11px;color:#6b7280;margin-top:2px">${dateStr}${entry.user_name?' · '+escHtml(entry.user_name):''}${entry.ip?' · IP '+escHtml(entry.ip):''}</div>
+        ${alDetailsHtml(entry, i)}
       </div>
       <div class="al-actions" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-      ${entry.snapshot?`<button onclick="viewAlSnapshot(${i})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">Переглянути дані</button>`:''}
+      ${hasData?`<button onclick="viewAlSnapshot(${i})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;font-family:inherit;font-weight:600;flex-shrink:0">Переглянути дані</button>`:''}
       ${entry.undone_at ? `<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#fef2f2;color:#991b1b;flex-shrink:0;white-space:nowrap">↩ Скасовано</span>`
-        : (entry.snapshot && entry.entity_type==='booking' && ['create','update','delete'].includes(entry.action) ? `<button onclick="undoActivityLogEntry(${entry.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #fca5a5;background:#fff;color:#991b1b;font-family:inherit;font-weight:600;flex-shrink:0">↩ Скасувати</button>` : '')}
+        : (canUndo ? `<button onclick="undoActivityLogEntry(${entry.id})" style="font-size:10px;padding:6px 12px;border-radius:5px;cursor:pointer;border:1px solid #fca5a5;background:#fff;color:#991b1b;font-family:inherit;font-weight:600;flex-shrink:0">↩ Скасувати</button>` : '')}
       </div>
     </div>`;
   }).join('');
+  const moreBtn = alHasMore ? `<div style="text-align:center;margin:6px 0 2px"><button onclick="loadActivityLog(true)" style="font-size:12px;padding:8px 18px;border-radius:7px;cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#374151;font-family:inherit;font-weight:600">Показати ще</button></div>` : '';
+  list.innerHTML = rowsHtml + moreBtn;
 }
 function formatBookingSnapshot(b){
   if(!b) return '(немає даних)';
@@ -15520,16 +15617,27 @@ async function restoreDeletedBooking(logId){
     if(btn){ btn.disabled = false; btn.textContent = '↩ Відновити'; }
   }
 }
+function formatGenericSnapshot(o, indent){
+  indent = indent || '';
+  if(o == null) return indent + '(немає даних)';
+  if(typeof o !== 'object') return indent + String(o);
+  return Object.entries(o).filter(([k,v])=>v!==null && v!=='' && v!==false && !(Array.isArray(v)&&!v.length)).map(([k,v])=>{
+    if(Array.isArray(v)) return indent + k + ':\n' + v.map(x=>indent + '  • ' + (typeof x==='object' ? JSON.stringify(x) : x)).join('\n');
+    if(typeof v === 'object') return indent + k + ':\n' + formatGenericSnapshot(v, indent + '  ');
+    return indent + k + ': ' + v;
+  }).join('\n');
+}
 function viewAlSnapshot(i){
   const entry = ACTIVITY_LOG[i];
   if(!entry) return;
-  const actionLabel = entry.action==='create'?'Створено':entry.action==='update'?'Змінено':'Видалено';
+  const actionLabel = entry.action==='create'?'Створено':entry.action==='update'?'Змінено':entry.action==='delete'?'Видалено':entry.action;
   document.getElementById('al-snapshot-title').textContent = actionLabel + ': ' + (entry.summary || '');
+  const fmt_ = entry.entity_type === 'booking' ? formatBookingSnapshot : formatGenericSnapshot;
   let content;
   if(entry.action === 'update' && entry.snapshot?.before && entry.snapshot?.after){
-    content = '── ДО ЗМІНИ ──\n' + formatBookingSnapshot(entry.snapshot.before) + '\n\n── ПІСЛЯ ЗМІНИ ──\n' + formatBookingSnapshot(entry.snapshot.after);
+    content = '── ДО ЗМІНИ ──\n' + fmt_(entry.snapshot.before) + '\n\n── ПІСЛЯ ЗМІНИ ──\n' + fmt_(entry.snapshot.after);
   } else {
-    content = formatBookingSnapshot(entry.snapshot);
+    content = fmt_(entry.snapshot);
   }
   document.getElementById('al-snapshot-content').textContent = content;
   document.getElementById('al-snapshot-overlay').style.display='flex';

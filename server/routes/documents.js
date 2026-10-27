@@ -7,6 +7,7 @@ const sharp = require('sharp');
 const { execFile } = require('child_process');
 const db = require('../db');
 const { auth } = require('./auth');
+const { logReq, vehicleLabel, VEHICLE_DOC_LABELS } = require('../activityLog');
 
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -166,6 +167,11 @@ router.post('/:vid/:key', auth, (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
     ).run(vid, key, relPath, thumbRelPath, fixedOriginalName, req.file.mimetype, req.file.size, req.user?.id || null);
 
+    logReq(req, {
+      action: 'create', entityType: 'vehicle_doc', entityId: vid,
+      summary: `${vehicleLabel(vid)} — ${VEHICLE_DOC_LABELS[key] || key}: ${fixedOriginalName}`,
+      details: [{ label: 'Додано файл', to: `${VEHICLE_DOC_LABELS[key] || key}: ${fixedOriginalName}` }],
+    });
     res.json({
       id: info.lastInsertRowid,
       doc_type: key,
@@ -196,6 +202,11 @@ router.delete('/:id', auth, (req, res) => {
   const row = db.prepare('SELECT * FROM documents WHERE id = ?').get(id);
   if (!row) return res.status(404).json({ error: 'Не знайдено' });
   db.prepare('DELETE FROM documents WHERE id = ?').run(id);
+  logReq(req, {
+    action: 'delete', entityType: 'vehicle_doc', entityId: row.vehicle_id,
+    summary: `${vehicleLabel(row.vehicle_id)} — ${VEHICLE_DOC_LABELS[row.doc_type] || row.doc_type}: ${row.original_name}`,
+    details: [{ label: 'Видалено файл', to: `${VEHICLE_DOC_LABELS[row.doc_type] || row.doc_type}: ${row.original_name}` }],
+  });
   fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {}); // best-effort cleanup
   if (row.thumb_filename) fs.unlink(path.join(UPLOAD_DIR, row.thumb_filename), () => {});
   res.json({ ok: true });

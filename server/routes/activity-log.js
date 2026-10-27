@@ -2,19 +2,41 @@ const router = require('express').Router();
 const db = require('../db');
 const { auth, adminOnly } = require('./auth');
 
-// GET /api/activity-log — list recent entries (most recent first), optional filters
+// GET /api/activity-log — list recent entries (most recent first), optional filters:
+// entityType, entityId, action, date (YYYY-MM-DD, Kyiv time), user (name), q (text search), limit, offset.
 router.get('/', auth, adminOnly, (req, res) => {
-  const { entityType, entityId, action, date, limit } = req.query;
+  const { entityType, entityId, action, date, limit, offset, user, q } = req.query;
   let sql = 'SELECT * FROM activity_log WHERE 1=1';
   const params = [];
   if (entityType) { sql += ' AND entity_type = ?'; params.push(entityType); }
   if (entityId) { sql += ' AND entity_id = ?'; params.push(Number(entityId)); }
-  if (action) { sql += ' AND action = ?'; params.push(action); }
+  if (action) {
+    if (action === 'auth') { sql += " AND action IN ('login','logout','login_failed')"; }
+    else { sql += ' AND action = ?'; params.push(action); }
+  }
+  if (user) { sql += ' AND user_name = ?'; params.push(user); }
   if (date) { sql += " AND DATE(created_at, '+3 hours') = ?"; params.push(date); }
-  sql += ' ORDER BY created_at DESC LIMIT ?';
-  params.push(Math.min(Number(limit) || 200, 500));
-  const rows = db.prepare(sql).all(...params);
-  res.json(rows.map(r => ({ ...r, snapshot: r.snapshot ? JSON.parse(r.snapshot) : null })));
+  const lim = Math.min(Number(limit) || 200, 500), off = Math.max(Number(offset) || 0, 0);
+  let rows;
+  if (q) {
+    // Text search is done here (SQLite's LIKE is case-sensitive for Cyrillic).
+    const needle = String(q).toLowerCase();
+    rows = db.prepare(sql + ' ORDER BY created_at DESC, id DESC LIMIT 20000').all(...params)
+      .filter(r => `${r.summary || ''} ${r.details || ''} ${r.user_name || ''}`.toLowerCase().includes(needle))
+      .slice(off, off + lim);
+  } else {
+    rows = db.prepare(sql + ' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?').all(...params, lim, off);
+  }
+  res.json(rows.map(r => ({
+    ...r,
+    snapshot: r.snapshot ? JSON.parse(r.snapshot) : null,
+    details: r.details ? JSON.parse(r.details) : null,
+  })));
+});
+
+// GET /api/activity-log/users — names that appear in the log (for the user filter)
+router.get('/users', auth, adminOnly, (req, res) => {
+  res.json(db.prepare("SELECT DISTINCT user_name FROM activity_log WHERE user_name IS NOT NULL AND user_name <> '' ORDER BY user_name COLLATE NOCASE").all().map(r => r.user_name));
 });
 
 // POST /api/activity-log/:id/undo — reverses a logged action using its

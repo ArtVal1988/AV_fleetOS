@@ -1,7 +1,17 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
-const { logActivity } = require('../activityLog');
+const { logReq, diffData, changedLabels, mapValues, vehicleLabel, BOOKING_LABELS, STATUS_LABELS, PAY_LABELS } = require('../activityLog');
+
+// Readable list of what changed between two versions of a booking.
+function bookingChanges(before, after) {
+  const ch = diffData(before, after, BOOKING_LABELS);
+  mapValues(ch, 'Авто', v => vehicleLabel(v));
+  mapValues(ch, 'Статус', v => STATUS_LABELS[v] || v);
+  mapValues(ch, 'Спосіб оплати', v => PAY_LABELS[v] || v);
+  mapValues(ch, 'Спосіб оплати застави', v => PAY_LABELS[v] || v);
+  return ch;
+}
 
 function bookingSummary(b) {
   const name = b?.customer?.name || '';
@@ -49,10 +59,14 @@ router.post('/', auth, (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(b.vehicleId, b.status || 'reserved', b.start, b.end, data, req.user.id);
 
-  logActivity({
+  logReq(req, {
     action: 'create', entityType: 'booking', entityId: result.lastInsertRowid,
     summary: bookingSummary(b), snapshot: { ...b, id: result.lastInsertRowid },
-    userName: req.user?.name || req.user?.username,
+    details: [
+      { label: 'Авто', to: vehicleLabel(b.vehicleId) },
+      { label: 'Дати', to: `${b.start} – ${b.end}` },
+      { label: 'Статус', to: STATUS_LABELS[b.status] || b.status || '—' },
+    ],
   });
 
   res.status(201).json({ id: result.lastInsertRowid });
@@ -72,11 +86,15 @@ router.put('/:id', auth, (req, res) => {
     WHERE id = ?
   `).run(b.vehicleId, b.status, b.start, b.end, JSON.stringify(b), req.params.id);
 
-  logActivity({
-    action: 'update', entityType: 'booking', entityId: req.params.id,
-    summary: bookingSummary(b), snapshot: { before, after: { ...b, id: Number(req.params.id) } },
-    userName: req.user?.name || req.user?.username,
-  });
+  const changes = bookingChanges(before, b);
+  if (changes.length) {
+    logReq(req, {
+      action: 'update', entityType: 'booking', entityId: req.params.id,
+      summary: `${bookingSummary(b)} — ${changedLabels(changes)}`,
+      snapshot: { before, after: { ...b, id: Number(req.params.id) } },
+      details: changes,
+    });
+  }
 
   res.json({ ok: true });
 });
@@ -88,10 +106,9 @@ router.delete('/:id', auth, (req, res) => {
   const deletedData = { ...JSON.parse(row.data), id: row.id };
   db.prepare('DELETE FROM bookings WHERE id = ?').run(req.params.id);
 
-  logActivity({
+  logReq(req, {
     action: 'delete', entityType: 'booking', entityId: req.params.id,
     summary: bookingSummary(deletedData), snapshot: deletedData,
-    userName: req.user?.name || req.user?.username,
   });
 
   res.json({ ok: true });

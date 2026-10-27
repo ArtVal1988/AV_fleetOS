@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const sharp = require('sharp');
 const db = require('../db');
 const { auth } = require('./auth');
+const { logReq, clientLabel, CLIENT_DOC_LABELS } = require('../activityLog');
 
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -110,6 +111,11 @@ router.post('/:id/rotate', auth, async (req, res) => {
       const rotatedThumb = await sharp(thumbPath).rotate(degrees).toBuffer();
       await sharp(rotatedThumb).toFile(thumbPath);
     }
+    logReq(req, {
+      action: 'update', entityType: 'client_doc', entityId: row.client_id,
+      summary: `${clientLabel(row.client_id)} — ${CLIENT_DOC_LABELS[row.doc_type] || row.doc_type}: повернуто`,
+      details: [{ label: 'Файл «${row.original_name}»', to: 'повернуто' }],
+    });
     res.json({ ok: true });
   } catch (e) {
     console.error('[rotate] Failed for document', id, ':', e);
@@ -155,6 +161,11 @@ router.post('/:id/crop', auth, async (req, res) => {
       await sharp(thumbBuf).toFile(thumbPath);
     }
     db.prepare('UPDATE client_documents SET size = ? WHERE id = ?').run(buffer.length, id);
+    logReq(req, {
+      action: 'update', entityType: 'client_doc', entityId: row.client_id,
+      summary: `${clientLabel(row.client_id)} — ${CLIENT_DOC_LABELS[row.doc_type] || row.doc_type}: обрізано`,
+      details: [{ label: 'Файл «${row.original_name}»', to: 'обрізано' }],
+    });
     res.json({ ok: true, size: buffer.length });
   } catch (e) {
     console.error('[crop] Failed for document', id, ':', e);
@@ -210,6 +221,11 @@ router.post('/:id/straighten', auth, async (req, res) => {
       await sharp(thumbBuf).toFile(thumbPath);
     }
     db.prepare('UPDATE client_documents SET size = ? WHERE id = ?').run(buffer.length, id);
+    logReq(req, {
+      action: 'update', entityType: 'client_doc', entityId: row.client_id,
+      summary: `${clientLabel(row.client_id)} — ${CLIENT_DOC_LABELS[row.doc_type] || row.doc_type}: вирівняно`,
+      details: [{ label: 'Файл «${row.original_name}»', to: 'вирівняно' }],
+    });
     res.json({ ok: true, size: buffer.length });
   } catch (e) {
     console.error('[straighten] Failed for document', id, ':', e);
@@ -267,6 +283,11 @@ router.post('/:cid/:key', auth, (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
     ).run(cid, key, relPath, thumbRelPath, fixedOriginalName, req.file.mimetype, finalSize, req.user?.id || null);
 
+    logReq(req, {
+      action: 'create', entityType: 'client_doc', entityId: cid,
+      summary: `${clientLabel(cid)} — ${CLIENT_DOC_LABELS[key] || key}: ${fixedOriginalName}`,
+      details: [{ label: 'Додано файл', to: `${CLIENT_DOC_LABELS[key] || key}: ${fixedOriginalName}` }],
+    });
     res.json({
       id: info.lastInsertRowid,
       doc_type: key,
@@ -297,6 +318,11 @@ router.delete('/:id', auth, (req, res) => {
   const row = db.prepare('SELECT * FROM client_documents WHERE id = ?').get(id);
   if (!row) return res.status(404).json({ error: 'Не знайдено' });
   db.prepare('DELETE FROM client_documents WHERE id = ?').run(id);
+  logReq(req, {
+    action: 'delete', entityType: 'client_doc', entityId: row.client_id,
+    summary: `${clientLabel(row.client_id)} — ${CLIENT_DOC_LABELS[row.doc_type] || row.doc_type}: ${row.original_name}`,
+    details: [{ label: 'Видалено файл', to: `${CLIENT_DOC_LABELS[row.doc_type] || row.doc_type}: ${row.original_name}` }],
+  });
   fs.unlink(path.join(UPLOAD_DIR, row.filename), () => {});
   if (row.thumb_filename) fs.unlink(path.join(UPLOAD_DIR, row.thumb_filename), () => {});
   res.json({ ok: true });

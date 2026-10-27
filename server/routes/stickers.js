@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const { auth } = require('./auth');
-const { logActivity } = require('../activityLog');
+const { logReq, diffData, changedLabels, STICKER_LABELS } = require('../activityLog');
 
 function stickerSummary(s) {
   const text = (s.text || '').trim();
@@ -57,7 +57,7 @@ router.post('/', auth, (req, res) => {
     comments: stampNewComments(req.body.comments, user, now) };
   delete data.id;
   const result = db.prepare('INSERT INTO stickers (data) VALUES (?)').run(JSON.stringify(data));
-  logActivity({
+  logReq(req, {
     action: 'create', entityType: 'sticker', entityId: result.lastInsertRowid,
     summary: stickerSummary(data), snapshot: { ...data, id: result.lastInsertRowid },
     userName: user,
@@ -71,11 +71,15 @@ router.put('/:id', auth, (req, res) => {
   const data = before ? stampUpdate(req.body, before, userLabel(req), nowIso()) : { ...req.body };
   delete data.id;
   db.prepare('UPDATE stickers SET data = ? WHERE id = ?').run(JSON.stringify(data), req.params.id);
-  logActivity({
-    action: 'update', entityType: 'sticker', entityId: req.params.id,
-    summary: stickerSummary(data), snapshot: { before, after: { ...data, id: Number(req.params.id) } },
-    userName: userLabel(req),
-  });
+  const changes = diffData(before, data, STICKER_LABELS);
+  if (changes.length) {
+    logReq(req, {
+      action: 'update', entityType: 'sticker', entityId: req.params.id,
+      summary: `${stickerSummary(data)} — ${changedLabels(changes)}`,
+      snapshot: { before, after: { ...data, id: Number(req.params.id) } },
+      details: changes, userName: userLabel(req),
+    });
+  }
   res.json({ ok: true, sticker: { ...data, id: Number(req.params.id) } });
 });
 
@@ -83,10 +87,9 @@ router.delete('/:id', auth, (req, res) => {
   const row = db.prepare('SELECT id, data FROM stickers WHERE id = ?').get(req.params.id);
   const deletedData = row ? { ...JSON.parse(row.data), id: row.id } : null;
   db.prepare('DELETE FROM stickers WHERE id = ?').run(req.params.id);
-  logActivity({
+  logReq(req, {
     action: 'delete', entityType: 'sticker', entityId: req.params.id,
     summary: deletedData ? stickerSummary(deletedData) : null, snapshot: deletedData,
-    userName: req.user?.name || req.user?.username,
   });
   res.json({ ok: true });
 });
