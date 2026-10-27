@@ -10,6 +10,18 @@ app.set('etag', false);
 // ── Middleware ───────────────────────────────────────────────────
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
+// Experimental standalone page — exists only on the TEST site (port 3003).
+// On production /lab and /lab.html fall through to the normal app.
+const IS_TEST_SITE = String(PORT) === '3003';
+app.get(['/lab', '/lab.html'], (req, res, next) => {
+  if (!IS_TEST_SITE) return next();
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public', 'lab.html'));
+});
+app.use((req, res, next) => {
+  if (!IS_TEST_SITE && req.path === '/lab.html') return res.redirect('/');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
   lastModified: false,
