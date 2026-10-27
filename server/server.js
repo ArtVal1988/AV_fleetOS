@@ -13,14 +13,14 @@ app.use(express.json({ limit: '10mb' }));
 // Experimental standalone page — exists only on the TEST site (port 3003).
 // On production /lab and /lab.html fall through to the normal app.
 const IS_TEST_SITE = String(PORT) === '3003';
-app.get(['/lab', '/lab.html'], (req, res, next) => {
-  if (!IS_TEST_SITE) return next();
-  res.set('Cache-Control', 'no-store');
-  res.sendFile(path.join(__dirname, 'public', 'lab.html'));
-});
+// /lab = first splash style, /lab2 = card style.
+const LAB_PAGES = { '/lab': 'lab.html', '/lab.html': 'lab.html', '/lab2': 'lab2.html', '/lab2.html': 'lab2.html' };
 app.use((req, res, next) => {
-  if (!IS_TEST_SITE && req.path === '/lab.html') return res.redirect('/');
-  next();
+  const file = LAB_PAGES[req.path];
+  if (!file) return next();
+  if (!IS_TEST_SITE) return req.path.endsWith('.html') ? res.redirect('/') : next();
+  res.set('Cache-Control', 'no-store');
+  res.sendFile(path.join(__dirname, 'public', file));
 });
 app.use(express.static(path.join(__dirname, 'public'), {
   etag: false,
