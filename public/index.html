@@ -2417,6 +2417,7 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
     <div style="padding:20px 28px">
       <button onclick="copyAlSnapshot()" style="margin-bottom:12px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:7px;padding:8px 14px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">📋 Скопіювати як текст</button>
+      <button id="al-snapshot-toggle" onclick="toggleAlSnapshotFull()" style="display:none;margin:0 0 12px 8px;background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;border-radius:7px;padding:8px 14px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">Показати всі дані ›</button>
       <pre id="al-snapshot-content" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;font-size:11px;font-family:var(--font-mono);white-space:pre-wrap;word-break:break-word;line-height:1.6"></pre>
     </div>
   </div>
@@ -15623,29 +15624,73 @@ async function restoreDeletedBooking(logId){
     if(btn){ btn.disabled = false; btn.textContent = '↩ Відновити'; }
   }
 }
+function alCompactItem(x){
+  if(x===null || typeof x!=='object') return String(x);
+  if(x.name && (x.url || String(x.type||'').includes('/'))) return x.name; // an attached file: just its name
+  const parts = [];
+  Object.entries(x).forEach(([k,v])=>{
+    if(['id','url','thumbUrl'].includes(k) || v===null || v==='' || v===false || typeof v==='object') return;
+    parts.push(k + ': ' + v);
+  });
+  const t = parts.join(', ');
+  return t.length > 200 ? t.slice(0,199) + '…' : t;
+}
 function formatGenericSnapshot(o, indent){
   indent = indent || '';
   if(o == null) return indent + '(немає даних)';
   if(typeof o !== 'object') return indent + String(o);
-  return Object.entries(o).filter(([k,v])=>v!==null && v!=='' && v!==false && !(Array.isArray(v)&&!v.length)).map(([k,v])=>{
-    if(Array.isArray(v)) return indent + k + ':\n' + v.map(x=>indent + '  • ' + (typeof x==='object' ? JSON.stringify(x) : x)).join('\n');
-    if(typeof v === 'object') return indent + k + ':\n' + formatGenericSnapshot(v, indent + '  ');
-    return indent + k + ': ' + v;
-  }).join('\n');
+  const lines = [];
+  Object.entries(o).forEach(([k,v])=>{
+    if(v===null || v==='' || v===false || ['url','thumbUrl'].includes(k)) return;
+    if(Array.isArray(v)){
+      if(!v.length) return;
+      lines.push(indent + k + ':');
+      v.forEach(x=>lines.push(indent + '  • ' + alCompactItem(x)));
+    } else if(typeof v === 'object'){
+      const inner = formatGenericSnapshot(v, indent + '  ');
+      if(inner.trim()) lines.push(indent + k + ':\n' + inner);
+    } else lines.push(indent + k + ': ' + v);
+  });
+  return lines.join('\n');
 }
-function viewAlSnapshot(i){
-  const entry = ACTIVITY_LOG[i];
+function alChangesText(det){
+  return det.map(c=>{
+    if(Array.isArray(c.added) || Array.isArray(c.removed)){
+      return c.label + ':\n' + (c.removed||[]).map(x=>'   − ' + x).concat((c.added||[]).map(x=>'   + ' + x)).join('\n');
+    }
+    return c.from != null ? `${c.label}: ${c.from} → ${c.to}` : `${c.label}: ${c.to}`;
+  }).join('\n\n');
+}
+let _alSnapIdx = -1, _alSnapFull = false;
+function renderAlSnapshot(){
+  const entry = ACTIVITY_LOG[_alSnapIdx];
   if(!entry) return;
-  const actionLabel = entry.action==='create'?'Створено':entry.action==='update'?'Змінено':entry.action==='delete'?'Видалено':entry.action;
-  document.getElementById('al-snapshot-title').textContent = actionLabel + ': ' + (entry.summary || '');
+  const hasDet = Array.isArray(entry.details) && entry.details.length;
   const fmt_ = entry.entity_type === 'booking' ? formatBookingSnapshot : formatGenericSnapshot;
   let content;
-  if(entry.action === 'update' && entry.snapshot?.before && entry.snapshot?.after){
+  if(entry.action === 'update' && hasDet && !_alSnapFull){
+    content = 'ЩО ЗМІНИЛОСЬ:\n\n' + alChangesText(entry.details);
+  } else if(entry.action === 'update' && entry.snapshot?.before && entry.snapshot?.after){
     content = '── ДО ЗМІНИ ──\n' + fmt_(entry.snapshot.before) + '\n\n── ПІСЛЯ ЗМІНИ ──\n' + fmt_(entry.snapshot.after);
   } else {
     content = fmt_(entry.snapshot);
   }
   document.getElementById('al-snapshot-content').textContent = content;
+  const tg = document.getElementById('al-snapshot-toggle');
+  if(tg){
+    const canToggle = entry.action === 'update' && hasDet && entry.snapshot;
+    tg.style.display = canToggle ? '' : 'none';
+    tg.textContent = _alSnapFull ? '← Тільки зміни' : 'Показати всі дані ›';
+  }
+}
+function toggleAlSnapshotFull(){ _alSnapFull = !_alSnapFull; renderAlSnapshot(); }
+function viewAlSnapshot(i){
+  const entry = ACTIVITY_LOG[i];
+  if(!entry) return;
+  _alSnapIdx = i; _alSnapFull = false;
+  const actionLabel = entry.action==='create'?'Створено':entry.action==='update'?'Змінено':entry.action==='delete'?'Видалено':entry.action;
+  document.getElementById('al-snapshot-title').textContent = actionLabel + ': ' + (entry.summary || '');
+  renderAlSnapshot();
   document.getElementById('al-snapshot-overlay').style.display='flex';
 }
 function closeAlSnapshot(){
