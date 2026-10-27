@@ -303,7 +303,71 @@ const STATUS_LABELS = {
 };
 const PAY_LABELS = { cash: 'готівка', card: 'картка', mixed: 'змішана' };
 
+
+// ── One-time backfill ────────────────────────────────────────────
+// Entries written before the detailed log existed only have a before/after
+// snapshot. Rebuild readable details (and the «Ремонти і ТО» / «Страхування»
+// sections) from those snapshots, once, so older work shows up properly too.
+const MAINT_KEYS = ['works', 'service', 'serviceInterval', 'currentKm', 'nextServiceKm', 'currentKmDate'];
+const INSUR_KEYS = ['insuranceCases', 'osago', 'kasko', 'insurance'];
+function pickKeys(o, keys, invert) {
+  const r = {};
+  Object.keys(o || {}).forEach(k => { if (keys.includes(k) !== !!invert) r[k] = o[k]; });
+  return r;
+}
+
+function backfillActivityLog() {
+  try {
+    const done = db.prepare("SELECT value FROM settings WHERE key = 'activity_log_backfill_v1'").get();
+    if (done) return;
+    const rows = db.prepare(`SELECT id, action, entity_type, summary, snapshot FROM activity_log
+      WHERE details IS NULL AND action = 'update' AND snapshot IS NOT NULL
+        AND entity_type IN ('vehicle','client','booking','sticker')`).all();
+    const upd = db.prepare('UPDATE activity_log SET details = ?, summary = ?, entity_type = ? WHERE id = ?');
+    let n = 0;
+    for (const r of rows) {
+      let snap;
+      try { snap = JSON.parse(r.snapshot); } catch (e) { continue; }
+      if (!snap || !snap.before || !snap.after) continue;
+      let changes = [], type = r.entity_type, summary = r.summary || '';
+      if (r.entity_type === 'vehicle') {
+        const parts = [
+          ['maintenance', MAINT_KEYS, false], ['insurance', INSUR_KEYS, false],
+          ['vehicle', [...MAINT_KEYS, ...INSUR_KEYS], true],
+        ].map(([t, keys, inv]) => ({ t, ch: diffData(pickKeys(snap.before, keys, inv), pickKeys(snap.after, keys, inv), VEHICLE_DIFF_LABELS_REF.v) }))
+          .filter(x => x.ch.length);
+        if (!parts.length) continue;
+        changes = parts.flatMap(x => x.ch);
+        if (parts.length === 1) type = parts[0].t;
+        const plate = snap.after.plate || snap.before.plate || '';
+        summary = `${plate ? plate + ' — ' : ''}${changedLabels(changes)}`;
+      } else if (r.entity_type === 'client') {
+        changes = diffData(snap.before, snap.after, CLIENT_LABELS);
+        if (changes.length) summary = `${summary.split(' — ')[0]} — ${changedLabels(changes)}`;
+      } else if (r.entity_type === 'sticker') {
+        changes = diffData(snap.before, snap.after, STICKER_LABELS);
+        if (changes.length) summary = `${summary.split(' — ')[0]} — ${changedLabels(changes)}`;
+      } else if (r.entity_type === 'booking') {
+        changes = diffData(snap.before, snap.after, BOOKING_LABELS);
+        mapValues(changes, 'Авто', v => vehicleLabel(v));
+        mapValues(changes, 'Статус', v => STATUS_LABELS[v] || v);
+        mapValues(changes, 'Спосіб оплати', v => PAY_LABELS[v] || v);
+        if (changes.length) summary = `${summary.split(' — ')[0]} — ${changedLabels(changes)}`;
+      }
+      if (!changes.length) continue;
+      upd.run(JSON.stringify(changes), summary, type, r.id);
+      n++;
+    }
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('activity_log_backfill_v1', ?)").run(JSON.stringify({ at: new Date().toISOString(), updated: n }));
+    if (n) console.log(`[activity-log] backfilled details for ${n} older entries`);
+  } catch (e) {
+    console.error('Activity log backfill failed (continuing anyway):', e);
+  }
+}
+
+const VEHICLE_DIFF_LABELS_REF = { v: Object.assign({}, VEHICLE_LABELS, { __vehicle: true }) };
 module.exports = {
+  backfillActivityLog,
   VEHICLE_DIFF_LABELS: Object.assign({}, VEHICLE_LABELS, { __vehicle: true }),
   mapValues, STATUS_LABELS, PAY_LABELS,
   logActivity, logReq, reqUserName, reqIp,

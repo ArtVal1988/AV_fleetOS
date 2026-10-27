@@ -83,6 +83,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ── Backup endpoint ──────────────────────────────────────────────
 const { auth, adminOnly } = require('./routes/auth');
 const db = require('./db');
+require('./activityLog').backfillActivityLog();
 require('./telegram').startPolling();
 
 app.get('/api/backup', auth, adminOnly, (req, res) => {
