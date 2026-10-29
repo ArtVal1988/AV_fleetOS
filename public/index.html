@@ -286,8 +286,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* iOS/Android render native date inputs taller than selects — force the same 30px as the time field */
   input[type=date].lr-date{-webkit-appearance:none;appearance:none;height:30px!important;min-height:30px!important;max-height:30px!important;line-height:28px!important;padding-top:0!important;padding-bottom:0!important;margin:0;display:block;}
   input[type=date].lr-date::-webkit-date-and-time-value{min-height:0!important;height:28px;line-height:28px;margin:0;padding:0;text-align:center;}
-  #bm-rate-mobile-row .fin-rate2{flex:0 0 96px!important;width:96px!important;}
-  #bm-rate-mobile-row #bm-exchange-rate{width:100%!important;box-sizing:border-box;}
+  #bm-deposit-mobile-row .fin-rate2{flex:0 0 62px!important;width:62px!important;}
+  #bm-deposit-mobile-row #bm-exchange-rate{width:100%!important;box-sizing:border-box;}
+  #bm-deposit-mobile-row #bm-deposit-field{flex:1 1 auto!important;min-width:0!important;}
   .lr-loc{flex:1 1 100%!important;width:100%;}
   .lr-label{width:100%!important;margin-bottom:2px;}
   .fin-row{gap:10px;}
@@ -3874,44 +3875,34 @@ function arrangeFinRowForViewport(){
   const rateField = document.getElementById('bm-rate-row');
   if(!depositField || !depositPayField) return;
   let mobileRow = document.getElementById('bm-deposit-mobile-row');
-  let rateRow = document.getElementById('bm-rate-mobile-row');
-  const arranged = !!mobileRow && depositField.parentElement === mobileRow;
+  const arranged = !!mobileRow && depositField.parentElement === mobileRow
+    && (!rateField || rateField.parentElement === mobileRow);
   if(isMobileViewport()){
-    // Already in the mobile rows — do nothing. Re-appending the nodes on every
+    // Already in the mobile row — do nothing. Re-appending the nodes on every
     // resize (the on-screen keyboard fires one) moved the focused deposit
     // input in the DOM, which blurred it and instantly closed the keyboard.
-    if(arranged && (!rateField || rateField.parentElement === rateRow)) return;
-    const mainRow = (mobileRow ? mobileRow.previousElementSibling : null) || depositField.closest('.fin-row');
+    if(arranged) return;
+    const mainRow = depositField.closest('.fin-row');
     if(!mainRow) return;
     if(!mobileRow){
       mobileRow = document.createElement('div');
       mobileRow.id = 'bm-deposit-mobile-row';
       mobileRow.className = 'fin-row';
-      mobileRow.style.cssText = 'justify-content:space-between;margin-top:8px';
+      mobileRow.style.cssText = 'justify-content:space-between;flex-wrap:nowrap;gap:6px;margin-top:8px';
       mainRow.parentNode.insertBefore(mobileRow, mainRow.nextSibling);
     }
-    // «Курс» gets its own line right under the main row (before the deposit line)
-    if(rateField && !rateRow){
-      rateRow = document.createElement('div');
-      rateRow.id = 'bm-rate-mobile-row';
-      rateRow.className = 'fin-row';
-      rateRow.style.cssText = 'justify-content:flex-start;margin-top:8px;margin-bottom:0';
-      mobileRow.parentNode.insertBefore(rateRow, mobileRow);
-    }
-    if(rateField && rateRow) rateRow.appendChild(rateField);
-    if(depositField.parentElement !== mobileRow){
-      mobileRow.appendChild(depositField);
-      mobileRow.appendChild(depositPayField);
-    }
+    // One line below the main row: Курс · Депозит · deposit payment icons
+    if(rateField) mobileRow.appendChild(rateField);
+    mobileRow.appendChild(depositField);
+    mobileRow.appendChild(depositPayField);
   } else if(mobileRow){
-    const mainRow = (rateRow || mobileRow).previousElementSibling;
+    const mainRow = mobileRow.previousElementSibling;
     if(mainRow){
       if(rateField) mainRow.appendChild(rateField);
       mainRow.appendChild(depositField);
       mainRow.appendChild(depositPayField);
     }
     mobileRow.remove();
-    if(rateRow) rateRow.remove();
   }
 }
 window.addEventListener('resize', positionMonthNavForViewport);
