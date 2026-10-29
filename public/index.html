@@ -195,6 +195,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .th-day-num{font-size:11px!important;}
   .th-day-dow{font-size:7px!important;}
 }
+/* PHONE IN LANDSCAPE (short, wide screen): the vertical space is the scarce resource —
+   compact top bar, one-line stickers, plate-only pinned column and low rows so that
+   as many vehicles as possible fit on the screen. */
+@media (max-height:500px) and (orientation:landscape){
+  .topbar{padding:4px 8px 3px!important;}
+  .today-btn{padding:4px 9px!important;font-size:11px!important;}
+  .month-nav{padding:1px!important;}
+  .mn-btn{padding:3px 8px!important;}
+  .mn-label{padding:5px 4px!important;font-size:11px!important;}
+  #new-booking-btn{width:30px!important;height:30px!important;border-radius:8px!important;}
+  .stickers-bar{padding:3px 8px!important;gap:5px!important;}
+  .sticker-card{width:128px!important;height:34px!important;padding:3px 6px!important;justify-content:center!important;gap:0!important;}
+  .sticker-label{font-size:7px!important;margin:0!important;padding-right:56px!important;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sticker-text{-webkit-line-clamp:1!important;font-size:9px!important;}
+  .sticker-author{display:none!important;}
+  .sticker-actions{top:1px!important;right:1px!important;}
+  .sticker-pin,.sticker-edit,.sticker-del{width:16px!important;height:16px!important;font-size:9px!important;}
+  .sticker-add-btn{padding:4px 10px!important;font-size:9px!important;}
+  .content-split{padding:0 2px 4px 8px!important;}
+  /* pinned column = plate only, like in portrait */
+  .th-vehicle,.td-vehicle{min-width:92px!important;width:92px!important;max-width:92px!important;padding:2px 4px!important;}
+  .td-vehicle .veh-name,.td-vehicle .veh-actions{display:none!important;}
+  .td-vehicle .veh-plate-badge{font-size:11px!important;padding:2px!important;letter-spacing:0!important;width:82px!important;}
+  .th-vehicle{font-size:0!important;}
+  .calendar-scroll{scroll-padding-left:92px;}
+  .cal-table .th-day,.cal-table .td-day{width:24px!important;min-width:24px!important;}
+  .cal-table .th-day{padding:2px 1px!important;}
+  .th-day-num{font-size:11px!important;}
+  .th-day-dow{font-size:7px!important;margin-top:0!important;}
+  .cal-table .day-cell{height:27px!important;}
+  .cat-row td{padding:2px 8px!important;}
+  /* menu button: small, bottom-right, out of the plate column */
+  .mobile-menu-fab{left:auto!important;right:10px!important;bottom:8px!important;width:34px!important;height:34px!important;font-size:16px!important;opacity:.85;}
+}
 @media (max-width: 640px), (max-height: 500px) and (orientation: landscape){
   .ext-stack-mobile{flex-direction:column!important;align-items:stretch!important;gap:2px!important;}
   #ext-summary-row{margin-bottom:6px!important;padding:6px 8px!important;}
