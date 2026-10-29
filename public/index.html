@@ -226,6 +226,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .th-day-dow{font-size:7px!important;margin-top:0!important;}
   .cal-table .day-cell{height:27px!important;}
   .cat-row td{padding:2px 8px!important;}
+  #vehicle-specs-popup#vehicle-specs-popup{width:480px!important;max-width:calc(100vw - 110px)!important;}
   /* menu button: small, bottom-right, out of the plate column */
   .mobile-menu-fab{left:auto!important;right:10px!important;bottom:8px!important;width:34px!important;height:34px!important;font-size:16px!important;opacity:.85;}
 }
@@ -7560,19 +7561,33 @@ async function showVehicleSpecs(e, vid){
       </div>`
     : '';
 
-  popup.innerHTML = `
-    <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:0 20px 8px;border-bottom:1px solid #e5e7eb">
+  // Phone in landscape: little height, so the characteristics are collapsed (tap to
+  // expand), the price block is the main content and the ТО / Страх. / Док. buttons
+  // stay pinned at the bottom of the card (never scrolled away).
+  const LS = vsLandscape();
+  const lsInner = window.innerHeight - 16 - 32;
+  const headerHtml = `
+    <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px;padding:0 20px 8px;border-bottom:1px solid #e5e7eb;flex:none">
       <div style="font-weight:800;font-size:13px;color:#1a1d26;text-align:center">${v.name}</div>
       <button onclick="document.getElementById('vehicle-specs-popup').style.display='none'" style="position:absolute;right:0;top:-2px;background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px">✕</button>
-    </div>
-    ${bodyHtml}
+    </div>`;
+  const specsBlock = LS
+    ? `<button type="button" id="vs-specs-toggle" onclick="toggleVsSpecs()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:6px;padding:6px 8px;margin-bottom:6px;font-family:inherit;font-size:11px;font-weight:600;color:#4b5563;cursor:pointer">▸ Характеристики</button>
+       <div id="vs-specs-body" style="display:none;margin-bottom:6px">${bodyHtml}</div>`
+    : bodyHtml;
+  const quickBtnStyle = LS ? 'padding:10px 4px;font-size:12px' : 'padding:6px 4px;font-size:10px';
+  popup.innerHTML = `${LS ? `<div style="display:flex;flex-direction:column;max-height:${lsInner}px">` : ''}
+    ${headerHtml}
+    ${LS ? '<div id="vs-scroll" style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch">' : ''}
+    ${specsBlock}
     ${priceSectionHtml}
-    <div id="specs-quick-actions" style="gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb">
-      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openToModal(${vid})" style="flex:1;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:6px;padding:6px 4px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">🔧 ТО</button>
-      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openInsuranceModal(${vid})" style="flex:1;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;padding:6px 4px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">🛡 Страх.</button>
-      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openDocsModal(${vid})" style="flex:1;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:6px;padding:6px 4px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">📄 Док.</button>
+    ${LS ? '</div>' : ''}
+    <div id="specs-quick-actions" style="gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;flex:none">
+      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openToModal(${vid})" style="flex:1;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:6px;${quickBtnStyle};font-family:inherit;font-weight:700;cursor:pointer">🔧 ТО</button>
+      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openInsuranceModal(${vid})" style="flex:1;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;${quickBtnStyle};font-family:inherit;font-weight:700;cursor:pointer">🛡 Страх.</button>
+      <button onclick="document.getElementById('vehicle-specs-popup').style.display='none';openDocsModal(${vid})" style="flex:1;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:6px;${quickBtnStyle};font-family:inherit;font-weight:700;cursor:pointer">📄 Док.</button>
     </div>
-    
+    ${LS ? '</div>' : ''}
   `;
 
   popup.style.display = 'block';
@@ -7586,16 +7601,16 @@ async function showVehicleSpecs(e, vid){
     const margin = 14;
     const availableLeft = vehColWidth + margin;
     const availableWidth = window.innerWidth - availableLeft - margin;
-    const popupWidth = Math.max(180, Math.min(280, availableWidth));
+    const popupWidth = Math.max(180, Math.min(LS ? 480 : 280, availableWidth));
     const left = Math.round(availableLeft + Math.max(0, (availableWidth - popupWidth) / 2));
     const stickersBarBottom = document.querySelector('.stickers-bar')?.getBoundingClientRect().bottom || 8;
-    const availableTop = stickersBarBottom + margin;
-    const availableHeight = window.innerHeight - availableTop - margin;
+    const availableTop = LS ? 8 : stickersBarBottom + margin;
+    const availableHeight = LS ? window.innerHeight - 16 : window.innerHeight - availableTop - margin;
     popup.style.left = left + 'px';
     popup.style.transform = '';
     popup.style.width = popupWidth + 'px';
     popup.style.maxHeight = availableHeight + 'px';
-    popup.style.overflowY = 'auto';
+    popup.style.overflowY = LS ? 'hidden' : 'auto';
     // Vertical centering needs the popup's actual rendered height, which
     // isn't known until after its content (set above) has laid out.
     requestAnimationFrame(() => {
@@ -7621,15 +7636,31 @@ async function showVehicleSpecs(e, vid){
       if(!isMobile && specsPopupRect){
         repositionSpecsPopupDesktop(popup, specsPopupRect);
       } else if(isMobile){
-        const stickersBarBottom2 = document.querySelector('.stickers-bar')?.getBoundingClientRect().bottom || 8;
-        const margin2 = 14;
-        const availableTop2 = stickersBarBottom2 + margin2;
-        const availableHeight2 = window.innerHeight - availableTop2 - margin2;
-        const actualHeight2 = Math.min(popup.offsetHeight, availableHeight2);
-        popup.style.top = Math.round(availableTop2 + Math.max(0, (availableHeight2 - actualHeight2) / 2)) + 'px';
+        vsRecenter();
       }
     }
   }
+}
+// Phone held sideways (landscape): the specs card gets a compact layout.
+function vsLandscape(){ return isMobileViewport() && window.innerWidth > window.innerHeight; }
+function vsRecenter(){
+  const popup = document.getElementById('vehicle-specs-popup');
+  if(!popup || popup.style.display !== 'block' || !isMobileViewport()) return;
+  const ls = vsLandscape();
+  const margin = ls ? 8 : 14;
+  const top0 = ls ? margin : ((document.querySelector('.stickers-bar')?.getBoundingClientRect().bottom || 8) + margin);
+  const availH = window.innerHeight - top0 - margin;
+  const h = Math.min(popup.offsetHeight, availH);
+  popup.style.top = Math.round(top0 + Math.max(0, (availH - h) / 2)) + 'px';
+}
+function toggleVsSpecs(){
+  const body = document.getElementById('vs-specs-body');
+  const btn = document.getElementById('vs-specs-toggle');
+  if(!body || !btn) return;
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  btn.textContent = (open ? '▾ ' : '▸ ') + 'Характеристики';
+  requestAnimationFrame(vsRecenter);
 }
 function repositionSpecsPopupDesktop(popup, rect){
   // maxHeight from a PREVIOUS call would otherwise constrain offsetHeight
