@@ -1378,6 +1378,48 @@ textarea{resize:vertical;min-height:56px;}
 .vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
 .vf-inp:focus{border-color:#93c5fd;}
 
+/* ── Booking form (portrait phone): fines, extension, payments, footer ── */
+@media (max-width:640px){
+  /* Fines: status/check · date · amount on the first line, description on its own
+     line, then compensation button + edit/delete */
+  #bm-fines-list .fine-line{flex-wrap:wrap!important;gap:6px 8px!important;}
+  #bm-fines-list .fine-line > :nth-child(1){order:1;}
+  #bm-fines-list .fine-line > :nth-child(2){order:2;}
+  #bm-fines-list .fine-line > :nth-child(4){order:3;margin-left:auto;}
+  #bm-fines-list .fine-line > :nth-child(3){order:4;flex:1 1 100%!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;}
+  #bm-fines-list .fine-line > :nth-child(5){order:5;}
+  #bm-fines-list .fine-line > :nth-child(6){order:6;margin-left:auto;}
+  #bm-fines-list .fine-line button{height:30px!important;}
+  #bm-fines-list .fine-line > span:last-child button{width:30px!important;height:30px!important;}
+  #bm-fines-form-wrap > div{flex-wrap:wrap!important;}
+  #bm-fines-form-wrap > div > div{flex:1 1 calc(50% - 4px)!important;min-width:0!important;width:auto!important;}
+  #bm-fines-form-wrap > div > div:nth-child(2){flex:1 1 100%!important;order:3;}
+  #bm-fines-form-wrap input.vf-inp{width:100%!important;}
+  /* Extension: fields wrap into two columns instead of a clipped scrolling row */
+  #bm-ext-fields .ext-fin-row{flex-wrap:wrap!important;overflow:visible!important;gap:8px!important;padding-bottom:0!important;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box{flex:1 1 calc(50% - 4px)!important;width:auto!important;min-width:0!important;margin:0!important;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box > input,#bm-ext-fields .ext-fin-row .ext-date-short{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box;display:block;}
+  #bm-ext-fields .ext-fin-row .ext-cur-inline-wrap{width:100%;}
+  #bm-ext-timeline,#bm-ext-fields{max-width:100%;}
+  /* Payments blocks: use the whole width */
+  #bm-main-payments-wrap{margin:8px 0 0!important;}
+  #bm-main-payments-block{padding-left:8px!important;padding-right:8px!important;}
+  /* mixed-payment notes: normal-size text instead of big bold */
+  #bm-deposit-mixed-note,#bm-pay-mixed-note{font-size:12px!important;font-weight:500!important;font-family:inherit!important;text-align:left!important;padding:8px 10px!important;}
+  /* Footer */
+  #bm-footer{flex-wrap:wrap!important;gap:8px!important;padding:10px 12px 12px!important;justify-content:stretch!important;}
+  #bm-footer > #bm-delete-btn,#bm-footer > div:nth-child(2){flex:1 1 calc(50% - 4px)!important;min-width:0;}
+  #bm-footer > div:nth-child(2) > #bm-edit-history-btn{width:100%;}
+  #bm-footer .bmd-text,#bm-footer .bmh-text{display:inline!important;}
+  #bm-footer .bmd-icon,#bm-footer .bmh-icon{font-size:13px!important;}
+  #bm-footer > div[style*="background:#f7f8fb"]{flex:1 1 100%!important;justify-content:space-between;gap:2px;}
+  #bm-footer > div[style*="background:#f7f8fb"] > *{flex:1 1 0;min-width:0;}
+  #bm-footer > div[style*="background:#f7f8fb"] .btn{width:100%;padding:8px 2px!important;font-size:11px!important;white-space:nowrap;}
+  #bm-footer > .btn-primary{flex:1 1 100%!important;margin-left:0!important;order:99;padding:11px!important;}
+}
+
+@media (min-width:641px){ #bm-ext-from,#bm-ext-to{width:85px!important;} }
+
 /* ── Client card: mobile layout ── */
 @media (max-width:640px){
   #client-form-overlay > div{max-height:94vh!important;border-radius:14px!important;}
@@ -3129,11 +3171,11 @@ input.dm-pf-val.tel{font-size:14px;}
         <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:4px">
           <div class="ext-compact-box" style="flex:0 0 auto">
             <span class="ext-compact-label">З</span>
-            <input type="date" id="bm-ext-from" class="ext-date-short custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="onExtDatesChanged();blurDateFieldOnDesktop(this)" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 1px;width:85px!important;text-align:center">
+            <input type="date" id="bm-ext-from" class="ext-date-short custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="onExtDatesChanged();blurDateFieldOnDesktop(this)" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 1px;width:85px;text-align:center">
           </div>
           <div class="ext-compact-box" style="flex:0 0 auto">
             <span class="ext-compact-label">До</span>
-            <input type="date" id="bm-ext-to" class="ext-date-short custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="onExtDatesChanged();blurDateFieldOnDesktop(this)" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 1px;width:85px!important;text-align:center">
+            <input type="date" id="bm-ext-to" class="ext-date-short custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="onExtDatesChanged();blurDateFieldOnDesktop(this)" style="height:36px;box-sizing:border-box;border:1px solid #d8dbe2;border-radius:6px;padding:0 1px;width:85px;text-align:center">
             <div id="bm-ext-period-error" style="display:none;position:absolute;top:100%;left:0;color:#dc2626;font-size:11px;margin-top:4px;padding:4px 8px;background:#fee2e2;border-radius:5px;white-space:nowrap;z-index:3">⚠ Невірно обраний період — дата «до» має бути пізніше дати «з»</div>
           </div>
           <div class="ext-compact-box" style="width:25px;margin-left:0">
@@ -3437,7 +3479,7 @@ input.dm-pf-val.tel{font-size:14px;}
   </div>
   <div id="bm-closed-banner" style="display:none;background:#fef2f2;border-top:1px solid #fca5a5;padding:8px 20px;font-size:11px;color:#991b1b;text-align:center"></div>
   <div class="modal-footer" id="bm-footer">
-    <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none"><span class="bmd-icon">🗑</span><span class="bmd-text">✕ Видалити</span></button>
+    <button class="btn" id="bm-delete-btn" onclick="deleteBookingFromModal()" style="color:#f06060;border-color:rgba(240,96,96,.3);display:none"><span class="bmd-icon">🗑</span><span class="bmd-text"> Видалити</span></button>
     <div style="position:relative">
       <button class="btn" id="bm-edit-history-btn" onclick="toggleBmEditHistory()" style="display:none;color:#6b7280;border-color:#e5e7eb"><span class="bmh-icon">🕐</span><span class="bmh-text"> Історія</span></button>
       <div id="bm-edit-history-panel" style="display:none;position:absolute;bottom:calc(100% + 6px);left:0;width:380px;max-height:400px;overflow-y:auto;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.15);padding:10px;z-index:60"></div>
@@ -9679,7 +9721,7 @@ function renderFinesList(){
   wrap.innerHTML = currentFines.map((f,i) => {
     const isEditing = editingFineIndex === i;
     return `<div class="ext-history-row" style="display:flex;flex-direction:column;gap:2px;background:${isEditing?'#fef9c3':(f.paid?'#f0fdf4':'#fef2f2')};border:${isEditing?'1px solid #fde047':'none'};border-radius:4px;padding:5px 6px">
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="fine-line" style="display:flex;align-items:center;gap:10px">
         ${f.paid
           ? '<span style="font-size:14px;flex-shrink:0;line-height:1">✅</span>'
           : '<span style="flex-shrink:0;background:#ff0000;border:1px solid #ff0000;color:#ffffff;border-radius:5px;height:22px;line-height:20px;padding:0 8px;font-size:10px;font-weight:700;white-space:nowrap;box-sizing:border-box">Очікуємо на компенсацію</span>'}
@@ -9855,8 +9897,14 @@ function toggleExtensionSection(preserveExistingData){
   if(active){
     block.querySelectorAll('.ext-fin-row').forEach(row => {
       row.style.setProperty('display', 'flex', 'important');
-      row.style.setProperty('flex-wrap', 'nowrap', 'important');
-      row.style.setProperty('overflow-x', 'auto', 'important');
+      // Phone: the fields wrap into two columns (see the mobile CSS); desktop keeps one scrolling row
+      if(isMobileViewport()){
+        row.style.removeProperty('flex-wrap');
+        row.style.removeProperty('overflow-x');
+      } else {
+        row.style.setProperty('flex-wrap', 'nowrap', 'important');
+        row.style.setProperty('overflow-x', 'auto', 'important');
+      }
     });
   }
   const actBtn = document.getElementById('bm-ext-gen-act-btn');
