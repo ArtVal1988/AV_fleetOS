@@ -8,6 +8,10 @@ const PORT = process.env.PORT || 3000;
 app.set('etag', false);
 
 // ── Middleware ───────────────────────────────────────────────────
+// gzip for text responses (index.html is ~1.2 MB → ~330 KB). Optional dependency:
+// if `compression` is not installed yet the server still starts, just uncompressed.
+try { app.use(require('compression')({ threshold: 1024 })); }
+catch (e) { console.warn('compression not installed — responses are not gzipped'); }
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public'), {
