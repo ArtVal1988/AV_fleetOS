@@ -286,7 +286,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* iOS/Android render native date inputs taller than selects — force the same 30px as the time field */
   input[type=date].lr-date{-webkit-appearance:none;appearance:none;height:30px!important;min-height:30px!important;max-height:30px!important;line-height:28px!important;padding-top:0!important;padding-bottom:0!important;margin:0;display:block;}
   input[type=date].lr-date::-webkit-date-and-time-value{min-height:0!important;height:28px;line-height:28px;margin:0;padding:0;text-align:center;}
-  #bm-deposit-mobile-row .fin-rate2{flex:0 0 62px!important;width:62px!important;}
+  #bm-deposit-mobile-row .fin-rate2{flex:0 0 54px!important;width:54px!important;}
+  #bm-deposit-mobile-row #bm-deposit{width:44px!important;flex:0 0 44px!important;}
+  #bm-deposit-mobile-row #bm-deposit-paymethod-icons-wrap{gap:3px!important;}
   #bm-deposit-mobile-row #bm-exchange-rate{width:100%!important;box-sizing:border-box;}
   #bm-deposit-mobile-row #bm-deposit-field{flex:1 1 auto!important;min-width:0!important;}
   .lr-loc{flex:1 1 100%!important;width:100%;}
@@ -332,6 +334,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   #dp-total-row{height:45px!important;}
   #bm-partial-toggle-row{height:30px!important;}
   #bm-paymethod-icons-wrap .dep-cur-pill,#bm-deposit-paymethod-field .dep-cur-pill{height:30px!important;}
+  /* payment-type icons (cash / card / mixed): square buttons on mobile */
+  #bm-paymethod-icons-wrap .dep-cur-pill,#bm-deposit-paymethod-icons-wrap .dep-cur-pill{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;}
   #bm-delete-btn{height:30px!important;width:30px!important;padding:0!important;display:flex!important;align-items:center;justify-content:center;}
   #bm-edit-history-btn{height:30px!important;}
   .bmh-text{display:none!important;}
