@@ -2725,7 +2725,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <input type="text" id="bm-name" placeholder="Прізвище Ім'я По батькові" autocomplete="off" style="flex:1;min-width:0"
               oninput="filterNameInput(this);onClientNameInput(this);document.getElementById('bm-client-id').value='';updateClientLinkButton();updateBmExtraContactsInfo(null);" onfocus="onClientNameInput(this)" onblur="setTimeout(closeClientSuggest,150)">
             <button type="button" id="bm-goto-client-btn" onclick="gotoClientCard()" title="Відкрити картку клієнта" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;cursor:pointer;align-items:center;justify-content:center;font-size:13px;padding:0">👤</button>
-            <button type="button" id="bm-add-client-btn" onclick="quickAddClientFromBooking()" title="Додати клієнта в базу клієнтів" style="display:none;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;align-items:center;justify-content:center;font-size:18px;font-weight:700;line-height:1;padding:0">+</button>
+            <button type="button" id="bm-add-client-btn" onclick="openClientFormFromBooking()" title="Додати нового клієнта" style="display:flex;flex-shrink:0;width:28px;height:28px;border-radius:6px;border:1px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;align-items:center;justify-content:center;font-size:18px;font-weight:700;line-height:1;padding:0">+</button>
           </div>
           <input type="hidden" id="bm-client-id" value="">
           <div id="client-suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:3px;background:#fff;border:1px solid #dbeafe;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:40;max-height:220px;overflow-y:auto"></div>
@@ -12812,12 +12812,6 @@ function updateClientLinkButton(){
   if(!btn) return;
   const clientId = parseInt(document.getElementById('bm-client-id')?.value) || null;
   btn.style.display = clientId ? 'flex' : 'none';
-  // «+» — shown while the typed customer is not linked to a client card yet
-  const addBtn = document.getElementById('bm-add-client-btn');
-  if(addBtn){
-    const hasText = !!((document.getElementById('bm-name')?.value || '').trim() || (document.getElementById('bm-company')?.value || '').trim());
-    addBtn.style.display = (!clientId && hasText) ? 'flex' : 'none';
-  }
   const tierIcon = document.getElementById('bm-client-tier-icon');
   if(tierIcon) tierIcon.innerHTML = clientTierIconHtml(clientId);
 }
@@ -12828,55 +12822,36 @@ function quickToast(msg){
   document.body.appendChild(t);
   setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(), 450); }, 2600);
 }
-// «+» next to the customer name in the booking form: create the client card right
-// away from what is already typed in (name, phone, messengers; company + ЄДРПОУ
-// for business customers) and link it to this booking. Details (passport etc.)
-// can be added later through the 👤 button that appears next to it.
-async function quickAddClientFromBooking(){
-  const btn = document.getElementById('bm-add-client-btn');
-  if(!_token) return;
+// «+» next to the customer name in the booking form: opens the same «Новий клієнт»
+// form as on the «Клієнти» page (pre-filled with what is already typed in the booking).
+// After saving, the new client is linked to the booking and the booking form stays open.
+let cfLinkToBooking = false;
+function openClientFormFromBooking(){
   const type = document.getElementById('bm-client-type').value;
   const isCompany = type !== 'individual';
+  const category = type === 'individual' ? 'individual' : (type === 'fop_no_vat' ? 'fop_no_vat' : 'fop');
   const name = (document.getElementById('bm-name').value || '').trim();
+  const phone = (document.getElementById('bm-phone').value || '').trim();
   const company = (document.getElementById('bm-company')?.value || '').trim();
   const edrpou = (document.getElementById('bm-edrpou')?.value || '').trim();
-  const phone = (document.getElementById('bm-phone').value || '').trim();
-  if(IS_ACCOUNTANT_ROLE && !isCompany){ alert('Бухгалтер може додавати лише юридичних осіб.'); return; }
-  if(isCompany && !company){ alert('Вкажіть назву компанії (або ПІБ ФОП)'); document.getElementById('bm-company')?.focus(); return; }
-  if(!name){ alert(isCompany ? 'Вкажіть ПІБ контактної особи' : 'Вкажіть ПІБ клієнта'); document.getElementById('bm-name').focus(); return; }
-
-  // Already in the base? Offer to link to it instead of creating a duplicate.
-  const digits = v => String(v||'').replace(/\D/g,'');
-  const dup = (CLIENTS||[]).find(c =>
-    (digits(phone).length >= 9 && digits(c.phone) === digits(phone)) ||
-    (!isCompany && (c.name||'').trim().toLowerCase() === name.toLowerCase()) ||
-    (isCompany && company && (c.companyName||'').trim().toLowerCase() === company.toLowerCase()));
-  if(dup){
-    const dupName = (dup.category && dup.category !== 'individual') ? (dup.companyName || dup.name) : dup.name;
-    if(confirm(`Такий клієнт уже є в базі: «${dupName}»${dup.phone ? ' · ' + dup.phone : ''}.\n\nПрив'язати замовлення до нього (OK) чи все одно створити нового (Скасувати)?`)){
-      if(isCompany) selectCompanySuggestion(dup.companyName || company, dup.name || name, dup.phone || phone, dup.edrpou || edrpou, dup.id);
-      else selectClientSuggestion(dup.name, dup.phone || phone, dup.id);
-      return;
-    }
+  const msgs = readMessengersFromForm();
+  openClientForm(null, category);
+  cfLinkToBooking = true;
+  document.getElementById('cf-name').value = name;
+  document.getElementById('cf-phone').value = phone;
+  if(isCompany){
+    const rn = document.getElementById('cf-rep-name'); if(rn) rn.value = company;
+    const re = document.getElementById('cf-rep-edrpou'); if(re) re.value = edrpou;
   }
-
-  const category = type === 'individual' ? 'individual' : (type === 'fop_no_vat' ? 'fop_no_vat' : 'fop');
-  const data = {
-    name, category,
-    companyName: isCompany ? company : '', edrpou: isCompany ? edrpou : '',
-    repFields: isCompany ? {name: company, edrpou} : {},
-    tier: 'new', residency: 'resident',
-    phone, extraContacts: [], messengers: readMessengersFromForm(), notes: '',
-  };
-  if(btn){ btn.disabled = true; btn.style.opacity = '.5'; }
-  const r = await apiFetch('POST', '/clients', data);
-  if(btn){ btn.disabled = false; btn.style.opacity = ''; }
-  if(!r || !r.id){ alert('Не вдалося додати клієнта. Спробуйте ще раз.'); return; }
-  await loadClientsFromServer();
-  document.getElementById('bm-client-id').value = r.id;
-  updateClientLinkButton();
-  updateBmExtraContactsInfo(r.id);
-  quickToast(`Клієнта «${isCompany ? company : name}» додано в базу`);
+  if(Object.keys(msgs).length) loadCfMessengers(msgs);
+  document.getElementById('cf-name').focus();
+}
+function quickToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#14532d;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-family:inherit;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center';
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(), 450); }, 2600);
 }
 function gotoClientCard(){
   const clientId = parseInt(document.getElementById('bm-client-id')?.value);
@@ -14454,6 +14429,8 @@ function renderClientsPanelList(){
   }).join('');
 }
 function openClientForm(id, defaultCategory){
+  cfLinkToBooking = false;
+  clearCfPendingDocs();
   const c = id ? CLIENTS.find(x=>x.id===id) : null;
   document.getElementById('cf-title').textContent = c ? 'Клієнт' : '+ Новий клієнт';
   document.getElementById('cf-id').value = id || '';
@@ -14504,9 +14481,12 @@ function openClientForm(id, defaultCategory){
   });
   updateCfDocLock();
   document.getElementById('cf-delete-btn').style.display = (id && _currentUser && _currentUser.role === 'admin') ? '' : 'none'; // delete is admin-only
-  document.getElementById('cf-docs-wrap').style.display = id ? 'none' : 'block';
-  document.getElementById('cf-docs-active').style.display = id ? 'block' : 'none';
+  // Document photos can be attached right away, also for a not yet saved client:
+  // they are kept in memory and uploaded as soon as the client is saved.
+  document.getElementById('cf-docs-wrap').style.display = 'none';
+  document.getElementById('cf-docs-active').style.display = 'block';
   if(id) loadClientDocs(id);
+  else { CLIENT_DOCS = []; renderPendingClientDocs(); }
   document.getElementById('cf-history-section').style.display = id ? 'block' : 'none';
   if(id) renderClientBookingHistory(id);
   document.getElementById('client-form-overlay').style.display='flex';
@@ -14663,6 +14643,8 @@ function gotoBookingFromClient(bid){
 }
 function closeClientForm(){
   document.getElementById('client-form-overlay').style.display='none';
+  cfLinkToBooking = false;
+  clearCfPendingDocs();
 }
 async function saveClientForm(){
   const id = document.getElementById('cf-id').value;
@@ -14705,11 +14687,34 @@ async function saveClientForm(){
     nrPassportExpiry: document.getElementById('cf-nr-passport-expiry').value,
     notes: document.getElementById('cf-notes').value.trim(),
   };
-  if(id) await apiFetch('PUT', '/clients/'+id, data);
-  else await apiFetch('POST', '/clients', data);
+  let savedId = id ? parseInt(id) : null;
+  if(id){
+    await apiFetch('PUT', '/clients/'+id, data);
+  } else {
+    const r = await apiFetch('POST', '/clients', data);
+    if(!r || !r.id){ alert('Не вдалося зберегти клієнта. Спробуйте ще раз.'); return; }
+    savedId = r.id;
+    // upload the photos that were attached before the client existed
+    const pending = cfPendingDocs.slice();
+    const failedNames = [];
+    for(const d of pending){
+      const f = await uploadClientDocFiles(savedId, d.key, [d.file]);
+      failedNames.push(...f);
+    }
+    if(failedNames.length) alert('Клієнта збережено, але не вдалося завантажити: ' + failedNames.join(', '));
+  }
   await loadClientsFromServer();
+  const linkToBooking = cfLinkToBooking && !id;
   closeClientForm();
   renderClientsPanelList();
+  if(linkToBooking && savedId){
+    const nc = CLIENTS.find(c=>c.id===savedId);
+    if(nc){
+      if(nc.category && nc.category !== 'individual') selectCompanySuggestion(nc.companyName || '', nc.name || '', nc.phone || '', nc.edrpou || '', nc.id);
+      else selectClientSuggestion(nc.name || '', nc.phone || '', nc.id);
+      quickToast('Клієнта додано й прив\'язано до замовлення');
+    }
+  }
 }
 async function deleteClientFromForm(){
   const id = document.getElementById('cf-id').value;
@@ -14765,12 +14770,34 @@ function renderClientDocsList(){
     </div>`;
   }).join('');
 }
-async function uploadClientDoc(key, input){
-  const files = Array.from(input.files || []); // copy first: clearing input.value below empties the live FileList
-  input.value = '';
-  if(!files.length) return;
-  const clientId = document.getElementById('cf-id').value;
-  if(!clientId) return;
+// Photos picked for a client that is not saved yet: kept here until «Зберегти».
+let cfPendingDocs = [];
+const CF_DOC_LABELS = {passport:'Паспорт', inn:'ІПН', license:'Водійське', other:'Інше'};
+function clearCfPendingDocs(){
+  cfPendingDocs.forEach(d => { if(d.url) try{ URL.revokeObjectURL(d.url); }catch(e){} });
+  cfPendingDocs = [];
+}
+function renderPendingClientDocs(){
+  const wrap = document.getElementById('cf-docs-list');
+  if(!wrap) return;
+  if(!cfPendingDocs.length){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = cfPendingDocs.map((d,i) => {
+    const isImg = (d.file.type || '').startsWith('image/') && !/heic|heif/i.test(d.file.type);
+    const preview = isImg ? `<img src="${d.url}" style="width:100%;height:100%;object-fit:cover">` : '<div style="font-size:16px">📄</div>';
+    return `<div style="position:relative;width:56px">
+      <div style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;background:#f7f8fb">${preview}</div>
+      <div style="font-size:9px;color:#6b7280;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${CF_DOC_LABELS[d.key]||d.key}</div>
+      <button type="button" onclick="removeCfPendingDoc(${i})" title="Прибрати" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #fca5a5;color:#dc2626;font-size:11px;line-height:1;cursor:pointer;padding:0">✕</button>
+    </div>`;
+  }).join('') + '<div style="width:100%;font-size:10px;color:#9ca3af;font-style:italic">Фото буде завантажено після натискання «Зберегти»</div>';
+}
+function removeCfPendingDoc(i){
+  const d = cfPendingDocs[i];
+  if(d && d.url) try{ URL.revokeObjectURL(d.url); }catch(e){}
+  cfPendingDocs.splice(i,1);
+  renderPendingClientDocs();
+}
+async function uploadClientDocFiles(clientId, key, files){
   const failed = [];
   for(const file of files){
     const formData = new FormData();
@@ -14784,6 +14811,20 @@ async function uploadClientDoc(key, input){
       if(!res.ok) failed.push(file.name);
     } catch(e){ failed.push(file.name); }
   }
+  return failed;
+}
+async function uploadClientDoc(key, input){
+  const files = Array.from(input.files || []); // copy first: clearing input.value below empties the live FileList
+  input.value = '';
+  if(!files.length) return;
+  const clientId = document.getElementById('cf-id').value;
+  if(!clientId){
+    // new client — remember the files, they are uploaded when the client is saved
+    files.forEach(file => cfPendingDocs.push({key, file, url: URL.createObjectURL(file)}));
+    renderPendingClientDocs();
+    return;
+  }
+  const failed = await uploadClientDocFiles(clientId, key, files);
   if(failed.length) alert('Не вдалося завантажити: ' + failed.join(', '));
   await loadClientDocs(clientId);
 }
