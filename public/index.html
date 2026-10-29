@@ -1342,6 +1342,39 @@ textarea{resize:vertical;min-height:56px;}
 #client-form-overlay .vf-lbl{color:#000000;}
 .vf-inp{width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;box-sizing:border-box;outline:none;background:#fff;}
 .vf-inp:focus{border-color:#93c5fd;}
+
+/* ── Client card: mobile layout ── */
+@media (max-width:640px){
+  #client-form-overlay > div{max-height:94vh!important;border-radius:14px!important;}
+  #client-form-overlay > div > div[style*="padding:16px 24px 12px"]{padding:10px 12px!important;gap:8px!important;}
+  #client-form-overlay > div > div[style*="padding:16px 24px;"]{padding:12px 10px!important;}
+  #cf-title{font-size:14px!important;line-height:1.2;}
+  #client-form-overlay .cf-block{padding:10px 10px!important;margin-bottom:10px;}
+  #client-form-overlay .vf-inp,#client-form-overlay select.vf-inp{height:38px;font-size:14px;padding:6px 10px;min-width:0;}
+  #client-form-overlay textarea.vf-inp{height:auto;}
+  #client-form-overlay input[type=date].vf-inp{-webkit-appearance:none;appearance:none;display:block;line-height:24px;text-align:left;}
+  #client-form-overlay input[type=date].vf-inp::-webkit-date-and-time-value{text-align:left;min-height:0;margin:0;}
+  /* rows: two columns, wide fields (.cf-full) take the whole line */
+  #client-form-overlay .cf-row{flex-wrap:wrap!important;gap:8px 10px!important;}
+  #client-form-overlay .cf-row > div{flex:1 1 calc(50% - 5px)!important;min-width:0!important;}
+  #client-form-overlay .cf-row > .cf-full,#client-form-overlay .cf-row-stack > div{flex:1 1 100%!important;}
+  #client-form-overlay .cf-innphone{flex-wrap:wrap;gap:8px 10px!important;}
+  #client-form-overlay #cf-inn-row{max-width:none!important;flex:1 1 100%!important;}
+  #client-form-overlay #cf-phone-row{flex:1 1 100%!important;width:100%;}
+  #client-form-overlay .vf-lbl{white-space:normal;}
+  /* phone: input on its own line, messenger buttons spread under it */
+  #client-form-overlay .cf-phone-row{flex:1 1 100%!important;width:100%;flex-wrap:wrap;}
+  #client-form-overlay .cf-phone-row > div{flex:1 1 100%!important;}
+  #client-form-overlay .cf-phone-row > div > div[style*="display:flex"]{flex-wrap:wrap;gap:8px!important;}
+  #client-form-overlay .cf-phone-row input,#client-form-overlay #cf-extra-contact-phone{flex:1 1 100%!important;}
+  #client-form-overlay .messenger-icons{flex:1 1 100%;width:100%;gap:6px;}
+  #client-form-overlay .messenger-icons .msg-btn{flex:1 1 0;width:auto;height:38px;}
+  /* company representative fields: one column (a 'span 2' in a 1-column grid made a 2nd, squeezed column) */
+  #cf-company-rep-fields > .msec{grid-template-columns:minmax(0,1fr)!important;}
+  #cf-company-rep-fields [id^="cf-rep-wrap-"]{grid-column:1 / -1!important;}
+  /* document photo tiles: 2 × 2 */
+  #client-form-overlay #cf-docs-active > div[style*="grid-template-columns"]{grid-template-columns:1fr 1fr!important;}
+}
 .vf-option-chip{display:flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;border-radius:14px;padding:5px 8px 5px 12px;font-size:11px;}
 .vf-option-x{background:none;border:none;color:#1d4ed8;opacity:.6;cursor:pointer;font-size:13px;line-height:1;padding:0 2px;}
 .vf-option-x:hover{opacity:1;}
@@ -2078,8 +2111,8 @@ input.dm-pf-val.tel{font-size:14px;}
         <button type="button" class="ct-btn" data-cat="fop_no_vat" onclick="setClientFormCategory('fop_no_vat')">ФОП / ТОВ без ПДВ</button>
         <button type="button" class="ct-btn" data-cat="fop" onclick="setClientFormCategory('fop')">ФОП / ТОВ з ПДВ</button>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:10px">
-        <div style="flex:2">
+      <div class="cf-row" style="display:flex;gap:10px;margin-bottom:10px">
+        <div class="cf-full" style="flex:2">
           <label class="vf-lbl">ПІБ</label>
           <input id="cf-name" type="text" class="vf-inp" placeholder="Іваненко Олена Петрівна" style="width:100%">
         </div>
@@ -2099,7 +2132,7 @@ input.dm-pf-val.tel{font-size:14px;}
         <label class="vf-lbl">ІПН</label>
         <input id="cf-inn" type="text" class="vf-inp" placeholder="1234567890" style="width:100%">
       </div>
-      <div id="cf-phone-row" style="display:flex;gap:10px;margin-bottom:10px">
+      <div id="cf-phone-row" class="cf-phone-row" style="display:flex;gap:10px;margin-bottom:10px">
         <div style="flex:1.4;position:relative">
           <label class="vf-lbl">Телефон</label>
           <div style="display:flex;align-items:center;gap:4px">
@@ -2173,7 +2206,7 @@ input.dm-pf-val.tel{font-size:14px;}
             </button>
           </div>
           <div class="extras-panel" id="cf-doc-passport-fields" style="display:none">
-            <div style="display:flex;gap:10px;margin:0">
+            <div class="cf-row" style="display:flex;gap:10px;margin:0">
               <div style="flex:1">
                 <label class="vf-lbl">Серія та номер</label>
                 <input id="cf-passport-num" type="text" class="vf-inp" placeholder="АА 123456" style="width:100%">
@@ -2182,14 +2215,14 @@ input.dm-pf-val.tel{font-size:14px;}
                 <label class="vf-lbl">Дата видачі</label>
                 <input id="cf-passport-date" type="date" class="vf-inp custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="width:100%">
               </div>
-              <div style="flex:2">
+              <div class="cf-full" style="flex:2">
                 <label class="vf-lbl">Ким виданий</label>
                 <input id="cf-passport-issuer" type="text" class="vf-inp" placeholder="Печерським РУ ГУ МВС України" style="width:100%">
               </div>
             </div>
           </div>
           <div class="extras-panel" id="cf-doc-idcard-fields" style="display:none">
-            <div style="display:flex;gap:10px;margin:0">
+            <div class="cf-row" style="display:flex;gap:10px;margin:0">
               <div style="flex:1">
                 <label class="vf-lbl">Документ №</label>
                 <input id="cf-idcard-num" type="text" class="vf-inp" placeholder="123456789" style="width:100%">
@@ -2218,7 +2251,7 @@ input.dm-pf-val.tel{font-size:14px;}
 
       <div id="cf-nonresident-fields" class="cf-individual-only" style="display:none">
         <div class="cf-block-title">Закордонний паспорт</div>
-        <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div class="cf-row cf-row-stack" style="display:flex;gap:10px;margin-bottom:10px">
           <div style="flex:1">
             <label class="vf-lbl">Громадянство</label>
             <input id="cf-nr-citizenship" type="text" class="vf-inp" placeholder="Республіка Польща" style="width:100%">
@@ -2228,7 +2261,7 @@ input.dm-pf-val.tel{font-size:14px;}
             <input id="cf-nr-passport-num" type="text" class="vf-inp" placeholder="AB1234567" style="width:100%">
           </div>
         </div>
-        <div style="display:flex;gap:10px;margin-bottom:10px">
+        <div class="cf-row" style="display:flex;gap:10px;margin-bottom:10px">
           <div style="flex:1">
             <label class="vf-lbl">Дата видачі</label>
             <input id="cf-nr-passport-date" type="date" class="vf-inp custom-dp-trigger" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="width:100%">
@@ -14554,6 +14587,7 @@ function renderCfCompanyFields(){
   if(companyFields && phoneRow && extraContactsSection){
     const innPhoneWrap = document.createElement('div');
     innPhoneWrap.style.cssText = 'display:flex;gap:10px;margin-bottom:10px';
+    innPhoneWrap.className = 'cf-innphone';
     companyFields.parentNode.insertBefore(innPhoneWrap, companyFields);
     if(innRow){ innRow.style.marginBottom='0'; innPhoneWrap.appendChild(innRow); }
     phoneRow.style.marginBottom='0';
