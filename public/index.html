@@ -286,11 +286,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   /* iOS/Android render native date inputs taller than selects — force the same 30px as the time field */
   input[type=date].lr-date{-webkit-appearance:none;appearance:none;height:30px!important;min-height:30px!important;max-height:30px!important;line-height:28px!important;padding-top:0!important;padding-bottom:0!important;margin:0;display:block;}
   input[type=date].lr-date::-webkit-date-and-time-value{min-height:0!important;height:28px;line-height:28px;margin:0;padding:0;text-align:center;}
-  #bm-deposit-mobile-row .fin-rate2{flex:0 0 54px!important;width:54px!important;}
-  #bm-deposit-mobile-row #bm-deposit{width:44px!important;flex:0 0 44px!important;}
-  #bm-deposit-mobile-row #bm-deposit-paymethod-icons-wrap{gap:3px!important;}
-  #bm-deposit-mobile-row #bm-exchange-rate{width:100%!important;box-sizing:border-box;}
-  #bm-deposit-mobile-row #bm-deposit-field{flex:1 1 auto!important;min-width:0!important;}
+  /* Two aligned money lines: [Кільк. | Вартість | 3 icons] and [Курс | Депозит | 3 icons] —
+     Кільк. = Курс width, Вартість = Депозит width, icon blocks equal. */
+  .fin-row .fin-days,#bm-deposit-mobile-row .fin-rate2{flex:0 0 54px!important;width:54px!important;min-width:54px!important;max-width:54px!important;}
+  .fin-row .fin-days input,#bm-deposit-mobile-row #bm-exchange-rate{width:100%!important;box-sizing:border-box;}
+  #bm-vartist-field,#bm-deposit-field{flex:1 1 0!important;min-width:0!important;}
+  #bm-rate,#bm-deposit{flex:1 1 auto!important;width:auto!important;min-width:0!important;}
+  #bm-paymethod-field,#bm-deposit-paymethod-field{flex:0 0 96px!important;min-width:96px!important;}
+  #bm-paymethod-icons-wrap,#bm-deposit-paymethod-icons-wrap{gap:3px!important;justify-content:flex-end;}
   .lr-loc{flex:1 1 100%!important;width:100%;}
   .lr-label{width:100%!important;margin-bottom:2px;}
   .fin-row{gap:10px;}
@@ -918,9 +921,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .dep-cur-pill{border:none;background:none;font-size:11px;font-family:var(--font-mono);font-weight:600;cursor:pointer;padding:4px 5px;border-radius:4px;color:#9ca3af;transition:all .15s;flex-shrink:0;}
 #pm-btn-cash,#dep-pm-btn-cash,#ext-pm-btn-cash{background:#66dbe3!important;color:#0a4548!important;opacity:.25;}
 #pm-btn-card,#dep-pm-btn-card,#ext-pm-btn-card{background:#ffcfab!important;color:#7c3a12!important;opacity:.25;}
-#dep-pm-btn-mixed{background:#749190!important;color:#1b3433!important;opacity:.25;}
-#pm-btn-cash,#dep-pm-btn-cash,#pm-btn-card,#dep-pm-btn-card,#dep-pm-btn-mixed,#ext-pm-btn-cash,#ext-pm-btn-card{box-shadow:0 0 0 1px #d4a92c inset;}
-#dep-pm-btn-mixed.active,#pm-btn-cash.active,#dep-pm-btn-cash.active,#pm-btn-card.active,#dep-pm-btn-card.active,#ext-pm-btn-cash.active,#ext-pm-btn-card.active{opacity:1;box-shadow:0 0 0 1px rgba(0,0,0,.15) inset;}
+#dep-pm-btn-mixed,#pm-btn-mixed{background:#749190!important;color:#1b3433!important;opacity:.25;}
+#pm-btn-cash,#dep-pm-btn-cash,#pm-btn-card,#dep-pm-btn-card,#dep-pm-btn-mixed,#pm-btn-mixed,#ext-pm-btn-cash,#ext-pm-btn-card{box-shadow:0 0 0 1px #d4a92c inset;}
+#dep-pm-btn-mixed.active,#pm-btn-mixed.active,#pm-btn-cash.active,#dep-pm-btn-cash.active,#pm-btn-card.active,#dep-pm-btn-card.active,#ext-pm-btn-cash.active,#ext-pm-btn-card.active{opacity:1;box-shadow:0 0 0 1px rgba(0,0,0,.15) inset;}
 .dep-cur-pill.active{background:#f0d060;color:#374151;}
 .dep-cur-pill.active[onclick*="'$'"]{background:#dbeafe;color:#1d4ed8;}
 .dep-cur-pill.active[onclick*="₴"]{background:#dcfce7;color:#166534;}
@@ -2910,6 +2913,14 @@ input.dm-pf-val.tel{font-size:14px;}
           <div class="dep-inline-wrap" style="background:none;border:none;padding:0;border-radius:4px;height:30px;box-sizing:border-box" id="bm-paymethod-icons-wrap">
             <button type="button" id="pm-btn-cash" class="dep-cur-pill" onclick="togglePayMethod('cash')" title="Готівка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
             <button type="button" id="pm-btn-card" class="dep-cur-pill" onclick="togglePayMethod('card')" title="Картка"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
+            <button type="button" id="pm-btn-mixed" class="dep-cur-pill" onclick="togglePayMethod('mixed')" title="Змішана оплата (готівка + картка + валюта)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">
+                <rect x="9" y="2.75" width="13" height="8" rx="1.25"/>
+                <circle cx="15.5" cy="6.75" r="1.75"/>
+                <rect x="2" y="12.75" width="13" height="8.5" rx="1.25"/>
+                <path d="M2 15.75h13M4.5 18.75h3"/>
+              </svg>
+            </button>
           </div>
           <button type="button" id="bm-bank-account-label" style="display:none;width:30px;height:30px;border-radius:6px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;align-items:center;justify-content:center;cursor:default;padding:0" title="Банківський рахунок"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10.5M20 21V10.5M2.25 10.5h19.5L12 3 2.25 10.5ZM8 21v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6"/></svg></button>
         </div>
@@ -2949,6 +2960,9 @@ input.dm-pf-val.tel{font-size:14px;}
             </button>
           </div>
         </div>
+      </div>
+      <div id="bm-pay-mixed-note-wrap" style="display:none;margin-top:8px">
+        <input type="text" id="bm-pay-mixed-note" placeholder="Вартість, змішана оплата. Напр.: 15 000₴ карткою + 50$ готівкою" style="width:100%;padding:7px 10px;border:1px solid #f0d060;background:#fffbeb;border-radius:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;text-align:right;box-sizing:border-box">
       </div>
       <div id="bm-deposit-mixed-note-wrap" style="display:none;margin-top:8px">
         <input type="text" id="bm-deposit-mixed-note" placeholder="Напр.: 15 000₴ карткою + 50$ готівкою" style="width:100%;padding:7px 10px;border:1px solid #f0d060;background:#fffbeb;border-radius:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;outline:none;text-align:right;box-sizing:border-box">
@@ -3892,7 +3906,7 @@ function arrangeFinRowForViewport(){
       mobileRow = document.createElement('div');
       mobileRow.id = 'bm-deposit-mobile-row';
       mobileRow.className = 'fin-row';
-      mobileRow.style.cssText = 'justify-content:space-between;flex-wrap:nowrap;gap:6px;margin-top:8px';
+      mobileRow.style.cssText = 'justify-content:space-between;flex-wrap:nowrap;gap:8px;margin-top:8px';
       mainRow.parentNode.insertBefore(mobileRow, mainRow.nextSibling);
     }
     // One line below the main row: Курс · Депозит · deposit payment icons
@@ -5729,6 +5743,7 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-deposit').value='';
   setDepositCur('$');
   setPayMethod(null);          // no default: manager picks the payment form (mandatory once status = «В оренді»)
+  if(document.getElementById('bm-pay-mixed-note')) document.getElementById('bm-pay-mixed-note').value = '';
   setDepositPayMethod(null);
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = '';
   document.getElementById('bm-partial-active').checked = false;
@@ -5902,6 +5917,7 @@ function editBooking(bid){
   document.getElementById('bm-deposit').value=b.deposit?Number(b.deposit).toLocaleString('uk-UA'):'';
   setDepositCur(b.depositCur || b.currency || '$');
   setPayMethod(b.payMethod || null);
+  if(document.getElementById('bm-pay-mixed-note')) document.getElementById('bm-pay-mixed-note').value = b.payMixedNote || '';
   setDepositPayMethod(b.depositPayMethod || null);
   if(document.getElementById('bm-deposit-mixed-note')) document.getElementById('bm-deposit-mixed-note').value = b.depositMixedNote || '';
   document.getElementById('bm-partial-active').checked = !!b.partialPaymentActive;
@@ -6271,6 +6287,7 @@ function saveBooking(){
     deposit:parseThousands(document.getElementById('bm-deposit').value),
     depositCur:(['$','₴','€'].find(c => document.getElementById(c==='$'?'dep-cur-btn-usd':c==='₴'?'dep-cur-btn-uah':'dep-cur-btn-eur')?.classList.contains('active')) || '$'),
     payMethod: bmPayMethod,
+    payMixedNote: bmPayMethod === 'mixed' ? (document.getElementById('bm-pay-mixed-note')?.value.trim() || '') : '',
     partialPaymentActive: document.getElementById('bm-partial-active')?.checked || false,
     amountPaid: currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0),
     payments: currentMainPayments,
@@ -6384,7 +6401,7 @@ const EDIT_HISTORY_FIELD_LABELS = {
   status:'Статус', rate:'Ставка', currency:'Валюта', exchangeRate:'Курс', start:'Дата початку', end:'Дата завершення',
   daysOverride:'Кількість днів', amountPaid:'Оплачено', partialPaymentActive:'Часткова оплата',
   deposit:'Депозит', depositCur:'Валюта депозиту', depositPayMethod:'Спосіб оплати депозиту',
-  startKm:'Пробіг на початку', endKm:'Пробіг в кінці', notes:'Примітки', payMethod:'Спосіб оплати',
+  startKm:'Пробіг на початку', endKm:'Пробіг в кінці', notes:'Примітки', payMethod:'Спосіб оплати', payMixedNote:'Примітка до змішаної оплати',
   clientType:'Тип клієнта', vatRate:'Ставка ПДВ', discount:'Знижка', closed:'Закрито',
   orderCompany:'Компанія замовлення', vehicleId:'Авто',
   // Nested (dot-path) fields within common object-type fields:
@@ -12397,6 +12414,7 @@ function setClientType(type, isUserAction = true){
     vatStatusLabel.textContent = isVat ? 'з ПДВ' : 'без ПДВ';
   }
   if(pmIconsWrap) pmIconsWrap.style.display = isCompany ? 'none' : 'flex';
+  if(isCompany && bmPayMethod === 'mixed') setPayMethod(null);
   if(bankLabel) bankLabel.style.display = isCompany ? 'flex' : 'none';
 
   // Deposit's card icon: show "Банківський рахунок" tooltip for all business
@@ -12945,6 +12963,10 @@ function setPayMethod(method){
   bmPayMethod = method;
   document.getElementById('pm-btn-cash')?.classList.toggle('active', method==='cash');
   document.getElementById('pm-btn-card')?.classList.toggle('active', method==='card');
+  document.getElementById('pm-btn-mixed')?.classList.toggle('active', method==='mixed');
+  // «Змішана»: the amount stays (it drives the totals); the note says how it was paid
+  const noteWrap = document.getElementById('bm-pay-mixed-note-wrap');
+  if(noteWrap) noteWrap.style.display = method==='mixed' ? 'block' : 'none';
 }
 function toggleRateCommentField(){
   const wrap = document.getElementById('bm-rate-comment-wrap');

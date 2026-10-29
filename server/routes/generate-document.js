@@ -382,7 +382,7 @@ const FIELD_CATALOG = [
     const usd = isUah ? (exRate > 0 ? deposit / exRate : 0) : deposit;
     return fmtMoney(Math.round(usd * 100) / 100);
   } },
-  { key: 'pay_method', label: 'Спосіб оплати послуг', get: ctx => ctx.booking.payMethod === 'card' ? 'Банківська картка' : ctx.booking.payMethod === 'cash' ? 'Готівка' : '' },
+  { key: 'pay_method', label: 'Спосіб оплати послуг', get: ctx => ctx.booking.payMethod === 'card' ? 'Банківська картка' : ctx.booking.payMethod === 'cash' ? 'Готівка' : ctx.booking.payMethod === 'mixed' ? 'Змішана оплата' : '' },
   { key: 'deposit_pay_method', label: 'Спосіб оплати застави', get: ctx => ctx.booking.depositPayMethod === 'card' ? 'Банківська картка' : ctx.booking.depositPayMethod === 'cash' ? 'Готівка' : '' },
   { key: 'status_label', label: 'Статус замовлення', get: ctx => ctx.booking.status || '' },
   { key: 'notes', label: 'Нотатки замовлення', get: ctx => ctx.booking.notes || '' },

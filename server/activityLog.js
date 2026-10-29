@@ -96,7 +96,7 @@ const BOOKING_LABELS = {
   'extension.payments': 'Продовження: оплати',
   extensionHistory: 'Історія продовжень', substituteVehicles: 'Підмінні авто',
   rate: 'Тариф', currency: 'Валюта', deposit: 'Застава', depositCur: 'Валюта застави',
-  payMethod: 'Спосіб оплати', partialPaymentActive: 'Часткова оплата', amountPaid: 'Сплачено',
+  payMethod: 'Спосіб оплати', payMixedNote: 'Примітка до змішаної оплати', partialPaymentActive: 'Часткова оплата', amountPaid: 'Сплачено',
   payments: 'Оплати', depositPayMethod: 'Спосіб оплати застави', depositMixedNote: 'Примітка до застави',
   daysOverride: 'Кількість діб', earlyReturn: 'Дострокове повернення', discount: 'Знижка',
   startKm: 'Пробіг на початку', endKm: 'Пробіг в кінці', deductions: 'Утримання', fines: 'Штрафи',
