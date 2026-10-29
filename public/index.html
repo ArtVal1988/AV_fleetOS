@@ -1395,11 +1395,23 @@ textarea{resize:vertical;min-height:56px;}
   #bm-fines-form-wrap > div > div{flex:1 1 calc(50% - 4px)!important;min-width:0!important;width:auto!important;}
   #bm-fines-form-wrap > div > div:nth-child(2){flex:1 1 100%!important;order:3;}
   #bm-fines-form-wrap input.vf-inp{width:100%!important;}
-  /* Extension: fields wrap into two columns instead of a clipped scrolling row */
-  #bm-ext-fields .ext-fin-row{flex-wrap:wrap!important;overflow:visible!important;gap:8px!important;padding-bottom:0!important;}
-  #bm-ext-fields .ext-fin-row > .ext-compact-box{flex:1 1 calc(50% - 4px)!important;width:auto!important;min-width:0!important;margin:0!important;}
-  #bm-ext-fields .ext-fin-row > .ext-compact-box > input,#bm-ext-fields .ext-fin-row .ext-date-short{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box;display:block;}
+  /* Extension: line 1 = З · До · Діб, line 2 = Ціна · Курс · Загалом · Оплачено */
+  #bm-ext-fields .ext-fin-row{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px 6px!important;overflow:visible!important;padding-bottom:0!important;align-items:end!important;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box{width:auto!important;min-width:0!important;margin:0!important;flex:none!important;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(1){grid-column:span 5;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(2){grid-column:span 5;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(3){grid-column:span 2;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(4){grid-column:span 4;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(5){grid-column:span 2;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(6){grid-column:span 3;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box:nth-child(7){grid-column:span 3;}
+  /* «Курс» is hidden for some currencies — then «Ціна» takes its place */
+  #bm-ext-fields .ext-fin-row:has(> #bm-ext-rate2-field[style*="none"]) > .ext-compact-box:nth-child(4){grid-column:span 6;}
+  #bm-ext-fields .ext-fin-row > .ext-compact-box > input,#bm-ext-fields .ext-fin-row .ext-date-short{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box;display:block;padding:0 2px!important;font-size:12px!important;}
   #bm-ext-fields .ext-fin-row .ext-cur-inline-wrap{width:100%;}
+  #bm-ext-fields .ext-fin-row .ext-cur-inline-wrap input{font-size:12px!important;}
+  #bm-ext-fields .ext-fin-row .ext-compact-label{font-size:7.5px;}
+  #bm-ext-fields .ext-fin-row .dep-inline-wrap .dep-cur-pill{padding:3px 2px!important;font-size:10px!important;}
   #bm-ext-timeline,#bm-ext-fields{max-width:100%;}
   /* Payments blocks: use the whole width */
   #bm-main-payments-wrap{margin:8px 0 0!important;}
@@ -9896,12 +9908,13 @@ function toggleExtensionSection(preserveExistingData){
   if(active) extPanelOpen = true;
   if(active){
     block.querySelectorAll('.ext-fin-row').forEach(row => {
-      row.style.setProperty('display', 'flex', 'important');
-      // Phone: the fields wrap into two columns (see the mobile CSS); desktop keeps one scrolling row
+      // Phone: a 12-column grid with two lines (see the mobile CSS); desktop keeps one scrolling row
       if(isMobileViewport()){
+        row.style.removeProperty('display');
         row.style.removeProperty('flex-wrap');
         row.style.removeProperty('overflow-x');
       } else {
+        row.style.setProperty('display', 'flex', 'important');
         row.style.setProperty('flex-wrap', 'nowrap', 'important');
         row.style.setProperty('overflow-x', 'auto', 'important');
       }
