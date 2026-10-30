@@ -16253,7 +16253,7 @@ function renderVehiclesPanelList(){
           <button onclick="moveCategory(${CATEGORIES.indexOf(cat)},1)" ${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'disabled':''} title="Перемістити розділ вниз"
             style="background:none;border:none;padding:0;margin:0;line-height:1;font-size:11px;color:${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'#d1d5db':'#6b7280'};cursor:${CATEGORIES.indexOf(cat)===CATEGORIES.length-1?'default':'pointer'}">▼</button>
         </div>
-        <input type="color" value="${cat.colorHex}" onchange="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}',this.value)"
+        <input type="color" value="${cat.colorHex}" oninput="categoryColorLive('${cat.name.replace(/'/g,"\\'")}',this)" onchange="setVehicleCategoryColor('${cat.name.replace(/'/g,"\\'")}',this.value)"
           title="Обрати колір розділу" style="width:22px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:5px;cursor:pointer;flex-shrink:0">
         <input type="text" value="${cat.name}" onchange="renameVehicleCategory('${cat.name.replace(/'/g,"\\'")}',this.value)"
           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
@@ -16321,6 +16321,16 @@ function mixWithWhite(hex, alpha){
   const mg = Math.round(g*alpha + 255*(1-alpha));
   const mb = Math.round(bch*alpha + 255*(1-alpha));
   return `rgb(${mr},${mg},${mb})`;
+}
+function categoryColorLive(name, el){
+  const cat = CATEGORIES.find(c=>c.name===name);
+  if(!cat) return;
+  cat.colorHex = el.value;
+  clearTimeout(_catColTimer);
+  _catColTimer = setTimeout(()=>{
+    cat.vehicles.forEach(v => { v.categoryColor = cat.colorHex; persistVehicle(v); });
+    render();
+  }, 500);
 }
 function setVehicleCategoryColor(name, colorHex){
   const cat = CATEGORIES.find(c=>c.name===name);
@@ -16608,7 +16618,7 @@ function renderStatusesPanelList(){
   const list = document.getElementById('statuses-list');
   list.innerHTML = STATUSES.map(s => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
-      <input type="color" value="${s.color}" onchange="updateStatusColor('${s.key}',this.value)"
+      <input type="color" value="${s.color}" oninput="statusColorLive('${s.key}',this)" onchange="updateStatusColor('${s.key}',this.value)"
         style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
       <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
         style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${s.color};outline:none">
@@ -16676,6 +16686,19 @@ function updateStatusLabel(key, value){
   renderLegend();
   render();
 }
+// Colour pickers: the native picker (e.g. macOS «Показати кольори» panel) may never
+// fire `change` — only continuous `input` events — so a colour was lost until reload.
+// `oninput` therefore applies + saves the colour (debounced) WITHOUT re-rendering the
+// list (that would destroy the open picker); `onchange` still does the full refresh.
+let _stColTimer = null, _tierColTimer = null, _catColTimer = null;
+function statusColorLive(key, el){
+  const s = SM[key];
+  if(!s) return;
+  s.color = el.value;
+  const t = el.nextElementSibling; if(t && t.tagName === 'INPUT') t.style.color = el.value;
+  clearTimeout(_stColTimer);
+  _stColTimer = setTimeout(()=>{ saveStatusesToStorage(); renderLegend(); render(); }, 300);
+}
 function updateStatusColor(key, value){
   const s = SM[key];
   if(!s) return;
@@ -16699,7 +16722,7 @@ function renderClientTiersPanelList(){
     <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
       <input type="text" value="${t.icon}" maxlength="4" onchange="updateClientTierIcon('${t.key}',this.value)"
         style="width:40px;height:32px;border:1px solid #e5e7eb;border-radius:6px;text-align:center;font-size:16px;flex-shrink:0" title="Іконка (emoji)">
-      <input type="color" value="${t.color}" onchange="updateClientTierColor('${t.key}',this.value)"
+      <input type="color" value="${t.color}" oninput="clientTierColorLive('${t.key}',this)" onchange="updateClientTierColor('${t.key}',this.value)"
         style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
       <input type="text" value="${t.label}" onchange="updateClientTierLabel('${t.key}',this.value)"
         style="flex:1;min-width:0;padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;color:${t.color};outline:none">
@@ -16741,6 +16764,14 @@ function updateClientTierLabel(key, value){
   saveClientTiersToStorage();
   renderClientTiersPanelList();
   renderClientsPanelList();
+}
+function clientTierColorLive(key, el){
+  const t = CTM[key];
+  if(!t) return;
+  t.color = el.value;
+  const lbl = el.nextElementSibling; if(lbl && lbl.tagName === 'INPUT') lbl.style.color = el.value;
+  clearTimeout(_tierColTimer);
+  _tierColTimer = setTimeout(()=>{ saveClientTiersToStorage(); renderClientsPanelList(); }, 300);
 }
 function updateClientTierColor(key, value){
   const t = CTM[key];
