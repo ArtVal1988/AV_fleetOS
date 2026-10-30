@@ -3609,8 +3609,21 @@ STATUSES.forEach(s=>{
 });
 // «Повернено з оренди» is a system status (mileage on return is mandatory for
 // it) — add it to a saved list that predates it, right after «Пролонгація».
+// «Повернено з оренди» is recognised by key OR by label: an admin may already have
+// created a status with this name by hand (different key) — it must behave the same.
+function isReturnedKey(k){
+  if(k === 'returned') return true;
+  const lbl = ((SM[k] && SM[k].label) || '').toLowerCase().replace(/\s+/g,' ').trim();
+  return lbl.startsWith('поверн') && lbl.includes('оренд');
+}
 function ensureReturnedStatus(){
-  if(SM['returned']) return false;
+  const existing = STATUSES.filter(x => isReturnedKey(x.key));
+  if(existing.length){
+    // Already there (system one or created by hand): it must be an order-type status.
+    let changed = false;
+    existing.forEach(x => { if(x.isBooking !== true){ x.isBooking = true; changed = true; } });
+    return changed;
+  }
   const st = {key:'returned', label:'Повернено з оренди', color:'#2f9e8f', isBooking:true};
   const i = STATUSES.findIndex(x=>x.key==='extension');
   STATUSES.splice(i>=0 ? i+1 : STATUSES.length, 0, st);
@@ -3620,7 +3633,8 @@ function ensureReturnedStatus(){
 ensureReturnedStatus();
 // Statuses that mean "the car is out with / was just with a client" — the
 // booking-form sections (mileage, extension, fines, deductions) are open for them.
-function isRentedLikeStatus(st){ return st === 'rented' || st === 'returned'; }
+function isRentedLikeStatus(st){ return st === 'rented' || isReturnedKey(st); }
+function isCompanyRequiredStatus(st){ return COMPANY_REQUIRED_STATUSES.includes(st) || isReturnedKey(st); }
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
   apiFetch('PUT','/settings/statuses',{value:STATUSES});
@@ -6299,7 +6313,7 @@ function saveBooking(){
   // No status chosen yet (fresh form) is treated like «В оренді» for the checklist
   // below, so one Save click shows every field that still has to be filled in.
   const strictChecklist = !statusVal || isRentedLikeStatus(statusVal);
-  if(currentStatusIsBooking && (!statusVal || COMPANY_REQUIRED_STATUSES.includes(statusVal)) && !currentOrderCompany){
+  if(currentStatusIsBooking && (!statusVal || isCompanyRequiredStatus(statusVal)) && !currentOrderCompany){
     errors.push({fields:['bm-company-toprent','bm-company-rentplus'], message:'Оберіть компанію: TopRent або RentPlus'});
   }
 
@@ -6348,7 +6362,7 @@ function saveBooking(){
   }
 
   // «Повернено з оренди»: пробіг при поверненні обов'язковий (і не менший за початковий).
-  if(statusVal === 'returned'){
+  if(isReturnedKey(statusVal)){
     const endKmV = parseThousands(document.getElementById('bm-end-km')?.value);
     const startKmV = parseThousands(document.getElementById('bm-start-km')?.value);
     if(!(endKmV > 0)){
@@ -6372,8 +6386,8 @@ function saveBooking(){
     });
   }
 
-  const orderStatuses = ['rented', 'returned', 'res-docs', 'reserved'];
-  if(!statusVal || orderStatuses.includes(statusVal)){
+  const orderStatuses = ['rented', 'res-docs', 'reserved'];
+  if(!statusVal || orderStatuses.includes(statusVal) || isReturnedKey(statusVal)){
     const clientName = document.getElementById('bm-name').value.trim();
     const clientPhone = document.getElementById('bm-phone').value.trim();
     if(!clientName) errors.push({fields:'bm-name', message:'Вкажіть прізвище клієнта'});
@@ -12426,7 +12440,7 @@ function updateCompanyToggleVisibility(){
   const trBtn = document.getElementById('bm-company-toprent');
   const rpBtn = document.getElementById('bm-company-rentplus');
   if(!trBtn || !rpBtn) return;
-  const needsCompany = COMPANY_REQUIRED_STATUSES.includes(status);
+  const needsCompany = isCompanyRequiredStatus(status);
   trBtn.style.display = needsCompany ? '' : 'none';
   rpBtn.style.display = needsCompany ? '' : 'none';
   if(!needsCompany){ currentOrderCompany = null; }
@@ -12478,7 +12492,7 @@ function updateStatusSelectColor(isUserChange){
   updateBmSectionAvailability();
   // Status just switched to «В оренді»: outline EVERY mandatory field that is
   // still empty (the same set saveBooking checks), so nothing is a surprise on save.
-  if(isUserChange === true && sel.value === 'returned'){
+  if(isUserChange === true && isReturnedKey(sel.value)){
     if(!(parseThousands(document.getElementById('bm-end-km')?.value) > 0)){
       highlightField(['bm-end-km']);
       try{ document.getElementById('bm-end-km')?.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
@@ -16629,7 +16643,7 @@ function renderStatusesPanelList(){
             : 'background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280'
         }">${s.isBooking!==false ? '📋 Замовлення' : '🏷️ Лише статус'}</button>
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
-      ${(s.key==='extension'||s.key==='substitute'||s.key==='returned')
+      ${(s.key==='extension'||s.key==='substitute'||isReturnedKey(s.key))
         ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
         : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
@@ -16638,6 +16652,7 @@ function renderStatusesPanelList(){
 function toggleStatusLevel(key){
   const s = SM[key];
   if(!s) return;
+  if(isReturnedKey(key)){ alert('Статус «'+s.label+'» завжди є статусом замовлення (потрібні пробіг при поверненні та компанія).'); return; }
   s.isBooking = s.isBooking===false ? true : false;
   saveStatusesToStorage();
   renderStatusesPanelList();
@@ -16657,8 +16672,8 @@ function addNewStatus(){
 function deleteStatus(key){
   const s = SM[key];
   if(!s) return;
-  if(key==='extension' || key==='substitute' || key==='returned'){
-    alert(key==='returned'
+  if(key==='extension' || key==='substitute' || isReturnedKey(key)){
+    alert(isReturnedKey(key)
       ? `Статус "${s.label}" використовується системою (обов'язковий пробіг при поверненні та нагадування менеджерам) і не може бути видалений.`
       : `Статус "${s.label}" використовується системою для позначення ${key==='extension'?'продовжень оренди':'підмінних авто'} в графіку і не може бути видалений.`);
     return;
@@ -17166,7 +17181,7 @@ window.saveBooking = async function(){
 function updateBookingModalTitle(status){
   const titleEl = document.getElementById('bm-title');
   if(!titleEl) return;
-  if(COMPANY_REQUIRED_STATUSES.includes(status)){
+  if(isCompanyRequiredStatus(status)){
     titleEl.textContent = 'Замовлення';
   } else {
     const st = SM[status];
