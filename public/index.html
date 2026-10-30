@@ -98,6 +98,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);}
 .btn-ghost:hover{color:var(--text);border-color:var(--muted);}
 .topbar-right{display:flex;gap:8px;justify-self:end;}
+#return-banner{align-items:center;gap:7px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;border-radius:8px;padding:7px 12px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;animation:rbPulse 2.4s ease-in-out infinite;}
+#return-banner:hover{background:#fde68a;}
+#return-banner .rb-count{background:#dc2626;color:#fff;border-radius:10px;min-width:18px;height:18px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;}
+@keyframes rbPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.45);}50%{box-shadow:0 0 0 5px rgba(245,158,11,0);}}
+@media (max-width:640px), (max-height:500px) and (orientation:landscape){
+  #return-banner{padding:0 8px;height:34px;border-radius:10px;gap:4px;flex-shrink:0;}
+  #return-banner .rb-text{display:none;}
+}
 .mobile-menu-fab{display:none;}
 
 /* CONTROLS */
@@ -2782,6 +2790,7 @@ input.dm-pf-val.tel{font-size:14px;}
       </div>
     </div><!-- end month wrapper -->
     <div class="topbar-right" style="gap:14px;grid-column:3">
+      <button type="button" id="return-banner" onclick="showReturnReminder()" title="Є замовлення, оренда за якими закінчилась, але статус не змінено на «Повернено з оренди». Натисніть, щоб побачити список." style="display:none"><span class="rb-icon">⏰</span><span class="rb-text">Оновити статус замовлень</span><span class="rb-count" id="return-banner-count">0</span></button>
       <button class="btn btn-primary" id="new-booking-btn" onclick="openBookingModal()"><span class="nb-icon">+</span><span class="nb-text">Замовлення</span></button>
       <div style="width:1px;height:22px;background:var(--border)"></div>
       <div style="display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:5px 12px 5px 6px">
@@ -4530,7 +4539,7 @@ const ICON_SERVICE   = '<svg viewBox="0 0 24 24" width="13" height="13" fill="no
 const ICON_INFO      = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
 const ICON_INSURANCE = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
 const ICON_DOCS      = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
-function render(){renderMonthLabel();renderLegend();renderCalendar();}
+function render(){renderMonthLabel();renderLegend();renderCalendar();try{updateReturnBanner();}catch(e){}}
 
 function renderMonthLabel(){
   const endD=colDate(VIEW_DAYS);
@@ -16013,9 +16022,27 @@ function checkReturnReminder(force){
   const todayYmd = _retLocalYmd(new Date());
   if(!force && _retRemindShownFor === todayYmd) return;
   if(typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return; // не перебиваємо роботу, спробуємо пізніше
-  const rows = getReturnReminderBookings();
-  if(!rows.length) return;
+  if(!getReturnReminderBookings().length) return;
   _retRemindShownFor = todayYmd;
+  showReturnReminder();
+}
+// Кнопка-банер в шапці: показується, поки є замовлення з простроченим поверненням.
+function updateReturnBanner(){
+  const el = document.getElementById('return-banner');
+  if(!el) return;
+  const show = !!(_token && _currentUser && _currentUser.role !== 'accountant');
+  const n = show ? getReturnReminderBookings().length : 0;
+  el.style.display = n > 0 ? 'inline-flex' : 'none';
+  const c = document.getElementById('return-banner-count');
+  if(c) c.textContent = n;
+}
+function showReturnReminder(){
+  const overlay = document.getElementById('return-reminder-overlay');
+  if(!overlay) return;
+  const todayYmd = _retLocalYmd(new Date());
+  const rows = getReturnReminderBookings();
+  updateReturnBanner();
+  if(!rows.length){ overlay.style.display = 'none'; return; }
   const list = document.getElementById('return-reminder-list');
   list.innerHTML = rows.map(({b,end}) => {
     const v = getVehicle(b.vehicleId);
