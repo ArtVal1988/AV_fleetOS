@@ -16635,8 +16635,14 @@ function closeStatusesPanel(){
 }
 function renderStatusesPanelList(){
   const list = document.getElementById('statuses-list');
-  list.innerHTML = STATUSES.map(s => `
+  list.innerHTML = STATUSES.map((s, si) => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:8px;background:#fff">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button type="button" onclick="moveStatus('${s.key}',-1)" ${si===0?'disabled':''} title="Перемістити вгору"
+          style="background:none;border:none;padding:0 2px;margin:0;line-height:1;font-size:13px;color:${si===0?'#d1d5db':'#6b7280'};cursor:${si===0?'default':'pointer'}">▲</button>
+        <button type="button" onclick="moveStatus('${s.key}',1)" ${si===STATUSES.length-1?'disabled':''} title="Перемістити вниз"
+          style="background:none;border:none;padding:0 2px;margin:0;line-height:1;font-size:13px;color:${si===STATUSES.length-1?'#d1d5db':'#6b7280'};cursor:${si===STATUSES.length-1?'default':'pointer'}">▼</button>
+      </div>
       <input type="color" value="${s.color}" oninput="statusColorLive('${s.key}',this)" onchange="statusColorLive('${s.key}',this)"
         style="width:32px;height:32px;border:1px solid #e5e7eb;border-radius:6px;padding:2px;cursor:pointer;flex-shrink:0">
       <input type="text" value="${s.label}" onchange="updateStatusLabel('${s.key}',this.value)"
@@ -16653,6 +16659,16 @@ function renderStatusesPanelList(){
         : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
   `).join('');
+}
+// Admin: change the order of statuses (list in this panel, legend, status dropdown).
+function moveStatus(key, dir){
+  const i = STATUSES.findIndex(x=>x.key===key);
+  const j = i + dir;
+  if(i < 0 || j < 0 || j >= STATUSES.length) return;
+  const tmp = STATUSES[i]; STATUSES[i] = STATUSES[j]; STATUSES[j] = tmp;
+  saveStatusesToStorage();
+  renderStatusesPanelList();
+  renderLegend();
 }
 function toggleStatusLevel(key){
   const s = SM[key];
