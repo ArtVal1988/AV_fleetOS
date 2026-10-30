@@ -3634,7 +3634,13 @@ ensureReturnedStatus();
 // Statuses that mean "the car is out with / was just with a client" — the
 // booking-form sections (mileage, extension, fines, deductions) are open for them.
 function isRentedLikeStatus(st){ return st === 'rented' || isReturnedKey(st); }
-function isCompanyRequiredStatus(st){ return COMPANY_REQUIRED_STATUSES.includes(st) || isReturnedKey(st); }
+// TopRent / RentPlus choice belongs to every order-type status (incl. ones created by hand).
+function isCompanyRequiredStatus(st){
+  if(!st) return false;
+  if(COMPANY_REQUIRED_STATUSES.includes(st) || isReturnedKey(st)) return true;
+  const sm = SM[st];
+  return !!sm && sm.isBooking !== false;
+}
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
   apiFetch('PUT','/settings/statuses',{value:STATUSES});
