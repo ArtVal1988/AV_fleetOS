@@ -3617,13 +3617,12 @@ function isReturnedKey(k){
   return lbl.startsWith('поверн') && lbl.includes('оренд');
 }
 function ensureReturnedStatus(){
-  const existing = STATUSES.filter(x => isReturnedKey(x.key));
-  if(existing.length){
-    // Already there (system one or created by hand): it must be an order-type status.
-    let changed = false;
-    existing.forEach(x => { if(x.isBooking !== true){ x.isBooking = true; changed = true; } });
-    return changed;
+  if(SM['returned']){
+    // The system status itself must stay an order-type status.
+    if(SM['returned'].isBooking !== true){ SM['returned'].isBooking = true; return true; }
+    return false;
   }
+  if(STATUSES.some(x => isReturnedKey(x.key))) return false; // one made by hand — it works the same, no duplicate
   const st = {key:'returned', label:'Повернено з оренди', color:'#2f9e8f', isBooking:true};
   const i = STATUSES.findIndex(x=>x.key==='extension');
   STATUSES.splice(i>=0 ? i+1 : STATUSES.length, 0, st);
@@ -16649,7 +16648,7 @@ function renderStatusesPanelList(){
             : 'background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280'
         }">${s.isBooking!==false ? '📋 Замовлення' : '🏷️ Лише статус'}</button>
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
-      ${(s.key==='extension'||s.key==='substitute'||isReturnedKey(s.key))
+      ${(s.key==='extension'||s.key==='substitute'||s.key==='returned')
         ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
         : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
@@ -16658,7 +16657,7 @@ function renderStatusesPanelList(){
 function toggleStatusLevel(key){
   const s = SM[key];
   if(!s) return;
-  if(isReturnedKey(key)){ alert('Статус «'+s.label+'» завжди є статусом замовлення (потрібні пробіг при поверненні та компанія).'); return; }
+  if(key==='returned'){ alert('Статус «'+s.label+'» завжди є статусом замовлення (потрібні пробіг при поверненні та компанія).'); return; }
   s.isBooking = s.isBooking===false ? true : false;
   saveStatusesToStorage();
   renderStatusesPanelList();
@@ -16678,17 +16677,24 @@ function addNewStatus(){
 function deleteStatus(key){
   const s = SM[key];
   if(!s) return;
-  if(key==='extension' || key==='substitute' || isReturnedKey(key)){
-    alert(isReturnedKey(key)
+  if(key==='extension' || key==='substitute' || key==='returned'){
+    alert(key==='returned'
       ? `Статус "${s.label}" використовується системою (обов'язковий пробіг при поверненні та нагадування менеджерам) і не може бути видалений.`
       : `Статус "${s.label}" використовується системою для позначення ${key==='extension'?'продовжень оренди':'підмінних авто'} в графіку і не може бути видалений.`);
     return;
   }
+  // A hand-made «Повернено з оренди» duplicate: its orders are moved to the system status.
+  const moveToReturned = isReturnedKey(key) && !!SM['returned'];
   const inUse = bookings.filter(b=>b.status===key).length;
-  const msg = inUse>0
+  const msg = (moveToReturned && inUse>0)
+    ? `Статус "${s.label}" дублює системний «${SM['returned'].label}». Видалити його? ${inUse} замовлень з цим статусом буде автоматично переведено на системний «${SM['returned'].label}».`
+    : inUse>0
     ? `Статус "${s.label}" використовується у ${inUse} замовленн${inUse===1?'і':inUse<5?'ях':'ях'}. Видалити його все одно? Ці замовлення залишаться зі старим статусом у даних, але він більше не відображатиметься у списку.`
     : `Видалити статус "${s.label}"?`;
   if(!confirm(msg)) return;
+  if(moveToReturned){
+    bookings.filter(b=>b.status===key).forEach(b => { b.status = 'returned'; try{ apiFetch('PUT','/bookings/'+b.id, b); }catch(e){} });
+  }
   const idx = STATUSES.findIndex(x=>x.key===key);
   if(idx!==-1) STATUSES.splice(idx,1);
   delete SM[key];
