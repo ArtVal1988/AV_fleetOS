@@ -297,7 +297,7 @@ function mapValues(changes, label, fn) {
   return changes;
 }
 const STATUS_LABELS = {
-  rented: 'В оренді', extension: 'Пролонгація без $', 'res-docs': 'Резерв + документи', reserved: 'Резерв',
+  rented: 'В оренді', extension: 'Пролонгація без $', returned: 'Повернено з оренди', 'res-docs': 'Резерв + документи', reserved: 'Резерв',
   repair: 'В ремонті', investor: 'У Інвестора', storage: 'На зберіганні', personal: 'Особисте використання',
   substitute: 'Підмінне авто',
 };

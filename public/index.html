@@ -2571,6 +2571,18 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
   </div>
 </div>
+<div id="return-reminder-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:940;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+  <div style="background:#fff;border-radius:14px;width:720px;max-width:calc(100vw - 24px);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div style="padding:16px 22px 12px;border-bottom:1px solid #e5e7eb;background:#fffbeb">
+      <div style="font-size:15px;font-weight:700;color:#92400e">⏰ Потрібно оновити статус замовлень</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:3px">Оренда за цими замовленнями вже закінчилась, але статус не змінено на «Повернено з оренди». Відкрийте замовлення, внесіть пробіг при поверненні та змініть статус.</div>
+    </div>
+    <div id="return-reminder-list" style="padding:14px 22px;overflow-y:auto;flex:1"></div>
+    <div style="padding:12px 22px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end">
+      <button onclick="closeReturnReminder()" style="background:#fff;border:1px solid #e5e7eb;color:#374151;border-radius:7px;padding:9px 18px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Закрити</button>
+    </div>
+  </div>
+</div>
 <div id="al-snapshot-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:620;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:16px;width:640px;max-width:calc(100vw - 24px);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">
     <div style="padding:22px 28px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2">
@@ -3562,6 +3574,7 @@ let MILEAGE_STALE_DAYS = 7;
 const STATUSES=[
   {key:'rented',    label:'В оренді',             color:'#f06060', isBooking:true},
   {key:'extension', label:'Пролонгація без $',    color:'#9090a8', isBooking:true},
+  {key:'returned',  label:'Повернено з оренди',   color:'#2f9e8f', isBooking:true},
   {key:'res-docs',  label:'Резерв + документи',   color:'#8060f0', isBooking:true},
   {key:'reserved',  label:'Резерв',               color:'#60f0a0', isBooking:true},
   {key:'repair',    label:'В ремонті',             color:'#f09060', isBooking:false},
@@ -3585,6 +3598,20 @@ try{
 STATUSES.forEach(s=>{
   if(s.isBooking===undefined) s.isBooking = !['repair','investor','storage','personal'].includes(s.key);
 });
+// «Повернено з оренди» is a system status (mileage on return is mandatory for
+// it) — add it to a saved list that predates it, right after «Пролонгація».
+function ensureReturnedStatus(){
+  if(SM['returned']) return false;
+  const st = {key:'returned', label:'Повернено з оренди', color:'#2f9e8f', isBooking:true};
+  const i = STATUSES.findIndex(x=>x.key==='extension');
+  STATUSES.splice(i>=0 ? i+1 : STATUSES.length, 0, st);
+  SM['returned'] = st;
+  return true;
+}
+ensureReturnedStatus();
+// Statuses that mean "the car is out with / was just with a client" — the
+// booking-form sections (mileage, extension, fines, deductions) are open for them.
+function isRentedLikeStatus(st){ return st === 'rented' || st === 'returned'; }
 function saveStatusesToStorage(){
   try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
   apiFetch('PUT','/settings/statuses',{value:STATUSES});
@@ -6262,7 +6289,7 @@ function saveBooking(){
   if(!statusVal) errors.push({fields:'bm-status', message:'Оберіть статус замовлення'});
   // No status chosen yet (fresh form) is treated like «В оренді» for the checklist
   // below, so one Save click shows every field that still has to be filled in.
-  const strictChecklist = !statusVal || statusVal === 'rented';
+  const strictChecklist = !statusVal || isRentedLikeStatus(statusVal);
   if(currentStatusIsBooking && (!statusVal || COMPANY_REQUIRED_STATUSES.includes(statusVal)) && !currentOrderCompany){
     errors.push({fields:['bm-company-toprent','bm-company-rentplus'], message:'Оберіть компанію: TopRent або RentPlus'});
   }
@@ -6308,7 +6335,18 @@ function saveBooking(){
   // so it could never already have a value at the moment the status change
   // was attempted).
   if(strictChecklist && !(parseThousands(document.getElementById('bm-start-km')?.value) > 0)){
-    errors.push({fields:'bm-start-km', message: statusVal ? 'Так як статус було змінено на "В оренді" - необхідно вказати пробіг.' : 'Вкажіть пробіг на початку'});
+    errors.push({fields:'bm-start-km', message: statusVal ? 'Так як статус було змінено на "'+(SM[statusVal]?.label||'В оренді')+'" - необхідно вказати пробіг на початку оренди.' : 'Вкажіть пробіг на початку'});
+  }
+
+  // «Повернено з оренди»: пробіг при поверненні обов'язковий (і не менший за початковий).
+  if(statusVal === 'returned'){
+    const endKmV = parseThousands(document.getElementById('bm-end-km')?.value);
+    const startKmV = parseThousands(document.getElementById('bm-start-km')?.value);
+    if(!(endKmV > 0)){
+      errors.push({fields:'bm-end-km', message:'Так як статус змінено на "Повернено з оренди" - необхідно вказати пробіг при поверненні.'});
+    } else if(startKmV > 0 && endKmV < startKmV){
+      errors.push({fields:'bm-end-km', message:'Пробіг при поверненні не може бути меншим за пробіг на початку оренди.'});
+    }
   }
 
   // Every recorded substitute vehicle period must have its own exchange
@@ -6325,7 +6363,7 @@ function saveBooking(){
     });
   }
 
-  const orderStatuses = ['rented', 'res-docs', 'reserved'];
+  const orderStatuses = ['rented', 'returned', 'res-docs', 'reserved'];
   if(!statusVal || orderStatuses.includes(statusVal)){
     const clientName = document.getElementById('bm-name').value.trim();
     const clientPhone = document.getElementById('bm-phone').value.trim();
@@ -9544,7 +9582,7 @@ function autoOpenBmSectionsWithData(){
 }
 function updateBmSectionAvailability(){
   const currentStatus = document.getElementById('bm-status')?.value;
-  const isRented = currentStatus === 'rented';
+  const isRented = isRentedLikeStatus(currentStatus);
   ['bm-sec-btn-ext','bm-sec-btn-sub','bm-sec-btn-fine','bm-sec-btn-rep','bm-sec-btn-ded'].forEach(id => {
     document.getElementById(id)?.classList.toggle('bm-sec-locked', !isRented);
   });
@@ -9555,7 +9593,7 @@ function updateBmSectionAvailability(){
 }
 function activateBmSection(id){
   const currentStatus = document.getElementById('bm-status')?.value;
-  if(currentStatus !== 'rented'){
+  if(!isRentedLikeStatus(currentStatus)){
     alert('Спочатку встановіть статус "В оренді" — доти ці розділи недоступні.');
     return;
   }
@@ -12369,7 +12407,7 @@ function openVehiclePanel(vid, tab){
 
 /* ── CLIENT TYPE & VAT ── */
 let currentOrderCompany = null;
-const COMPANY_REQUIRED_STATUSES = ['rented', 'extension', 'res-docs', 'reserved'];
+const COMPANY_REQUIRED_STATUSES = ['rented', 'returned', 'extension', 'res-docs', 'reserved'];
 function setOrderCompany(company){
   currentOrderCompany = currentOrderCompany === company ? null : company; // clicking the active one deselects it
   renderOrderCompanyToggle();
@@ -12402,14 +12440,14 @@ function renderOrderCompanyToggle(){
 function rentedRequiredMissing(){
   const out = [];
   const stNow = document.getElementById('bm-status')?.value;
-  if(stNow && stNow !== 'rented') return out; // empty status = fresh form: show the full checklist
+  if(stNow && !isRentedLikeStatus(stNow)) return out; // empty status = fresh form: show the full checklist
   const isCompany = document.getElementById('bm-client-type')?.value !== 'individual';
   if((document.getElementById('bm-rate')?.value || '').trim() === '')
-    out.push({field:'bm-rate-wrap', message:'Вкажіть вартість оренди — обов\'язково для статусу "В оренді".'});
+    out.push({field:'bm-rate-wrap', message:'Вкажіть вартість оренди — обов\'язково для статусу "В оренді" / "Повернено з оренди".'});
   if(!isCompany && !bmPayMethod)
-    out.push({field:'bm-paymethod-icons-wrap', message:'Оберіть форму розрахунку (готівка / картка) — обов\'язково для статусу "В оренді".'});
+    out.push({field:'bm-paymethod-icons-wrap', message:'Оберіть форму розрахунку (готівка / картка) — обов\'язково для статусу "В оренді" / "Повернено з оренди".'});
   if(!bmDepositPayMethod)
-    out.push({field:'bm-deposit-paymethod-icons-wrap', message:'Оберіть форму внесення депозиту — обов\'язково для статусу "В оренді".'});
+    out.push({field:'bm-deposit-paymethod-icons-wrap', message:'Оберіть форму внесення депозиту — обов\'язково для статусу "В оренді" / "Повернено з оренди".'});
   return out;
 }
 function updateStatusSelectColor(isUserChange){
@@ -12431,6 +12469,12 @@ function updateStatusSelectColor(isUserChange){
   updateBmSectionAvailability();
   // Status just switched to «В оренді»: outline EVERY mandatory field that is
   // still empty (the same set saveBooking checks), so nothing is a surprise on save.
+  if(isUserChange === true && sel.value === 'returned'){
+    if(!(parseThousands(document.getElementById('bm-end-km')?.value) > 0)){
+      highlightField(['bm-end-km']);
+      try{ document.getElementById('bm-end-km')?.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+    }
+  }
   if(isUserChange === true && sel.value === 'rented'){
     const missing = [];
     if(!parseInt(document.getElementById('bm-vehicle')?.value)) missing.push('bm-vehicle');
@@ -15940,6 +15984,64 @@ async function undoActivityLogEntry(id){
 // When someone else (e.g. a manager) deletes a booking, the admin gets a
 // popup with a "Відновити" button. Restoring reuses the existing activity-log
 // undo endpoint (re-inserts the booking from the snapshot taken at deletion).
+// ── Нагадування: оренда закінчилась, а статус не змінено на «Повернено з оренди» ──
+// Показується всім користувачам (крім бухгалтера) при вході/оновленні сторінки,
+// починаючи з наступного дня після закінчення оренди — доки статус не змінять.
+const RETURN_REMINDER_MAX_AGE_DAYS = 60; // старіші записи (історичні дані) не нагадуємо
+let _retRemindShownFor = null; // дата (YYYY-MM-DD), за яку вікно вже показали в цьому завантаженні
+function _retLocalYmd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _retRentalEnd(b){
+  let e = b.end || '';
+  (b.extensionHistory||[]).forEach(h => { if(h.toDate && h.toDate > e) e = h.toDate; });
+  if(b.extension && b.extension.active && b.extension.toDate > e) e = b.extension.toDate;
+  return e;
+}
+function getReturnReminderBookings(){
+  const todayYmd = _retLocalYmd(new Date());
+  const minD = new Date(); minD.setDate(minD.getDate() - RETURN_REMINDER_MAX_AGE_DAYS);
+  const minYmd = _retLocalYmd(minD);
+  return bookings
+    .filter(b => (b.status === 'rented' || b.status === 'extension'))
+    .map(b => ({b, end:_retRentalEnd(b)}))
+    .filter(x => x.end && x.end < todayYmd && x.end >= minYmd)
+    .sort((a,c) => a.end < c.end ? -1 : a.end > c.end ? 1 : 0);
+}
+function checkReturnReminder(force){
+  if(!_token || !_currentUser || _currentUser.role === 'accountant') return;
+  const overlay = document.getElementById('return-reminder-overlay');
+  if(!overlay || overlay.style.display === 'flex') return;
+  const todayYmd = _retLocalYmd(new Date());
+  if(!force && _retRemindShownFor === todayYmd) return;
+  if(typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return; // не перебиваємо роботу, спробуємо пізніше
+  const rows = getReturnReminderBookings();
+  if(!rows.length) return;
+  _retRemindShownFor = todayYmd;
+  const list = document.getElementById('return-reminder-list');
+  list.innerHTML = rows.map(({b,end}) => {
+    const v = getVehicle(b.vehicleId);
+    const days = Math.round((new Date(todayYmd) - new Date(end)) / 86400000);
+    const who = _delEsc((b.customer && (b.customer.company || b.customer.name)) || '—');
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-left:4px solid ${(SM[b.status]||{}).color||'#f06060'};border-radius:8px;margin-bottom:8px;background:#fff;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:13px;font-weight:600;color:#1a1d26">${who}</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px"><b>${_delEsc(v ? v.plate : '—')}</b> ${_delEsc(v ? (v.name||'') : '')}</div>
+        <div style="font-size:11px;color:#b45309;margin-top:2px">Оренда закінчилась ${fmt(end)} · ${days} дн. тому · статус: ${_delEsc((SM[b.status]||{}).label||b.status)}</div>
+      </div>
+      <button onclick="openBookingFromReminder(${b.id})" style="font-size:11px;padding:7px 14px;border-radius:6px;cursor:pointer;border:none;background:#2563eb;color:#fff;font-family:inherit;font-weight:700;flex-shrink:0">Відкрити</button>
+    </div>`;
+  }).join('');
+  overlay.style.display = 'flex';
+}
+function closeReturnReminder(){
+  const o = document.getElementById('return-reminder-overlay');
+  if(o) o.style.display = 'none';
+}
+function openBookingFromReminder(id){
+  closeReturnReminder();
+  editBooking(id);
+}
+setInterval(() => { try{ checkReturnReminder(false); }catch(e){} }, 10 * 60 * 1000); // якщо сторінка відкрита через північ
+
 let _delWatchTimer = null;
 let _pendingDeleted = [];
 let _pendingDeletedMaxId = 0;
@@ -16490,7 +16592,7 @@ function renderStatusesPanelList(){
             : 'background:#f3f4f6;border:1px solid #d1d5db;color:#6b7280'
         }">${s.isBooking!==false ? '📋 Замовлення' : '🏷️ Лише статус'}</button>
       <span style="font-size:10px;color:#9ca3af;font-family:var(--font-mono);flex-shrink:0">${s.key}</span>
-      ${(s.key==='extension'||s.key==='substitute')
+      ${(s.key==='extension'||s.key==='substitute'||s.key==='returned')
         ? '<span title="Системний статус — не можна видалити" style="font-size:10px;color:#9ca3af;flex-shrink:0;padding:0 4px">🔒</span>'
         : '<button onclick="deleteStatus(\''+s.key+'\')" title="Видалити статус" style="background:none;border:1px solid #fecaca;color:#dc2626;border-radius:5px;width:26px;height:26px;flex-shrink:0;cursor:pointer;font-size:12px">✕</button>'}
     </div>
@@ -16518,8 +16620,10 @@ function addNewStatus(){
 function deleteStatus(key){
   const s = SM[key];
   if(!s) return;
-  if(key==='extension' || key==='substitute'){
-    alert(`Статус "${s.label}" використовується системою для позначення ${key==='extension'?'продовжень оренди':'підмінних авто'} в графіку і не може бути видалений.`);
+  if(key==='extension' || key==='substitute' || key==='returned'){
+    alert(key==='returned'
+      ? `Статус "${s.label}" використовується системою (обов'язковий пробіг при поверненні та нагадування менеджерам) і не може бути видалений.`
+      : `Статус "${s.label}" використовується системою для позначення ${key==='extension'?'продовжень оренди':'підмінних авто'} в графіку і не може бути видалений.`);
     return;
   }
   const inUse = bookings.filter(b=>b.status===key).length;
@@ -16959,6 +17063,7 @@ async function syncFromServer(){
       SM['extension'] = extStatus;
       saveStatusesToStorage();
     }
+    if(ensureReturnedStatus()) saveStatusesToStorage();
     // Keep the local cache in sync too, so the app still has something
     // sensible to show offline / before the next server round-trip.
     try{ localStorage.setItem('av_fleetos_statuses', JSON.stringify(STATUSES)); }catch(e){}
@@ -16980,6 +17085,7 @@ async function syncFromServer(){
   }
   ALL_VEHICLES.forEach(v => { if(v.service) v.service.status = computeServiceStatus(v); });
   renderStickers(); render();
+  try{ checkReturnReminder(false); }catch(e){}
 }
 
 // Auto-save bookings to server
