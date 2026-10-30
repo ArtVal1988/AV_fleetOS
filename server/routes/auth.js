@@ -112,7 +112,7 @@ router.post('/login', async (req, res) => {
     const challengeId = crypto.randomBytes(24).toString('hex');
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0].trim();
     const text = ownerMode
-      ? `🔐 AV_fleetOS: запит на вхід\n\nКористувач: ${user.name} (@${user.username})${ip ? '\nIP: ' + ip : ''}\n\nКод: ${code}\n\nДійсний 5 хвилин. Передайте код лише цій людині, якщо ви очікуєте її вхід.`
+      ? `🔐 AV_fleetOS: запит на вхід\n\nКод: ${code}\n\nКористувач: ${user.name} (@${user.username})${ip ? '\nIP: ' + ip : ''}\n\nДійсний 5 хвилин. Передайте код лише цій людині, якщо ви очікуєте її вхід.`
       : `🔐 AV_fleetOS: код входу ${code}\n\nДійсний 5 хвилин. Вхід для «${user.name}»${ip ? ' з IP ' + ip : ''}.\nЯкщо це не ви — нікому не повідомляйте код і змініть пароль.`;
     try {
       await telegram.sendMessage(recipientChat, text);
