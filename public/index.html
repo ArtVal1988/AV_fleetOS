@@ -2579,7 +2579,7 @@ input.dm-pf-val.tel{font-size:14px;}
     </div>
   </div>
 </div>
-<div id="return-reminder-overlay" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:940;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
+<div id="return-reminder-overlay" onmousedown="if(event.target===this)closeReturnReminder()" style="display:none;position:fixed;inset:0;background:rgba(30,35,50,.6);z-index:940;align-items:center;justify-content:center;font-family:'Verdana',sans-serif">
   <div style="background:#fff;border-radius:14px;width:720px;max-width:calc(100vw - 24px);max-height:86vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
     <div style="padding:16px 22px 12px;border-bottom:1px solid #e5e7eb;background:#fffbeb">
       <div style="font-size:15px;font-weight:700;color:#92400e">⏰ Потрібно оновити статус замовлень</div>
@@ -17577,6 +17577,7 @@ document.addEventListener('keydown', e => {
   else if(document.getElementById('spare-parts-panel-overlay')?.style.display==='flex') closeSparePartsPanel();
   else if(document.getElementById('doctemplates-panel-overlay')?.style.display==='flex') closeDocTemplatesPanel();
   else if(document.getElementById('orders-panel-overlay')?.style.display==='flex') closeOrdersPanel();
+  else if(document.getElementById('return-reminder-overlay')?.style.display==='flex') closeReturnReminder();
   else if(document.getElementById('docarchive-panel-overlay')?.style.display==='flex') closeDocArchivePanel();
   else if(document.getElementById('activitylog-panel-overlay')?.style.display==='flex') closeActivityLogPanel();
   // z-index 480
