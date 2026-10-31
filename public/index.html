@@ -2853,7 +2853,7 @@ input.dm-pf-val.tel{font-size:14px;}
 <!-- TOOLTIP -->
 <div class="tooltip-mobile-backdrop" id="tooltip-mobile-backdrop" onclick="closeMobileTooltip()"></div>
 <div class="tooltip" id="tooltip"></div>
-<div id="vehicle-specs-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:260px;font-family:'Verdana',sans-serif;font-size:12px;max-height:calc(100vh - 24px);overflow-y:auto"></div>
+<div id="vehicle-specs-popup" style="display:none;position:fixed;z-index:400;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:260px;font-family:'Verdana',sans-serif;font-size:12px;max-height:calc(100vh - 24px);overflow-y:auto"></div>
 <div id="sticker-fulltext-popup" style="display:none;position:fixed;z-index:250;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;width:240px;font-family:'Verdana',sans-serif;font-size:12px"></div>
 
 <!-- MINI PICKER (empty cell) -->
@@ -2864,7 +2864,10 @@ input.dm-pf-val.tel{font-size:14px;}
 <div class="modal-overlay" id="booking-modal">
 <div class="modal">
   <div class="modal-head">
-    <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="updateKmDiff();updatePartnerPercentVisibility()"></select>
+    <div style="display:flex;align-items:center;gap:6px;min-width:0">
+      <select id="bm-vehicle" class="bm-head-select veh-plate-badge" onchange="updateKmDiff();updatePartnerPercentVisibility()"></select>
+      <button type="button" id="bm-veh-info" class="veh-act-btn" title="Характеристики авто" onclick="openVehicleSpecsFromBooking(event)" style="color:#9ca3af;border-color:#9ca3af;flex-shrink:0"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+    </div>
     <div style="display:flex;align-items:center;gap:8px">
       <button type="button" id="bm-company-toprent" onclick="setOrderCompany('toprent')" style="border:1px solid #e5e7eb;border-radius:5px;padding:4px 8px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;background:#f7f8fb;color:#9ca3af"><span class="bmc-full">TopRent</span><span class="bmc-short">TR</span></button>
       <div class="modal-title" id="bm-title">Замовлення</div>
@@ -7663,6 +7666,12 @@ const SPEC_ROWS = [
   ['drive', '🧭'], ['fuel', '⛽'], ['consumption', '📊', ' л/100км'],
   ['climate', '❄️']
 ];
+// «і» in the booking-form header: same specs popup as in the calendar, for the chosen car.
+function openVehicleSpecsFromBooking(e){
+  const vid = parseInt(document.getElementById('bm-vehicle')?.value);
+  if(!vid){ e.stopPropagation(); alert('Спочатку оберіть авто.'); return; }
+  showVehicleSpecs(e, vid);
+}
 async function showVehicleSpecs(e, vid){
   e.stopPropagation();
   const popup = document.getElementById('vehicle-specs-popup');
