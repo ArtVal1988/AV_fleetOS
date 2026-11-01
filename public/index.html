@@ -850,6 +850,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* VEHICLE ACTION ICONS */
 .veh-actions{display:flex;gap:3px;flex-shrink:0;}
 #specs-quick-actions{display:none;}
+.rep-th{position:sticky;top:0;z-index:1;background:#fff;box-shadow:0 2px 0 #e5e7eb;}
 .veh-act-btn{position:relative;width:22px;height:22px;border:1px solid #e5e7eb;border-radius:4px;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s;}
 .veh-act-btn:hover{background:#fff;border-color:#d1d5db;box-shadow:0 1px 4px rgba(0,0,0,.1);transform:translateY(-1px);}
 .veh-act-btn svg{display:block;pointer-events:none;}
@@ -8935,11 +8936,11 @@ function renderReportResults(rows){
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="border-bottom:2px solid #e5e7eb;text-align:left">
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;width:350px;border-right:1px solid #e2e5eb">Авто</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Днів в оренді</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Середня вартість</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Валовий дохід</th>
-          <th style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Прогнозований<br>дохід TR (≈ 30%)</th>
+          <th class="rep-th" style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;width:350px;border-right:1px solid #e2e5eb">Авто</th>
+          <th class="rep-th" style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Днів в оренді</th>
+          <th class="rep-th" style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Середня вартість</th>
+          <th class="rep-th" style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center;border-right:1px solid #e2e5eb">Валовий дохід</th>
+          <th class="rep-th" style="padding:8px 6px;color:#6b7280;font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:center">Прогнозований<br>дохід TR (≈ 30%)</th>
         </tr>
       </thead>
       <tbody>
@@ -8980,6 +8981,11 @@ function renderReportResults(rows){
   csvBtn.style.display = 'inline-block';
   document.getElementById('rep-grid-csv-btn').style.display = 'inline-block';
   document.getElementById('rep-xlsx-btn').style.display = 'inline-block';
+  // Table headings stay pinned right under the panel's own sticky title bar while
+  // scrolling a long list of cars.
+  const repHead = document.querySelector('#report-panel-overlay > div > div:first-child');
+  const repHeadH = repHead ? repHead.offsetHeight : 0;
+  wrap.querySelectorAll('thead th.rep-th').forEach(th => { th.style.top = repHeadH + 'px'; });
 }
 function exportProfitabilityCSV(){
   if(!lastReportData) return;
