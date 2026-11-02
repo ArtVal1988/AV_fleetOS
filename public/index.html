@@ -8041,7 +8041,7 @@ function renderStickerFullTextContent(s){
     </div>`).join('') : '<div style="font-size:10px;color:#9ca3af;padding:6px 0;border-top:1px solid #f0f2f5">Ще немає коментарів</div>';
 
   popup.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e5e7eb">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
       <div style="font-size:12px;font-weight:800;color:#1a1d26">${(s.title||'').replace(/</g,'&lt;')}</div>
       <button onclick="document.getElementById('sticker-fulltext-popup').style.display='none'" style="background:none;border:none;color:#9ca3af;cursor:pointer;font-size:14px;padding:0 2px">✕</button>
     </div>
