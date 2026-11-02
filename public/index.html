@@ -16039,6 +16039,15 @@ function _retRentalEnd(b){
   if(b.extension && b.extension.active && b.extension.toDate > e) e = b.extension.toDate;
   return e;
 }
+// The car is in repair right now (a «В ремонті» entry in the calendar covers today, or the
+// booking itself has a repair pause running): the client is long gone but the car cannot be
+// «returned» into circulation yet — no reminder until the repair is over.
+function _retCarInRepairNow(b, todayYmd){
+  if(b.repairPause && b.repairPause.fromDate && b.repairPause.toDate
+     && b.repairPause.fromDate <= todayYmd && b.repairPause.toDate >= todayYmd) return true;
+  return bookings.some(x => x.id !== b.id && x.vehicleId === b.vehicleId && x.status === 'repair'
+    && x.start && x.start <= todayYmd && getEffectiveEnd(x) >= todayYmd);
+}
 function getReturnReminderBookings(){
   const todayYmd = _retLocalYmd(new Date());
   const minD = new Date(); minD.setDate(minD.getDate() - RETURN_REMINDER_MAX_AGE_DAYS);
@@ -16047,6 +16056,7 @@ function getReturnReminderBookings(){
     .filter(b => (b.status === 'rented' || b.status === 'extension'))
     .map(b => ({b, end:_retRentalEnd(b)}))
     .filter(x => x.end && x.end < todayYmd && x.end >= minYmd)
+    .filter(x => !_retCarInRepairNow(x.b, todayYmd))
     .sort((a,c) => a.end < c.end ? -1 : a.end > c.end ? 1 : 0);
 }
 function checkReturnReminder(force){
