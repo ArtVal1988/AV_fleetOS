@@ -10480,10 +10480,15 @@ function toggleExtPaymentForm(){
 function editExtPayment(i){
   extEditingPaymentIndex = i;
   extPaymentFormOpen = true;
-  renderExtPaymentsColumn();
   const p = currentExtPayments[i];
+  const isUah = p.currency === '₴' && p.amountUah > 0 && p.rate > 0;
+  extNewPaymentCur = isUah ? '₴' : '$';
+  renderExtPaymentsColumn();
   const amountEl = document.getElementById('ext-new-payment-amount');
-  if(amountEl) amountEl.value = p.amount ? p.amount.toLocaleString('uk-UA') : '';
+  if(amountEl) amountEl.value = isUah ? p.amountUah.toLocaleString('uk-UA') : (p.amount ? p.amount.toLocaleString('uk-UA') : '');
+  const rateEl = document.getElementById('ext-new-payment-rate');
+  if(rateEl && isUah) rateEl.value = String(p.rate).replace('.',',');
+  extPayEqUpdate();
   const dateEl = document.getElementById('ext-new-payment-date');
   if(dateEl) dateEl.value = p.date || '';
   setExtNewPaymentMethod(p.method || 'cash');
@@ -10496,9 +10501,11 @@ function renderExtPaymentsColumn(){
   const paid = currentExtPayments.reduce((s,p)=>s+(p.amount||0), 0);
   const isFullyPaid = total > 0 && paid >= total;
   const list = currentExtPayments.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px${i===extEditingPaymentIndex?';background:#eff6ff':''}">
-      <span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>
-      <span style="color:#9ca3af;flex:1">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px;flex-wrap:wrap${i===extEditingPaymentIndex?';background:#eff6ff':''}">
+      ${(p.currency==='₴' && p.amountUah>0 && p.rate>0 && cur==='$')
+        ? `<span style="font-weight:700;color:${curColor('₴')}">${fmtSmart(p.amountUah)} ₴</span><span style="color:#6b7280;font-size:10.5px">курс ${fmtSmart(p.rate)}</span><span style="font-weight:700;color:${curColor('$')}">≈ ${fmtSmart(p.amount)} $</span>`
+        : `<span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>`}
+      <span style="color:#9ca3af;flex:1;min-width:70px">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
       <button type="button" onclick="editExtPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`).join('');
@@ -10516,8 +10523,16 @@ function renderExtPaymentsColumn(){
     <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
       <div style="width:90px">
         <label class="vf-lbl">Сума</label>
-        <input type="text" inputmode="decimal" id="ext-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this)">
+        <input type="text" inputmode="decimal" id="ext-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this);extPayEqUpdate()">
       </div>
+      ${cur==='$' ? `<div style="display:flex;gap:2px;height:32px;align-items:center">
+        <button type="button" id="ext-npc-usd" class="dep-cur-pill${extNewPaymentCur==='$'?' active':''}" onclick="setExtNewPaymentCur('$')" title="Оплата в доларах" style="width:28px;height:32px;display:flex;align-items:center;justify-content:center;padding:0;font-weight:700">$</button>
+        <button type="button" id="ext-npc-uah" class="dep-cur-pill${extNewPaymentCur==='₴'?' active':''}" onclick="setExtNewPaymentCur('₴')" title="Оплата в гривнях (зі своїм курсом)" style="width:28px;height:32px;display:flex;align-items:center;justify-content:center;padding:0;font-weight:700">₴</button>
+      </div>
+      <div id="ext-new-payment-rate-wrap" style="width:56px;display:${extNewPaymentCur==='₴'?'block':'none'}">
+        <label class="vf-lbl">Курс</label>
+        <input type="text" inputmode="decimal" id="ext-new-payment-rate" class="vf-inp no-spinner" style="width:100%;height:32px;text-align:center;padding:0 3px" placeholder="00,00" oninput="formatExchangeRateInput(this);extPayEqUpdate()">
+      </div>` : ''}
       <div style="width:100px">
         <label class="vf-lbl">Дата</label>
         <input type="date" id="ext-new-payment-date" class="custom-dp-trigger vf-inp" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="width:100%;height:32px;box-sizing:border-box">
@@ -10527,10 +10542,49 @@ function renderExtPaymentsColumn(){
         <button type="button" id="ext-pm-btn-card" class="dep-cur-pill" onclick="setExtNewPaymentMethod('card')" title="Картка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
       </div>
       <button type="button" onclick="addExtPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${isEditing?'Зберегти':'Додати'}</button>
-    </div>`:''}
+    </div>
+    <div id="ext-new-payment-eq" style="display:none;margin-top:5px;font-size:12px;font-weight:700;color:${curColor('$')}"></div>`:''}
   `;
   const dateEl = document.getElementById('ext-new-payment-date');
   if(dateEl && !isEditing) dateEl.value = new Date().toISOString().slice(0,10);
+  if(showForm && extNewPaymentCur === '₴' && !isEditing) extPayFillDefaultRate();
+  if(showForm) extPayEqUpdate();
+}
+// Payment currency for the extension payment form: '$' (the extension's own currency) or
+// '₴' — a hryvnia payment with its OWN exchange rate (installments can be paid at different
+// rates). A ₴ payment is stored with amount = its dollar equivalent (so every total/debt
+// calculation keeps working) plus currency:'₴', amountUah, rate.
+let extNewPaymentCur = '$';
+function extPayDefaultRate(){
+  const r = parseFloat((document.getElementById('bm-ext-rate2')?.value || '').replace(',','.'))
+    || parseFloat((document.getElementById('bm-exchange-rate')?.value || '').replace(',','.')) || 0;
+  return r > 0 ? String(r).replace('.',',') : '';
+}
+function extPayFillDefaultRate(){
+  const el = document.getElementById('ext-new-payment-rate');
+  if(el && !el.value) el.value = extPayDefaultRate();
+}
+function setExtNewPaymentCur(c){
+  extNewPaymentCur = c;
+  document.getElementById('ext-npc-usd')?.classList.toggle('active', c==='$');
+  document.getElementById('ext-npc-uah')?.classList.toggle('active', c==='₴');
+  const wrap = document.getElementById('ext-new-payment-rate-wrap');
+  if(wrap) wrap.style.display = c==='₴' ? 'block' : 'none';
+  if(c==='₴') extPayFillDefaultRate();
+  const amt = document.getElementById('ext-new-payment-amount');
+  if(amt) formatExtAmountInput(amt);
+  extPayEqUpdate();
+}
+function extPayEqUpdate(){
+  const eq = document.getElementById('ext-new-payment-eq');
+  if(!eq) return;
+  if(extNewPaymentCur !== '₴'){ eq.style.display = 'none'; return; }
+  const amt = parseThousands(document.getElementById('ext-new-payment-amount')?.value);
+  const rate = parseFloat((document.getElementById('ext-new-payment-rate')?.value || '').replace(',','.')) || 0;
+  eq.style.display = 'block';
+  eq.textContent = (amt > 0 && rate > 0)
+    ? '≈ ' + fmtSmart(Math.round(amt / rate * 100) / 100) + ' $ (за курсом ' + fmtSmart(rate) + ')'
+    : '≈ — $ (вкажіть суму і курс)';
 }
 let extNewPaymentMethod = 'cash';
 function setExtNewPaymentMethod(m){
@@ -10541,10 +10595,18 @@ function setExtNewPaymentMethod(m){
 function addExtPayment(){
   const amountEl = document.getElementById('ext-new-payment-amount');
   const dateEl = document.getElementById('ext-new-payment-date');
-  const amount = parseThousands(amountEl.value);
+  let amount = parseThousands(amountEl.value);
   if(!amount || amount <= 0){ alert('Вкажіть суму платежу'); return; }
   const total = parseThousands(document.getElementById('bm-ext-total').value);
   const cur = document.getElementById('bm-ext-currency')?.value || '$';
+  // ₴ payment against a $ extension: convert by this payment's own rate.
+  let uahInfo = null;
+  if(cur === '$' && extNewPaymentCur === '₴'){
+    const rate = parseFloat((document.getElementById('ext-new-payment-rate')?.value || '').replace(',','.')) || 0;
+    if(!(rate > 0)){ alert('Вкажіть курс для оплати в гривнях'); return; }
+    uahInfo = { currency:'₴', amountUah: amount, rate };
+    amount = Math.round(amount / rate * 100) / 100;
+  }
   const isEditing = extEditingPaymentIndex !== null;
   const otherPaymentsTotal = currentExtPayments.reduce((s,p,i)=>i===extEditingPaymentIndex?s:s+(p.amount||0), 0);
   if(total > 0 && otherPaymentsTotal + amount > total + 0.01){
@@ -10558,12 +10620,13 @@ function addExtPayment(){
     } else if(!confirm(`Сума перевищить загальну вартість продовження (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
   }
   if(isEditing){
-    currentExtPayments[extEditingPaymentIndex] = { amount, date: dateEl.value || '', method: extNewPaymentMethod };
+    currentExtPayments[extEditingPaymentIndex] = { amount, date: dateEl.value || '', method: extNewPaymentMethod, ...(uahInfo||{}) };
     extEditingPaymentIndex = null;
   } else {
-    currentExtPayments.push({ amount, date: dateEl.value || '', method: extNewPaymentMethod });
+    currentExtPayments.push({ amount, date: dateEl.value || '', method: extNewPaymentMethod, ...(uahInfo||{}) });
   }
   extNewPaymentMethod = 'cash';
+  extNewPaymentCur = '$';
   updateExtPaidSum();
 }
 function deleteExtPayment(i){
@@ -10572,6 +10635,7 @@ function deleteExtPayment(i){
   updateExtPaidSum();
 }
 function loadExtPayments(payments){
+  extNewPaymentCur = '$';
   currentExtPayments = (payments||[]).map(p=>({...p}));
   extPaymentFormOpen = false;
   extEditingPaymentIndex = null;
@@ -13357,7 +13421,7 @@ function formatExtAmountInput(el){
   const firstComma = v.indexOf(',');
   if(firstComma !== -1) v = v.slice(0, firstComma+1) + v.slice(firstComma+1).replace(/,/g, '');
   let [intPart, decPart] = v.split(',');
-  intPart = (intPart||'').slice(0, 5);
+  intPart = (intPart||'').slice(0, (el.id==='ext-new-payment-amount' && extNewPaymentCur==='₴') ? 8 : 5);
   if(decPart !== undefined) decPart = decPart.slice(0, 2);
   const formattedInt = intPart ? Number(intPart).toLocaleString('uk-UA') : '';
   el.value = formattedInt + (decPart !== undefined ? ',' + decPart : (v.endsWith(',') ? ',' : ''));
