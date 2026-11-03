@@ -10614,10 +10614,32 @@ function addExtPayment(){
     // mistake — most often the wrong currency (e.g. typing a ₴ amount into
     // a $ field) — so a single confirm()-click warning is too easy to blow
     // past without noticing. Requires re-typing the exact amount instead.
+    let askedAlready = false;
     if(amount > total * 3){
       const typed = prompt(`⚠ Сума ${fmtSmart(amount)} ${cur} У КІЛЬКА РАЗІВ БІЛЬША за загальну вартість продовження (${fmtSmart(total)} ${cur}) — це часто трапляється через помилку з валютою. Якщо сума дійсно правильна, введіть її ще раз тут для підтвердження:`);
       if(parseThousands(typed || '') !== amount){ alert('Підтвердження не збіглося — платіж не додано.'); return; }
-    } else if(!confirm(`Сума перевищить загальну вартість продовження (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
+      askedAlready = true;
+    }
+    // The payment covers more than the extension costs: offer to lengthen the extension
+    // period so it matches what was actually paid (otherwise the period stays short).
+    const extRate = parseThousands(document.getElementById('bm-ext-rate')?.value);
+    const extDaysNow = parseInt(document.getElementById('bm-ext-days')?.value) || 0;
+    const extFrom = getExtDateField('bm-ext-from');
+    const daily = extRate > 0 ? extRate : (extDaysNow > 0 ? total / extDaysNow : 0);
+    const needDays = daily > 0 ? Math.ceil((otherPaymentsTotal + amount) / daily - 1e-9) : 0;
+    if(daily > 0 && extFrom && needDays > extDaysNow){
+      const newTo = addDaysStr(extFrom, needDays);
+      if(confirm(`Сума платежів (${fmtSmart(otherPaymentsTotal + amount)} ${cur}) перевищує вартість продовження (${fmtSmart(total)} ${cur}).\n\nЗбільшити продовження до ${needDays} ${pluralDoba(needDays)} (${fmtCaseDate(extFrom)} – ${fmtCaseDate(newTo)})?\n\nОК — збільшити період продовження. Скасувати — залишити період як є.`)){
+        setExtDateField('bm-ext-to', newTo);
+        document.getElementById('bm-ext-days').value = needDays;
+        extDaysOverridden = true; // keep the typed days while the dates handler runs
+        recalcExtensionCost();
+        onExtDatesChanged();
+        extDaysOverridden = false;
+        askedAlready = true;
+      }
+    }
+    if(!askedAlready && !confirm(`Сума перевищить загальну вартість продовження (${fmtSmart(total)}). Все одно ${isEditing?'зберегти':'додати'}?`)) return;
   }
   if(isEditing){
     currentExtPayments[extEditingPaymentIndex] = { amount, date: dateEl.value || '', method: extNewPaymentMethod, ...(uahInfo||{}) };
