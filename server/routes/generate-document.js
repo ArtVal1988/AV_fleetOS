@@ -997,6 +997,20 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     }
   }
 
+  // Extension payment-row acts: Оплачено/Борг as of THIS payment of the extension (the
+  // extension's own payments, cumulative up to and including it).
+  if (req.query.extPaymentIndex !== undefined) {
+    const pIdx = parseInt(req.query.extPaymentIndex);
+    const extSrc = req.query.useExtension === '1'
+      ? ctx.booking.extension
+      : (req.query.extHistoryIndex !== undefined ? ctx.booking.extensionHistory?.[parseInt(req.query.extHistoryIndex)] : null);
+    const extPayments = (extSrc && extSrc.payments) || [];
+    if (!isNaN(pIdx) && pIdx >= 0 && pIdx < extPayments.length) {
+      const cumulativePaid = extPayments.slice(0, pIdx + 1).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      ctx.booking.amountPaid = Math.round(cumulativePaid * 100) / 100;
+    }
+  }
+
   const repKey = ctx.repSlot;
   const templateFile = templateFileName(type, repKey);
   const templatePath = path.join(TEMPLATES_DIR, templateFile);

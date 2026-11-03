@@ -850,6 +850,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 /* VEHICLE ACTION ICONS */
 .veh-actions{display:flex;gap:3px;flex-shrink:0;}
 #specs-quick-actions{display:none;}
+#bm-ext-gen-act-btn.has-pay{display:none!important;}
 .rep-th{position:sticky;top:0;z-index:1;background:#fff;box-shadow:0 2px 0 #e5e7eb;}
 .veh-act-btn{position:relative;width:22px;height:22px;border:1px solid #e5e7eb;border-radius:4px;background:#f9fafb;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all .15s;}
 .veh-act-btn:hover{background:#fff;border-color:#d1d5db;box-shadow:0 1px 4px rgba(0,0,0,.1);transform:translateY(-1px);}
@@ -3281,7 +3282,7 @@ input.dm-pf-val.tel{font-size:14px;}
           </div>
         </div>
         <div style="display:flex;align-items:flex-end;gap:10px;margin-top:6px">
-          <div id="bm-ext-payments-column" style="width:377px;flex-shrink:0;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
+          <div id="bm-ext-payments-column" style="width:420px;flex-shrink:0;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
             <div id="bm-ext-payments-list-area"></div>
           </div>
           <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
@@ -10401,6 +10402,37 @@ function renderMainPaymentsList(){
   const dateEl = document.getElementById('main-new-payment-date');
   if(dateEl && !isEditing) dateEl.value = new Date().toISOString().slice(0,10);
 }
+// Act for ONE payment of the extension being edited: «Оплачено / Борг» in the document
+// reflect the state as of that payment (server: ?extPaymentIndex=).
+async function generateExtPaymentAct(i, btn){
+  if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
+  const extFrom = getExtDateField('bm-ext-from');
+  const extTo = getExtDateField('bm-ext-to');
+  if(!extFrom || !extTo){ alert('Вкажіть дати продовження'); return; }
+  const origHtml = btn ? btn.innerHTML : null;
+  if(btn){ btn.innerHTML = '⏳'; btn.disabled = true; }
+  try{
+    _skipCloseOnSave = true;
+    saveBooking();
+    const b = bookings.find(x=>x.id===editBid);
+    if(b) await apiFetch('PUT', '/bookings/'+editBid, b);
+    const res = await fetch(API_BASE + '/generate-document/' + editBid + '/act_extension?useExtension=1&extPaymentIndex=' + i, { headers: apiHeaders() });
+    if(!res.ok) throw new Error('Помилка сервера');
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const fileName = match ? decodeURIComponent(match[1]) : 'Акт_продовження.docx';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Не вдалося сформувати документ. Спробуйте ще раз.');
+  } finally {
+    if(btn){ btn.innerHTML = origHtml; btn.disabled = false; }
+  }
+}
 async function generateMainPaymentAct(i, btn){
   if(!editBid){ alert('Спочатку збережіть замовлення'); return; }
   const type = 'act_extension'; // every payment-row act is always Акт продовження — the one canonical Акт is generated separately, via the main Акт button
@@ -10506,11 +10538,14 @@ function renderExtPaymentsColumn(){
         ? `<span style="font-weight:700;color:${curColor('₴')}">${fmtSmart(p.amountUah)} ₴</span><span style="color:#6b7280;font-size:10.5px">курс ${fmtSmart(p.rate)}</span><span style="font-weight:700;color:${curColor('$')}">≈ ${fmtSmart(p.amount)} $</span>`
         : `<span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>`}
       <span style="color:#9ca3af;flex:1;min-width:70px">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
+      <button type="button" onclick="generateExtPaymentAct(${i}, this)" title="Сформувати акт продовження (на цей платіж)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
       <button type="button" onclick="editExtPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`).join('');
   const isEditing = extEditingPaymentIndex !== null;
   const showForm = extPaymentFormOpen && (isEditing || !isFullyPaid);
+  // Once payments exist each payment row has its own printer; the general one is only for an unpaid extension.
+  document.getElementById('bm-ext-gen-act-btn')?.classList.toggle('has-pay', currentExtPayments.length > 0);
   col.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <span style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af">Платежі за це продовження</span>
@@ -10520,8 +10555,9 @@ function renderExtPaymentsColumn(){
     </div>
     ${list?`<div style="max-height:160px;overflow-y:auto;margin-bottom:8px">${list}</div>`:''}
     ${showForm?`
-    <div style="display:flex;gap:6px;align-items:end;flex-wrap:wrap">
-      <div style="width:90px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
+      <div style="width:88px">
         <label class="vf-lbl">Сума</label>
         <input type="text" inputmode="decimal" id="ext-new-payment-amount" class="vf-inp no-spinner" style="width:100%;height:32px" placeholder="0" oninput="formatExtAmountInput(this);extPayEqUpdate()">
       </div>
@@ -10533,7 +10569,7 @@ function renderExtPaymentsColumn(){
         <label class="vf-lbl">Курс</label>
         <input type="text" inputmode="decimal" id="ext-new-payment-rate" class="vf-inp no-spinner" style="width:100%;height:32px;text-align:center;padding:0 3px" placeholder="00,00" oninput="formatExchangeRateInput(this);extPayEqUpdate()">
       </div>` : ''}
-      <div style="width:100px">
+      <div style="width:98px">
         <label class="vf-lbl">Дата</label>
         <input type="date" id="ext-new-payment-date" class="custom-dp-trigger vf-inp" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="width:100%;height:32px;box-sizing:border-box">
       </div>
@@ -10541,9 +10577,12 @@ function renderExtPaymentsColumn(){
         <button type="button" id="ext-pm-btn-cash" class="dep-cur-pill active" onclick="setExtNewPaymentMethod('cash')" title="Готівка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg></button>
         <button type="button" id="ext-pm-btn-card" class="dep-cur-pill" onclick="setExtNewPaymentMethod('card')" title="Картка" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;padding:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg></button>
       </div>
-      <button type="button" onclick="addExtPayment()" style="height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${isEditing?'Зберегти':'Додати'}</button>
     </div>
-    <div id="ext-new-payment-eq" style="display:none;margin-top:5px;font-size:12px;font-weight:700;color:${curColor('$')}"></div>`:''}
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px">
+      <div id="ext-new-payment-eq" style="display:none;font-size:12px;font-weight:700;color:${curColor('$')}"></div>
+      <button type="button" onclick="addExtPayment()" style="margin-left:auto;height:32px;padding:0 12px;background:#374151;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${isEditing?'Зберегти':'Додати'}</button>
+    </div>
+    </div>`:''}
   `;
   const dateEl = document.getElementById('ext-new-payment-date');
   if(dateEl && !isEditing) dateEl.value = new Date().toISOString().slice(0,10);
