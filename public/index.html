@@ -6946,6 +6946,7 @@ function handleDocAttach(e, vid, key){
     alert('Потрібно увійти в систему, щоб завантажувати файли.');
     return;
   }
+  const savedByIdx = {}; // successfully uploaded files of THIS batch, by position in the selection
   files.forEach(async (file, idx) => {
     if(file.size > 10*1024*1024){ alert(file.name+': файл понад 10 МБ'); return; }
     const ext = (file.name.match(/\.[^.]+$/) || [''])[0];
@@ -6965,6 +6966,15 @@ function handleDocAttach(e, vid, key){
       if(!res.ok){ alert(file.name+': не вдалося завантажити файл'); return; }
       const saved = await res.json();
       v.docs.files[key].push(saved);
+      // A newly added mandatory-insurance (ОСЦПВ) policy file automatically becomes the main
+      // («актуальний») one; for a multi-file batch the last selected file wins.
+      if(key === 'osago-policy' && saved && saved.id){
+        savedByIdx[idx] = saved;
+        const top = Math.max(...Object.keys(savedByIdx).map(Number));
+        if(!v.docs.activeFile) v.docs.activeFile = {};
+        v.docs.activeFile[key] = savedByIdx[top].id;
+        persistVehicle(v);
+      }
       recalcMissingDocs(v);
       if(docsVehicleId === vid) syncDocsFieldsToVehicle(v);
       renderDocsModalBody(v);
