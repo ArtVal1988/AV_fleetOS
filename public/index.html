@@ -5234,7 +5234,7 @@ function showTooltip(e,bid,subContext){
   // Final return for an extended booking is shown at the very bottom of the rental data.
   const retBarHtml = (hasExtPeriods && !isSpecialStatus) ? (()=>{
     const defLoc = (!b.ret?.loc || b.ret.loc === BM_DEFAULT_ADDRESS);
-    return `<div class="tt-ret-bar"><span>↩ Повернення (кінцеве)</span><b>${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}${defLoc?' · Офіс':''}</b></div>` +
+    return `<div class="tt-ret-bar"><span>↩ Повернення</span><b>${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}${defLoc?' · Офіс':''}</b></div>` +
       (defLoc ? '' : `<div style="font-size:10px;color:var(--muted);text-align:right;margin:2px 0 4px">${b.ret.loc}</div>`);
   })() : '';
 
