@@ -12323,13 +12323,10 @@ function renderDocsModalBody(v){
     }).map(d => {
       const has = (v.docs?.files?.[d.key]||[]).length > 0;
       if(d.key==='poa_owner'){
-        const dd = v.poaExpiry ? daysFromNow(v.poaExpiry) : null;
-        const pc  = dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#2F6364';
-        const pb  = dd===null?'#f7f8fb':dd<0||dd<=7?'#fee2e2':dd<=30?'#fff8e6':'#f0fdf4';
-        const pbd = dd===null?'#e5e7eb':dd<0||dd<=7?'#fca5a5':dd<=30?'#f0d060':'#86efac';
-        const pl  = dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні закінчується':'залишилось '+dd+' дн.';
+        const _pv = poaExpiryView(v.poaExpiry);
+        const dd = _pv.dd, pc = _pv.pc, pb = _pv.pb, pbd = _pv.pbd, pl = _pv.pl;
         const fmtPoa = v.poaExpiry ? new Date(v.poaExpiry).toLocaleDateString('uk-UA',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
-        return '<div class="dm-doc-item'+(has?' has':'')+(v.poaExpiry?' has':'')+'" style="grid-column:1/-1;background:'+(v.poaExpiry?pb:'#f7f8fb')+';border-color:'+(v.poaExpiry?pbd:'#e5e7eb')+'">'+
+        return '<div id="dm-poa-item" class="dm-doc-item'+(has?' has':'')+(v.poaExpiry?' has':'')+'" style="grid-column:1/-1;background:'+(v.poaExpiry?pb:'#f7f8fb')+';border-color:'+(v.poaExpiry?pbd:'#e5e7eb')+'">'+
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">'+
             '<div>'+
               '<div class="dm-doc-head-row"><span class="dm-doc-icon">'+d.icon+'</span><span class="dm-doc-name">'+d.name+'</span></div>'+
@@ -12340,7 +12337,7 @@ function renderDocsModalBody(v){
                 '<span style="font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:#9ca3af;white-space:nowrap;flex-shrink:0">Строк дії до</span>'+
                 '<input type="date" class="custom-dp-trigger" value="'+(v.poaExpiry||'')+'" onchange="setPoaExpiry('+v.id+',this.value);blurDateFieldOnDesktop(this)" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" style="font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;outline:none;width:auto;min-width:0;box-sizing:border-box">'+
               '</div>'+
-              (v.poaExpiry?'<div style="background:'+pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pl+'</div>':'')+
+              '<div id="dm-poa-badge">'+(v.poaExpiry?'<div style="background:'+pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pl+'</div>':'')+'</div>'+
             '</div>'+
           '</div>'+
         '</div>';
@@ -12359,10 +12356,33 @@ function renderDocsModalBody(v){
   applyDocsFieldEditability();
 }
 
+function poaExpiryView(exp){
+  const dd = exp ? daysFromNow(exp) : null;
+  return {
+    dd,
+    pc:  dd===null?'#9ca3af':dd<0||dd<=7?'#ef4444':dd<=30?'#f59e0b':'#2F6364',
+    pb:  dd===null?'#f7f8fb':dd<0||dd<=7?'#fee2e2':dd<=30?'#fff8e6':'#f0fdf4',
+    pbd: dd===null?'#e5e7eb':dd<0||dd<=7?'#fca5a5':dd<=30?'#f0d060':'#86efac',
+    pl:  dd===null?'—':dd<0?'прострочено '+Math.abs(dd)+' дн.':dd===0?'сьогодні закінчується':'залишилось '+dd+' дн.'
+  };
+}
 function setPoaExpiry(vid, value){
   const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v) return;
   v.poaExpiry = value || null;
-  renderDocsModalBody(v);
+  // Update the status badge in place. A full re-render here would rebuild the
+  // input while the operator is still typing the year (focus lost after 2 digits).
+  const item = document.getElementById('dm-poa-item');
+  const badge = document.getElementById('dm-poa-badge');
+  if(!item || !badge){ renderDocsModalBody(v); return; }
+  // Half-typed year (0002, 0020, 0202...) — don't flash a silly "overdue" badge.
+  if(v.poaExpiry && +String(v.poaExpiry).slice(0,4) < 1900){ badge.innerHTML=''; return; }
+  const pv = poaExpiryView(v.poaExpiry);
+  item.style.background = v.poaExpiry ? pv.pb : '#f7f8fb';
+  item.style.borderColor = v.poaExpiry ? pv.pbd : '#e5e7eb';
+  item.classList.toggle('has', !!v.poaExpiry || item.classList.contains('has'));
+  badge.innerHTML = v.poaExpiry
+    ? '<div style="background:'+pv.pc+';color:#fff;font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;text-align:center">'+pv.pl+'</div>'
+    : '';
 }
 
 /* ── HANDOVER PHOTOS (фото авто на момент передачі компанії) ── */
