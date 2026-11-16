@@ -11515,6 +11515,7 @@ function renderInsuranceModal(v){
     const filesRow = '<div class="im-action-row" style="margin-top:6px">' +
       (policyFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(policyFile.url)+','+JSON.stringify(policyFile.name)+','+JSON.stringify(policyFile.type)+')\'>📄 Договір</div>' : '<div class="im-btn" style="opacity:.5">📄 Договір відсутній</div>') +
       (invoiceFile ? '<div class="im-btn" onclick=\'viewAttachment('+JSON.stringify(invoiceFile.url)+','+JSON.stringify(invoiceFile.name)+','+JSON.stringify(invoiceFile.type)+')\'>🧾 Рахунок для оплати</div>' : '<div class="im-btn" style="opacity:.5">🧾 Рахунок відсутній</div>') +
+      ((v.kasko.reqRecipient||v.kasko.reqAccount||v.kasko.reqCode||v.kasko.reqPurpose) ? '<div class="im-btn" onclick="openKaskoReqView('+v.id+')">💳 Реквізити</div>' : '<div class="im-btn" style="opacity:.5">💳 Реквізити відсутні</div>') +
     '</div>';
     kaskoHtml =
       '<div class="im-fields-3 kasko-main-fields">' +
@@ -11526,7 +11527,6 @@ function renderInsuranceModal(v){
         '<div class="im-field kasko-compact-field" style="grid-area:deductible"><div class="imf-lbl">Франшиза</div><div class="imf-val blue" style="display:flex;align-items:center">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span>':'')+'<span style="flex:1;text-align:center;font-weight:700;font-size:13px">'+fmtMn(v.kasko.deductible)+'</span></div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
-      ((v.kasko.reqRecipient||v.kasko.reqAccount) ? buildKaskoReqDisplay(v.kasko) : '') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
       filesRow +
       '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn danger" onclick="deleteCalKasko('+v.id+')">🗑 Видалити</div></div>'+
@@ -11988,6 +11988,14 @@ function buildKaskoReqDisplay(k){
   const content = row('Отримувач', k.reqRecipient, true) + codeAccountRow + row('Призначення платежу', k.reqPurpose);
   if(!content) return '';
   return '<div class="im-fields" style="margin-bottom:8px;display:flex;flex-direction:column;gap:6px;background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:8px">' + content + '</div>';
+}
+function openKaskoReqView(vid){
+  const v = ALL_VEHICLES.find(x=>x.id===vid); if(!v || !v.kasko) return;
+  document.getElementById('ck-req-view-body').innerHTML = buildKaskoReqDisplay(v.kasko) || '<div style="color:#9ca3af;font-size:12px">Реквізити не заповнені</div>';
+  document.getElementById('ck-req-view-modal').classList.add('open');
+}
+function closeKaskoReqView(){
+  document.getElementById('ck-req-view-modal').classList.remove('open');
 }
 function copyKaskoReqValue(btn){
   const value = btn.dataset.copyValue;
@@ -18117,6 +18125,17 @@ function startAutoRefresh(){
       <button class="btn btn-ghost" onclick="document.getElementById('cal-kasko-modal').classList.remove('open')">Скасувати</button>
       <button class="btn btn-primary" onclick="saveCalKasko()">Зберегти КАСКО</button>
     </div>
+  </div>
+</div>
+
+<!-- KASKO PAYMENT REQUISITES VIEW POPUP -->
+<div class="docs-modal-overlay" id="ck-req-view-modal" onclick="if(event.target===this)closeKaskoReqView()" style="z-index:1200">
+  <div class="docs-modal" style="width:480px">
+    <div class="docs-modal-head">
+      <div><div class="docs-modal-title">Реквізити для оплати КАСКО</div></div>
+      <button class="docs-modal-x" onclick="closeKaskoReqView()">✕</button>
+    </div>
+    <div class="docs-modal-body" id="ck-req-view-body" style="padding-bottom:20px"></div>
   </div>
 </div>
 
