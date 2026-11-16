@@ -5147,9 +5147,8 @@ function showTooltip(e,bid,subContext){
     const hiddenCount = Math.max(0, fullHistory.length - 2);
     const visibleHistory = fullHistory.slice(-2);
     const moreIndicator = hiddenCount > 0 ? `<div class="tt-row" style="padding:2px 4px"><span class="tt-val" style="text-align:left;color:var(--muted);font-style:italic;font-size:10px">… ще ${hiddenCount} попередніх — повна історія в замовленні</span></div>` : '';
-    const histOffset = fullHistory.length - visibleHistory.length; // so tags keep their real numbers (+3, +4 …)
     const perRow = (datesTxt, tagTxt, tagCls, rightHtml, rowCls, afterTagHtml) =>
-      `<div class="tt-per${rowCls?' '+rowCls:''}"><span style="display:flex;align-items:center;gap:0"><span class="tt-per-dates">${datesTxt}</span><span class="tt-per-tag${tagCls?' '+tagCls:''}">${tagTxt}</span>${afterTagHtml||''}</span><span class="tt-per-sum">${rightHtml}</span></div>`;
+      `<div class="tt-per${rowCls?' '+rowCls:''}"><span style="display:flex;align-items:center;gap:0"><span class="tt-per-dates">${datesTxt}</span>${tagTxt?`<span class="tt-per-tag${tagCls?' '+tagCls:''}">${tagTxt}</span>`:''}${afterTagHtml||''}</span><span class="tt-per-sum">${rightHtml}</span></div>`;
     // First (original) period — the base order itself, before any extension.
     const firstRemaining = b.partialPaymentActive ? Math.max(0, (cur==='₴' ? (totalUah||0) : (total||0)) - (b.amountPaid||0)) : 0;
     const firstStatus = firstRemaining > 0.009
@@ -5167,7 +5166,7 @@ function showTooltip(e,bid,subContext){
       const hCur = h.currency||'$';
       const hExRate = parseFloat(h.totalExchangeRate) || 0;
       const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart((h.rate||0)/hExRate)} $)</span>` : '';
-      return perRow(`${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}`, '+'+(histOffset+i+1), '',
+      return perRow(`${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}`, '', '',
         `${hDays} * <span style="color:${curColor(hCur)}">${fmtSmart(h.rate||0)} ${hCur}</span>${usdEquiv} = <span style="color:${curColor(hCur)}">${total} ${hCur}</span> <span style="color:#2F6364">✓</span>`,
         (i % 2 === 0) ? 'alt' : '');
     }).join('');
@@ -5181,7 +5180,7 @@ function showTooltip(e,bid,subContext){
       const extCurTxt = ext.currency||b.currency||'$';
       const actRight = (ext.cost?`<span style="color:${curColor(extCurTxt)}">${fmtSmart(ext.cost)} ${extCurTxt}</span> `:'')
         + (st==='paid' ? `<span style="color:${color}">${label}</span>` : `<span style="color:#dc2626">борг ${fmtSmart((ext.cost||0)-(ext.amountPaid||0))} ${extCurTxt} ⚠</span>`);
-      activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '+'+(fullHistory.length+1), 'act', actRight, 'act');
+      activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '', '', actRight, 'act');
 
       // "Тест" debt-at-date widget: only relevant while there's still an
       // unpaid balance on the active extension — mirrors the same
