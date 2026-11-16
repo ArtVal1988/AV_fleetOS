@@ -622,6 +622,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .tt-pm-icon.card{background:#ffcfab;}
 .tt-pm-icon svg{width:10px;height:10px;}
 .tt-pm-icon.dim{opacity:.35;}
+.tt-per{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;padding:3px 6px;border-radius:4px;font-size:11px;}
+.tt-per.alt{background:rgba(0,0,0,.07);}
+.tt-per.act{background:rgba(194,97,13,.10);outline:1px solid rgba(194,97,13,.35);}
+.tt-per-dates{font-weight:500;white-space:nowrap;}
+.tt-per-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:1px 5px;border-radius:3px;margin-left:6px;background:#e5e7eb;color:#374151;}
+.tt-per-tag.first{background:#e0e7ff;color:#3730a3;}
+.tt-per-tag.act{background:#fde7cf;color:#9a3412;}
+.tt-per-sum{font-weight:700;text-align:right;}
+.tt-ret-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;background:#0f172a;color:#fff;border-radius:6px;font-size:11px;}
+.tt-ret-bar b{font-size:12px;text-align:right;}
 .tt-badge{display:inline-block;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;margin-bottom:8px;}
 
 /* RIGHT PANEL */
@@ -5103,8 +5113,25 @@ function showTooltip(e,bid,subContext){
     ${equipList.map(x=>`<div class="tt-row"><span class="tt-val" style="text-align:left;color:var(--text)">🔧 ${x.name}</span><span class="tt-val">${convertItemAmount(x)}</span></div>`).join('')}
   ` : '';
 
+  const ttCashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>';
+  const ttCardSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>';
+  const ttBankSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10.5M20 21V10.5M2.25 10.5h19.5L12 3 2.25 10.5ZM8 21v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6"/></svg>';
+  const isCompanyClient = ['tov','fop','fop_no_vat'].includes(b.clientType);
+  const ttPmIcons = (method, servicesOnly) => {
+    if(servicesOnly && isCompanyClient){
+      return `<span class="tt-pm-icons"><span class="tt-pm-icon" title="Банк" style="border:1px solid #dbeafe;background:#eff6ff;border-radius:5px">${ttBankSvg}</span></span>`;
+    }
+    const isCard = method==='card';
+    const svg = isCard ? (isCompanyClient ? ttBankSvg : ttCardSvg) : ttCashSvg;
+    return `<span class="tt-pm-icons">
+    <span class="tt-pm-icon ${isCard?'card':'cash'}">${svg}</span>
+  </span>`;
+  };
+
+
   // extension info
   let extBlock='';
+  let periodsBlock=''; // set for bookings with extensions (see below)
   if(b.isExtension){
     const orig = b.extendsId ? bookings.find(x=>x.id===b.extendsId) : null;
     extBlock = `
@@ -5120,20 +5147,29 @@ function showTooltip(e,bid,subContext){
     const hiddenCount = Math.max(0, fullHistory.length - 2);
     const visibleHistory = fullHistory.slice(-2);
     const moreIndicator = hiddenCount > 0 ? `<div class="tt-row" style="padding:2px 4px"><span class="tt-val" style="text-align:left;color:var(--muted);font-style:italic;font-size:10px">… ще ${hiddenCount} попередніх — повна історія в замовленні</span></div>` : '';
+    const histOffset = fullHistory.length - visibleHistory.length; // so tags keep their real numbers (+3, +4 …)
+    const perRow = (datesTxt, tagTxt, tagCls, rightHtml, rowCls, afterTagHtml) =>
+      `<div class="tt-per${rowCls?' '+rowCls:''}"><span style="display:flex;align-items:center;gap:0"><span class="tt-per-dates">${datesTxt}</span><span class="tt-per-tag${tagCls?' '+tagCls:''}">${tagTxt}</span>${afterTagHtml||''}</span><span class="tt-per-sum">${rightHtml}</span></div>`;
+    // First (original) period — the base order itself, before any extension.
+    const firstRemaining = b.partialPaymentActive ? Math.max(0, (cur==='₴' ? (totalUah||0) : (total||0)) - (b.amountPaid||0)) : 0;
+    const firstStatus = firstRemaining > 0.009
+      ? ` <span style="color:#dc2626">борг ${fmtSmart(firstRemaining)} ${cur} ⚠</span>`
+      : ` <span style="color:#2F6364">✓</span>`;
+    const firstRowHtml = perRow(
+      `${fmtShortYear(b.start)}–${fmtShortYear(firstPeriodEnd)}`, 'Початковий період', 'first',
+      (b.rate
+        ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`
+        : `${days} діб`) + firstStatus,
+      '', (b.payMethod ? '<span style="margin-left:6px;display:inline-flex">'+ttPmIcons(b.payMethod,true)+'</span>' : ''));
     const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmtSmart(hDays*(h.rate||0));
-      const rowBg = i % 2 === 1 ? 'background:rgba(0,0,0,.09);border-radius:4px;' : '';
       const hCur = h.currency||'$';
       const hExRate = parseFloat(h.totalExchangeRate) || 0;
       const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart((h.rate||0)/hExRate)} $)</span>` : '';
-      return `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 4px;${rowBg}">
-        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}</span>
-        <span style="display:flex;align-items:center;gap:6px">
-          <span class="tt-val" style="color:var(--text);font-weight:700">${hDays} * <span style="color:${curColor(hCur)}">${fmtSmart(h.rate||0)} ${hCur}</span>${usdEquiv} = <span style="color:${curColor(hCur)}">${total} ${hCur}</span></span>
-          <span class="tt-val" style="color:#2F6364;font-weight:700">✓</span>
-        </span>
-      </div>`;
+      return perRow(`${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}`, '+'+(histOffset+i+1), '',
+        `${hDays} * <span style="color:${curColor(hCur)}">${fmtSmart(h.rate||0)} ${hCur}</span>${usdEquiv} = <span style="color:${curColor(hCur)}">${total} ${hCur}</span> <span style="color:#2F6364">✓</span>`,
+        (i % 2 === 0) ? 'alt' : '');
     }).join('');
     let activeRow = '';
     let debtAtDateWidget = '';
@@ -5142,13 +5178,10 @@ function showTooltip(e,bid,subContext){
       const st = getExtStatus(ext);
       const color = st==='paid'?'#2F6364':st==='partial'?'#f0a830':'#ef4444';
       const label = st==='paid'?'✓':'Борг '+fmtSmart((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
-      activeRow = `<div class="tt-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <span class="tt-val" style="text-align:left;color:var(--text);font-weight:500;flex-shrink:0">${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}</span>
-        ${st==='paid' ? `<span style="display:flex;align-items:center;gap:6px">
-          ${ext.cost?`<span class="tt-val" style="color:${curColor(ext.currency||b.currency||'$')};font-weight:500">${fmtSmart(ext.cost)} ${ext.currency||b.currency||'$'}</span>`:''}
-          <span class="tt-val" style="color:${color};font-weight:700">${label}</span>
-        </span>` : ''}
-      </div>`;
+      const extCurTxt = ext.currency||b.currency||'$';
+      const actRight = (ext.cost?`<span style="color:${curColor(extCurTxt)}">${fmtSmart(ext.cost)} ${extCurTxt}</span> `:'')
+        + (st==='paid' ? `<span style="color:${color}">${label}</span>` : `<span style="color:#dc2626">борг ${fmtSmart((ext.cost||0)-(ext.amountPaid||0))} ${extCurTxt} ⚠</span>`);
+      activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '+'+(fullHistory.length+1), 'act', actRight, 'act');
 
       // "Тест" debt-at-date widget: only relevant while there's still an
       // unpaid balance on the active extension — mirrors the same
@@ -5191,12 +5224,21 @@ function showTooltip(e,bid,subContext){
         `;
       }
     }
-    extBlock = `
-      <div class="tt-divider"></div>
-      <div class="tt-label" style="margin-bottom:4px">Продовження оренди</div>
-      ${moreIndicator}${historyRows}${activeRow}${debtAtDateWidget}
+    // One list of ALL periods (original + extensions) replaces the separate «Оренда»
+    // row and the «Продовження оренди» block; the final return goes to the bottom.
+    periodsBlock = `
+      <div class="tt-label" style="margin-bottom:4px">Періоди оренди</div>
+      ${firstRowHtml}${moreIndicator}${historyRows}${activeRow}${debtAtDateWidget}
     `;
   }
+
+  const hasExtPeriods = !!periodsBlock;
+  // Final return for an extended booking is shown at the very bottom of the rental data.
+  const retBarHtml = (hasExtPeriods && !isSpecialStatus) ? (()=>{
+    const defLoc = (!b.ret?.loc || b.ret.loc === BM_DEFAULT_ADDRESS);
+    return `<div class="tt-ret-bar"><span>↩ Повернення (кінцеве)</span><b>${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}${defLoc?' · Офіс':''}</b></div>` +
+      (defLoc ? '' : `<div style="font-size:10px;color:var(--muted);text-align:right;margin:2px 0 4px">${b.ret.loc}</div>`);
+  })() : '';
 
   // Substitute vehicle history — shown whenever this booking has one or
   // more recorded substitution periods, regardless of which specific day
@@ -5252,21 +5294,6 @@ function showTooltip(e,bid,subContext){
     </div>
   ` : '';
 
-  const ttCashSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>';
-  const ttCardSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>';
-  const ttBankSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10.5M20 21V10.5M2.25 10.5h19.5L12 3 2.25 10.5ZM8 21v-6a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6"/></svg>';
-  const isCompanyClient = ['tov','fop','fop_no_vat'].includes(b.clientType);
-  const ttPmIcons = (method, servicesOnly) => {
-    if(servicesOnly && isCompanyClient){
-      return `<span class="tt-pm-icons"><span class="tt-pm-icon" title="Банк" style="border:1px solid #dbeafe;background:#eff6ff;border-radius:5px">${ttBankSvg}</span></span>`;
-    }
-    const isCard = method==='card';
-    const svg = isCard ? (isCompanyClient ? ttBankSvg : ttCardSvg) : ttCashSvg;
-    return `<span class="tt-pm-icons">
-    <span class="tt-pm-icon ${isCard?'card':'cash'}">${svg}</span>
-  </span>`;
-  };
-
   tt.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <span style="display:flex;align-items:center;gap:5px">
@@ -5305,20 +5332,21 @@ function showTooltip(e,bid,subContext){
     <div class="tt-divider" style="margin-bottom:6px"></div>
     ${nameRow}
     ${pickupRow}
-    ${retRow}
+    ${hasExtPeriods?'':retRow}
     ${(earlyReturnEnabled()&&b.earlyReturn&&b.earlyReturn.active)?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Дострокове повернення</span><span class="tt-val" style="color:#475569">план до ${fmt(b.earlyReturn.plannedEnd)} · оплачено ${b.daysOverride||''} діб</span></div>`:''}
     ${servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
-    <div class="tt-row" style="padding:0 8px"><span class="tt-label">${isVat?'Оренда з ПДВ':'Оренда'}</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>
+    ${hasExtPeriods ? periodsBlock : `<div class="tt-row" style="padding:0 8px"><span class="tt-label">${isVat?'Оренда з ПДВ':'Оренда'}</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>`}
     ${extrasTotal>0?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Послуги</span><span class="tt-val" style="font-weight:700;color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?'+'+fmtSmart(extrasUah)+'₴':'+'+fmtSmart(extrasTotal)+cur}</span></div>`:''}
     ${isVat&&vatAmount>0?`<div class="tt-row" style="margin-top:2px;padding:0 8px"><span class="tt-label">з яких сума ПДВ</span><span class="tt-val">${canShowUahOnly?`<span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:`<span style="color:${curColor(cur)}">+${fmtSmart(vatAmount)}${cur}</span>${vatUah!==null?` · <span style="color:${curColor('₴')}">+${fmtSmart(vatUah)}₴</span>`:''}`}</span></div>`:''}
     <div class="tt-divider" style="margin:6px 0"></div>
-    ${(b.rate||b.deposit)?`<div style="display:flex;gap:6px;margin-top:6px">
+    ${((b.rate&&!hasExtPeriods)||b.deposit)?`<div style="display:flex;gap:6px;margin-top:6px">
       ${b.deposit?`<div class="tt-total-row" style="flex:1;margin-top:0;background:#fdf3e7"><span class="tt-total-label" style="color:#8a4b0f">Депозит</span><span class="tt-total-val" style="color:#8a4b0f"><span style="color:${curColor(b.depositCur||cur)}">${fmtSmart(b.deposit)} ${b.depositCur||cur}</span>${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
-      ${b.rate?`<div class="tt-total-row" style="flex:1;margin-top:0"><span class="tt-total-label">Загалом</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
+      ${(b.rate&&!hasExtPeriods)?`<div class="tt-total-row" style="flex:1;margin-top:0"><span class="tt-total-label">Загалом</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
     </div>`:''}
     `:''}
+    ${retBarHtml}
     ${extBlock}
     ${substituteBlock}
     ${repairBlock}
