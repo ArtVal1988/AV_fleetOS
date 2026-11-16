@@ -5159,7 +5159,7 @@ function showTooltip(e,bid,subContext){
       (b.rate
         ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`
         : `${days} діб`) + firstStatus,
-      '', (b.payMethod ? '<span style="margin-left:6px;display:inline-flex">'+ttPmIcons(b.payMethod,true)+'</span>' : ''));
+      '');
     const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmtSmart(hDays*(h.rate||0));
