@@ -805,6 +805,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .im-pay-status.paid{background:#dcfce7;color:#166534;}
 .im-pay-status.unpaid{background:#fff8e6;color:#92400e;}
 .im-pay-status.unpaid:hover{background:#fef3c7;}
+.im-pay-status.norenew{background:#e5e7eb;color:#4b5563;}
+.im-pay-row.inactive{opacity:.45;filter:grayscale(1);}
+.im-pay-row.inactive .im-pay-status{pointer-events:none;}
+#kasko-pay-menu{position:fixed;z-index:1300;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:4px;min-width:170px;font-family:var(--font-mono);font-size:11px;}
+#kasko-pay-menu .kpm-item{padding:7px 10px;border-radius:5px;cursor:pointer;color:#374151;white-space:nowrap;}
+#kasko-pay-menu .kpm-item:hover{background:#f3f4f6;}
+#kasko-pay-menu .kpm-item.active{background:#eff6ff;color:#1d4ed8;font-weight:700;}
 .im-next-badge{font-size:9px;color:#2563eb;margin-left:4px;font-weight:600;}
 
 .im-no-policy{text-align:center;padding:20px;color:#9ca3af;font-size:12px;}
@@ -4598,7 +4605,7 @@ function getInsuranceDueStatus(v){
     if(daysLeft<=30) return 'warn';
     return null;
   };
-  const statuses = [check(v.osago?.end), check(v.kasko?.end)].filter(Boolean);
+  const statuses = [check(v.osago?.end), isKaskoClosed(v) ? null : check(v.kasko?.end)].filter(Boolean);
   if(statuses.includes('danger')) return 'danger';
   if(statuses.includes('warn')) return 'warn';
   return null;
@@ -4632,8 +4639,8 @@ function getOsagoDotStatus(v){
 }
 function getKaskoDotStatus(v){
   if(!v.kasko) return null; // truly no policy on file — empty half
-  const payments = v.kasko.payments||[];
-  const unpaid = payments.filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(isKaskoClosed(v)) return 'ok'; // closed («Без продовження») — nothing to chase any more
+  const unpaid = kaskoActiveUnpaid(v.kasko).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const nextDue = unpaid[0]?.date;
   if(!nextDue) return 'ok'; // policy exists, fully paid (or no schedule recorded yet)
   return daysLeftStatus(nextDue);
@@ -8642,12 +8649,12 @@ function renderDashboard(){
   const soon = (dateStr, days) => { if(!dateStr) return false; const d = new Date(dateStr); const diff = Math.round((d-today)/86400000); return diff <= days; };
   const osagoSoon = ALL_VEHICLES.filter(v => v.osago && soon(v.osago.end, 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>a.osago.end.localeCompare(b.osago.end));
   const getKaskoNextPayment = v => {
-    const unpaid = (v.kasko?.payments||[]).filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const unpaid = kaskoActiveUnpaid(v.kasko).sort((a,b)=>new Date(a.date)-new Date(b.date));
     return unpaid[0] || (v.kasko?.end ? {date: v.kasko.end, amount: null} : null);
   };
   const getKaskoNextDue = v => getKaskoNextPayment(v)?.date;
-  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && soon(getKaskoNextDue(v), 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
-  const kaskoRenewalSoon = ALL_VEHICLES.filter(v => v.kasko?.end && soon(v.kasko.end, 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
+  const kaskoSoon = ALL_VEHICLES.filter(v => v.kasko && !isKaskoClosed(v) && soon(getKaskoNextDue(v), 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>getKaskoNextDue(a).localeCompare(getKaskoNextDue(b)));
+  const kaskoRenewalSoon = ALL_VEHICLES.filter(v => v.kasko?.end && !isKaskoClosed(v) && soon(v.kasko.end, 30) && !otherCatVehicleIds.has(v.id)).sort((a,b)=>a.kasko.end.localeCompare(b.kasko.end));
   const serviceSoon = ALL_VEHICLES.filter(v => v.service && ['warn','danger'].includes(computeServiceStatus(v)) && !otherCatVehicleIds.has(v.id))
     .sort((a,b) => {
       const leftA = a.service.nextKm-(a.currentKm??a.service.lastKm??0);
@@ -11485,12 +11492,14 @@ function renderInsuranceModal(v){
     const {paymentType,payments,end,insurer,policyNum,contractDate,totalPremium,notes} = v.kasko;
     const typeLbl = paymentType==='quarterly'?'Щоквартально':'Один платіж';
     const qRowHtml = p => {
-      const isNext = !p.paid && payments.filter(x=>!x.paid).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.quarter===p.quarter;
-      return '<div class="im-pay-row'+(isNext?' next-pay':'')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
+      const st = kaskoPayState(p);
+      const inactive = kaskoPayInactive(v.kasko, p);
+      const isNext = !p.paid && !p.noRenewal && !inactive && kaskoActiveUnpaid(v.kasko).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.quarter===p.quarter;
+      return '<div class="im-pay-row'+(isNext?' next-pay':'')+(inactive?' inactive':'')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+p.quarter+'</span>'+
         '<span class="im-pay-date" style="'+(isNext?'color:#9a3412;font-weight:700':'')+'">'+fmtD(p.date)+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoQ('+v.id+','+p.quarter+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
+        '<span class="im-pay-status '+(st==='norenew'?'norenew':(p.paid?'paid':'unpaid'))+'" onclick="openKaskoPayMenu(event,this,\'view\','+v.id+','+p.quarter+',\''+st+'\')" title="'+(st==='norenew'?'Без продовження':(p.paid?'Оплачено':'Очікується'))+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(st==='norenew'?'⛔':(p.paid?'✓':'●'))+'</span>'+
       '</div>';
     };
     const payRows = paymentType==='quarterly' ?
@@ -11503,13 +11512,14 @@ function renderInsuranceModal(v){
         '<div style="display:flex;flex-direction:column;gap:6px">' + [1,2].flatMap(q => payments.filter(p=>p.quarter===q)).map(qRowHtml).join('') + '</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px">' + [3,4].flatMap(q => payments.filter(p=>p.quarter===q)).map(qRowHtml).join('') + '</div>' +
       '</div>'
-      : payments.map(p=>
-      '<div class="im-pay-row'+(p.paid?'':' next-pay')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
+      : payments.map(p=>{
+      const st = kaskoPayState(p);
+      return '<div class="im-pay-row'+((p.paid||p.noRenewal)?'':' next-pay')+'" style="'+(p.paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-date">'+fmtD(p.date)+'</span>'+
         '<span class="im-pay-amount">'+fmtMn(p.amount)+'</span>'+
-        '<span class="im-pay-status '+(p.paid?'paid':'unpaid')+'" onclick="toggleCalKaskoSingle('+v.id+')" title="'+(p.paid?'Сплачено':'Очікується')+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(p.paid?'✓':'●')+'</span>'+
-      '</div>'
-    ).join('');
+        '<span class="im-pay-status '+(st==='norenew'?'norenew':(p.paid?'paid':'unpaid'))+'" onclick="openKaskoPayMenu(event,this,\'view\','+v.id+','+(p.quarter??0)+',\''+st+'\')" title="'+(st==='norenew'?'Без продовження':(p.paid?'Оплачено':'Очікується'))+'" style="'+(p.paid?'color:#166534;font-weight:700':'')+'">'+(st==='norenew'?'⛔':(p.paid?'✓':'●'))+'</span>'+
+      '</div>';
+    }).join('');
     const policyFile = getActiveDocFile(v, 'kasko-policy');
     const invoiceFile = getActiveDocFile(v, 'kasko-invoice');
     const filesRow = '<div class="im-action-row" style="margin-top:6px">' +
@@ -11527,6 +11537,7 @@ function renderInsuranceModal(v){
         '<div class="im-field kasko-compact-field" style="grid-area:deductible"><div class="imf-lbl">Франшиза</div><div class="imf-val blue" style="display:flex;align-items:center">'+(v.kasko.deductiblePct?'<span class="im-pct-pill blue">'+v.kasko.deductiblePct+'%</span>':'')+'<span style="flex:1;text-align:center;font-weight:700;font-size:13px">'+fmtMn(v.kasko.deductible)+'</span></div></div>' +
       '</div>' +
       (notes?'<div class="im-fields"><div class="im-field full"><div class="imf-lbl">Нотатки</div><div class="imf-val" style="color:#6b7280;font-size:11px">'+notes+'</div></div></div>':'') +
+      (isKaskoClosed(v) ? '<div style="margin-bottom:8px;padding:7px 10px;border-radius:6px;background:#f3f4f6;border:1px solid #d1d5db;color:#4b5563;font-size:11px;font-weight:700">⛔ Договір закрито — без продовження</div>' : '') +
       '<div style="margin-bottom:8px">'+payRows+'</div>' +
       filesRow +
       '<div class="im-action-row"><div class="im-btn hi" onclick="openCalKaskoEdit('+v.id+')">✏ Редагувати</div><div class="im-btn danger" onclick="deleteCalKasko('+v.id+')">🗑 Видалити</div></div>'+
@@ -11614,16 +11625,15 @@ function buildInsuranceCasesSection(v){
   '</div>';
 }
 
-function toggleCalKaskoQ(vid,quarter){
+// state: 'pending' | 'paid' | 'norenew'. «Без продовження» is exclusive — only one payment
+// can carry it (choosing it on another payment moves it); picking another state on that
+// same payment re-opens the contract.
+function setCalKaskoPayState(vid, q, state){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v?.kasko)return;
-  const p=v.kasko.payments.find(x=>x.quarter===quarter); if(p)p.paid=!p.paid;
-  persistVehicle(v);
-  renderInsuranceModal(v); render();
-  if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
-}
-function toggleCalKaskoSingle(vid){
-  const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v?.kasko)return;
-  if(v.kasko.payments[0])v.kasko.payments[0].paid=!v.kasko.payments[0].paid;
+  const p=(v.kasko.payments||[]).find(x=>(x.quarter??0)===q); if(!p)return;
+  (v.kasko.payments||[]).forEach(x=>{ if(state==='norenew') x.noRenewal=false; });
+  p.paid = state==='paid';
+  p.noRenewal = state==='norenew';
   persistVehicle(v);
   renderInsuranceModal(v); render();
   if(document.getElementById('insurance-overview-panel-overlay')?.style.display==='flex') renderInsuranceOverviewPanel();
@@ -11854,7 +11864,7 @@ function saveCalOsago(){
 }
 
 /* КАСКО edit */
-let calKPayType='single', calKPaid={}, calKSavedPayments={};
+let calKPayType='single', calKPaid={}, calKSavedPayments={}, calKNoRenew=null;
 function autoCalcKaskoEndDate(){
   const startVal = document.getElementById('ck-start')?.value;
   if(!startVal) return;
@@ -11871,6 +11881,7 @@ function autoCalcKaskoEndDate(){
   buildCalKaskoPayments();
 }
 function setCalPayType(t){
+  if(calKPayType!==t) calKNoRenew=null;
   calKPayType=t;
   document.getElementById('ck-ptb-single').classList.toggle('active',t==='single');
   document.getElementById('ck-ptb-quarterly').classList.toggle('active',t==='quarterly');
@@ -11881,14 +11892,16 @@ function buildCalKaskoPayments(){
   const total=parseThousands(document.getElementById('ck-total').value)||0;
   const list=document.getElementById('ck-payments-list');
   if(calKPayType==='single'){
-    const paid = !!calKPaid[0];
+    const paid = !!calKPaid[0] && calKNoRenew!==0;
+    const nr0 = calKNoRenew===0;
+    const st0 = nr0 ? 'norenew' : (paid ? 'paid' : 'pending');
     const saved = calKSavedPayments[0];
     const dateVal = saved?.date || start || '';
     const amtVal = saved?.amount!=null ? saved.amount : total;
     list.innerHTML='<div class="im-pay-row" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">' +
       '<input type="date" id="ckp-date-0" class="custom-dp-trigger" value="'+dateVal+'" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="flex:1;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">' +
       '<input type="number" id="ckp-amt-0" value="'+amtVal+'" style="width:64px;padding:5px 6px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">' +
-      '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-0" onclick="toggleCKP(0)" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>' +
+      '<span class="im-pay-status '+(nr0?'norenew':(paid?'paid':'unpaid'))+'" id="ckps-0" onclick="openKaskoPayMenu(event,this,\'edit\',0,0,\''+st0+'\')" title="'+(nr0?'Без продовження':(paid?'Оплачено':'Очікується'))+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(nr0?'⛔':(paid?'✓':'●'))+'</span>' +
     '</div>';
   } else {
     const perQ=Math.round(total/4);
@@ -11903,12 +11916,15 @@ function buildCalKaskoPayments(){
         dateVal = qd.toISOString().split('T')[0];
       }
       const amtVal = saved?.amount!=null ? saved.amount : perQ;
-      const paid = !!calKPaid[q];
-      return '<div class="im-pay-row'+(paid?'':' next-pay')+'" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
+      const nr = calKNoRenew===q;
+      const paid = !!calKPaid[q] && !nr;
+      const stq = nr ? 'norenew' : (paid ? 'paid' : 'pending');
+      const inactive = calKNoRenew!==null && q>calKNoRenew;
+      return '<div class="im-pay-row'+((paid||nr||inactive)?'':' next-pay')+(inactive?' inactive':'')+'" style="'+(paid?'background:#f0fdf4;border-radius:6px':'')+'">'+
         '<span class="im-pay-q">Q'+q+'</span>'+
         '<input type="date" id="ckp-date-'+q+'" class="custom-dp-trigger" value="'+dateVal+'" onmousedown="if(!isMobileViewport()){openDateDropdown(this);}" onchange="blurDateFieldOnDesktop(this)" style="flex:1;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono);min-width:0">'+
         '<input type="number" id="ckp-amt-'+q+'" value="'+amtVal+'" style="width:56px;padding:4px 5px;font-size:10px;border:1px solid #e5e7eb;border-radius:4px;font-family:var(--font-mono)">'+
-        '<span class="im-pay-status '+(paid?'paid':'unpaid')+'" id="ckps-'+q+'" onclick="toggleCKP('+q+')" title="'+(paid?'Сплачено':'Очікується')+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(paid?'✓':'●')+'</span>'+
+        '<span class="im-pay-status '+(nr?'norenew':(paid?'paid':'unpaid'))+'" id="ckps-'+q+'" onclick="openKaskoPayMenu(event,this,\'edit\',0,'+q+',\''+stq+'\')" title="'+(nr?'Без продовження':(paid?'Оплачено':'Очікується'))+'" style="'+(paid?'color:#166534;font-weight:700':'')+'">'+(nr?'⛔':(paid?'✓':'●'))+'</span>'+
       '</div>';
     };
     list.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px">' +
@@ -11931,7 +11947,13 @@ function captureCurrentKaskoPaymentValues(){
     }
   });
 }
-function toggleCKP(q){ captureCurrentKaskoPaymentValues(); calKPaid[q]=!calKPaid[q]; buildCalKaskoPayments(); }
+function setCKPState(q, state){
+  captureCurrentKaskoPaymentValues();
+  calKPaid[q] = state==='paid';
+  if(state==='norenew') calKNoRenew = q;
+  else if(calKNoRenew===q) calKNoRenew = null;
+  buildCalKaskoPayments();
+}
 function openCalKaskoEdit(vid){
   const v=ALL_VEHICLES.find(x=>x.id===vid); if(!v)return;
   insVehicleId=vid;
@@ -11958,9 +11980,10 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-notes-chevron').style.transform = hasNotes ? 'rotate(180deg)' : '';
   document.getElementById('ck-attach-policy').innerHTML = buildAttachArea(v, 'kasko-policy');
   document.getElementById('ck-attach-invoice').innerHTML = buildAttachArea(v, 'kasko-invoice');
-  calKPayType=k.paymentType||'single'; calKPaid={}; calKSavedPayments={};
+  calKPayType=k.paymentType||'single'; calKPaid={}; calKSavedPayments={}; calKNoRenew=null;
   (k.payments||[]).forEach(p=>{
     calKPaid[p.quarter??0]=p.paid;
+    if(p.noRenewal) calKNoRenew = p.quarter??0;
     calKSavedPayments[p.quarter??0]={date:p.date, amount:p.amount};
   });
   document.getElementById('ck-ptb-single').classList.toggle('active',calKPayType==='single');
@@ -12067,7 +12090,7 @@ function renewCalKasko(vid){
   document.getElementById('ck-policy').value='';
   document.getElementById('ck-contract-date').value='';
   updateCkReqPurposeAuto();
-  calKPaid={}; calKSavedPayments={}; buildCalKaskoPayments();
+  calKPaid={}; calKSavedPayments={}; calKNoRenew=null; buildCalKaskoPayments();
 }
 function deleteCalKasko(vid){
   if(!confirm('Видалити поліс КАСКО для цього авто? Цю дію не можна скасувати.')) return;
@@ -12081,9 +12104,9 @@ function saveCalKasko(){
   const end=document.getElementById('ck-end').value; if(!end){alert('Вкажіть дату');return;}
   let payments=[];
   if(calKPayType==='single'){
-    payments=[{quarter:0,date:document.getElementById('ckp-date-0')?.value||'',amount:parseFloat(document.getElementById('ckp-amt-0')?.value)||0,paid:calKPaid[0]||false}];
+    payments=[{quarter:0,date:document.getElementById('ckp-date-0')?.value||'',amount:parseFloat(document.getElementById('ckp-amt-0')?.value)||0,paid:(calKPaid[0]&&calKNoRenew!==0)||false,noRenewal:calKNoRenew===0}];
   } else {
-    payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:calKPaid[q]||false}));
+    payments=[1,2,3,4].map(q=>({quarter:q,date:document.getElementById('ckp-date-'+q)?.value||'',amount:parseFloat(document.getElementById('ckp-amt-'+q)?.value)||0,paid:(calKPaid[q]&&calKNoRenew!==q)||false,noRenewal:calKNoRenew===q}));
   }
   v.kasko={insurer:document.getElementById('ck-insurer').value.trim(),policyNum:document.getElementById('ck-policy').value.trim(),contractDate:document.getElementById('ck-contract-date').value,start:document.getElementById('ck-start').value,end,insuredSum:parseThousands(document.getElementById('ck-sum').value)||0,tariff:parseFloat((document.getElementById('ck-tariff').value||'').replace(',','.'))||0,paymentType:calKPayType,totalPremium:parseThousands(document.getElementById('ck-total').value)||0,deductiblePct:parseFloat((document.getElementById('ck-deductible-pct').value||'').replace(',','.'))||0,deductible:parseThousands(document.getElementById('ck-deductible').value)||0,notes:document.getElementById('ck-notes').value.trim(),reqRecipient:document.getElementById('ck-req-recipient').value.trim(),reqCode:document.getElementById('ck-req-code').value.trim(),reqAccount:document.getElementById('ck-req-account').value.trim(),reqPurpose:document.getElementById('ck-req-purpose').value.trim(),payments};
   persistVehicle(v);
@@ -12099,6 +12122,51 @@ function calOsagoInfo(v){
   const d = daysFromNow(v.osago.end);
   return {days:d, date:v.osago.end, insurer:v.osago.insurer};
 }
+// «Без продовження»: one KASKO payment can be marked this way — the contract is then
+// treated as closed and every LATER payment (higher quarter number) becomes inactive.
+function kaskoNoRenewalQ(k){
+  const p = (k?.payments||[]).find(x=>x.noRenewal);
+  return p ? (p.quarter??0) : null;
+}
+function isKaskoClosed(v){ return kaskoNoRenewalQ(v?.kasko) !== null; }
+function kaskoPayInactive(k, p){
+  const q = kaskoNoRenewalQ(k);
+  return q !== null && (p.quarter??0) > q;
+}
+// Unpaid payments that still matter (not the «no renewal» one, not the ones after it).
+function kaskoActiveUnpaid(k){
+  return (k?.payments||[]).filter(p=>!p.paid && p.date && !p.noRenewal && !kaskoPayInactive(k,p));
+}
+function kaskoPayState(p){ return p.noRenewal ? 'norenew' : (p.paid ? 'paid' : 'pending'); }
+let _kPayMenuCtx = null;
+function closeKaskoPayMenu(){
+  document.getElementById('kasko-pay-menu')?.remove();
+  _kPayMenuCtx = null;
+}
+// mode: 'view' (insurance card, saved immediately) or 'edit' (KASKO edit form)
+function openKaskoPayMenu(ev, el, mode, vid, q, cur){
+  ev.stopPropagation();
+  closeKaskoPayMenu();
+  const items = [['pending','● Очікується'],['paid','✓ Оплачено'],['norenew','⛔ Без продовження']];
+  const m = document.createElement('div');
+  m.id = 'kasko-pay-menu';
+  m.innerHTML = items.map(([k,l])=>'<div class="kpm-item'+(k===cur?' active':'')+'" onclick="pickKaskoPayState(\''+k+'\')">'+l+'</div>').join('');
+  document.body.appendChild(m);
+  const r = el.getBoundingClientRect();
+  const w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + 'px';
+  m.style.top  = (r.bottom + 4 + h > window.innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4) + 'px';
+  _kPayMenuCtx = {mode, vid, q};
+}
+function pickKaskoPayState(state){
+  const c = _kPayMenuCtx; closeKaskoPayMenu();
+  if(!c) return;
+  if(c.mode === 'edit') setCKPState(c.q, state); else setCalKaskoPayState(c.vid, c.q, state);
+}
+document.addEventListener('click', e => { if(!e.target.closest('#kasko-pay-menu')) closeKaskoPayMenu(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeKaskoPayMenu(); });
+window.addEventListener('scroll', closeKaskoPayMenu, true);
+window.addEventListener('resize', closeKaskoPayMenu);
 function calKaskoInfo(v){
   if(!v.kasko) return null;
   const {paymentType,payments,end,insurer} = v.kasko;
@@ -12107,7 +12175,7 @@ function calKaskoInfo(v){
     if(!p||p.paid) return {days:daysFromNow(end),date:end,insurer,label:'кін. договору',isEnd:true};
     return {days:daysFromNow(p.date),date:p.date,insurer,label:'платіж',isEnd:false};
   }
-  const unpaid = [...payments].filter(p=>!p.paid).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const unpaid = kaskoActiveUnpaid(v.kasko).sort((a,b)=>new Date(a.date)-new Date(b.date));
   if(unpaid.length) return {days:daysFromNow(unpaid[0].date),date:unpaid[0].date,insurer,label:'Q'+unpaid[0].quarter,isEnd:false};
   return {days:daysFromNow(end),date:end,insurer,label:'кін. договору',isEnd:true};
 }
@@ -14667,10 +14735,24 @@ function renderInsuranceOverviewPanel(){
         const k = v.kasko;
         const durationText = `${fmt(k.start)}–${fmt(k.end)}`;
         const payments = k.payments || [];
-        const nextDueDate = payments.filter(p=>!p.paid && p.date).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date;
+        const nextDueDate = kaskoActiveUnpaid(k).sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date;
         const paymentCellHtml = p => {
           if(!p) return '';
           const label = k.paymentType==='quarterly' ? 'Q'+p.quarter : 'Платіж';
+          if(p.noRenewal){
+            return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:2px 4px">
+              <span style="color:#9ca3af;font-size:9.5px">${label}</span>
+              <span style="color:#6b7280;font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</span>
+              <span style="color:#6b7280;font-size:10px">⛔ без продовження</span>
+            </div>`;
+          }
+          if(kaskoPayInactive(k,p)){
+            return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:2px 4px;opacity:.4;filter:grayscale(1)">
+              <span style="color:#9ca3af;font-size:9.5px">${label}</span>
+              <span style="color:#6b7280;font-weight:700;font-family:var(--font-mono)">${fmt(p.date)}</span>
+              <span style="color:#9ca3af;font-size:10px">${p.amount?fmtMon(p.amount):''}</span>
+            </div>`;
+          }
           const isNext = p.date === nextDueDate;
           const days = daysFromNow(p.date);
           const color = p.paid ? '#0023ff' : (isNext ? kaskoInsColor(days) : '#9ca3af');
