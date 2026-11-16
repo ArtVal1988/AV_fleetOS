@@ -5155,7 +5155,7 @@ function showTooltip(e,bid,subContext){
       ? ` <span style="color:#dc2626">борг ${fmtSmart(firstRemaining)} ${cur} ⚠</span>`
       : ` <span style="color:#2F6364">✓</span>`;
     const firstRowHtml = perRow(
-      `${fmtShortYear(b.start)}–${fmtShortYear(firstPeriodEnd)}`, 'Початково', 'first',
+      `${fmtShortYear(b.start)}–${fmtShortYear(firstPeriodEnd)}`, '', '',
       (b.rate
         ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`
         : `${days} діб`) + firstStatus,
@@ -5226,7 +5226,6 @@ function showTooltip(e,bid,subContext){
     // One list of ALL periods (original + extensions) replaces the separate «Оренда»
     // row and the «Продовження оренди» block; the final return goes to the bottom.
     periodsBlock = `
-      <div class="tt-label" style="margin-bottom:4px">Періоди оренди</div>
       ${firstRowHtml}${moreIndicator}${historyRows}${activeRow}${debtAtDateWidget}
     `;
   }
