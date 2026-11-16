@@ -11952,6 +11952,7 @@ function openCalKaskoEdit(vid){
   document.getElementById('ck-req-account').value=k.reqAccount||'';
   document.getElementById('ck-contract-date').value=k.contractDate||'';
   document.getElementById('ck-req-purpose').value=k.reqPurpose || buildKaskoReqPurpose(k.policyNum, k.contractDate, v?.owner?.name, v?.owner?.inn);
+  updateCkReqIndicator();
   const hasNotes = !!k.notes;
   document.getElementById('ck-notes-panel').style.display = hasNotes ? 'block' : 'none';
   document.getElementById('ck-notes-toggle-icon').textContent = hasNotes ? '⊖' : '⊕';
@@ -12004,6 +12005,18 @@ function buildKaskoReqPurpose(policyNum, contractDate, ownerName, ownerInn){
   if(ownerName) s += `, ${ownerName}`;
   if(ownerInn) s += `, ${ownerInn}`;
   return s;
+}
+function updateCkReqIndicator(){
+  const has = ['ck-req-recipient','ck-req-code','ck-req-account'].some(id=>(document.getElementById(id)?.value||'').trim());
+  const c = document.getElementById('ck-req-count');
+  if(c) c.style.display = has ? '' : 'none';
+}
+function openCkReqModal(){
+  document.getElementById('ck-req-modal').classList.add('open');
+}
+function closeCkReqModal(){
+  document.getElementById('ck-req-modal').classList.remove('open');
+  updateCkReqIndicator();
 }
 function updateCkReqPurposeAuto(){
   const el = document.getElementById('ck-req-purpose');
@@ -18066,7 +18079,42 @@ function startAutoRefresh(){
         </div>
       </div>
       <div style="margin-top:12px">
-        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px">Реквізити для оплати</div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px">Графік платежів</div>
+        <div id="ck-payments-list"></div>
+      </div>
+      <div class="fgrid" style="margin-top:10px;grid-template-columns:1fr 1fr 1fr">
+        <div class="fg"><label>Договір</label><div id="ck-attach-policy"></div></div>
+        <div class="fg"><label>Рахунок для оплати</label><div id="ck-attach-invoice"></div></div>
+        <div class="fg"><label>Реквізити</label>
+          <div class="dm-attach-area"><button type="button" id="ck-req-open-btn" class="dm-add-file-btn" style="display:flex" onclick="openCkReqModal()">💳 Реквізити<span class="dm-file-count" id="ck-req-count" style="display:none">✓</span></button></div>
+        </div>
+      </div>
+      <div class="msec-inner-sep" style="margin-top:12px">
+        <button type="button" class="extras-toggle" id="ck-notes-toggle-btn" onclick="toggleCkNotesPanel()">
+          <span id="ck-notes-toggle-icon">⊕</span>
+          <span>Нотатки</span>
+          <span class="extras-toggle-chevron" id="ck-notes-chevron">▾</span>
+        </button>
+        <div class="extras-panel" id="ck-notes-panel" style="display:none">
+          <textarea id="ck-notes" style="min-height:56px;width:100%;margin:12px 0" placeholder="Умови, франшиза..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="document.getElementById('cal-kasko-modal').classList.remove('open')">Скасувати</button>
+      <button class="btn btn-primary" onclick="saveCalKasko()">Зберегти КАСКО</button>
+    </div>
+  </div>
+</div>
+
+<!-- KASKO PAYMENT REQUISITES POPUP -->
+<div class="docs-modal-overlay" id="ck-req-modal" onclick="if(event.target===this)closeCkReqModal()" style="z-index:1200">
+  <div class="docs-modal" style="width:480px">
+    <div class="docs-modal-head">
+      <div><div class="docs-modal-title">Реквізити для оплати КАСКО</div></div>
+      <button class="docs-modal-x" onclick="closeCkReqModal()">✕</button>
+    </div>
+    <div class="docs-modal-body" style="padding-bottom:20px">
         <div class="fg" style="margin-bottom:8px"><label>Отримувач</label>
           <div style="display:flex;gap:4px">
             <input type="text" id="ck-req-recipient" placeholder="ТОВ Страхова компанія" style="flex:1;min-width:0">
@@ -18093,29 +18141,9 @@ function startAutoRefresh(){
             <button type="button" onclick="copyCkReqField('ck-req-purpose')" title="Скопіювати" style="width:32px;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px">📋</button>
           </div>
         </div>
-      </div>
-      <div style="margin-top:12px">
-        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#0891b2;margin-bottom:8px">Графік платежів</div>
-        <div id="ck-payments-list"></div>
-      </div>
-      <div class="fgrid" style="margin-top:10px">
-        <div class="fg"><label>Договір</label><div id="ck-attach-policy"></div></div>
-        <div class="fg"><label>Рахунок для оплати</label><div id="ck-attach-invoice"></div></div>
-      </div>
-      <div class="msec-inner-sep" style="margin-top:12px">
-        <button type="button" class="extras-toggle" id="ck-notes-toggle-btn" onclick="toggleCkNotesPanel()">
-          <span id="ck-notes-toggle-icon">⊕</span>
-          <span>Нотатки</span>
-          <span class="extras-toggle-chevron" id="ck-notes-chevron">▾</span>
-        </button>
-        <div class="extras-panel" id="ck-notes-panel" style="display:none">
-          <textarea id="ck-notes" style="min-height:56px;width:100%;margin:12px 0" placeholder="Умови, франшиза..."></textarea>
-        </div>
-      </div>
     </div>
     <div class="modal-footer" style="padding:0 24px 20px;display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="document.getElementById('cal-kasko-modal').classList.remove('open')">Скасувати</button>
-      <button class="btn btn-primary" onclick="saveCalKasko()">Зберегти КАСКО</button>
+      <button class="btn btn-primary" onclick="closeCkReqModal()">Готово</button>
     </div>
   </div>
 </div>
