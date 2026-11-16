@@ -5178,8 +5178,15 @@ function showTooltip(e,bid,subContext){
       const color = st==='paid'?'#2F6364':st==='partial'?'#f0a830':'#ef4444';
       const label = st==='paid'?'✓':'Борг '+fmtSmart((ext.cost||0)-(ext.amountPaid||0))+' '+(ext.currency||b.currency||'$')+' ⚠';
       const extCurTxt = ext.currency||b.currency||'$';
-      const actRight = (ext.cost?`<span style="color:${curColor(extCurTxt)}">${fmtSmart(ext.cost)} ${extCurTxt}</span> `:'')
-        + (st==='paid' ? `<span style="color:${color}">${label}</span>` : `<span style="color:#dc2626">борг ${fmtSmart((ext.cost||0)-(ext.amountPaid||0))} ${extCurTxt} ⚠</span>`);
+      const actDays = ext.days>0 ? ext.days : Math.max(1, Math.round((new Date(ext.toDate)-new Date(ext.fromDate))/86400000));
+      const actRate = ext.rate>0 ? ext.rate : (ext.cost>0 ? Math.round(ext.cost/actDays*100)/100 : 0);
+      const actExRate = parseFloat(ext.totalExchangeRate) || 0;
+      const actUsd = extCurTxt==='₴' && actExRate>0 && actRate ? ` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart(actRate/actExRate)} $)</span>` : '';
+      const actCalc = ext.cost>0
+        ? `${actDays} * <span style="color:${curColor(extCurTxt)}">${fmtSmart(actRate)} ${extCurTxt}</span>${actUsd} = <span style="color:${curColor(extCurTxt)}">${fmtSmart(ext.cost)} ${extCurTxt}</span>`
+        : '';
+      const actRight = actCalc
+        + (actCalc?' ':'') + (st==='paid' ? `<span style="color:${color}">${label}</span>` : `<span style="color:#dc2626">борг ${fmtSmart((ext.cost||0)-(ext.amountPaid||0))} ${extCurTxt} ⚠</span>`);
       activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '', '', actRight, 'act');
 
       // "Тест" debt-at-date widget: only relevant while there's still an
