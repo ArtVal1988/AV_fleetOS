@@ -5155,7 +5155,7 @@ function showTooltip(e,bid,subContext){
       ? ` <span style="color:#dc2626">борг ${fmtSmart(firstRemaining)} ${cur} ⚠</span>`
       : ` <span style="color:#2F6364">✓</span>`;
     const firstRowHtml = perRow(
-      `${fmtShortYear(b.start)}–${fmtShortYear(firstPeriodEnd)}`, 'Початковий період', 'first',
+      `${fmtShortYear(b.start)}–${fmtShortYear(firstPeriodEnd)}`, 'Початково', 'first',
       (b.rate
         ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`
         : `${days} діб`) + firstStatus,
