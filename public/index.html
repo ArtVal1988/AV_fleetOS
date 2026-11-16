@@ -4639,7 +4639,7 @@ function getOsagoDotStatus(v){
 }
 function getKaskoDotStatus(v){
   if(!v.kasko) return null; // truly no policy on file — empty half
-  if(isKaskoClosed(v)) return 'ok'; // closed («Без продовження») — nothing to chase any more
+  if(isKaskoClosed(v)) return null; // closed («Без продовження») — shown as if there were no KASKO at all
   const unpaid = kaskoActiveUnpaid(v.kasko).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const nextDue = unpaid[0]?.date;
   if(!nextDue) return 'ok'; // policy exists, fully paid (or no schedule recorded yet)
