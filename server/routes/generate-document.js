@@ -997,6 +997,19 @@ router.get('/:bookingId/:type', auth, async (req, res) => {
     }
   }
 
+  // Whole-extension act (no payment index): Оплачено/Борг must reflect the extension's OWN payments,
+  // not the main rental period's amountPaid — so the printed «Борг» is the extension's remaining debt.
+  if (req.query.extPaymentIndex === undefined && periodLabel !== 'Основний') {
+    const extSrcAll = req.query.useExtension === '1'
+      ? ctx.booking.extension
+      : ctx.booking.extensionHistory?.[parseInt(req.query.extHistoryIndex)];
+    if (extSrcAll) {
+      const pays = Array.isArray(extSrcAll.payments) ? extSrcAll.payments : [];
+      const paidAll = pays.length ? pays.reduce((a, p) => a + (Number(p.amount) || 0), 0) : (Number(extSrcAll.amountPaid) || 0);
+      ctx.booking.amountPaid = Math.round(paidAll * 100) / 100;
+    }
+  }
+
   // Extension payment-row acts: Оплачено/Борг as of THIS payment of the extension (the
   // extension's own payments, cumulative up to and including it).
   if (req.query.extPaymentIndex !== undefined) {
