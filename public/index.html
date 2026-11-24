@@ -5974,9 +5974,9 @@ function openBookingModal(vid=null,start=null,end=null){
   document.getElementById('bm-ext-fields').style.display='none';
   document.getElementById('bm-ext-gen-act-btn').style.display='none';
   loadExtPayments([]);
-  moveReturnRow(false);
   extDaysOverridden=false; extTotalOverridden=false;
   currentExtHistory = [];
+  moveReturnRow(false);
   editingExtHistoryIndex = null;
   renderExtTimeline();
 
@@ -9392,7 +9392,10 @@ let extTotalCurTouched = false, extPaidCurTouched = false;
 
 function moveReturnRow(toExtSection){
   const row = document.getElementById('bm-return-row');
-  const anchor = document.getElementById(toExtSection ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
+  // The final return sits under the extensions whenever there are any: either the extension
+  // form is open, or saved periods exist (they are listed in the «Продовження» timeline).
+  const hasExt = !!toExtSection || (currentExtHistory && currentExtHistory.length>0) || !!document.getElementById('bm-ext-active')?.checked;
+  const anchor = document.getElementById(hasExt ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
   if(row && anchor) anchor.parentNode.insertBefore(row, anchor);
 }
 function clearActiveExtension(){
@@ -11007,6 +11010,7 @@ function closeAndStartNewExtension(){
 function renderExtTimeline(){
   const wrap = document.getElementById('bm-ext-timeline');
   if(!wrap) return;
+  moveReturnRow(false); // keeps the return row under the extensions while any exist
   if(!currentExtHistory.length && !editBid){ wrap.style.display='none'; return; }
 
   const b = editBid ? bookings.find(x=>x.id===editBid) : null;
