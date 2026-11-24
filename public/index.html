@@ -3353,22 +3353,18 @@ input.dm-pf-val.tel{font-size:14px;}
           <div id="bm-ext-payments-column" style="width:420px;flex-shrink:0;background:#f7f8fb;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
             <div id="bm-ext-payments-list-area"></div>
           </div>
-          <div class="ext-compact-box" style="flex:1;min-width:0;text-align:center">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;position:relative">
+          <div class="ext-compact-box" style="min-width:0;text-align:center">
             <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
             <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">0 $</div>
           </div>
-          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
-        </div>
-        <div id="bm-ext-close-row" style="display:none;margin-top:8px">
-          <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:15;pointer-events:auto">💾 Зберегти продовження</button>
-        </div>
-        <div id="ext-debt-at-date-widget" class="msec-inner-sep" style="margin-top:12px;display:none">
-          <button type="button" class="extras-toggle" id="ext-debt-toggle-btn" onclick="toggleExtDebtWidget()">
-            <span id="ext-debt-toggle-icon">⊕</span>
-            <span>🧮 Борг станом на дату</span>
-            <span class="extras-toggle-chevron" id="ext-debt-chevron">▾</span>
-          </button>
-          <div class="extras-panel" id="ext-debt-panel" style="display:none;margin-top:8px;padding:14px;background:linear-gradient(135deg,#fef9f3,#fdf4ec);border:1px solid #fbe0c0;border-radius:12px;box-shadow:0 1px 3px rgba(194,97,13,.08)">
+          <div id="ext-debt-at-date-widget" style="display:none;position:relative;text-align:center">
+            <button type="button" id="ext-debt-toggle-btn" onclick="toggleExtDebtWidget()" title="Показати борг станом на дату" style="display:inline-flex;align-items:center;gap:4px;background:#fef9f3;border:1px solid #fbe0c0;color:#c2610d;border-radius:6px;padding:3px 8px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap">
+              <span id="ext-debt-toggle-icon" style="display:none">⊕</span>
+              <span>🧮 Борг станом на дату</span>
+              <span class="extras-toggle-chevron" id="ext-debt-chevron" style="font-size:9px">▾</span>
+            </button>
+            <div class="extras-panel" id="ext-debt-panel" style="display:none;position:absolute;right:0;top:calc(100% + 4px);width:400px;max-width:calc(100vw - 48px);z-index:40;box-sizing:border-box;margin-top:0;padding:12px;background:linear-gradient(135deg,#fef9f3,#fdf4ec);border:1px solid #fbe0c0;border-radius:12px;box-shadow:0 1px 3px rgba(194,97,13,.08)">
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:#fff;border:1px solid #fbe0c0;border-radius:8px;padding:8px 10px;text-align:center">
               <span style="font-size:14px;flex-shrink:0">📍</span>
@@ -3392,6 +3388,12 @@ input.dm-pf-val.tel{font-size:14px;}
             </div>
           </div>
           </div>
+          </div>
+          </div>
+          <button type="button" id="bm-ext-gen-act-btn" onclick="generateExtensionAct()" title="Сформувати акт продовження" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;width:30px;height:36px;cursor:pointer;font-size:14px;flex-shrink:0">🖨️</button>
+        </div>
+        <div id="bm-ext-close-row" style="display:none;margin-top:8px">
+          <button type="button" id="bm-ext-save-btn" class="case-add-btn" style="width:100%;background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;position:relative;z-index:15;pointer-events:auto">💾 Зберегти продовження</button>
         </div>
       </div>
 
@@ -10674,6 +10676,8 @@ function editExtPayment(i){
   if(dateEl) dateEl.value = p.date || '';
   setExtNewPaymentMethod(p.method || 'cash');
 }
+const EXTPM_CASH_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/></svg>';
+const EXTPM_CARD_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>';
 function renderExtPaymentsColumn(){
   const col = document.getElementById('bm-ext-payments-list-area');
   if(!col) return;
@@ -10682,11 +10686,13 @@ function renderExtPaymentsColumn(){
   const paid = currentExtPayments.reduce((s,p)=>s+(p.amount||0), 0);
   const isFullyPaid = total > 0 && paid >= total;
   const list = currentExtPayments.map((p,i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px;flex-wrap:wrap${i===extEditingPaymentIndex?';background:#eff6ff':''}">
+    <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #e5e7eb;font-size:11.5px;flex-wrap:wrap${i===extEditingPaymentIndex?';background:#eff6ff':''}">
       ${(p.currency==='₴' && p.amountUah>0 && p.rate>0 && cur==='$')
-        ? `<span style="font-weight:700;color:${curColor('₴')}">${fmtSmart(p.amountUah)} ₴</span><span style="color:#6b7280;font-size:10.5px">курс ${fmtSmart(p.rate)}</span><span style="font-weight:700;color:${curColor('$')}">≈ ${fmtSmart(p.amount)} $</span>`
+        ? `<span style="font-weight:700;color:${curColor('₴')}">${fmtSmart(p.amountUah)} ₴</span><span style="color:#6b7280;font-size:10.5px">(${fmtSmart(p.rate)})</span><span style="font-weight:700;color:${curColor('$')}">≈ ${fmtSmart(p.amount)} $</span>`
         : `<span style="font-weight:700;color:${curColor(cur)}">${fmtSmart(p.amount)} ${cur}</span>`}
-      <span style="color:#9ca3af;flex:1;min-width:70px">${p.date?fmt(p.date):''}${p.method?(p.method==='cash'?' · готівка':' · картка'):''}</span>
+      <span style="flex:1;min-width:8px"></span>
+      <span style="color:#6b7280;font-size:11px;white-space:nowrap">${p.date?fmt(p.date):''}</span>
+      ${p.method ? `<span title="${p.method==='cash'?'Готівка':'Картка'}" style="width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:${p.method==='cash'?'#66dbe3':'#ffcfab'}"><span style="width:12px;height:12px;display:block;line-height:0">${p.method==='cash'?EXTPM_CASH_SVG:EXTPM_CARD_SVG}</span></span>` : ''}
       <button type="button" onclick="generateExtPaymentAct(${i}, this)" title="Сформувати акт продовження (на цей платіж)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
       <button type="button" onclick="editExtPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
