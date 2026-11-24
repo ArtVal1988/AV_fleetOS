@@ -5285,12 +5285,12 @@ function showTooltip(e,bid,subContext){
   // Final return for an extended booking is shown at the very bottom of the rental data.
   const retBarHtml = (hasExtPeriods && !isSpecialStatus) ? (()=>{
     const defLoc = (!b.ret?.loc || b.ret.loc === BM_DEFAULT_ADDRESS);
-    return `<div class="tt-ret-bar"><span>↩ Повернення</span><div class="tt-bar-right"><b>${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}${defLoc?' · Офіс':''}</b>${defLoc ? '' : `<div class="tt-bar-addr">${b.ret.loc}</div>`}</div></div>`;
+    return `<div class="tt-ret-bar"><span>↩ Повернення</span><div class="tt-bar-right"><b>${fmt(getEffectiveEnd(b))}${b.ret?.time?' · '+b.ret.time:''}</b><div class="tt-bar-addr">${defLoc ? 'Офіс' : b.ret.loc}</div></div></div>`;
   })() : '';
 
   const pickupBarHtml = (hasExtPeriods && !isSpecialStatus) ? (()=>{
     const defLoc = (!b.pickup?.loc || b.pickup.loc === BM_DEFAULT_ADDRESS);
-    return `<div class="tt-divider"></div><div class="tt-ret-bar tt-pick-bar"><span>↪ Отримання</span><div class="tt-bar-right"><b>${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}${defLoc?' · Офіс':''}</b>${defLoc ? '' : `<div class="tt-bar-addr">${b.pickup.loc}</div>`}</div></div>` + firstPeriodBlock;
+    return `<div class="tt-divider"></div><div class="tt-ret-bar tt-pick-bar"><span>↪ Отримання</span><div class="tt-bar-right"><b>${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</b><div class="tt-bar-addr">${defLoc ? 'Офіс' : b.pickup.loc}</div></div></div>` + firstPeriodBlock;
   })() : pickupRow;
 
   // Substitute vehicle history — shown whenever this booking has one or
