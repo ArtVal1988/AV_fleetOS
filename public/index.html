@@ -5339,15 +5339,18 @@ function showTooltip(e,bid,subContext){
     return `<div class="tt-divider"></div><div class="tt-ret-bar tt-pick-bar"><span>↪ Отримання</span><div class="tt-bar-right"><b>${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}</b><div class="tt-bar-addr">${defLoc ? 'Офіс' : b.pickup.loc}</div></div></div>` + firstPeriodBlock;
   })() : pickupRow;
 
-  // Substitute vehicle history — shown whenever this booking has one or
-  // more recorded substitution periods, regardless of which specific day
-  // triggered the tooltip (matches how extension history is shown too).
+  // Substitute vehicle — only the period(s) active today (see activeSubstitutes below).
   let substituteBlock = '';
-  if(b.substituteVehicles && b.substituteVehicles.length){
+  // Only substitute periods that are active right now (today within from..to) are shown here;
+  // finished and not-yet-started ones stay visible in the order itself.
+  const subNow = new Date();
+  const subToday = dStr(subNow.getFullYear(), subNow.getMonth(), subNow.getDate());
+  const activeSubstitutes = (b.substituteVehicles||[]).filter(sv => sv.fromDate && sv.toDate && sv.fromDate <= subToday && subToday <= sv.toDate);
+  if(activeSubstitutes.length){
     const fmtSY = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
     // One row per substitute: plate · dates · calculation. With a single substitute its comment
     // goes up to the header line; with several, each comment sits under its own row.
-    const subs = b.substituteVehicles;
+    const subs = activeSubstitutes;
     const single = subs.length === 1;
     const subRows = subs.map(s=>{
       const sv = getVehicle(s.vehicleId);
