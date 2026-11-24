@@ -6311,7 +6311,7 @@ function editBooking(bid){
   bookingWasClosedOnOpen = !!b.closed;
   applyOrderLockState();
   updateAllMsgIconStates();
-  autoOpenBmSectionsWithData();
+  autoOpenBmSectionsWithData(b.uiCollapsed);
   updateBmSectionButtons();
   applyAccountantBookingFormRestrictions();
   document.getElementById('booking-modal').classList.add('open');
@@ -6654,6 +6654,7 @@ function saveBooking(){
     payMethod: bmPayMethod,
     payMixedNote: bmPayMethod === 'mixed' ? (document.getElementById('bm-pay-mixed-note')?.value.trim() || '') : '',
     partialPaymentActive: document.getElementById('bm-partial-active')?.checked || false,
+    uiCollapsed: Object.keys(bmCollapsed).filter(k => bmCollapsed[k]), // view state: collapsed form sections
     amountPaid: currentMainPayments.reduce((s,p)=>s+(p.amount||0), 0),
     payments: currentMainPayments,
     depositPayMethod: bmDepositPayMethod,
@@ -6780,7 +6781,7 @@ const EDIT_HISTORY_FIELD_LABELS = {
   'repairPause.fromDate':'Ремонт від', 'repairPause.toDate':'Ремонт до',
 };
 // Internal/metadata fields — never meaningful to show as a "change" to the user.
-const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','_updatedAt','_createdAt','_createdBy','_rotatedAt','_id']);
+const EDIT_HISTORY_SKIP_FIELDS = new Set(['id','_updatedAt','_createdAt','_createdBy','_rotatedAt','_id','uiCollapsed']);
 const EDIT_HISTORY_ARRAY_LABELS = {
   fines:'Штрафи', substituteVehicles:'Підмінні авто', extensionHistory:'Історія продовжень',
   messengers:'Месенджери', payments:'Платежі', equipment:'Обладнання', 'extension.payments':'Платежі продовження',
@@ -9778,7 +9779,7 @@ function bmDedHasData(){
 // panels are static DOM elements reused across every booking switch) when
 // the newly-loaded booking has no data in it — otherwise a panel opened
 // once stays visually 'stuck open' for every other booking afterward.
-function autoOpenBmSectionsWithData(){
+function autoOpenBmSectionsWithData(savedCollapsed){
   bmExpandAllSections();
   const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
   if(bmSubHasData() !== subOpen) toggleSubstituteSection();
@@ -9788,6 +9789,10 @@ function autoOpenBmSectionsWithData(){
   if(bmRepHasData() !== repOpen) toggleRepairSection();
   const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
   if(bmDedHasData() !== dedOpen) toggleDedPanel();
+  // restore the sections the user collapsed before the last save (only ones that hold data)
+  (Array.isArray(savedCollapsed) ? savedCollapsed : []).forEach(k => {
+    if(k in bmCollapsed && bmSectionOpen(k) && bmSectionHasData(k)) bmCollapsed[k] = true;
+  });
 }
 function updateBmSectionAvailability(){
   const currentStatus = document.getElementById('bm-status')?.value;

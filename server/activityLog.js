@@ -180,7 +180,7 @@ const BY_ID = {
 const SKIP_PATHS = new Set(['nextServiceKm', 'service.nextKm', 'service.status', 'currentKmDate', 'sortOrder',
   'categoryOrder', 'categoryColor', 'docs.activeFile', 'docs.missingCount']);
 
-const SKIP_KEYS = new Set(['id', '_createdAt', '_updatedAt', '_createdBy', 'createdAt', 'updatedAt', 'author', 'createdBy', 'edited', 'editedBy', 'editedAt']);
+const SKIP_KEYS = new Set(['id', '_createdAt', '_updatedAt', '_createdBy', 'createdAt', 'updatedAt', 'author', 'createdBy', 'edited', 'editedBy', 'editedAt', 'uiCollapsed']);
 
 // ── Diffing ──────────────────────────────────────────────────────
 const isEmpty = v => v === undefined || v === null || v === '' || v === false;
