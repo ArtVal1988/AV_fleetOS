@@ -3376,7 +3376,7 @@ input.dm-pf-val.tel{font-size:14px;}
           <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;position:relative">
           <div style="display:flex;align-items:flex-end;gap:6px"><div class="ext-compact-box" style="min-width:0;text-align:center;flex:1">
             <span class="ext-compact-label" style="left:50%;transform:translateX(-50%)">Залишок боргу</span>
-            <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;align-items:center;justify-content:center">0 $</div>
+            <div class="ext-remaining-display" id="bm-ext-remaining" style="height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0">0 $</div>
           </div><button type="button" id="bm-ext-print-debt-btn" onclick="generateExtensionAct(this)" title="Роздрукувати акт продовження із залишком боргу" style="display:none;flex-shrink:0;width:34px;height:36px;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:6px;cursor:pointer;font-size:15px;padding:0">🖨️</button></div>
           
           </div>
@@ -10671,7 +10671,12 @@ function updateExtensionPaidUI(){
     remainingEl.textContent = 'Оплачено';
     remainingEl.style.color = '#16a34a';
   } else {
-    remainingEl.textContent = remaining.toLocaleString('uk-UA') + ' ' + cur;
+    // Under a dollar debt show the same amount in hryvnias (at the extension's exchange rate).
+    const exRate = parseFloat((document.getElementById('bm-ext-rate2')?.value || '').replace(',','.')) || 0;
+    const uahLine = (cur === '$' && exRate > 0 && remaining > 0)
+      ? `<span style="font-size:10.5px;font-weight:700;line-height:1;margin-top:2px;color:${curColor('₴')}">≈ ${Math.round(remaining * exRate).toLocaleString('uk-UA')} ₴</span>`
+      : '';
+    remainingEl.innerHTML = `<span style="line-height:1.1">${remaining.toLocaleString('uk-UA')} ${cur}</span>${uahLine}`;
     remainingEl.style.color = '';
   }
 
