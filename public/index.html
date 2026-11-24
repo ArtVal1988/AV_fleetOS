@@ -1332,7 +1332,12 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .bm-sec-btn:hover{filter:brightness(0.97)}
 .bm-sec-btn.active,.bm-sec-btn.locked-active{box-shadow:0 0 0 2px currentColor inset}
 .bm-sec-btn.locked-active{cursor:default}
-.bm-sec-badge{position:absolute;top:-5px;right:-3px;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:8px;background:#dc2626;color:#fff;display:none}
+.bm-sec-badge{position:absolute;top:4px;right:6px;min-width:16px;box-sizing:border-box;text-align:center;font-size:10px;line-height:1;font-weight:800;padding:3px 5px;border-radius:9px;background:#374151;color:#fff;display:none}
+#bm-sec-btn-ext .bm-sec-badge{background:#1f6357;}
+#bm-sec-btn-sub .bm-sec-badge{background:#6d28d9;}
+#bm-sec-btn-fine .bm-sec-badge{background:#b91c1c;}
+#bm-sec-btn-rep .bm-sec-badge{background:#c2410c;}
+#bm-sec-btn-ded .bm-sec-badge{background:#92400e;}
 #bm-return-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 #bm-pickup-row{background:#eff6ff;border:1px solid rgba(0,0,0,.07);border-left:3px solid #60a5fa;border-radius:10px;padding:16px 14px 10px;}
 .fin-label-style label{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9ca3af!important;}
@@ -3276,19 +3281,19 @@ input.dm-pf-val.tel{font-size:14px;}
 
     <div class="msec" id="bm-sections-nav-row" style="margin-top:14px;position:relative">
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ext" onclick="activateBmSection('ext')"><span class="bm-sec-badge" id="bm-sec-badge-ext"></span>
           <span style="font-size:18px">↷</span><span>Продовження</span>
         </button>
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-sub" onclick="activateBmSection('sub')"><span class="bm-sec-badge" id="bm-sec-badge-sub"></span>
           <span style="font-size:18px">🔄</span><span>Підмінне</span>
         </button>
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-fine" onclick="activateBmSection('fine')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-fine" onclick="activateBmSection('fine')"><span class="bm-sec-badge" id="bm-sec-badge-fine"></span>
           <span style="font-size:18px">🚔</span><span>Штрафи</span>
         </button>
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-rep" onclick="activateBmSection('rep')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-rep" onclick="activateBmSection('rep')"><span class="bm-sec-badge" id="bm-sec-badge-rep"></span>
           <span style="font-size:18px">🔧</span><span>Ремонт</span>
         </button>
-        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ded" onclick="activateBmSection('ded')">
+        <button type="button" class="bm-sec-btn" id="bm-sec-btn-ded" onclick="activateBmSection('ded')"><span class="bm-sec-badge" id="bm-sec-badge-ded"></span>
           <span style="font-size:18px">💰</span><span>Утримання</span>
         </button>
       </div>
@@ -9906,40 +9911,25 @@ function updateBmSectionButtons(){
   const secDed = document.getElementById('bm-block-5');
   if(secDed) secDed.style.display = ((dedOpen || dedLocked) && !bmCollapsed.ded) ? '' : 'none';
 
-  // Badges — quick summary visible even while the section itself is closed
-  const badgeExt = document.getElementById('bm-sec-badge-ext');
-  if(badgeExt){
-    if(extFormOpen){
-      const d = parseInt(document.getElementById('bm-ext-days')?.value) || 0;
-      badgeExt.textContent = d ? d+'дн' : '';
-      badgeExt.style.display = d ? 'block' : 'none';
-    } else { badgeExt.style.display = 'none'; }
-  }
-  const badgeSub = document.getElementById('bm-sec-badge-sub');
-  if(badgeSub){
-    const n = (currentSubstitutes||[]).length;
-    badgeSub.textContent = n || '';
-    badgeSub.style.display = n ? 'block' : 'none';
-  }
-  const badgeFine = document.getElementById('bm-sec-badge-fine');
-  if(badgeFine){
-    const n = (currentFines||[]).filter(f=>!f.paid).length;
-    badgeFine.textContent = n || '';
-    badgeFine.style.display = n ? 'block' : 'none';
-  }
-  const badgeRep = document.getElementById('bm-sec-badge-rep');
-  if(badgeRep){
-    const has = !!currentRepairPause;
-    badgeRep.textContent = has ? repairPauseDays(currentRepairPause)+'дн' : '';
-    badgeRep.style.display = has ? 'block' : 'none';
-  }
-  const badgeDed = document.getElementById('bm-sec-badge-ded');
-  if(badgeDed){
-    const countEl = document.getElementById('ded-active-count');
-    const n = countEl && countEl.style.display !== 'none' ? countEl.textContent : '';
-    badgeDed.textContent = n || '';
-    badgeDed.style.display = n ? 'block' : 'none';
-  }
+  // Badges — while a section is collapsed, its button shows how many entries it holds
+  const extCount = currentExtHistory.length + ((extFormOpen && getExtDateField('bm-ext-from') && getExtDateField('bm-ext-to')) ? 1 : 0);
+  const dedCountEl = document.getElementById('ded-active-count');
+  const dedCount = (dedCountEl && dedCountEl.style.display !== 'none') ? (parseInt(dedCountEl.textContent) || (bmDedHasData() ? 1 : 0)) : (bmDedHasData() ? 1 : 0);
+  const badgeCounts = {
+    ext: extCount,
+    sub: (currentSubstitutes||[]).length,
+    fine: (currentFines||[]).length,
+    rep: currentRepairPause ? 1 : 0,
+    ded: dedCount
+  };
+  Object.keys(badgeCounts).forEach(k => {
+    const el = document.getElementById('bm-sec-badge-'+k);
+    if(!el) return;
+    const n = badgeCounts[k];
+    const show = !!(bmCollapsed[k] && n > 0);
+    el.textContent = show ? n : '';
+    el.style.display = show ? 'block' : 'none';
+  });
 }
 function toggleFinesSection(){
   const panel = document.getElementById('bm-fines-panel');
