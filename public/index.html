@@ -1338,6 +1338,8 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .bm-sec-btn.active,.bm-sec-btn.locked-active{box-shadow:0 0 0 2px currentColor inset}
 .bm-sec-btn.locked-active{cursor:default}
 .bm-sec-badge{position:absolute;top:0;right:0;min-width:24px;height:22px;box-sizing:border-box;text-align:right;font-size:11px;line-height:1;font-weight:800;padding:3px 6px 0 0;border-radius:0 0 0 24px;background:#374151;color:#fff;display:none}
+/* keep the count at 11px on phones too (the mobile `.bm-sec-btn span:first-child` rule would otherwise enlarge it) */
+.bm-sec-btn span.bm-sec-badge:first-child{font-size:11px!important;}
 #bm-sec-btn-ext .bm-sec-badge{background:#1f6357;}
 #bm-sec-btn-sub .bm-sec-badge{background:#6d28d9;}
 #bm-sec-btn-fine .bm-sec-badge{background:#b91c1c;}
