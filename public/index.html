@@ -10740,7 +10740,6 @@ function renderExtPaymentsColumn(){
       <span style="flex:1;min-width:8px"></span>
       <span style="color:#6b7280;font-size:11px;white-space:nowrap">${p.date?fmt(p.date):''}</span>
       ${p.method ? `<span title="${p.method==='cash'?'Готівка':'Картка'}" style="width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:${p.method==='cash'?'#66dbe3':'#ffcfab'}"><span style="width:12px;height:12px;display:block;line-height:0">${p.method==='cash'?EXTPM_CASH_SVG:EXTPM_CARD_SVG}</span></span>` : ''}
-      <button type="button" onclick="generateExtPaymentAct(${i}, this)" title="Сформувати акт продовження (на цей платіж)" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:4px;width:22px;height:22px;cursor:pointer;font-size:11px;padding:0">🖨️</button>
       <button type="button" onclick="editExtPayment(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#374151;font-size:11px;padding:0">✎</button>
       <button type="button" onclick="deleteExtPayment(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
     </div>`).join('');
