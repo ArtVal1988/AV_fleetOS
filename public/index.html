@@ -624,6 +624,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .tt-pm-icon.dim{opacity:.35;}
 .tt-per{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 8px;padding:3px 6px;border-radius:4px;font-size:11px;}
 .tt-per.alt{background:rgba(0,0,0,.07);}
+.tt-rail{position:relative;margin:4px 0 6px 7px;padding-left:16px;border-left:2px solid #cbd5e1;}
+.tt-rail .tt-per{position:relative;margin-bottom:2px;}
+.tt-rail .tt-per::before{content:"";position:absolute;left:-24px;top:50%;transform:translateY(-50%);width:11px;height:11px;border-radius:50%;background:#fff;border:2px solid #94a3b8;}
+.tt-rail .tt-per.first{background:#e8f5ec;}
+.tt-rail .tt-per.first::before{background:#14532d;border-color:#14532d;}
+.tt-rail .tt-per.first .tt-per-dates{font-weight:700;color:#14532d;}
+.tt-rail .tt-per.act::before{background:#fed7aa;border-color:#ea580c;}
 .tt-per.act{background:rgba(194,97,13,.10);outline:1px solid rgba(194,97,13,.35);}
 .tt-per-dates{font-weight:500;white-space:nowrap;}
 .tt-per-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:1px 5px;border-radius:3px;margin-left:6px;background:#e5e7eb;color:#374151;}
@@ -5167,7 +5174,7 @@ function showTooltip(e,bid,subContext){
       (b.rate
         ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`
         : `${days} діб`) + firstStatus,
-      '');
+      'first');
     const historyRows = visibleHistory.map((h,i) => {
       const hDays = h.days || countDays(h.fromDate, h.toDate);
       const total = fmtSmart(hDays*(h.rate||0));
@@ -5176,7 +5183,7 @@ function showTooltip(e,bid,subContext){
       const usdEquiv = hCur==='₴' && hExRate>0 ? ` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart((h.rate||0)/hExRate)} $)</span>` : '';
       return perRow(`${fmtShortYear(h.fromDate)}–${fmtShortYear(h.toDate)}`, '', '',
         `${hDays} * <span style="color:${curColor(hCur)}">${fmtSmart(h.rate||0)} ${hCur}</span>${usdEquiv} = <span style="color:${curColor(hCur)}">${total} ${hCur}</span> <span style="color:#2F6364">✓</span>`,
-        (i % 2 === 0) ? 'alt' : '');
+        '');
     }).join('');
     let activeRow = '';
     let debtAtDateWidget = '';
@@ -5241,7 +5248,8 @@ function showTooltip(e,bid,subContext){
     // One list of ALL periods (original + extensions) replaces the separate «Оренда»
     // row and the «Продовження оренди» block; the final return goes to the bottom.
     periodsBlock = `
-      <div style="margin-bottom:6px">${firstRowHtml}${moreIndicator}${historyRows}${activeRow}${debtAtDateWidget}</div>
+      <div class="tt-rail">${firstRowHtml}${moreIndicator}${historyRows}${activeRow}</div>
+      <div style="margin-bottom:6px">${debtAtDateWidget}</div>
     `;
   }
 
@@ -5353,7 +5361,7 @@ function showTooltip(e,bid,subContext){
     ${pickupBarHtml}
     ${hasExtPeriods?'':retRow}
     ${(earlyReturnEnabled()&&b.earlyReturn&&b.earlyReturn.active)?`<div class="tt-row" style="padding:0 8px"><span class="tt-label">Дострокове повернення</span><span class="tt-val" style="color:#475569">план до ${fmt(b.earlyReturn.plannedEnd)} · оплачено ${b.daysOverride||''} діб</span></div>`:''}
-    ${servicesBlock}
+    ${hasExtPeriods?'':servicesBlock}
     ${!isSpecialStatus?`
     <div class="tt-divider"></div>
     ${hasExtPeriods ? '' : `<div class="tt-row" style="padding:0 8px"><span class="tt-label">${isVat?'Оренда з ПДВ':'Оренда'}</span><span class="tt-val" style="font-weight:700">${b.rate?`${days} * <span style="color:${curColor(cur)}">${fmtSmart(b.rate)} ${cur}</span>${cur==='₴'&&b.exchangeRate>0?` <span style="color:#1d4ed8;font-weight:700">(${fmtSmart(b.rate/b.exchangeRate)} $)</span>`:''} = <span style="color:${curColor(cur)}">${fmtSmart(days*b.rate)} ${cur}</span>`:days}</span></div>`}
@@ -5367,6 +5375,7 @@ function showTooltip(e,bid,subContext){
     ${hasExtPeriods?`<div class="tt-divider" style="margin:8px 0 6px"></div>${periodsBlock}`:''}
     `:''}
     ${retBarHtml}
+    ${hasExtPeriods?servicesBlock:''}
     ${extBlock}
     ${substituteBlock}
     ${repairBlock}
