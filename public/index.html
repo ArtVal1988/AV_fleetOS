@@ -378,7 +378,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   .bmc-short{display:inline!important;}
   #bm-status{height:27px!important;}
   #dp-total-row{height:45px!important;}
-  #bm-partial-toggle-row{height:30px!important;}
   #bm-paymethod-icons-wrap .dep-cur-pill,#bm-deposit-paymethod-field .dep-cur-pill{height:30px!important;}
   /* payment-type icons (cash / card / mixed): square buttons on mobile */
   #bm-paymethod-icons-wrap .dep-cur-pill,#bm-deposit-paymethod-icons-wrap .dep-cur-pill{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;}
@@ -491,7 +490,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
   #bm-main-payments-column,#bm-ext-payments-column{width:100%!important;}
   #bm-main-payments-wrap>div[style*="align-items:flex-end"],
   #bm-ext-fields>div[style*="align-items:flex-end"]{flex-direction:column!important;align-items:stretch!important;}
-  #bm-main-payments-block{padding-top:40px!important;}
 
   /* КАСКО: Страхова компанія / Номер договору / від — inline 3-column grid,
      not caught by the shared .fgrid rule below (different column count). */
@@ -1310,6 +1308,19 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
 .bm-sec-btn.bm-sec-locked{filter:grayscale(.6) opacity(.55);cursor:not-allowed;}
+/* «Часткова оплата» — compact switch inside the «Загалом» bar; the payments box shows only when it is on */
+.pp-switch{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:500;text-transform:none;letter-spacing:0;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:2px 9px 2px 7px;cursor:pointer;white-space:nowrap;user-select:none;}
+.pp-switch input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+.pp-track{position:relative;display:inline-block;width:22px;height:12px;border-radius:7px;background:#cbd5e1;transition:background .15s;flex-shrink:0;}
+.pp-knob{position:absolute;left:1px;top:1px;width:10px;height:10px;border-radius:50%;background:#fff;transition:left .15s;}
+.pp-switch:has(input:checked){border-color:#2563eb;color:#1d4ed8;}
+.pp-switch:has(input:checked) .pp-track{background:#2563eb;}
+.pp-switch:has(input:checked) .pp-knob{left:11px;}
+.pp-switch:has(input:focus-visible){outline:2px solid #93c5fd;outline-offset:1px;}
+.pp-switch:has(input:disabled){cursor:not-allowed;}
+.pp-short{display:none;}
+@media (max-width:700px){.pp-long{display:none;}.pp-short{display:inline;}}
+#dp-total-row:has(#bm-partial-active:not(:checked)) + #bm-main-payments-block{display:none;}
 #bm-sec-btn-ext{background:#e8f3f1;border-color:#8dbfb5;color:#1f6357}
 #bm-sec-btn-sub{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
 #bm-sec-btn-fine{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
@@ -3229,15 +3240,18 @@ input.dm-pf-val.tel{font-size:14px;}
           <span class="vat-uah" id="dp-extras-uah">—</span>
         </div>
         <div class="vat-table-row" id="dp-total-row" style="background:#1faf560f;border:1px solid #2563eb;border-radius:6px;padding:10px 12px;margin-top:8px">
-          <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом:</span>
+          <span class="dp-total-lcell" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;min-width:0">
+            <span class="vat-row-label" style="font-weight:700;color:#1d4ed8;font-size:15px" id="dp-total-label">Загалом:</span>
+            <label id="bm-partial-toggle-row" class="pp-switch" title="Часткова оплата">
+              <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()">
+              <span class="pp-track"><span class="pp-knob"></span></span>
+              <span class="pp-text"><span class="pp-long">Часткова оплата</span><span class="pp-short">Частково</span></span>
+            </label>
+          </span>
           <span class="vat-orig" id="dp-total" style="color:#1d4ed8;font-weight:700;font-size:15px">—</span>
           <span class="vat-uah" id="dp-total-uah" style="color:#166534;font-weight:700;font-size:15px">—</span>
         </div>
-        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:24px 10px 10px;box-sizing:border-box;position:relative">
-          <div id="bm-partial-toggle-row" style="position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="bm-partial-active" onchange="togglePartialPayment()">
-            <span style="font-size:11px;color:#6b7280;cursor:pointer;white-space:nowrap" onclick="document.getElementById('bm-partial-active').click()">Часткова оплата</span>
-          </div>
+        <div id="bm-main-payments-block" style="margin-top:6px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px 10px;box-sizing:border-box;position:relative">
           <div id="bm-main-payments-wrap" style="display:none;margin:10px">
             <div style="display:flex;align-items:flex-end;gap:10px">
               <div id="bm-main-payments-column" style="width:450px;flex-shrink:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px">
