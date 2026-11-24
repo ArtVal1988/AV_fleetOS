@@ -5335,27 +5335,30 @@ function showTooltip(e,bid,subContext){
   let substituteBlock = '';
   if(b.substituteVehicles && b.substituteVehicles.length){
     const fmtSY = s=>{if(!s)return'—';const[y,m,d]=s.split('-');return`${d}.${m}.${(y||'').slice(2)}`;};
+    // One row per substitute: plate · dates · calculation. With a single substitute its comment
+    // goes up to the header line; with several, each comment sits under its own row.
+    const subs = b.substituteVehicles;
+    const single = subs.length === 1;
+    const subRows = subs.map(s=>{
+      const sv = getVehicle(s.vehicleId);
+      const days = Math.round((new Date(s.toDate)-new Date(s.fromDate))/86400000);
+      const cur = s.currency||'$';
+      const total = days*(s.rate||0);
+      const priceText = s.rate>0
+        ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(s.rate)} ${cur}</span> = <span style="color:${curColor(cur)}">${fmtSmart(total)} ${cur}</span>${s.exchangeRate>0?' ('+fmtSmart(s.exchangeRate)+')':''}`
+        : '';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;white-space:nowrap${single?'':';margin-top:3px'}">
+          <b style="font-family:var(--font-mono);color:var(--text)">${sv?sv.plate:'?'}</b>
+          <span style="color:var(--text)">${fmtSY(s.fromDate)}–${fmtSY(s.toDate)}</span>
+          <span style="color:var(--text);text-align:right">${priceText}</span>
+        </div>` + ((!single && s.comment) ? `<div style="font-size:10.5px;color:var(--muted);font-style:italic">${s.comment}</div>` : '');
+    }).join('');
+    const headComment = (single && subs[0].comment) ? `<span style="font-size:10.5px;font-style:italic;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;text-align:right">${subs[0].comment}</span>` : '';
     substituteBlock = `
       <div class="tt-divider"></div>
       <div style="background:#a78bfa14;border-radius:6px;padding:8px 10px">
-      <div class="tt-label" style="margin-bottom:4px">🔄 Підмінне авто</div>
-      ${b.substituteVehicles.map(s=>{
-        const sv = getVehicle(s.vehicleId);
-        const days = Math.round((new Date(s.toDate)-new Date(s.fromDate))/86400000);
-        const cur = s.currency||'$';
-        const total = days*(s.rate||0);
-        const priceText = s.rate>0
-          ? `${days} * <span style="color:${curColor(cur)}">${fmtSmart(s.rate)} ${cur}</span> = <span style="color:${curColor(cur)}">${fmtSmart(total)} ${cur}</span>${s.exchangeRate>0?' ('+fmtSmart(s.exchangeRate)+')':''}`
-          : '';
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px">
-          <span style="flex-shrink:0"><b style="font-family:var(--font-mono);color:var(--text)">${sv?sv.plate:'?'}</b></span>
-          <span style="color:var(--muted);text-align:right"><i>${s.comment||''}</i></span>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;margin-bottom:6px">
-          <span style="color:var(--text)">${fmtSY(s.fromDate)}–${fmtSY(s.toDate)}</span>
-          <span style="color:var(--text);text-align:right">${priceText}</span>
-        </div>`;
-      }).join('')}
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px"><span class="tt-label">🔄 Підмінне авто</span>${headComment}</div>
+      ${subRows}
       </div>
     `;
   }
