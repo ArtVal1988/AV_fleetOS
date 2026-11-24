@@ -5072,6 +5072,24 @@ function showTooltip(e,bid,subContext){
   </div>` + (secondaryName?`<div style="font-size:11px;color:var(--muted);margin-bottom:2px">${secondaryName}</div>`:'')
   + (b.customer?.phone?`<div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-bottom:6px">${msgIconsInline}<a href="tel:${b.customer.phone.replace(/[^+\d]/g,'')}" onclick="event.stopPropagation()" class="tt-phone" style="margin-bottom:0;color:inherit;text-decoration:none">${b.customer.phone}</a>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}</div>`:'<div style="margin-bottom:6px"></div>');
 
+  // Legal entities (ТОВ / ФОП): a blue company card — name + VAT badge, ЄДРПОУ,
+  // and the contact person with the phone below a dashed line.
+  if(b.clientType && b.clientType!=='individual' && primaryName){
+    const ttVatBadge = b.clientType==='fop_no_vat' ? 'ЮР · БЕЗ ПДВ' : 'ЮР · З ПДВ';
+    const ttRep = (b.customer?.name && b.customer.name!==primaryName) ? b.customer.name : '';
+    const ttPhoneHtml = b.customer?.phone ? `${msgIconsInline}<a href="tel:${b.customer.phone.replace(/[^+\d]/g,'')}" onclick="event.stopPropagation()" class="tt-phone" style="margin:0;color:inherit;text-decoration:none">${b.customer.phone}</a>${ttExtraContactsCount?`<span title="Додаткових контактів: ${ttExtraContactsCount}" style="font-size:9px;font-weight:700;background:#dbeafe;color:#1d4ed8;border-radius:8px;padding:1px 5px">☎+${ttExtraContactsCount}</span>`:''}` : '';
+    nameRow = `<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:9px 11px;margin-bottom:2px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:#0f172a;line-height:1.2">${clientTierIconHtml(b.customer?.clientId)}${primaryName}</div>
+        <span style="background:#1d4ed8;color:#fff;font-size:9px;font-weight:700;letter-spacing:.4px;padding:3px 7px;border-radius:4px;white-space:nowrap">${ttVatBadge}</span>
+      </div>
+      ${b.customer?.edrpou?`<div style="font-size:10.5px;color:#475569;margin-top:3px">ЄДРПОУ <b style="font-family:var(--font-mono);color:#1e293b">${b.customer.edrpou}</b></div>`:''}
+      ${(ttRep||ttPhoneHtml)?`<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:7px;padding-top:7px;border-top:1px dashed #93c5fd;font-size:11px">
+        <span style="color:#334155">${ttRep?'👤 '+ttRep:''}</span><span style="display:flex;align-items:center;gap:5px">${ttPhoneHtml}</span>
+      </div>`:''}
+    </div>`;
+  }
+
   // 2: date+time on one line, address on the line below
   const isSpecialStatus = SM[b.status] ? (SM[b.status].isBooking===false) : STATUSES_WITHOUT_ORDER_DETAILS.includes(b.status);
   const pickupRow = isSpecialStatus
