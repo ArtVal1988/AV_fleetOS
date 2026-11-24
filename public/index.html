@@ -1178,7 +1178,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 input[type=number]{-moz-appearance:textfield;}
 .ext-toggle-label{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#0891b2;cursor:pointer;margin-top:6px;}
 .ext-toggle-label input[type=checkbox]{width:auto;margin:0;}
-.ext-fields-block{margin-top:0;padding:12px 14px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;}
+.ext-fields-block{margin-top:0;padding:12px 14px;background:#e8f3f1;border:1px solid #8dbfb5;border-radius:8px;}
 .ext-calc-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
 .ext-calc-field label{display:block;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#854f0b;margin-bottom:4px;font-weight:600;}
 .ext-calc-input-cur{display:flex;align-items:center;gap:5px;}
@@ -1275,7 +1275,28 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .msec-inner-sep{margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,0,0,.08);}
 #bm-block-extras{padding-top:0!important;}
 .msec-b4{background:#f9fafb;border-left-color:#d1d5db;}
-.msec-ext{background:#ecfdf5;border-left-color:#34d399;}
+.msec-ext{background:#e8f3f1;border-left-color:#1f6357;}
+/* Orders with extensions: pickup/return styled like the tooltip bars, periods on a rail */
+#bm-pickup-row.ext-styled,#bm-return-row.ext-styled{border:none;border-radius:8px;padding:22px 12px 10px;}
+#bm-pickup-row.ext-styled{background:#14532d;}
+#bm-return-row.ext-styled{background:#0f172a;}
+#bm-pickup-row.ext-styled .lr-label,#bm-return-row.ext-styled .lr-label{color:#fff;font-size:11px;letter-spacing:.3px;top:5px;left:12px;text-transform:none;font-weight:600;}
+#bm-pickup-row.ext-styled input,#bm-pickup-row.ext-styled select,#bm-return-row.ext-styled input,#bm-return-row.ext-styled select{border-color:transparent!important;}
+.ext-rail{position:relative;margin:4px 0 6px 8px;padding-left:20px;border-left:2px solid #cbd5e1;}
+.ext-rail .rrow{position:relative;display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;font-size:11px;margin-bottom:2px;color:#1a1d26;}
+.ext-rail .rrow::before{content:"";position:absolute;left:-29px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #94a3b8;}
+.ext-rail .rrow.first{background:#e8f5ec;}
+.ext-rail .rrow.first::before{background:#14532d;border-color:#14532d;}
+.ext-rail .rrow.first .d{font-weight:700;color:#14532d;}
+.ext-rail .rrow .d{white-space:nowrap;font-weight:500;}
+.ext-rail .rrow .s{margin-left:auto;text-align:right;font-weight:700;}
+.ext-rail .rrow .rbtns{display:flex;gap:2px;flex-shrink:0;}
+.ext-rail-cur{position:relative;margin:0 0 6px 8px;padding-left:20px;}
+.ext-rail-cur.with-line{border-left:2px solid #cbd5e1;}
+.ext-rail-cur .rrow{position:relative;display:flex;align-items:center;padding:5px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#9a3412;background:#fff7ed;}
+.ext-rail-cur .rrow::before{content:"";position:absolute;left:-29px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:#fed7aa;border:2px solid #ea580c;}
+.ext-rail-cur:not(.with-line) .rrow::before{left:-9px;}
+@media (max-width:700px){.ext-rail .rrow{flex-wrap:wrap;}}
 .msec-sub{background:#f5f3ff;border-left-color:#c4b5fd;}
 /* Client card: 4 visual blocks */
 .cf-block{border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid rgba(0,0,0,.07);border-left:4px solid transparent;}
@@ -1289,7 +1310,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
 .bm-sec-btn.bm-sec-locked{filter:grayscale(.6) opacity(.55);cursor:not-allowed;}
-#bm-sec-btn-ext{background:#ecfdf5;border-color:#6ee7b7;color:#047857}
+#bm-sec-btn-ext{background:#e8f3f1;border-color:#8dbfb5;color:#1f6357}
 #bm-sec-btn-sub{background:#f5f3ff;border-color:#c4b5fd;color:#6d28d9}
 #bm-sec-btn-fine{background:#fef2f2;border-color:#fca5a5;color:#b91c1c}
 #bm-sec-btn-rep{background:#fff7ed;border-color:#fdba74;color:#c2410c}
@@ -3260,10 +3281,11 @@ input.dm-pf-val.tel{font-size:14px;}
     <div class="msec msec-ext" id="bm-block-ext-section">
       <input type="checkbox" id="bm-ext-active" onchange="toggleExtensionSection()" style="display:none">
 
-      <button type="button" id="bm-ext-add-btn" onclick="openExtensionForNewEntry()" style="width:100%;background:#d1fae5;border:1px dashed #6ee7b7;color:#047857;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px">+ Додати продовження</button>
+      <button type="button" id="bm-ext-add-btn" onclick="openExtensionForNewEntry()" style="width:100%;background:#d3e8e4;border:1px dashed #1f6357;color:#1f6357;border-radius:7px;padding:9px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;margin-bottom:8px">+ Додати продовження</button>
 
       <div id="bm-ext-timeline" style="display:none;margin:6px 0 4px"></div>
 
+      <div id="bm-ext-cur-marker" class="ext-rail-cur" style="display:none"><div class="rrow">Поточне продовження</div></div>
       <div id="bm-ext-fields" class="ext-fields-block" style="display:none;position:relative">
         <button type="button" onclick="clearActiveExtension()" title="Прибрати це продовження" style="position:absolute;top:-6px;right:-6px;z-index:2;background:#fff;border:1px solid #e5e7eb;border-radius:50%;width:22px;height:22px;cursor:pointer;color:#dc2626;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.15)">✕</button>
         <div class="ext-fin-row" style="flex-wrap:nowrap;align-items:flex-end;gap:4px">
@@ -9397,6 +9419,13 @@ function moveReturnRow(toExtSection){
   const hasExt = !!toExtSection || (currentExtHistory && currentExtHistory.length>0) || !!document.getElementById('bm-ext-active')?.checked;
   const anchor = document.getElementById(hasExt ? 'bm-return-anchor-ext' : 'bm-return-anchor-normal');
   if(row && anchor) anchor.parentNode.insertBefore(row, anchor);
+  // pickup/return get the tooltip-like green / dark look while the order has extensions
+  const pRow = document.getElementById('bm-pickup-row');
+  if(pRow) pRow.classList.toggle('ext-styled', hasExt);
+  if(row) row.classList.toggle('ext-styled', hasExt);
+  const pl = document.getElementById('bm-pickup-label'), rl = document.getElementById('bm-return-label');
+  if(pl) pl.textContent = hasExt ? '↪ Отримання' : '↑ Отримання';
+  if(rl) rl.textContent = hasExt ? '↩ Повернення' : '↓ Повернення';
 }
 function clearActiveExtension(){
   if(!confirm('Прибрати це продовження? Незбережені дані буде очищено (історія попередніх продовжень залишиться).')) return;
@@ -10138,6 +10167,7 @@ function toggleExtensionSection(preserveExistingData){
   if(actBtn) actBtn.style.display = active ? '' : 'none';
   renderExtTimeline();
   moveReturnRow(active);
+  updateExtCurMarker();
   if(active && !preserveExistingData){
     extDaysOverridden = false;
     extTotalOverridden = false;
@@ -11007,6 +11037,13 @@ function closeAndStartNewExtension(){
   render();
 }
 
+function updateExtCurMarker(){
+  const m = document.getElementById('bm-ext-cur-marker');
+  if(!m) return;
+  const open = !!document.getElementById('bm-ext-active')?.checked;
+  m.style.display = open ? '' : 'none';
+  m.classList.toggle('with-line', open && currentExtHistory.length>0);
+}
 function renderExtTimeline(){
   const wrap = document.getElementById('bm-ext-timeline');
   if(!wrap) return;
@@ -11019,19 +11056,17 @@ function renderExtTimeline(){
     const origDays = b.daysOverride>0 ? b.daysOverride : countDays(b.start, b.end);
     const origTotal = Math.round((b.rate||0) * origDays * 100) / 100;
     originalRowHtml = `
-      <div class="ext-history-row ext-stack-mobile" style="display:flex;border-bottom:1px solid #f0f2f5;padding-left:0;font-weight:600;color:#1a1d26">
-        <div class="eh-dates">📍 ${fmt(b.start)}–${fmt(b.end)}</div>
-        <div class="eh-amt" style="text-align:right">${origDays} ${pluralDoba(origDays)} × ${fmtSmart(b.rate||0)} ${b.currency||'$'}${(b.currency==='₴' && b.exchangeRate>0) ? ' ('+fmtSmart(b.rate/b.exchangeRate)+' $)' : ''} = ${fmtSmart(origTotal)} ${b.currency||'$'}${b.exchangeRate?' ('+fmtSmart(b.exchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
+      <div class="rrow first">
+        <span class="d">${fmt(b.start)}–${fmt(b.end)}</span>
+        <span class="s">${origDays} ${pluralDoba(origDays)} × ${fmtSmart(b.rate||0)} ${b.currency||'$'}${(b.currency==='₴' && b.exchangeRate>0) ? ' ('+fmtSmart(b.rate/b.exchangeRate)+' $)' : ''} = ${fmtSmart(origTotal)} ${b.currency||'$'}${b.exchangeRate?' ('+fmtSmart(b.exchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></span>
       </div>`;
   }
 
   const historyRowsHtml = currentExtHistory.map((h,i) => `
-    <div class="ext-history-row" style="display:flex;align-items:center;gap:6px;background:${i%2?'#eceef1':'transparent'};border-radius:4px;padding-left:4px;padding-right:4px">
-      <div class="ext-history-inner" style="flex:1;min-width:0">
-        <div class="eh-dates">↳ ${fmt(h.fromDate)}–${fmt(h.toDate)}</div>
-        <div class="eh-amt" style="text-align:right">${h.days||''} ${pluralDoba(h.days||0)} × ${fmtSmart(h.rate||0)} ${h.currency}${(h.currency==='₴' && h.totalExchangeRate>0) ? ' ('+fmtSmart(h.rate/h.totalExchangeRate)+' $)' : ''} = ${fmtSmart(h.cost||0)} ${h.currency}${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></div>
-      </div>
-      <div style="display:flex;gap:2px;flex-shrink:0">
+    <div class="rrow">
+      <span class="d">${fmt(h.fromDate)}–${fmt(h.toDate)}</span>
+      <span class="s">${h.days||''} ${pluralDoba(h.days||0)} × ${fmtSmart(h.rate||0)} ${h.currency}${(h.currency==='₴' && h.totalExchangeRate>0) ? ' ('+fmtSmart(h.rate/h.totalExchangeRate)+' $)' : ''} = ${fmtSmart(h.cost||0)} ${h.currency}${h.totalExchangeRate?' ('+fmtSmart(h.totalExchangeRate)+')':''} · <span style="color:#16a34a;font-weight:700">✓</span></span>
+      <div class="rbtns">
         <button type="button" onclick="generateExtHistoryAct(${i})" title="Сформувати акт продовження" style="background:none;border:1px solid #bfdbfe;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#1d4ed8;font-size:10px;padding:0">🖨️</button>
         <button type="button" onclick="editExtHistoryEntry(${i})" title="Редагувати" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#6b7280;font-size:11px;padding:0">✎</button>
         <button type="button" onclick="deleteExtHistoryEntry(${i})" title="Видалити" style="background:none;border:1px solid #e5e7eb;border-radius:4px;width:20px;height:20px;cursor:pointer;color:#dc2626;font-size:11px;padding:0">✕</button>
@@ -11063,8 +11098,9 @@ function renderExtTimeline(){
       </div>`;
   }
 
-  wrap.innerHTML = summaryHtml + originalRowHtml + historyRowsHtml;
+  wrap.innerHTML = summaryHtml + ((originalRowHtml || historyRowsHtml) ? `<div class="ext-rail">${originalRowHtml}${historyRowsHtml}</div>` : '');
   wrap.style.display = (originalRowHtml || historyRowsHtml) ? '' : 'none';
+  updateExtCurMarker();
 }
 
 async function generateExtHistoryAct(index){
