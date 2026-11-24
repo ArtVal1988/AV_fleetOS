@@ -1308,6 +1308,9 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
 .bm-sec-btn.bm-sec-locked{filter:grayscale(.6) opacity(.55);cursor:not-allowed;}
+.bm-sec-btn.bm-sec-collapsible::after,.bm-sec-btn.bm-sec-collapsed::after{position:absolute;top:4px;left:7px;font-size:9px;line-height:1;opacity:.75;pointer-events:none;}
+.bm-sec-btn.bm-sec-collapsible::after{content:"▾";}
+.bm-sec-btn.bm-sec-collapsed::after{content:"▸";}
 /* «Часткова оплата» — compact switch inside the «Загалом» bar; the payments box shows only when it is on */
 .pp-switch{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:500;text-transform:none;letter-spacing:0;color:#475569;background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:2px 9px 2px 7px;cursor:pointer;white-space:nowrap;user-select:none;}
 .pp-switch input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
@@ -6571,6 +6574,7 @@ function saveBooking(){
   }
 
   if(errors.length){
+    bmExpandAllSections(); updateBmSectionButtons();
     errors.forEach(err => err.before && err.before());
     highlightField(errors.flatMap(err => Array.isArray(err.fields) ? err.fields : [err.fields]));
     const list = errors.map(err => '• ' + err.message).join('\n');
@@ -9767,6 +9771,7 @@ function bmDedHasData(){
 // the newly-loaded booking has no data in it — otherwise a panel opened
 // once stays visually 'stuck open' for every other booking afterward.
 function autoOpenBmSectionsWithData(){
+  bmExpandAllSections();
   const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
   if(bmSubHasData() !== subOpen) toggleSubstituteSection();
   const fineOpen = document.getElementById('bm-fines-panel')?.style.display !== 'none';
@@ -9787,10 +9792,29 @@ function updateBmSectionAvailability(){
   if(startKm) startKm.disabled = !isRented;
   if(endKm) endKm.disabled = !isRented;
 }
+// Sections of the booking form (Продовження / Підмінне / Штрафи / Ремонт / Утримання) can be
+// collapsed while they hold data: a click on the section's button hides the body (data stays in
+// the form and in the badge), another click shows it again. View state only — never saved.
+const bmCollapsed = {ext:false, sub:false, fine:false, rep:false, ded:false};
+function bmExpandAllSections(){ Object.keys(bmCollapsed).forEach(k => bmCollapsed[k] = false); }
+function bmSectionOpen(id){
+  if(id==='ext') return !!(document.getElementById('bm-ext-active')?.checked || extPanelOpen || currentExtHistory.length>0);
+  const panel = {sub:'bm-substitute-panel', fine:'bm-fines-panel', rep:'bm-repair-panel', ded:'ded-panel'}[id];
+  return document.getElementById(panel)?.style.display !== 'none';
+}
+function bmSectionHasData(id){
+  return {ext:bmExtHasData, sub:bmSubHasData, fine:bmFineHasData, rep:bmRepHasData, ded:bmDedHasData}[id]();
+}
 function activateBmSection(id){
   const currentStatus = document.getElementById('bm-status')?.value;
   if(!isRentedLikeStatus(currentStatus)){
     alert('Спочатку встановіть статус "В оренді" — доти ці розділи недоступні.');
+    return;
+  }
+  // A section that is open and holds data: the button collapses / expands it.
+  if(bmSectionOpen(id) && bmSectionHasData(id)){
+    bmCollapsed[id] = !bmCollapsed[id];
+    updateBmSectionButtons();
     return;
   }
   // Close every OTHER section — but never force-close one that already has
@@ -9829,30 +9853,42 @@ function activateBmSection(id){
   updateBmSectionButtons();
 }
 function updateBmSectionButtons(){
+  // a section that is no longer open/has no data cannot stay "collapsed"; chevron + tooltip on the buttons
+  const _st = {ext:[bmSectionOpen('ext'),bmExtHasData()], sub:[bmSectionOpen('sub'),bmSubHasData()], fine:[bmSectionOpen('fine'),bmFineHasData()], rep:[bmSectionOpen('rep'),bmRepHasData()], ded:[bmSectionOpen('ded'),bmDedHasData()]};
+  Object.keys(_st).forEach(k => {
+    const [o,d] = _st[k];
+    if(!(o && d)) bmCollapsed[k] = false;
+    const bt = document.getElementById('bm-sec-btn-'+k);
+    if(bt){
+      bt.classList.toggle('bm-sec-collapsible', !!(o && d && !bmCollapsed[k]));
+      bt.classList.toggle('bm-sec-collapsed', !!(o && d && bmCollapsed[k]));
+      bt.title = (o && d) ? (bmCollapsed[k] ? 'Розгорнути розділ' : 'Згорнути розділ') : '';
+    }
+  });
   const isExtLocked = bmExtHasData();
   const extFormOpen = document.getElementById('bm-ext-active')?.checked;
   const extOpen = extFormOpen || extPanelOpen || currentExtHistory.length > 0;
   const btnExt = document.getElementById('bm-sec-btn-ext');
   if(btnExt){
-    btnExt.classList.toggle('locked-active', !!isExtLocked);
+    btnExt.classList.toggle('locked-active', !!isExtLocked && !bmCollapsed.ext);
     btnExt.classList.toggle('active', !!extOpen && !isExtLocked);
   }
   const subOpen = document.getElementById('bm-substitute-panel')?.style.display !== 'none';
   const subLocked = bmSubHasData();
   const btnSub = document.getElementById('bm-sec-btn-sub');
-  if(btnSub){ btnSub.classList.toggle('locked-active', subLocked); btnSub.classList.toggle('active', subOpen && !subLocked); }
+  if(btnSub){ btnSub.classList.toggle('locked-active', subLocked && !bmCollapsed.sub); btnSub.classList.toggle('active', subOpen && !subLocked); }
   const fineOpen = document.getElementById('bm-fines-panel')?.style.display !== 'none';
   const fineLocked = bmFineHasData();
   const btnFine = document.getElementById('bm-sec-btn-fine');
-  if(btnFine){ btnFine.classList.toggle('locked-active', fineLocked); btnFine.classList.toggle('active', fineOpen && !fineLocked); }
+  if(btnFine){ btnFine.classList.toggle('locked-active', fineLocked && !bmCollapsed.fine); btnFine.classList.toggle('active', fineOpen && !fineLocked); }
   const repOpen = document.getElementById('bm-repair-panel')?.style.display !== 'none';
   const repLocked = bmRepHasData();
   const btnRep = document.getElementById('bm-sec-btn-rep');
-  if(btnRep){ btnRep.classList.toggle('locked-active', repLocked); btnRep.classList.toggle('active', repOpen && !repLocked); }
+  if(btnRep){ btnRep.classList.toggle('locked-active', repLocked && !bmCollapsed.rep); btnRep.classList.toggle('active', repOpen && !repLocked); }
   const dedOpen = document.getElementById('ded-panel')?.style.display !== 'none';
   const dedLocked = bmDedHasData();
   const btnDed = document.getElementById('bm-sec-btn-ded');
-  if(btnDed){ btnDed.classList.toggle('locked-active', dedLocked); btnDed.classList.toggle('active', dedOpen && !dedLocked); }
+  if(btnDed){ btnDed.classList.toggle('locked-active', dedLocked && !bmCollapsed.ded); btnDed.classList.toggle('active', dedOpen && !dedLocked); }
 
   // The outer msec wrapper for each section has its own padding/border/
   // background (for the colored side-strip look) that renders regardless
@@ -9860,15 +9896,15 @@ function updateBmSectionButtons(){
   // every closed/empty section still shows as a blank colored bar. Hide
   // the whole wrapper when there's nothing open or committed to show.
   const secExt = document.getElementById('bm-block-ext-section');
-  if(secExt) secExt.style.display = (extOpen || isExtLocked) ? '' : 'none';
+  if(secExt) secExt.style.display = ((extOpen || isExtLocked) && !bmCollapsed.ext) ? '' : 'none';
   const secSub = document.getElementById('bm-substitute-section');
-  if(secSub) secSub.style.display = (subOpen || subLocked) ? '' : 'none';
+  if(secSub) secSub.style.display = ((subOpen || subLocked) && !bmCollapsed.sub) ? '' : 'none';
   const secFine = document.getElementById('bm-fines-section');
-  if(secFine) secFine.style.display = (fineOpen || fineLocked) ? '' : 'none';
+  if(secFine) secFine.style.display = ((fineOpen || fineLocked) && !bmCollapsed.fine) ? '' : 'none';
   const secRep = document.getElementById('bm-repair-section');
-  if(secRep) secRep.style.display = (repOpen || repLocked) ? '' : 'none';
+  if(secRep) secRep.style.display = ((repOpen || repLocked) && !bmCollapsed.rep) ? '' : 'none';
   const secDed = document.getElementById('bm-block-5');
-  if(secDed) secDed.style.display = (dedOpen || dedLocked) ? '' : 'none';
+  if(secDed) secDed.style.display = ((dedOpen || dedLocked) && !bmCollapsed.ded) ? '' : 'none';
 
   // Badges — quick summary visible even while the section itself is closed
   const badgeExt = document.getElementById('bm-sec-badge-ext');
