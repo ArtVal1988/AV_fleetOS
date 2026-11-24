@@ -5395,7 +5395,7 @@ function showTooltip(e,bid,subContext){
     ${hasExtPeriods?'':'<div class="tt-divider" style="margin:6px 0"></div>'}
     ${(b.rate||b.deposit)?`<div style="display:flex;gap:6px;margin-top:6px">
       ${b.deposit?`<div class="tt-total-row" style="flex:1;margin-top:0;background:#fdf3e7"><span class="tt-total-label" style="color:#8a4b0f">Депозит</span><span class="tt-total-val" style="color:#8a4b0f"><span style="color:${curColor(b.depositCur||cur)}">${fmtSmart(b.deposit)} ${b.depositCur||cur}</span>${b.depositPayMethod?ttPmIcons(b.depositPayMethod,false):''}</span></div>`:''}
-      ${b.rate?`<div class="tt-total-row" style="flex:1;margin-top:0"><span class="tt-total-label">Загалом</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
+      ${b.rate?`<div class="tt-total-row" style="flex:${(isCompanyClient && b.clientType!=='fop_no_vat')?'1.5':'1'};margin-top:0;white-space:nowrap"><span class="tt-total-label"${(isCompanyClient && b.clientType!=='fop_no_vat')?' style="font-size:9px;letter-spacing:.2px"':''}>${(isCompanyClient && b.clientType!=='fop_no_vat')?'Загалом (з ПДВ)':'Загалом'}</span><span class="tt-total-val"><span style="color:${canShowUahOnly?curColor('₴'):curColor(cur)}">${canShowUahOnly?fmtSmart(totalUah)+' ₴':fmtSmart(total)+' '+cur}</span>${b.payMethod?ttPmIcons(b.payMethod,true):''}</span></div>`:''}
     </div>`:''}
     ${hasExtPeriods?`<div class="tt-divider" style="margin:8px 0 6px"></div>${periodsBlock}`:''}
     `:''}
