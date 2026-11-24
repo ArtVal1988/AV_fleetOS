@@ -630,7 +630,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-hei
 .tt-rail .tt-per.first{background:#e8f5ec;}
 .tt-rail .tt-per.first::before{background:#14532d;border-color:#14532d;}
 .tt-rail .tt-per.first .tt-per-dates{font-weight:700;color:#14532d;}
-.tt-rail .tt-per.act::before{background:#fed7aa;border-color:#ea580c;}
+.tt-rail .tt-per.act::before,.tt-rail .tt-per.cur::before{background:#fed7aa;border-color:#ea580c;}
+.tt-debt-strip{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;border-radius:4px;padding:3px 8px;margin:1px 0 2px;}
+.tt-debt-strip span:first-child{font-weight:600;color:#991b1b;}
 .tt-per.act{background:rgba(194,97,13,.10);outline:1px solid rgba(194,97,13,.35);}
 .tt-per-dates{font-weight:500;white-space:nowrap;}
 .tt-per-tag{font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:1px 5px;border-radius:3px;margin-left:6px;background:#e5e7eb;color:#374151;}
@@ -5201,9 +5203,13 @@ function showTooltip(e,bid,subContext){
       const actCalc = ext.cost>0
         ? `${actDays} * <span style="color:${curColor(extCurTxt)}">${fmtSmart(actRate)} ${extCurTxt}</span>${actUsd} = <span style="color:${curColor(extCurTxt)}">${fmtSmart(ext.cost)} ${extCurTxt}</span>`
         : '';
-      const actRight = actCalc
-        + (actCalc?' ':'') + (st==='paid' ? `<span style="color:${color}">${label}</span>` : `<span style="color:#dc2626">борг ${fmtSmart((ext.cost||0)-(ext.amountPaid||0))} ${extCurTxt} ⚠</span>`);
-      activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '', '', actRight, 'act');
+      // Same look as the previous periods; an unpaid balance goes on a red strip right under the row.
+      const actRight = actCalc + (st==='paid' ? (actCalc?' ':'') + `<span style="color:${color}">${label}</span>` : '');
+      activeRow = perRow(`${fmtShortYear(ext.fromDate)}–${fmtShortYear(ext.toDate)}`, '', '', actRight, 'cur');
+      if(st !== 'paid'){
+        const actDebt = (ext.cost||0)-(ext.amountPaid||0);
+        activeRow += `<div class="tt-debt-strip"><span>${(ext.amountPaid||0)>0 ? 'Сплачено частково' : 'Не сплачено'}</span><span>борг ${fmtSmart(actDebt)} ${extCurTxt} ⚠</span></div>`;
+      }
 
       // "Тест" debt-at-date widget: only relevant while there's still an
       // unpaid balance on the active extension — mirrors the same
