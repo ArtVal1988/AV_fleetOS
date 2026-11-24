@@ -5147,6 +5147,7 @@ function showTooltip(e,bid,subContext){
   // extension info
   let extBlock='';
   let periodsBlock=''; // set for bookings with extensions (see below)
+  let firstPeriodBlock=''; // the original period — shown right under the pickup bar
   if(b.isExtension){
     const orig = b.extendsId ? bookings.find(x=>x.id===b.extendsId) : null;
     extBlock = `
@@ -5248,9 +5249,10 @@ function showTooltip(e,bid,subContext){
     // One list of ALL periods (original + extensions) replaces the separate «Оренда»
     // row and the «Продовження оренди» block; the final return goes to the bottom.
     periodsBlock = `
-      <div class="tt-rail">${firstRowHtml}${moreIndicator}${historyRows}${activeRow}</div>
+      <div class="tt-rail">${moreIndicator}${historyRows}${activeRow}</div>
       <div style="margin-bottom:6px">${debtAtDateWidget}</div>
     `;
+    firstPeriodBlock = `<div class="tt-rail" style="margin-bottom:2px">${firstRowHtml}</div>`;
   }
 
   const hasExtPeriods = !!periodsBlock;
@@ -5264,7 +5266,7 @@ function showTooltip(e,bid,subContext){
   const pickupBarHtml = (hasExtPeriods && !isSpecialStatus) ? (()=>{
     const defLoc = (!b.pickup?.loc || b.pickup.loc === BM_DEFAULT_ADDRESS);
     return `<div class="tt-divider"></div><div class="tt-ret-bar tt-pick-bar"><span>↪ Отримання</span><b>${fmt(b.pickup?.date)}${b.pickup?.time?' · '+b.pickup.time:''}${defLoc?' · Офіс':''}</b></div>` +
-      (defLoc ? '' : `<div style="font-size:10px;color:var(--muted);text-align:right;margin:2px 0 4px">${b.pickup.loc}</div>`);
+      (defLoc ? '' : `<div style="font-size:10px;color:var(--muted);text-align:right;margin:2px 0 4px">${b.pickup.loc}</div>`) + firstPeriodBlock;
   })() : pickupRow;
 
   // Substitute vehicle history — shown whenever this booking has one or
