@@ -22,7 +22,29 @@ resolve_db() {
 PROD_DB="${PROD_DB:-$(resolve_db "$PROD_DIR")}"
 [ -f "$PROD_DB" ] || { echo "❌ Не знайдено базу основи: $PROD_DB"; exit 1; }
 
+# Скільки останніх бекапів prod-* зберігати (старіші видаляються автоматично) і мінімум вільного місця (МБ)
+KEEP="${KEEP:-3}"
+MIN_FREE_MB="${MIN_FREE_MB:-2500}"
+
 umask 077
+mkdir -p "$BACKUP_ROOT"
+
+# 0) Місце на диску: спершу прибираємо найстаріші prod-* (лишаємо KEEP-1, щоб разом з новим було KEEP)
+PRUNE_KEEP=$((KEEP-1)); [ "$PRUNE_KEEP" -lt 1 ] && PRUNE_KEEP=1
+ls -1d "$BACKUP_ROOT"/prod-* 2>/dev/null | sort | head -n -"$PRUNE_KEEP" | while read -r old; do
+    echo "🧹 Видаляю старий бекап: $old"; rm -rf "$old"
+done
+FREE_MB=$(df -Pm "$BACKUP_ROOT" | awk 'NR==2{print $4}')
+if [ "$FREE_MB" -lt "$MIN_FREE_MB" ]; then
+    echo "❌ Мало місця на диску: вільно ${FREE_MB} МБ, потрібно щонайменше ${MIN_FREE_MB} МБ. Бекап НЕ створено."
+    echo "   Звільни місце (наприклад, старі бекапи у $BACKUP_ROOT) і запусти ще раз."
+    exit 1
+fi
+
+# Якщо бекап обірвався (наприклад, закінчилось місце) — неповну папку видаляємо, щоб її не сприйняли за робочу
+BACKUP_OK=0
+cleanup_incomplete() { [ "$BACKUP_OK" = "1" ] || { echo "❌ Бекап не завершився — неповну папку видаляю: $OUT"; rm -rf "$OUT"; }; }
+trap cleanup_incomplete EXIT
 mkdir -p "$OUT"
 echo "ОСНОВА : $PROD_DIR"
 echo "БАЗА   : $PROD_DB"
@@ -78,6 +100,7 @@ cat > "$OUT/RESTORE.txt" <<EOT
 ВІДНОВЛЕННЯ КОДУ (відкат версії):
   tar xzf "$OUT/code.tar.gz" -C "$PROD_DIR" && pm2 restart AV_fleetOS
 EOT
+BACKUP_OK=1
 echo
 echo "🎉 Готово. Папка бекапу: $OUT"
 echo "   Розмір: $(du -sh "$OUT" | cut -f1)   |   Як відновити: cat $OUT/RESTORE.txt"
