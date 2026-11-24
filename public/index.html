@@ -1308,12 +1308,10 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 #bm-repair-section{background:#fff7ed!important;border-left-color:#fb923c!important;}
 .bm-sec-btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:12px 4px;border-radius:10px;cursor:pointer;font-family:inherit;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:filter .15s,box-shadow .15s;border:1px solid}
 .bm-sec-btn.bm-sec-locked{filter:grayscale(.6) opacity(.55);cursor:not-allowed;}
-/* compact section buttons on desktop: icon and title in one row (phones keep the stacked layout) */
+/* compact section buttons on desktop (icon above the title, smaller icon and paddings; phones keep their own sizes) */
 @media (min-width:641px) and (min-height:501px){
-  .bm-sec-btn{flex-direction:row;justify-content:center;gap:7px;padding:7px 6px;}
-  .bm-sec-btn > span[style]{font-size:15px!important;line-height:1;}
-  .bm-sec-btn.bm-sec-collapsible::after,.bm-sec-btn.bm-sec-collapsed::after{top:50%;transform:translateY(-50%);left:8px;}
-  .bm-sec-badge{top:50%;transform:translateY(-50%);right:8px;}
+  .bm-sec-btn{gap:1px;padding:6px 4px;}
+  .bm-sec-btn > span[style]{font-size:15px!important;line-height:1.2;}
 }
 .bm-sec-btn.bm-sec-collapsible::after,.bm-sec-btn.bm-sec-collapsed::after{position:absolute;top:4px;left:7px;font-size:9px;line-height:1;opacity:.75;pointer-events:none;}
 .bm-sec-btn.bm-sec-collapsible::after{content:"▾";}
@@ -1339,7 +1337,7 @@ select.veh-plate-badge{appearance:none;-webkit-appearance:none;-moz-appearance:n
 .bm-sec-btn:hover{filter:brightness(0.97)}
 .bm-sec-btn.active,.bm-sec-btn.locked-active{box-shadow:0 0 0 2px currentColor inset}
 .bm-sec-btn.locked-active{cursor:default}
-.bm-sec-badge{position:absolute;top:4px;right:6px;min-width:16px;box-sizing:border-box;text-align:center;font-size:10px;line-height:1;font-weight:800;padding:3px 5px;border-radius:9px;background:#374151;color:#fff;display:none}
+.bm-sec-badge{position:absolute;top:0;right:0;min-width:24px;height:22px;box-sizing:border-box;text-align:right;font-size:11px;line-height:1;font-weight:800;padding:3px 6px 0 0;border-radius:0 0 0 24px;background:#374151;color:#fff;display:none}
 #bm-sec-btn-ext .bm-sec-badge{background:#1f6357;}
 #bm-sec-btn-sub .bm-sec-badge{background:#6d28d9;}
 #bm-sec-btn-fine .bm-sec-badge{background:#b91c1c;}
